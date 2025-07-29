@@ -11,6 +11,7 @@ import {
   Settings,
   HelpCircle
 } from "lucide-react";
+import Link from "next/link";
 
 export default function Sidebar() {
   return (
@@ -21,15 +22,31 @@ export default function Sidebar() {
         <p className="text-xs text-[#00000080] tracking-wide mb-6">Menú</p>
 
         {/* Menú */}
-        <nav className="space-y-7">
-          <NavItem icon={<ClipboardList size={20} />} label="Inspección" />
-          <NavItem icon={<Clock size={20} />} label="Cola de inspecciones" />
-          <NavItem icon={<History size={20} />} label="Historial de inspecciones" />
-          <NavItem icon={<FileClock size={20} />} label="Historial de dominios" />
-          <NavItem icon={<Printer size={20} />} label="Reimpresión de CRT" />
-          <NavItem icon={<FileText size={20} />} label="Obleas" />
-          <NavItem icon={<ChartColumn size={20} />} label="Estadísticas" />
-          <NavItem icon={<Users size={20} />} label="Usuarios" />
+        <nav className="flex flex-col space-y-7 ">
+          <Link href={"/dashboard/applications"}>
+            <NavItem icon={<ClipboardList size={20} />} label="Inspección" />
+          </Link>
+          <Link href={"/dashboard/inspections-queue"}>
+            <NavItem icon={<Clock size={20} />} label="Cola de inspecciones" />
+          </Link>
+          <Link href={"/dashboard/inspections-history"}>
+            <NavItem icon={<History size={20} />} label="Historial de inspecciones" />
+          </Link>
+          <Link href={"/dashboard/domains-history"}>
+            <NavItem icon={<FileClock size={20} />} label="Historial de dominios" />
+          </Link>
+          <Link href={"/dashboard/reprint-crt"}>
+            <NavItem icon={<Printer size={20} />} label="Reimpresión de CRT" />
+          </Link>
+          <Link href={"/dashboard/decals"}>
+            <NavItem icon={<FileText size={20} />} label="Obleas" />
+          </Link>
+          <Link href={"/dashboard/statistics"}>
+            <NavItem icon={<ChartColumn size={20} />} label="Estadísticas" />
+          </Link>
+          <Link href={"/dashboard/users"}>
+            <NavItem icon={<Users size={20} />} label="Usuarios" />
+          </Link>
         </nav>
 
         {/* Talleres */}
@@ -44,9 +61,13 @@ export default function Sidebar() {
 
       {/* Fijo al fondo */}
       <div className="p-6 border-t border-gray-200">
-        <div className="space-y-7">
-          <NavItem icon={<Settings size={20} />} label="Configuración" />
-          <NavItem icon={<HelpCircle size={20} />} label="Centro de ayuda" />
+        <div className="flex flex-col space-y-7">
+          <Link href={"/dashboard/settings"}>
+            <NavItem icon={<Settings size={20} />} label="Configuración" />
+          </Link>
+          <Link href={"/dashboard/help"}>
+            <NavItem icon={<HelpCircle size={20} />} label="Ayuda" />
+          </Link>
         </div>
       </div>
     </aside>
