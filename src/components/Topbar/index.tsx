@@ -7,11 +7,12 @@ export default function Topbar() {
     <header className="h-16 px-6 flex items-center justify-between bg-white border-b border-gray-200">
       {/* Logo a la izquierda */}
       <div className="flex items-center gap-2">
+        <h1 className="hidden max-md:block text-lg font-semibold text-gray-800">*</h1>
         <Link href="/dashboard">
           <Image src="/images/logo.png" alt="Logo" width={150} height={50} className="p-2"/>
         </Link>
       </div>
-
+      
       {/* Usuario a la derecha */}
       <div className="flex items-center gap-2">
         <User className="text-gray-500" size={24} />

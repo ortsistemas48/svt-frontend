@@ -8,15 +8,15 @@ import NavItem from "@/components/NavItem";
 import SideBarItem from "@/components/SideBarMenu";
 export default function Sidebar() {
   return (
-    <aside className="w-72 max-[1400px]:w-60 h-[calc(100vh-60px)] bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-72 max-[1400px]:w-64 h-[calc(100vh-60px)] bg-white border-r border-gray-200 flex flex-col max-md:hidden">
       {/* Contenedor scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pt-6">
+      <div className="flex-1 overflow-y-auto px-6 pt-6 max-[1400px]:px-3 max-[1400px]:pt-4">
         {/* Título del menú */}
-        <p className="text-xs text-[#00000080] tracking-wide mb-6">Menú</p>
+        <p className="text-xs text-[#00000080] tracking-wide mb-6 max-[1400px]:mb-4">Menú</p>
 
         {/* Menú */}
         <SideBarItem />
-
+        
         {/* Talleres */}
         <div className="mt-5 mb-8 pt-5 border-t border-gray-200">
           <p className="text-xs text-[#00000080] tracking-wide mb-6">Talleres</p>

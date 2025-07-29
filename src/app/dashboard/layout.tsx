@@ -5,7 +5,7 @@ import Topbar from "@/components/Topbar";
 import { ReactNode } from "react";
 
 export const metadata = {
-  title: "Dashboard - Track Detail",
+  title: "Panel de control - Track Detail",
   description: "Accedé a tu cuenta de Track Detail para continuar",
 };
 

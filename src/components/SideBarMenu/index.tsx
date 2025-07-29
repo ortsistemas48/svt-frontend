@@ -18,11 +18,13 @@ export default function SideBarMenu(){
     const pathname = usePathname();
     const getLinkClass = (href: string) => {
       return pathname === href
-        ? "bg-[#0040B826] rounded-xl text-white"
+        ? "bg-[#0040B826] rounded-lg text-white"
         : "";
     }
+    
+
     const links = [
-        { href: "/dashboard/home", icon: <Home size={20} />, label: "Inicio" },
+        { href: "/dashboard/", icon: <Home size={20} />, label: "Inicio" },
         { href: "/dashboard/applications", icon: <ClipboardList size={20} />, label: "Inspección" },
         { href: "/dashboard/inspections-queue", icon: <Clock size={20} />, label: "Cola de inspecciones" },
         { href: "/dashboard/inspections-history", icon: <History size={20} />, label: "Historial de inspecciones" },
@@ -32,12 +34,11 @@ export default function SideBarMenu(){
         { href: "/dashboard/statistics", icon: <ChartColumn size={20} />, label: "Estadísticas" },
         { href: "/dashboard/users", icon: <Users size={20} />, label: "Usuarios" },
     ];
-    console.log(getLinkClass("/dashboard/applications"));
     return (
         <nav className="flex flex-col space-y-2 ">
             {links.map((link) => (
                 
-                <Link key={link.href} href={link.href} className={`p-3 ${getLinkClass(link.href)}`} >
+                <Link key={link.href} href={link.href} className={`px-2 py-3 ${getLinkClass(link.href)}`} >
                     <NavItem icon={link.icon} label={link.label}/>
                 </Link>
             ))}     
