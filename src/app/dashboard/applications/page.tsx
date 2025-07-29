@@ -7,28 +7,27 @@ export default function InspectionsPage() {
 
     return (
         <section className="w-full">
-            <article className="flex items-center gap-1 mb-6">
+            <article className="flex items-center text-lg gap-1 mb-6">
                 <span>Home</span>
-                <ChevronRight></ChevronRight>
+                <ChevronRight size={20}></ChevronRight>
                 <span className="text-[#0040B8]">Inspecciones</span>
-
             </article>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-4">
                 {/* Datos del titular */}
                 <DriverForm />      
                 {/* Datos del conductor */}
                 <OwnerForm />   
             </div>
-            <div className="flex gap-x-3 items-center px-4 mt-10">
-                <div className="w-20 h-10 border-2 border-[#0040B8] bg-white flex items-center justify-center py-4 px-10">
+
+            <div className="flex gap-x-3 justify-center px-4 pt-8 pb-10">
+                <button className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center py-2.5 px-7">
                     Anterior
-                </div>
-                <div className="w-20 h-10 border-2 text-white bg-[#0040B8] flex items-center justify-center py-4 px-12">
+                </button>
+                <button className="hover:bg-[#fff] hover:text-[#0040B8] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-7">
                     Continuar
-                </div>
+                </button>
             </div>
-
-
         </section>
     )
 }

@@ -18,7 +18,7 @@ export default function Sidebar() {
         <SideBarItem />
 
         {/* Talleres */}
-        <div className="mt-8 mb-8 pt-8 border-t border-gray-200">
+        <div className="mt-5 mb-8 pt-5 border-t border-gray-200">
           <p className="text-xs text-[#00000080] tracking-wide mb-6">Talleres</p>
           <div className="space-y-4">
             <TallerItem name="Taller Duarte Quiros" />
