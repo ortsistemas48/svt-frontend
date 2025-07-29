@@ -32,11 +32,11 @@ export default function SideBarMenu(){
     ];
     console.log(getLinkClass("/dashboard/applications"));
     return (
-        <nav className="flex flex-col space-y-3 ">
+        <nav className="flex flex-col space-y-2 ">
             {links.map((link) => (
                 
                 <Link key={link.href} href={link.href} className={`p-3 ${getLinkClass(link.href)}`} >
-                    <NavItem icon={link.icon} label={link.label} />
+                    <NavItem icon={link.icon} label={link.label}/>
                 </Link>
             ))}     
         </nav>

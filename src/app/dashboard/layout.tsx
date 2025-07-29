@@ -20,7 +20,7 @@ export default function DashBoardLayout({ children }: { children: ReactNode }) {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar/>
         <main className="flex-1 p-4 overflow-auto">
-          <div className="bg-white h-full rounded-[10px] shadow p-4 pt-8 pl-8">
+          <div className="bg-white h-[135vh] rounded-[10px] shadow p-4 pt-8 pl-8 pb-0">
             {children}
           </div>
         </main>
