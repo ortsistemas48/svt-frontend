@@ -7,10 +7,13 @@ export default function InspectionsPage() {
 
     return (
         <section className="w-full">
-            <article className="flex items-center text-lg gap-1 mb-6">
+            <article className="flex items-center justify-between text-lg mb-6">
+                <div className="flex items-center gap-1">
                 <span>Home</span>
-                <ChevronRight size={20}></ChevronRight>
+                <ChevronRight size={20} />
                 <span className="text-[#0040B8]">Inspecciones</span>
+                </div>
+                <span className="text-md mr-4 text-[#000000]">Paso 1/3</span>
             </article>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-4">
