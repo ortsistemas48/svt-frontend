@@ -1,6 +1,6 @@
 
 
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, ChevronLeft  } from "lucide-react"
 import DriverForm from "@/components/DriverForm";
 import OwnerForm from "@/components/OwnerForm";
 export default function InspectionsPage() {
@@ -16,18 +16,27 @@ export default function InspectionsPage() {
                 <span className="text-md mr-4 text-[#000000]">Paso 1/3</span>
             </article>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-4">
+            <div className="grid grid-cols-[1fr_1px_1fr] gap-8 mb-4 items-start">
                 {/* Datos del titular */}
-                <DriverForm />      
+                <div>
+                    <DriverForm />
+                </div>
+
+                {/* Línea divisoria */}
+                <div className="bg-[#dedede] h-full w-px" />
+
                 {/* Datos del conductor */}
-                <OwnerForm />   
+                <div>
+                    <OwnerForm />
+                </div>
             </div>
 
             <div className="flex gap-x-3 justify-center px-4 pt-8 pb-10">
-                <button className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center py-2.5 px-7">
-                    Anterior
+                <button className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-7">
+                <ChevronLeft size={18} />
+                Volver
                 </button>
-                <button className="hover:bg-[#fff] hover:text-[#0040B8] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-7">
+                <button className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-7">
                     Continuar
                 </button>
             </div>
