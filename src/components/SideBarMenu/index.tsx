@@ -35,7 +35,7 @@ export default function SideBarMenu(){
         <nav className="flex flex-col space-y-3 ">
             {links.map((link) => (
                 
-                <Link key={link.href} href={link.href} className={`p-4 ${getLinkClass(link.href)}`} >
+                <Link key={link.href} href={link.href} className={`p-3 ${getLinkClass(link.href)}`} >
                     <NavItem icon={link.icon} label={link.label} />
                 </Link>
             ))}     
