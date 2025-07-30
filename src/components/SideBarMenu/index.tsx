@@ -25,7 +25,7 @@ export default function SideBarMenu(){
 
     const links = [
         { href: "/dashboard/", icon: <Home size={20} />, label: "Inicio" },
-        { href: "/dashboard/applications", icon: <ClipboardList size={20} />, label: "Inspección" },
+        { href: "/dashboard/applications", icon: <ClipboardList size={20} />, label: "Trámites" },
         { href: "/dashboard/inspections-queue", icon: <Clock size={20} />, label: "Cola de inspecciones" },
         { href: "/dashboard/inspections-history", icon: <History size={20} />, label: "Historial de inspecciones" },
         { href: "/dashboard/domains-history", icon: <FileClock size={20} />, label: "Historial de dominios" },

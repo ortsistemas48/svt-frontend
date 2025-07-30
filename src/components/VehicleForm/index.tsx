@@ -3,17 +3,17 @@
 import FormField from "@/components/FormField";
 import React from "react";
 
+
 export default function VehicleForm() {
   return (
     <div className="space-y-6 mb-10">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">Datos del vehículo</h2>
-        <p className="text-sm text-gray-500">Ingrese los datos del vehículo</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-1">Datos del vehículo</h2>
       </div>
 
       <div className="">
         {/* Columna izquierda */}
-        <div className="grid grid-cols-2 gap-y-8 gap-x-10  ">
+        <div className="grid max-sm:grid-cols-1 grid-cols-2 gap-y-8 gap-x-10  ">
           <FormField label="Dominio" placeholder="Ej: AB123AB" />
           <FormField label= "Marca" placeholder="Ej: Fiat" />
 

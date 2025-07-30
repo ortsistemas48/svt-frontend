@@ -1,6 +1,6 @@
 'use client';
 import DriverForm from "@/components/DriverForm";
-import OwnerForm from "@/components/OwnerForm";
+import OwnerForm from "@/components/OwnerForm"
 import CheckBox from "../CheckBox";
 import { useState } from "react";
 export default function PersonForm() {
@@ -16,7 +16,7 @@ export default function PersonForm() {
         </div>
         <div className={`grid ${!isSamePerson ? "grid-cols-[1fr_1px_1fr]" : "grid-cols-1"} max-xl:grid-cols-1 gap-8 mb-4 items-start `}>
             <OwnerForm />
-            {!isSamePerson && <div className="bg-[#dedede] h-full w-px max-xl:hidden" />}
+            {!isSamePerson && <div className="bg-[#dedede] h-full w-px max-xl:w-full max-xl:h-px" />}
             {!isSamePerson && <DriverForm />}
         </div>
     </div>

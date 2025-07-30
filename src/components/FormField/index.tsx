@@ -17,7 +17,7 @@ export default function FormField({
 
   return (
     <div className="flex flex-col justify-center w-full">
-      <label htmlFor={id} className="block text-sm font-medium text-[#000000] mb-1">
+      <label htmlFor={id} className="block text-base font-semibold text-[#000000] mb-1">
         {label}
       </label>
       {options ? (

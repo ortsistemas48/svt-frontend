@@ -5,7 +5,8 @@ export default function DropzoneComponent({
 }) {
 
   return (
-    <div className="mb-4">
+    <div className="w-3/4 mx-auto">
+      <h3 className="text-xl font-semibold text-center my-5">Subí tus documentos</h3>
       <div
         className="border-dashed border-2 border-[#D3D3D3] rounded-xl text-center mt-1"
       >

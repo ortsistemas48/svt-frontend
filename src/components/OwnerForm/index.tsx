@@ -1,5 +1,7 @@
 import Dropzone from "@/components/Dropzone";
 import FormField from "@/components/FormField";
+
+
 const formData = [
     { label: "Nombre completo", placeholder: "Ej: Ángel Isaías Vaquero" },
     { label: "DNI", placeholder: "Ej: 39.959.950" },
@@ -24,11 +26,11 @@ const formData = [
     },
 ]
 import FormTemplate from "../FormTemplate";
-export default function DriverForm() {
+export default function OwnerForm() {
     return (
         <FormTemplate
             formData={formData}
-            title="Datos del Conductor"
-        />
+            title="Datos del Propietario"
+            />
     )
 }
