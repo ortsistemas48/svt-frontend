@@ -14,7 +14,7 @@ export default function PersonForm() {
                 onChange={setIsSamePerson} 
             />
         </div>
-        <div className={`grid ${!isSamePerson ? "grid-cols-[1fr_1px_1fr]" : "px-96 grid-cols-1"} max-xl:grid-cols-1 gap-8 mb-4 items-start `}>
+        <div className={`grid ${!isSamePerson ? "grid-cols-[1fr_1px_1fr]" : "px-10 grid-cols-1"} max-xl:grid-cols-1 gap-8 mb-4 items-start `}>
             <OwnerForm />
             {!isSamePerson && <div className="bg-[#dedede] h-full w-px max-xl:w-full max-xl:h-px" />}
             {!isSamePerson && <DriverForm />}
