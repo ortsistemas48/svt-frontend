@@ -6,6 +6,48 @@ import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [emailOrDni, setEmailOrDni] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    // Validación simple antes de enviar
+    if (!emailOrDni.trim() || !password.trim()) {
+      setError("Por favor completá todos los campos");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: emailOrDni,
+          password,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Error al iniciar sesión");
+        return;
+      }
+
+      const data = await res.json();
+      console.log("✅ Login exitoso", data);
+
+      window.location.href = "/dashboard";
+    } catch (err) {
+      console.error("❌ Error de red:", err);
+      setError("Ocurrió un error. Intentá de nuevo.");
+    }
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-white font-sans">
@@ -21,11 +63,13 @@ export default function LoginForm() {
 
           <h1 className="text-lg text-black font-medium">¡Bienvenido nuevamente!</h1>
 
-          <form className="">
+          <form onSubmit={handleSubmit}>
             <input
-              type="email"
-              placeholder="Correo electrónico o usuario"
-              className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[10px] px-5 py-4  focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+              type="text"
+              placeholder="Correo electrónico o DNI"
+              className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[10px] px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+              value={emailOrDni}
+              onChange={(e) => setEmailOrDni(e.target.value)}
             />
 
             <div className="relative">
@@ -33,19 +77,23 @@ export default function LoginForm() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Contraseña"
                 className="w-full border border-[#DEDEDE] rounded-[10px] px-5 py-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500"
               >
-                {showPassword ? <EyeOff stroke='#0040B8' size={20} /> : <Eye stroke='#0040B8' size={20} />}
+                {showPassword ? <EyeOff stroke="#0040B8" size={20} /> : <Eye stroke="#0040B8" size={20} />}
               </button>
             </div>
 
+            {error && <p className="text-sm text-red-600 mt-5">{error}</p>}
+
             <button
               type="submit"
-              className="mt-8 w-full bg-[#0040B8] text-white text-lg font-semibold rounded-[4px] py-3.5 hover:bg-[#0040B8] transition"
+              className="mt-5 w-full bg-[#0040B8] text-white text-lg font-semibold rounded-[4px] py-3.5 hover:bg-[#0038a6] transition"
             >
               Ingresar
             </button>
@@ -57,5 +105,5 @@ export default function LoginForm() {
         </a>
       </div>
     </main>
-  )
+  );
 }
