@@ -19,7 +19,7 @@ export default function SelectWorkshopPage() {
 
 
                 <article className="mt-4 flex justify-between items-center bg-[#0040B8] rounded-lg p-4 cursor-pointer">
-                    <h3 className="mx-auto text-white">Añadir nuevo taller</h3>
+                    <h3 className="mx-auto text-white">Inscribir mi taller</h3>
                 </article>
 
                 <article className="flex mt-4 mb-2 justify-center items-center hover:underline">
