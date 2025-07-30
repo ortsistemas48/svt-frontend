@@ -32,6 +32,6 @@ export default function OwnerForm() {
             formData={formData}
             title="Datos del Titular"
             description='Ingrese los datos del titular de auto'
-            />
+        />
     )
 }
