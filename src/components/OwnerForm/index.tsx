@@ -30,7 +30,8 @@ export default function OwnerForm() {
     return (
         <FormTemplate
             formData={formData}
-            title="Datos del Propietario"
+            title="Datos del Titular"
+            description='Ingrese los datos del titular de auto'
             />
     )
 }

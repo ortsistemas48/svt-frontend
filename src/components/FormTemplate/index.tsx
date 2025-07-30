@@ -16,12 +16,14 @@ export interface FormFieldData {
 export interface FormTemplateProps {
     formData: FormFieldData[];
     title: string;
+    description: string;
 }
-export default function FormTemplate({ formData, title }: FormTemplateProps) {
+export default function FormTemplate({ formData, title, description }: FormTemplateProps) {
     return (
         <div className="space-y-4">
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">{title}</h2>
+                <h2 className="text-xl font-regular text-[#000000] mb-1">{title}</h2>
+                <p className="text-md font-regular text-[#00000080] mb-10">{description}</p>
             </div>
 
 

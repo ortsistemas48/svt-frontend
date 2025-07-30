@@ -29,6 +29,7 @@ export default function DriverForm() {
         <FormTemplate
             formData={formData}
             title="Datos del Conductor"
+            description='Ingrese los datos del titular de auto'
         />
     )
 }
