@@ -9,13 +9,14 @@ export default function VehicleForm() {
     <div className="space-y-6 mb-10">
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Datos del vehículo</h2>
+        <p className="text-sm text-gray-500">Ingrese los datos del vehículo</p>
       </div>
 
-      <div className="">
+      <div className="grid grid-cols-[1fr_1px_1fr] max-xl:grid-cols-1 gap-10 ">
         {/* Columna izquierda */}
-        <div className="grid max-sm:grid-cols-1 grid-cols-2 gap-y-8 gap-x-10  ">
+        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8">  
           <FormField label="Dominio" placeholder="Ej: AB123AB" />
-          <FormField label= "Marca" placeholder="Ej: Fiat" />
+          <FormField label="Marca" placeholder="Ej: Fiat" />
 
           <FormField label="Modelo" placeholder="Ej: Cronos" />
           <FormField label="Año" placeholder="Ej: 2025" />
@@ -54,6 +55,13 @@ export default function VehicleForm() {
 
           <FormField label="Número de motor" placeholder="Ej: B91099432213123" />
           <FormField label="Marca de motor" placeholder="Ej: Toyota" />
+        </div>
+
+        {/* Separador */}
+        <div className="bg-[#dedede] w-px h-full max-xl:hidden" />
+
+        {/* Columna derecha */}
+        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8">
           <FormField label="Número de chasis" placeholder="Ej: 1231415251251451" />
           <FormField label="Marca de chasis" placeholder="Ej: MARCA" />
 
@@ -70,7 +78,7 @@ export default function VehicleForm() {
               { value: "oblea-2", label: "Oblea 2" },
             ]}
           />
-          <div /> 
+          <div /> {/* Empty to maintain layout */}
         </div>
       </div>
     </div>
