@@ -6,15 +6,15 @@ import React from "react";
 
 export default function VehicleForm() {
   return (
-    <div className="space-y-6 mb-10">
+    <div className="space-y-6 mb-10 px-4 mt-12">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Datos del vehículo</h2>
-        <p className="text-sm text-gray-500">Ingrese los datos del vehículo</p>
+        <h2 className="text-xl font-regular text-[#000000] mb-1">Datos del vehículo</h2>
+        <p className="text-md font-regular text-[#00000080] mb-10">Ingrese los datos del vehículo</p>
       </div>
 
       <div className="grid grid-cols-[1fr_1px_1fr] max-xl:grid-cols-1 gap-10     ">
         {/* Columna izquierda */}
-        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8">  
+        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8 grid-rows-[repeat(5,minmax(0,1fr))]">
           <FormField label="Dominio" placeholder="Ej: AB123AB" />
           <FormField label="Marca" placeholder="Ej: Fiat" />
 
@@ -53,32 +53,35 @@ export default function VehicleForm() {
             ]}
           />
 
+          <FormField label="Marca de motor" placeholder="Ej: Toyota" />
+          <FormField label="Número de motor" placeholder="Ej: B91099432213123" />
+
         </div>
 
         {/* Separador */}
         <div className="bg-[#dedede] w-px h-full max-xl:hidden" />
 
         {/* Columna derecha */}
-        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8">
+        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8 grid-rows-[repeat(5,minmax(0,1fr))]">
 
           <FormField label="Número de chasis" placeholder="Ej: 1231415251251451" />
           <FormField label="Marca de chasis" placeholder="Ej: MARCA" />
 
           <FormField label="Número de cédula verde" placeholder="Ej: 122144351" />
+          <FormField label="Vencimiento de la cédula" type="date" placeholder="dd/mm/aa" />
+
 
           <FormField label="Número de licencia de conducir" placeholder="Ej: 14214545" />
-          <FormField label="Marca de motor" placeholder="Ej: Toyota" />
-
-          <FormField label="Número de motor" placeholder="Ej: B91099432213123" />
-          <FormField label="Vencimiento de la cédula" type="date" placeholder="dd/mm/aa" />
           <FormField label="Vencimiento de la licencia" type="date" placeholder="dd/mm/aa" />
-          {/* <FormField
+
+          <FormField
             label="Seleccione la oblea a vincular"
             options={[
               { value: "oblea-1", label: "Oblea 1" },
               { value: "oblea-2", label: "Oblea 2" },
             ]}
-          /> */}
+            className="col-span-2"
+          />
           <div />
         </div>
       </div>

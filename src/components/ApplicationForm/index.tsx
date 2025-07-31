@@ -33,7 +33,7 @@ export default function ApplicationForm() {
     
     return (
         <>
-            <article className="flex items-center justify-between text-lg mb-6">
+            <article className="flex items-center justify-between text-lg mb-6 px-4">
                 <div className="flex items-center gap-1">
                     <span>Inicio</span>
                     <ChevronRight size={20} />

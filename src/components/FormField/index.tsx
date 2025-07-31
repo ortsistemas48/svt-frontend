@@ -1,10 +1,9 @@
-
-// components/FormField.tsx
 type FormFieldProps = {
   label: string;
   type?: string;
   placeholder?: string;
-  options?: { value: string; label: string }[]; // para selects
+  options?: { value: string; label: string }[];
+  className?: string;
 };
 
 export default function FormField({
@@ -12,11 +11,12 @@ export default function FormField({
   type = "text",
   placeholder = "",
   options,
+  className = "", 
 }: FormFieldProps) {
   const id = label.toLowerCase().replace(/\s+/g, "-");
 
   return (
-    <div className="flex flex-col justify-center w-full">
+    <div className={`flex flex-col justify-center w-full ${className}`}>
       <label htmlFor={id} className="block text-base font-regular text-[#000000] mb-1">
         {label}
       </label>
