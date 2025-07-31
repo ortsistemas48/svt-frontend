@@ -3,20 +3,23 @@ import { useState } from "react"
 import PersonForm from "@/components/PersonForm";
 import VehicleForm from "@/components/VehicleForm";
 import ConfirmationForm from "@/components/ConfirmationForm";
+import SelectApplicationType from "../SelectApplicationType";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 export default function ApplicationForm() {
-    const [step, setStep] = useState(1)
+    const [step, setStep] = useState(0)
 
     const handleNext = () => {
         if (step < 3) setStep(step + 1);
     };
 
     const handlePrev = () => {
-        if (step > 1) setStep(step - 1);
+        if (step > 0) setStep(step - 1);
     };
 
     const renderStepContent = () => {
         switch (step) {
+            case 0:
+                return <SelectApplicationType />;
             case 1:
                 return <PersonForm />;
             case 2:
@@ -32,11 +35,13 @@ export default function ApplicationForm() {
         <>
             <article className="flex items-center justify-between text-lg mb-6">
                 <div className="flex items-center gap-1">
-                    <span>Home</span>
+                    <span>Inicio</span>
                     <ChevronRight size={20} />
                     <span className="text-[#0040B8]">Trámite</span>
                 </div>
-                <span className="text-md mr-4 text-black">Paso {step}/3</span>
+                {
+                    step === 0 || <span className="text-md mr-4 text-black">Paso {step}/3</span>
+                }
             </article>
 
             <div>
