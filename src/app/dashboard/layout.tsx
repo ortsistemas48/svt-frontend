@@ -1,16 +1,15 @@
-
+'use client'
 // components/Layout.tsx
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 import { ReactNode } from "react";
-
-export const metadata = {
-  title: "Panel de control - Track Detail",
-  description: "Accedé a tu cuenta de Track Detail para continuar",
-};
-
+import { useUser } from "@/context/UserContext";
 
 export default function DashBoardLayout({ children }: { children: ReactNode }) {
+  const user = useUser();
+  if (!user) {
+    window.location.href = "/"; // Redirigir si no hay usuario
+  }
   return (
     <div className="h-screen flex flex-col bg-[#f5f5f5]">
       {/* Topbar ocupa todo el ancho */}

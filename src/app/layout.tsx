@@ -44,7 +44,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const user = await getUserFromCookies();
-
+  
   return (
     <html lang="es">
       <body className={poppins.variable}>
