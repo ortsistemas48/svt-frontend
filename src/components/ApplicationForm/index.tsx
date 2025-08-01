@@ -6,20 +6,19 @@ import ConfirmationForm from "@/components/ConfirmationForm";
 import SelectApplicationType from "../SelectApplicationType";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 export default function ApplicationForm() {
-    const [step, setStep] = useState(0)
+    const [step, setStep] = useState(1)
 
     const handleNext = () => {
         if (step < 3) setStep(step + 1);
     };
 
     const handlePrev = () => {
-        if (step > 0) setStep(step - 1);
+        if (step > 1) setStep(step - 1);
     };
 
     const renderStepContent = () => {
         switch (step) {
-            case 0:
-                return <SelectApplicationType />;
+            
             case 1:
                 return <PersonForm />;
             case 2:

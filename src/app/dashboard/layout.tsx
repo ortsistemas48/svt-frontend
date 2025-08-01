@@ -1,6 +1,6 @@
 // components/Layout.tsx
 import { ReactNode } from "react";
-import ClientLayout from "./ClientLayout"; // importás el nuevo wrapper
+import ClientLayout from "@/layouts/DashboardClientLayout"; // importás el nuevo wrapper
 
 export const metadata = {
   title: "Dashboard - RTO",

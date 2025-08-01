@@ -6,12 +6,13 @@ import { User } from "lucide-react";
 import HamburgerMenu from "../HamburgerMenu";
 import { useUser } from "@/context/UserContext";
 import { useEffect, useRef, useState } from "react";
-
+import { useRouter } from "next/navigation";
 export default function Topbar() {
   const user = useUser();
   const [openMenu, setOpenMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
+  const router = useRouter();
+   // Pre-fetch the dashboard page for faster navigation
   const logOutFunction = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
@@ -24,7 +25,9 @@ export default function Topbar() {
 
       if (!res.ok) return;
 
-      window.location.href = "/";
+      // window.location.href = "/";
+      router.push("/");
+      router.refresh(); // Refrescar la página para actualizar el estado del usuario
     } catch (err) {
       console.error("❌ Error de red:", err);
     }

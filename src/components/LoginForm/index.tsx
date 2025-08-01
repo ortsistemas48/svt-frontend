@@ -3,17 +3,16 @@
 import Image from "next/image";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailOrDni, setEmailOrDni] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
+  const router = useRouter();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     // Validación simple antes de enviar
     if (!emailOrDni.trim() || !password.trim()) {
       setError("Por favor completá todos los campos");
@@ -41,8 +40,10 @@ export default function LoginForm() {
 
       const data = await res.json();
       console.log("✅ Login exitoso", data);
-
-      window.location.href = "/dashboard";
+      
+      // window.location.href = "/dashboard"; // Redirigir al dashboard  
+      router.push("/dashboard");
+      router.refresh(); // Redirigir al dashboard
     } catch (err) {
       console.error("❌ Error de red:", err);
       setError("Ocurrió un error. Intentá de nuevo.");

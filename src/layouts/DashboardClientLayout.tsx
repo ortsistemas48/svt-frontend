@@ -4,14 +4,14 @@ import { useUser } from "@/context/UserContext";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
-
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+import { useRouter } from "next/navigation";
+export default function DashboardClientLayout({ children }: { children: React.ReactNode }) {
   const user = useUser();
   const [isChecking, setIsChecking] = useState(true);
-
+  const router = useRouter();
   useEffect(() => {
     if (!user) {
-      window.location.href = "/";
+      router.push("/");
     } else {
       setIsChecking(false);
     }

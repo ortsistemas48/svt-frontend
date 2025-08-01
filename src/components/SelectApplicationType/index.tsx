@@ -1,11 +1,15 @@
+'use client';
 import { Plus, RefreshCw, CircleFadingPlus} from "lucide-react";
-
 const options = [
     {
         key: "new",
         icon: <CircleFadingPlus size={42} strokeWidth={2.5} className="text-[#0040B8]" />,
         title: "Nueva Revisión",
-        description: "Iniciar una nueva revisión técnica desde cero"
+        description: "Iniciar una nueva revisión técnica desde cero",
+        handleOnClick: () => {
+            window.location.href = "/dashboard/applications/create-application";
+        }
+
     },
     {
         key: "continue",
@@ -31,6 +35,7 @@ export default function SelectApplicationType() {
                     return (
                         <button
                             key={option.key}
+                            onClick={option?.handleOnClick}
                             className="flex flex-col items-center justify-center border rounded-lg p-6 transition-all duration-200 focus:outline-noneborder-gray-300 hover:border-[#0040B8] hover:shadow-lg"
                         >
                             <div className="mb-3">{option.icon}</div>

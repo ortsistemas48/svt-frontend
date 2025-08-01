@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Poppins } from "next/font/google";
 import { cookies } from "next/headers";
-import ClientLayout from "./ClientLayout"; // importás el nuevo wrapper
+import ClientLayout from "@/layouts/ClientLayout"; // importás el nuevo wrapper
 
 const poppins = Poppins({
   subsets: ["latin"],
