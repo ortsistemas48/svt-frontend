@@ -31,7 +31,19 @@ export type UserType = {
   password: string;
   avatar: string;
 };
-
+export type PersonType = {
+  id?: number;
+  first_name?: string;
+  last_name?: string;
+  dni?: string;
+  phone_number?: string;
+  email?: string;
+  province?: string;
+  city?: string;
+  is_owner?: boolean;
+  street?: string;
+  street_number?: string;
+};
 type ApplicationContextType = {
   date: string;
   owner: PersonType;
@@ -46,19 +58,6 @@ type ApplicationContextType = {
   setUserId: React.Dispatch<React.SetStateAction<UserType>>;
 };
 
-export type PersonType = {
-  id: number;
-  first_name: string;
-  last_name: string;
-  dni: string;
-  phone_number: string;
-  email: string;
-  province: string;
-  city: string;
-  is_owner: boolean;
-  street: string;
-  street_number: string;
-};
 
 export type UserType = {
   id: string; // UUID

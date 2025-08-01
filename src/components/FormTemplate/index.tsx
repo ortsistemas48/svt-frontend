@@ -1,5 +1,6 @@
 import Dropzone from "../Dropzone"
-import FormField from "../FormField"
+import PersonFormField from "../PersonFormField";
+import FormField from "../PersonFormField"
 
 export interface FormFieldOption {
     value: string;
@@ -11,14 +12,16 @@ export interface FormFieldData {
     placeholder?: string;
     type?: string;
     options?: FormFieldOption[];
+    name?: any; // Optional, used for form submission
 }
 
 export interface FormTemplateProps {
     formData: FormFieldData[];
     title: string;
     description: string;
+    isOwner?: boolean; // Optional prop to indicate if the form is for owner data
 }
-export default function FormTemplate({ formData, title, description }: FormTemplateProps) {
+export default function FormTemplate({ formData, title, description, isOwner }: FormTemplateProps) {
     return (
         <div className="space-y-4">
             <div>
@@ -31,18 +34,22 @@ export default function FormTemplate({ formData, title, description }: FormTempl
 
                 {formData.map((field, index) =>
                     field.options ? (
-                        <FormField
+                        <PersonFormField
                             key={index}
                             label={field.label}
                             type="select"
                             options={field.options}
+                            name={field.name} // Use the name for form submission
+                            isOwner={isOwner} // Pass isOwner prop if needed
                         />
                     ) : (
-                        <FormField
+                        <PersonFormField
                             key={index}
                             label={field.label}
                             placeholder={field.placeholder ?? ""}
                             type={field.type ?? "text"}
+                            name={field.name} // Use the name for form submission
+                            isOwner={isOwner} // Pass isOwner prop if needed
                         />
                     )
                 )}
