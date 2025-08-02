@@ -1,6 +1,5 @@
-'use client'
+'use client';
 
-import { useApplication } from "@/context/ApplicationContext";
 import React from "react";
 
 type FormFieldProps = {
@@ -9,8 +8,10 @@ type FormFieldProps = {
   placeholder?: string;
   options?: { value: string; label: string }[];
   className?: string;
-  name?: any; // Optional, used for form submission
-  isOwner?: boolean; // Optional prop to indicate if the field is for owner data
+  name: string;
+  isOwner?: boolean;
+  value: string;
+  onChange: (value: string) => void;
 };
 
 export default function PersonFormField({
@@ -20,35 +21,25 @@ export default function PersonFormField({
   options,
   className = "",
   name,
-  isOwner
+  isOwner,
+  value,
+  onChange
 }: FormFieldProps) {
+  const id = isOwner ? `owner-${label}` : `driver-${label}`;
 
-  const id = isOwner ? `owner-${label}` : `driver-${label}`; // Unique ID for the field based on context
-  const { setOwner, setDriver } = useApplication();
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    // Handle change logic here, e.g., update form state
-    if (isOwner) {
-      setOwner((prev) => ({
-        ...prev,
-        [name]: event.target.value
-      }));
-    } else {
-      setDriver((prev) => ({
-        ...prev,
-        [name]: event.target.value
-      }));
-    }
-  }
   return (
     <div className={`flex flex-col justify-center w-full ${className}`}>
       <label htmlFor={id} className="block text-base font-regular text-[#000000] mb-1">
         {label}
       </label>
+
       {options ? (
         <select
           id={id}
+          name={name}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           className="w-full px-3 py-3 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-          onChange={handleChange}
         >
           <option value="">Seleccionar {label.toLowerCase()}</option>
           {options.map((opt) => (
@@ -60,9 +51,11 @@ export default function PersonFormField({
       ) : (
         <input
           id={id}
+          name={name}
           type={type}
           placeholder={placeholder}
-          onChange={handleChange}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           className="w-full px-3 py-3 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
         />
       )}

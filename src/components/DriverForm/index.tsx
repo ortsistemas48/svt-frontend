@@ -1,5 +1,4 @@
-import Dropzone from "@/components/Dropzone";
-import FormField from "@/components/PersonFormField";
+import FormTemplate from "../FormTemplate";
 // type PersonType = {
 //   id?: number;
 //   first_name?: string;
@@ -11,7 +10,6 @@ import FormField from "@/components/PersonFormField";
 //   city?: string;
 //   is_owner?: boolean;
 //   street?: string;
-//   street_number?: string;
 // };
 const formData = [
     { label: "Nombre", placeholder: "Ej: Ángel", name: "first_name" },
@@ -19,8 +17,7 @@ const formData = [
     { label: "DNI", placeholder: "Ej: 39.959.950", name: "dni" },
     { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number" },
     { label: "Email", type: "email", placeholder: "Ej: ejemplo@gmail.com", name: "email" },
-    { label: "Calle", placeholder: "Ej: Avenida Colón", name: "street" },
-    { label: "Número", placeholder: "Ej: 1450", name: "street_number" },
+    { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street" },
     {
         label: "Provincia",
         options: [
@@ -39,14 +36,19 @@ const formData = [
         name: "city"
     },
 ]
-import FormTemplate from "../FormTemplate";
-export default function DriverForm() {
+type Props = {
+  data: any;
+  setData: (value: any) => void;
+};
+
+export default function DriverForm({ data, setData }: Props) {
     return (
         <FormTemplate
             formData={formData}
             title="Datos del Conductor"
             description='Ingrese los datos del titular de auto'
-            isOwner={false} // Indicating this form is for driver data
+            data={data}
+            setData={setData}
         />
     )
 }

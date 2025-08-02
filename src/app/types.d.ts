@@ -45,6 +45,7 @@ export type PersonType = {
   street_number?: string;
 };
 type ApplicationContextType = {
+  applicationId: string;
   date: string;
   owner: PersonType;
   driver?: PersonType;

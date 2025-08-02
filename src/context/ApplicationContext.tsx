@@ -1,6 +1,18 @@
 'use client';
-import { type CarType, type PersonType, type ApplicationContextType, type UserType } from "@/app/types";
-import { ReactNode, useContext, useState, createContext, useEffect } from "react";
+import {
+  type CarType,
+  type PersonType,
+  type ApplicationContextType,
+  type UserType,
+} from "@/app/types";
+import {
+  ReactNode,
+  useContext,
+  useState,
+  createContext,
+  useEffect,
+} from "react";
+
 // 1️⃣ Crear el contexto
 const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
 
@@ -13,10 +25,21 @@ export const useApplication = () => {
   return context;
 };
 
-// 3️⃣ Provider
-export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
-  const [date, setDate] = useState<string>('');
-  const [owner, setOwner] = useState<PersonType>({
+// 3️⃣ Props para el Provider
+interface ApplicationProviderProps {
+  applicationId: string;
+  initialData: any;
+  children: ReactNode;
+}
+
+// 4️⃣ Provider
+export const ApplicationProvider = ({
+  applicationId,
+  initialData,
+  children,
+}: ApplicationProviderProps) => {
+  const [date, setDate] = useState<string>(initialData?.date || '');
+  const [owner, setOwner] = useState<PersonType>(initialData?.owner || {
     id: 0,
     first_name: '',
     last_name: '',
@@ -29,7 +52,7 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
     street: '',
     street_number: '',
   });
-  const [driver, setDriver] = useState<PersonType | undefined>({
+  const [driver, setDriver] = useState<PersonType | undefined>(initialData?.driver || {
     id: 0,
     first_name: '',
     last_name: '',
@@ -41,9 +64,8 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
     is_owner: false,
     street: '',
     street_number: '',
-    
   });
-  const [car, setCar] = useState<CarType>({
+  const [car, setCar] = useState<CarType>(initialData?.car || {
     id: 0,
     license_plate: '',
     brand: '',
@@ -64,7 +86,7 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
     owner_id: 0,
     driver_id: 0,
   });
-  const [userId, setUserId] = useState<UserType>({
+  const [userId, setUserId] = useState<UserType>(initialData?.user || {
     id: "",
     created_at: "",
     first_name: "",
@@ -77,12 +99,13 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
-    // Aquí podrías agregar lógica para sincronizar el estado con un backend o localStorage si es necesario
-    console.log("Context updated:", { owner, driver, car, userId });
+    console.log("Contexto cargado:", { owner, driver, car, userId });
   }, [owner, driver, car, userId]);
+
   return (
     <ApplicationContext.Provider
       value={{
+        applicationId,
         date,
         owner,
         driver,
