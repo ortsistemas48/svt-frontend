@@ -1,28 +1,8 @@
 // app/Form.tsx
 
-import FormField from "@/components/PersonFormField";
+import FormField from "@/components/FormField";
 import React from "react";
-// export type CarType = {
-//   id: number;
-//   license_plate: string;
-//   brand: string;
-//   vehicle_type: string;
-//   usage_type: string;
-//   model: string;
-//   engine_number: string;
-//   engine_brand: string;
-//   chassis_number: string;
-//   chassis_brand: string;
-//   weight: number;
-//   fuel_type: string;
-//   green_card_number: string;
-//   green_card_start: string;
-//   license_number: string;
-//   license_expiration: string;
-//   manufacture_year: number;
-//   owner_id: number;
-//   driver_id: number;
-// };
+
 const formData1 = [
   { label: "Dominio", placeholder: "Ej: AB123AB", name: "license_plate" },
   { label: "Marca", placeholder: "Ej: Fiat", name: "brand" },
