@@ -65,9 +65,6 @@ export default function InspectionsTable() {
           <button className="border border-[#0040B8] text-[#0040B8] px-4 py-3 rounded-[4px] flex items-center gap-2">
             <RefreshCcw size={16} /> Actualizar
           </button>
-          <button className="bg-[#0040B8] text-white px-4 py-3 rounded-[4px] flex items-center gap-2">
-            <Plus size={16} /> Nuevo trámite
-          </button>
         </div>
       </div>
 
