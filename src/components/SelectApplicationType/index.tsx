@@ -48,7 +48,7 @@ export default function SelectApplicationType() {
   ];
 
   return (
-    <div className="space-y-4 my-10">
+    <div className="space-y-4 my-10 px-4">
       <div>
         <h3 className="text-lg font-medium text-gray-900">Seleccione el tipo de revisión</h3>
         <p className="text-sm text-gray-500">

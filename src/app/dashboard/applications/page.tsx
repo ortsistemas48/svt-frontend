@@ -1,7 +1,7 @@
 
-import ApplicationForm from "@/components/ApplicationForm"
 import SelectApplicationType from "@/components/SelectApplicationType"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import InspectionsTable from "@/components/InspectionsTable"
 
 export default function InspectionsPage() {
 
@@ -17,6 +17,9 @@ export default function InspectionsPage() {
 
             <div>
                 <SelectApplicationType />
+            </div>
+            <div className="mt-8">
+                <InspectionsTable />
             </div>
 
         </>
