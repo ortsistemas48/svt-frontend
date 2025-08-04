@@ -1,33 +1,82 @@
-import { ChevronLeft, MoveRight } from "lucide-react"
+"use client";
+
+import { useEffect, useState } from "react";
+import { ChevronLeft, MoveRight, Info } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 export default function SelectWorkshopPage() {
+  const [workshops, setWorkshops] = useState<any[]>([]);
+  const [isGarageOwner, setIsGarageOwner] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-    return (
-        <main className="min-h-screen flex flex-col items-center justify-center bg-white font-sans rounded-lg">
-            <section className="border-2 border-gray-200 p-3 rounded-xl min-w-[300px]">
-                <h1 className="mx-2 my-4 font-bold">Selecciona el taller al que quieres ingresar</h1>
-                <section className="flex flex-col gap-4 p-4 mt-4">
-                    <article className="flex justify-between items-center border-2 border-[#0040B8] rounded-lg p-4 cursor-pointer">
-                        <h3>Taller Duarte Quirós</h3>
-                        <MoveRight size={20} />
-                    </article>
-                    <article className="flex justify-between items-center border-2 border-[#0040B8] rounded-lg p-4 cursor-pointer">
-                        <h3>Taller Santa Ana</h3>
-                        <MoveRight size={20} />
-                    </article>
-                </section>
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+        method: "GET",
+        credentials: "include"
+      });
 
+      if (!res.ok) {
+        console.error("Error al obtener talleres");
+        return;
+      }
 
-                <article className="mt-4 flex justify-between items-center bg-[#0040B8] rounded-lg p-4 cursor-pointer">
-                    <h3 className="mx-auto text-white">Inscribir mi taller</h3>
-                </article>
+      const data = await res.json();
+      setWorkshops(data.workshops || []);
 
-                <article className="flex mt-4 mb-2 justify-center items-center hover:underline">
-                    <ChevronLeft size={18} />    
-                    <Link href="/" className="font-thin text-sm ">Volver hacia atras </Link>
-                    
-                </article>
-            </section>
-        </main>
-    )
+      const hasGarageOwner = (data.workshops || []).some(
+        (w: any) => w.user_type_id === 2
+      );
+      setIsGarageOwner(hasGarageOwner);
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  const handleSelect = (id: number) => {
+    router.push(`/dashboard/${id}`);
+  };
+
+  if (loading) {
+    return null; // o spinner
+  }
+
+  return (
+    <main className="min-h-screen flex items-center justify-center bg-white font-sans">
+      <section className="w-full max-w-md bg-white rounded-[10px] border border-[#DEDEDE] px-8 py-10 text-center flex flex-col justify-between">
+        <h1 className="mx-2 my-4 font-semibold">Seleccioná el taller a ingresar</h1>
+
+        <section className="flex flex-col gap-4 mt-4">
+          {workshops.length > 0 ? (
+            workshops.map((w) => (
+              <article
+                key={w.workshop_id}
+                className="flex justify-between items-center border border-[#CECECE] rounded-[4px] p-4 cursor-pointer"
+                onClick={() => handleSelect(w.workshop_id)}
+              >
+                <h3>{w.workshop_name}</h3>
+                <MoveRight size={20} />
+              </article>
+            ))
+          ) : (
+            <article className="flex justify-between items-center border border-[#CECECE] rounded-[4px] p-4 text-gray-600">
+              <div className="flex gap-2 items-center mx-auto">
+                <Info size={20} stroke="#888" />
+                <span>No tenés talleres asignados</span>
+              </div>
+            </article>
+          )}
+        </section>
+
+        {isGarageOwner && (
+          <article className="mt-10 flex justify-between items-center bg-[#0040B8] rounded-[4px] p-4 cursor-pointer">
+            <h3 className="mx-auto text-white">Inscribir mi taller</h3>
+          </article>
+        )}
+      </section>
+    </main>
+  );
 }

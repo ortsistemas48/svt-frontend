@@ -1,4 +1,5 @@
-// components/Sidebar.tsx
+"use client";
+
 import {
   Settings,
   HelpCircle
@@ -6,32 +7,53 @@ import {
 import Link from "next/link";
 import NavItem from "@/components/NavItem";
 import SideBarItem from "@/components/SideBarMenu";
+import { useUser } from "@/context/UserContext"; // Asegurate de tener esto
+import { useParams, useRouter } from "next/navigation";
+
 export default function Sidebar() {
+  const { user, workshops } = useUser();
+  const { id } = useParams(); 
+  const router = useRouter();
+
+  const showWorkshops = workshops && workshops.length > 1;
+
+  const handleWorkshopClick = (workshopId: number) => {
+    if (workshopId.toString() !== id) {
+      router.push(`/dashboard/${workshopId}`);
+    }
+  };
+
   return (
     <aside className="w-72 max-[1400px]:w-64 h-[calc(100vh-60px)] bg-white border-r border-gray-200 flex flex-col max-md:hidden">
-      {/* Contenedor scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pt-6 max-[1400px]:px-3 max-[1400px]:pt-4">
-        {/* Título del menú */}
         <p className="text-xs text-[#00000080] tracking-wide mb-6 max-[1400px]:mb-4">Menú</p>
 
-        {/* Menú */}
         <SideBarItem />
-        
-        {/* Talleres */}
-        <div className="mt-5 mb-8 pt-5 border-t border-gray-200">
-          <p className="text-xs text-[#00000080] tracking-wide mb-6">Talleres</p>
-          <div className="space-y-4">
-            <TallerItem name="Taller Duarte Quiros" />
-            <TallerItem name="Taller Santa Ana" />
+
+        {/* Mostrar sección talleres solo si hay más de uno */}
+        {showWorkshops && (
+          <div className="mt-5 mb-8 pt-5 border-t border-gray-200">
+            <p className="text-xs text-[#00000080] tracking-wide mb-6">Talleres</p>
+            <div className="space-y-4">
+              {workshops.map((workshop) => (
+                <TallerItem
+                  key={workshop.workshop_id}
+                  name={workshop.workshop_name}
+                  selected={id === workshop.workshop_id.toString()}
+                  onClick={() => handleWorkshopClick(workshop.workshop_id)}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="border-t border-gray-200 py-5 px-1">
+        )}
+
+        <div className="border-t border-gray-200 py-5 px-1 mt-4">
           <p className="text-xs text-[#00000080] tracking-wide mb-6">Ajustes</p>
           <div className="flex flex-col space-y-6 px-1">
-            <Link href={"/dashboard/settings"}>
+            <Link href={`/dashboard/${id}/settings`}>
               <NavItem icon={<Settings size={20} />} label="Configuración" />
             </Link>
-            <Link href={"/dashboard/help"}>
+            <Link href={`/dashboard/${id}/help`}>
               <NavItem icon={<HelpCircle size={20} />} label="Ayuda" />
             </Link>
           </div>
@@ -41,9 +63,21 @@ export default function Sidebar() {
   );
 }
 
-function TallerItem({ name }: { name: string }) {
+function TallerItem({
+  name,
+  selected,
+  onClick
+}: {
+  name: string;
+  selected?: boolean;
+  onClick: () => void;
+}) {
   return (
-    <div className="flex items-center gap-3 text-sm max-[1400px]:text-xs text-[#000000]">
+    <div
+      onClick={onClick}
+      className={`flex items-center gap-3 text-sm max-[1400px]:text-xs text-[#000000] cursor-pointer 
+        ${selected ? "font-semibold text-[#0040B8]" : "hover:text-[#0040B8]"}`}
+    >
       <div className="w-8 h-8 bg-gray-300 rounded-full" />
       {name}
     </div>

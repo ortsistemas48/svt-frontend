@@ -1,4 +1,3 @@
-// context/UserContext.tsx
 "use client";
 
 import React, { createContext, useContext } from "react";
@@ -12,18 +11,39 @@ type User = {
   phone_number: string;
   dni: string;
   avatar: string;
-} | null;
+};
 
-const UserContext = createContext<User>(null);
+type Workshop = {
+  workshop_id: number;
+  workshop_name: string;
+  role: string;
+};
 
-export const useUser = () => useContext(UserContext);
+type UserContextType = {
+  user: User;
+  workshops: Workshop[];
+};
+
+const UserContext = createContext<UserContextType | null>(null);
+
+export const useUser = () => {
+  const ctx = useContext(UserContext);
+  if (!ctx) throw new Error("useUser debe usarse dentro de <UserProvider>");
+  return ctx;
+};
 
 export const UserProvider = ({
   user,
-  children,
+  workshops,
+  children
 }: {
   user: User;
+  workshops: Workshop[];
   children: React.ReactNode;
 }) => {
-  return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
+  return (
+    <UserContext.Provider value={{ user, workshops }}>
+      {children}
+    </UserContext.Provider>
+  );
 };

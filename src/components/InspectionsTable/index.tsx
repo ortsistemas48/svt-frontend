@@ -1,58 +1,54 @@
 "use client";
-import { Pencil, Trash2, Play, RefreshCcw, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Pencil, Trash2, Play, RefreshCcw } from "lucide-react";
+import { useParams  } from "next/navigation";
 
-const inspections = [
-  {
-    id: 1,
-    plate: "AB123AB",
-    model: "Fiat Cronos",
-    owner: "Alejo Vaquero",
-    dni: "46971353",
-    date: "30/07/2025",
-    time: "22:20 hs",
-    status: "Completado",
-  },
-  {
-    id: 2,
-    plate: "AB123AB",
-    model: "Fiat Cronos",
-    owner: "Alejo Vaquero",
-    dni: "46971353",
-    date: "30/07/2025",
-    time: "22:20 hs",
-    status: "Completado",
-  },
-  {
-    id: 3,
-    plate: "AB123AB",
-    model: "Fiat Cronos",
-    owner: "Alejo Isaias Vaquero",
-    dni: "46971353",
-    date: "30/07/2025",
-    time: "22:20 hs",
-    status: "En curso",
-  },
-  {
-    id: 4,
-    plate: "AB123AB",
-    model: "Fiat Cronos",
-    owner: "Alejo Alejo Vaquero Vaquero",
-    dni: "46971353",
-    date: "30/07/2025",
-    time: "22:20 hs",
-    status: "Pendiente",
-  },
-] as const;
+type Application = {
+  application_id: number;
+  car: {
+    license_plate: string;
+    model: string;
+    brand: string;
+  } | null;
+  owner: {
+    first_name: string;
+    last_name: string;
+    dni: string;
+  } | null;
+  date: string;
+  status: "Completado" | "En curso" | "Pendiente";
+};
 
-type StatusType = typeof inspections[number]["status"];
-
-const statusColor: Record<StatusType, string> = {
+const statusColor: Record<Application["status"], string> = {
   Completado: "text-green-600",
   "En curso": "text-yellow-600",
   Pendiente: "text-red-500",
 };
 
 export default function InspectionsTable() {
+  const [applications, setApplications] = useState<Application[]>([]);
+  const { id } = useParams();
+
+  const fetchApplications = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/full`,
+        {
+          credentials: "include",
+        }
+      );
+      const data = await res.json();
+      console.log(data);
+      setApplications(data);
+    } catch (err) {
+      console.error("Error al traer aplicaciones", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchApplications();
+  }, []);
+
   return (
     <div className="px-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
@@ -62,7 +58,10 @@ export default function InspectionsTable() {
           className="border px-4 py-3 rounded-[4px] w-full flex-1"
         />
         <div className="flex gap-2">
-          <button className="border border-[#0040B8] text-[#0040B8] px-4 py-3 rounded-[4px] flex items-center gap-2">
+          <button
+            className="border border-[#0040B8] text-[#0040B8] px-4 py-3 rounded-[4px] flex items-center gap-2"
+            onClick={fetchApplications}
+          >
             <RefreshCcw size={16} /> Actualizar
           </button>
         </div>
@@ -81,35 +80,62 @@ export default function InspectionsTable() {
             </tr>
           </thead>
           <tbody>
-            {inspections.map((item) => (
-                <tr key={item.id} className="border-t">
-                <td className="p-3 text-center">{item.id}</td>
-                <td className="p-3 text-center">
-                    <div className="font-medium">{item.plate}</div>
-                    <div className="text-xs text-gray-600">{item.model}</div>
+            {applications.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center py-20 text-gray-600">
+                  No se encontraron inspecciones registradas.
                 </td>
-                <td className="p-3 text-center">
-                    <div className="font-medium max-w-[160px] truncate mx-auto">{item.owner}</div>
-                    <div className="text-xs text-gray-600">{item.dni}</div>
-                </td>
-                <td className="p-3 text-center">
-                    <div>{item.date}</div> 
-                    <div className="text-xs">{item.time}</div>
-                </td>
-                <td className={`p-3 font-medium text-center ${statusColor[item.status]}`}>
-                    {item.status}
-                </td>
-                <td className="p-3 flex justify-center items-center gap-3">
-                    {item.status === "Completado" ? (
-                    <Pencil size={16} className="cursor-pointer text-[#0040B8]" />
-                    ) : (
-                    <Play size={16} className="cursor-pointer text-[#0040B8]" />
-                    )}
-                    <Trash2 size={16} className="cursor-pointer text-[#0040B8]" />
-                </td>
-                </tr>
-            ))}
+              </tr>
+            ) : (
+              applications.map((item) => {
+                const dateObj = new Date(item.date);
+                const date = dateObj.toLocaleDateString("es-AR");
+                const time = dateObj.toLocaleTimeString("es-AR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+
+                return (
+                  <tr key={item.application_id} className="border-t">
+                    <td className="p-3 text-center">{item.application_id}</td>
+                    <td className="p-3 text-center">
+                      <div className="font-medium">{item.car?.license_plate || "-"}</div>
+                      <div className="text-xs text-gray-600">
+                        {item.car?.brand} {item.car?.model}
+                      </div>
+                    </td>
+                    <td className="p-3 text-center">
+                      <div className="font-medium max-w-[160px] truncate mx-auto">
+                      {item.owner?.first_name || "-"} {item.owner?.last_name || ""}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {item.owner?.dni || "-"}
+                      </div>
+                    </td>
+                    <td className="p-3 text-center">
+                      <div>{date}</div>
+                      <div className="text-xs">{time}</div>
+                    </td>
+                    <td className={`p-3 font-medium text-center ${statusColor[item.status]}`}>
+                      {item.status}
+                    </td>
+                    <td className="p-0">
+                      <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
+                        <Pencil size={16} className="cursor-pointer text-[#0040B8]" />
+                        
+                        {(item.status === "En curso" || item.status === "Pendiente") && (
+                          <Play size={16} className="cursor-pointer text-[#0040B8]" />
+                        )}
+                        
+                        <Trash2 size={16} className="cursor-pointer text-[#0040B8]" />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
+
         </table>
       </div>
     </div>

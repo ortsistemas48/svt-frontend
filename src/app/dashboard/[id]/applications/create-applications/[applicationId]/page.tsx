@@ -6,7 +6,7 @@ import ApplicationForm from "@/components/ApplicationForm";
 
 export default function CreateApplicationPage() {
   const params = useParams();
-  const applicationId = params?.id as string;
+  const applicationId = params?.applicationId as string;
   const [application, setApplication] = useState(null);
 
   useEffect(() => {

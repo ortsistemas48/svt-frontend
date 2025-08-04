@@ -8,7 +8,7 @@ import { useUser } from "@/context/UserContext";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 export default function Topbar() {
-  const user = useUser();
+  const { user } = useUser();
   const [openMenu, setOpenMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();

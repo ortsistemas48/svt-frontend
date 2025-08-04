@@ -10,7 +10,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "RTO",
+  title: "Inspección Vehicular - RTO",
   description: "Sistema RTO",
 };
 
@@ -29,11 +29,12 @@ async function getUserFromCookies() {
       cache: "no-store",
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) return { user: null, workshops: [] };
+
     const data = await res.json();
-    return data.user;
+    return { user: data.user, workshops: data.workshops };
   } catch {
-    return null;
+    return { user: null, workshops: [] };
   }
 }
 
@@ -43,12 +44,12 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUserFromCookies();
+  const { user, workshops } = await getUserFromCookies();
   
   return (
     <html lang="es">
       <body className={poppins.variable}>
-        <ClientLayout user={user}>{children}</ClientLayout>
+        <ClientLayout user={user} workshops={workshops}>{children}</ClientLayout>
       </body>
     </html>
   );

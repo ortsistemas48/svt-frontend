@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailOrDni, setEmailOrDni] = useState("");
@@ -39,11 +40,35 @@ export default function LoginForm() {
       }
 
       const data = await res.json();
-      console.log("✅ Login exitoso", data);
       
-      // window.location.href = "/dashboard"; // Redirigir al dashboard  
-      router.push("/dashboard");
-      router.refresh(); // Redirigir al dashboard
+      const sessionRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+        method: "GET",
+        credentials: "include"
+      });
+
+      if (!sessionRes.ok) {
+        setError("Error al obtener datos del usuario");
+        return;
+      }
+
+      const session = await sessionRes.json();
+      const workshops = session.workshops || [];
+      const isAdmin = session.user.is_admin;
+
+      if (isAdmin) {
+        router.push("/admin-dashboard");
+        return;
+      }
+
+      const isGarageOwner = workshops.some((w: any) => w.user_type_id === 2);
+
+      if (isGarageOwner || workshops.length > 1) {
+        router.push("/select-workshop");
+      } else if (workshops.length === 1) {
+        router.push(`/dashboard/${workshops[0].workshop_id}`);
+      } else {
+        setError("No se encontraron talleres asociados");
+      }
     } catch (err) {
       console.error("❌ Error de red:", err);
       setError("Ocurrió un error. Intentá de nuevo.");

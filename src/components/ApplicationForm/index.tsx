@@ -35,7 +35,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         const json = await res.json();
         setOwner({ ...(json.owner || {}) });
 
-        if (json.driver?.id === json.owner?.id) {
+        if (json.driver?.is_owner || (json.owner?.id && json.driver?.id && json.driver.id === json.owner.id)) {
           setIsSamePerson(true);
           setDriver({ ...(json.owner || {}), is_owner: true });
         } else {

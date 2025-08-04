@@ -1,11 +1,12 @@
 'use client';
-import { useRouter } from "next/navigation";
+import { useRouter, useParams  } from "next/navigation";
 import { useState } from "react";
 import { RefreshCw, CircleFadingPlus } from "lucide-react";
 
 export default function SelectApplicationType() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { id } = useParams();
 
   const handleCreateApplication = async () => {
     try {
@@ -13,13 +14,15 @@ export default function SelectApplicationType() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/applications`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workshop_id: id })  // ← acá mandás el ID
       });
+
       const data = await res.json();
 
       if (!data.application_id) throw new Error("No se recibió un ID válido");
 
-      router.push(`/dashboard/applications/create-applications/${data.application_id}`);
+      router.push(`/dashboard/${id}/applications/create-applications/${data.application_id}`);
     } catch (error) {
       console.error("Error al crear la aplicación:", error);
       alert("Hubo un error al crear el trámite. Intente de nuevo.");
@@ -62,7 +65,7 @@ export default function SelectApplicationType() {
             key={option.key}
             onClick={option.handleOnClick}
             disabled={loading}
-            className="flex flex-col items-center justify-center border rounded-lg p-6 transition-all duration-200 focus:outline-none border-gray-300 hover:border-[#0040B8] hover:shadow-lg"
+            className="flex flex-col cursor-pointer items-center justify-center border rounded-lg p-6 transition-all duration-200 focus:outline-none border-gray-300 hover:border-[#0040B8] hover:shadow-lg"
           >
             <div className="mb-3">{option.icon}</div>
             <h4 className="text-md font-medium text-gray-900">{option.title}</h4>
