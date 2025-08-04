@@ -5,11 +5,14 @@ import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 import { useRouter } from "next/navigation";
+import PreLoader from "@/components/PreLoader";
 
 export default function DashboardClientLayout({ children }: { children: React.ReactNode }) {
   const user = useUser();
   const [isChecking, setIsChecking] = useState(true);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
   useEffect(() => {
     if (!user) {
       router.push("/");
@@ -18,7 +21,17 @@ export default function DashboardClientLayout({ children }: { children: React.Re
     }
   }, [user]);
 
-  if (isChecking) return null;
+  useEffect(() => {
+    if (!isChecking) {
+      const timeout = setTimeout(() => {
+        setLoading(false);
+      }, 1750);
+      return () => clearTimeout(timeout);
+    }
+  }, [isChecking]);
+
+  if (isChecking || loading) return <PreLoader />;
+
 
 return (
   <div className="h-screen flex flex-col bg-[#f5f5f5]">

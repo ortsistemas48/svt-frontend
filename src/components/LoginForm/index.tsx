@@ -1,16 +1,30 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailOrDni, setEmailOrDni] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const {user} = useUser();
   const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    if (user === null) {
+      setChecking(false); 
+    } else if (user) {
+      router.push("/select-workshop"); 
+    }
+  }, [user]);
+
+  if (checking || user) return null; 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");

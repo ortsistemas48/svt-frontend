@@ -52,6 +52,7 @@ export default function Sidebar() {
           <div className="flex flex-col space-y-6 px-1">
             <Link href={`/dashboard/${id}/settings`}>
               <NavItem icon={<Settings size={20} />} label="Configuración" />
+              {/* solo puede verlo el garage owner */}
             </Link>
             <Link href={`/dashboard/${id}/help`}>
               <NavItem icon={<HelpCircle size={20} />} label="Ayuda" />
@@ -78,8 +79,8 @@ function TallerItem({
       className={`flex items-center gap-3 text-sm max-[1400px]:text-xs text-[#000000] cursor-pointer 
         ${selected ? "font-semibold text-[#0040B8]" : "hover:text-[#0040B8]"}`}
     >
-      <div className="w-8 h-8 bg-gray-300 rounded-full" />
-      {name}
+      <div className={`w-2 h-2  ${selected ? "bg-[#0040B8]" : "bg-gray-400"} rounded-full`} />
+      <span className="truncate max-w-[100px] sm:max-w-[140px] md:max-w-[180px] block">{name}</span>
     </div>
   );
 }

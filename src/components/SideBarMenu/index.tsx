@@ -27,15 +27,13 @@ export default function SideBarMenu(){
     
 
     const links = [
-        { href: `/dashboard/${id}/`, icon: <Home size={20} />, label: "Inicio" },
-        { href: `/dashboard/${id}/applications`, icon: <ClipboardList size={20} />, label: "Trámites" },
-        { href: `/dashboard/${id}/inspections-queue`, icon: <Clock size={20} />, label: "Cola de inspecciones" },
-        { href: `/dashboard/${id}/inspections-history`, icon: <History size={20} />, label: "Historial de inspecciones" },
-        { href: `/dashboard/${id}/domains-history`, icon: <FileClock size={20} />, label: "Historial de dominios" },
-        { href: `/dashboard/${id}/reprint-crt`, icon: <Printer size={20} />, label: "Reimpresión de CRT" },
-        { href: `/dashboard/${id}/decals`, icon: <FileText size={20} />, label: "Obleas" },
-        { href: `/dashboard/${id}/statistics`, icon: <ChartColumn size={20} />, label: "Estadísticas" },
-        { href: `/dashboard/${id}/users`, icon: <Users size={20} />, label: "Usuarios" },
+        { href: `/dashboard/${id}/`, icon: <Home size={20} />, label: "Inicio" }, //todos 
+        { href: `/dashboard/${id}/applications`, icon: <ClipboardList size={20} />, label: "Trámites" }, //todos 
+        { href: `/dashboard/${id}/inspections-queue`, icon: <Clock size={20} />, label: "Cola de inspecciones" }, //todos 
+        { href: `/dashboard/${id}/reprint-crt`, icon: <Printer size={20} />, label: "Reimpresión de CRT" }, //todos 
+        { href: `/dashboard/${id}/decals`, icon: <FileText size={20} />, label: "Obleas" }, //todos 
+        { href: `/dashboard/${id}/statistics`, icon: <ChartColumn size={20} />, label: "Estadísticas" }, //solo el ingeniero y el garage owner
+        { href: `/dashboard/${id}/users`, icon: <Users size={20} />, label: "Usuarios" }, //solo puede verlo el garage owner 
     ];
     return (
         <nav className="flex flex-col space-y-2 ">

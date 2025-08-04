@@ -1,15 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, MoveRight, Info } from "lucide-react";
-import Link from "next/link";
+import { MoveRight, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 
 export default function SelectWorkshopPage() {
   const [workshops, setWorkshops] = useState<any[]>([]);
   const [isGarageOwner, setIsGarageOwner] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const {user} = useUser();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    if (user === undefined) return; 
+    if (user === null) {
+      router.push("/");
+    } else {
+      setChecking(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,7 +44,9 @@ export default function SelectWorkshopPage() {
       setLoading(false);
     };
 
+    if (user){
     fetchData();
+    }
   }, []);
 
   const handleSelect = (id: number) => {

@@ -28,6 +28,38 @@ const statusColor: Record<Application["status"], string> = {
 export default function InspectionsTable() {
   const [applications, setApplications] = useState<Application[]>([]);
   const { id } = useParams();
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
+  const [searchText, setSearchText] = useState("");
+  const filteredApplications = applications.filter((item) => {
+    if (!searchText.trim()) return true; // si no hay búsqueda, mostrar todo
+
+    const query = searchText.toLowerCase();
+
+    const licensePlate = item.car?.license_plate?.toLowerCase() || "";
+    const brand = item.car?.brand?.toLowerCase() || "";
+    const model = item.car?.model?.toLowerCase() || "";
+
+    const firstName = item.owner?.first_name?.toLowerCase() || "";
+    const lastName = item.owner?.last_name?.toLowerCase() || "";
+    const dni = item.owner?.dni?.toLowerCase() || "";
+
+    return (
+      licensePlate.includes(query) ||
+      brand.includes(query) ||
+      model.includes(query) ||
+      firstName.includes(query) ||
+      lastName.includes(query) ||
+      dni.includes(query)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
+
+  const currentData = filteredApplications.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
 
   const fetchApplications = async () => {
     try {
@@ -56,6 +88,11 @@ export default function InspectionsTable() {
           type="text"
           placeholder="Busca inspecciones por su: Dominio, Propietario u Oblea"
           className="border px-4 py-3 rounded-[4px] w-full flex-1"
+          value={searchText}
+          onChange={(e) => {
+            setSearchText(e.target.value);
+            setPage(1); 
+          }}
         />
         <div className="flex gap-2">
           <button
@@ -87,7 +124,7 @@ export default function InspectionsTable() {
                 </td>
               </tr>
             ) : (
-              applications.map((item) => {
+              currentData.map((item) => {
                 const dateObj = new Date(item.date);
                 const date = dateObj.toLocaleDateString("es-AR");
                 const time = dateObj.toLocaleTimeString("es-AR", {
@@ -135,8 +172,27 @@ export default function InspectionsTable() {
               })
             )}
           </tbody>
-
         </table>
+          {applications.length > itemsPerPage && (
+            <div className="flex justify-center items-center mt-6 gap-2 text-sm">
+              <button
+                className="px-4 py-2 border rounded-[4px] disabled:opacity-50"
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                disabled={page === 1}
+              >
+                Anterior
+              </button>
+              <span>Página {page} de {totalPages}</span>
+              <button
+                className="px-4 py-2 border rounded-[4px] disabled:opacity-50"
+                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={page === totalPages}
+              >
+                Siguiente
+              </button>
+            </div>
+          )}
+
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { UserProvider } from "@/context/UserContext";
+import React from "react";
 
 export default function ClientLayout({
   user,
@@ -11,6 +12,8 @@ export default function ClientLayout({
   workshops: any[];
   children: React.ReactNode;
 }) {
+
+
   return (
     <UserProvider user={user} workshops={workshops}>
       {children}
