@@ -41,33 +41,33 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
 
   const isSamePerson = owner && driver && owner.id === driver.id;
   const showDriver = driver && !isSamePerson;
-return (
-  <div className="px-4">
-    <div className="grid gap-6 max-lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
-      {/* Titular */}
-      <div className="border rounded-[4px] p-4">
-        <h2 className="text-lg max-md:text-base font-bold mb-3">Datos del titular</h2>
-        {owner ? renderPerson(owner) : <span>Cargando titular...</span>}
-      </div>
-
-      {/* Conductor (si es distinto) */}
-      {showDriver && (
-        <div className="border rounded-[4px] p-4">
-          <h2 className="text-lg max-md:text-base font-bold mb-3">Datos del conductor</h2>
-          {renderPerson(driver)}
+  return (
+    <div className="">
+      <div className="grid max-lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 xl:divide-x">
+        {/* Titular */}
+        <div className="px-4">
+          <h2 className="max-md:text-base font-regular mb-5 text-xl text-[#000000]">Datos del titular</h2>
+          {owner ? renderPerson(owner) : <span>Cargando titular...</span>}
         </div>
-      )}
 
-      {/* Vehículo */}
-      <div
-        className={`border rounded-[4px] p-4 lg:pb-10 ${
-          showDriver ? "xl:col-span-2 2xl:col-span-1" : ""
-        }`}
-      >
-        <h2 className="text-lg font-bold mb-3">Datos del vehículo</h2>
-        {car ? renderVehicle(car) : <span>Cargando vehículo...</span>}
+        {/* Conductor (si es distinto) */}
+        {showDriver && (
+          <div className="px-4">
+            <h2 className="max-md:text-base font-regular mb-5 text-xl text-[#000000]">Datos del conductor</h2>
+            {renderPerson(driver)}
+          </div>
+        )}
+
+        {/* Vehículo */}
+        <div
+          className={` px-6 lg:pb-10 ${
+            showDriver ? "xl:col-span-2 2xl:col-span-1" : ""
+          }`}
+        >
+          <h2 className="max-md:text-base font-regular mb-8 text-xl text-[#000000]">Datos del vehículo</h2>
+          {car ? renderVehicle(car) : <span>Cargando vehículo...</span>}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }

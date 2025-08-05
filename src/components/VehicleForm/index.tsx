@@ -63,12 +63,12 @@ const formData1: FormFieldData[] = [
 const formData2: FormFieldData[] = [
   { label: "Número de chasis", placeholder: "Ej: 1231415251251451", name: "chassis_number" },
   { label: "Marca de chasis", placeholder: "Ej: MARCA", name: "chassis_brand" },
-  { label: "Número de cédula verde", placeholder: "Ej: 122144351", name: "green_card_number" },
-  { label: "Vencimiento de la cédula", type: "date", placeholder: "dd/mm/aa", name: "green_card_expiration" },
-  { label: "Número de licencia de conducir", placeholder: "Ej: 14214545", name: "license_number" },
-  { label: "Vencimiento de la licencia", type: "date", placeholder: "dd/mm/aa", name: "license_expiration" },
+  { label: "Nº de cédula verde", placeholder: "Ej: 122144351", name: "green_card_number" },
+  { label: "Exp. de la cédula", type: "date", placeholder: "dd/mm/aa", name: "green_card_expiration" },
+  { label: "Nº de licencia", placeholder: "Ej: 14214545", name: "license_number" },
+  { label: "Exp. de la licencia", type: "date", placeholder: "dd/mm/aa", name: "license_expiration" },
   {
-    label: "Seleccione la oblea a vincular",
+    label: "Vincular oblea",
     options: [
       { value: "oblea-1", label: "Oblea 1" },
       { value: "oblea-2", label: "Oblea 2" },
@@ -93,9 +93,9 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         <p className="text-md font-regular text-[#00000080] mb-10">Ingrese los datos del vehículo</p>
       </div>
 
-      <div className="grid grid-cols-[1fr_1px_1fr] max-xl:grid-cols-1 gap-10">
+      <div className="grid grid-cols-[1fr_1px_1fr] max-xl:grid-cols-1 gap-10 items-start">
         {/* Columna izquierda */}
-        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8">
+        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8 self-start">
           {formData1.map((field, index) =>
             field.options ? (
               <FormField

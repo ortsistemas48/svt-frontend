@@ -26,9 +26,9 @@ const tableData = [
   { label: "Número de motor", key: "engine_number" },
   { label: "Número de chasis", key: "chassis_number" },
   { label: "Marca de chasis", key: "chassis_brand" },
-  { label: "Número de cédula verde", key: "green_card_number" },
+  { label: "Nº de cédula verde", key: "green_card_number" },
   { label: "Exp. de la cédula", key: "green_card_expiration" },
-  { label: "Número de licencia de conducir", key: "license_number" },
+  { label: "Nº de licencia", key: "license_number" },
   { label: "Exp. de la licencia", key: "license_expiration" },
   {
     label: "Oblea",
