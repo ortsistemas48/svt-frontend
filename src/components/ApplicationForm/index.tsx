@@ -13,7 +13,7 @@ type Props = {
     driver?: any;
     car?: any;
   };
-};
+};  
 
 export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [step, setStep] = useState(1);
@@ -179,7 +179,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
       case 2:
         return <VehicleForm car={car} setCar={setCar} />;
       case 3:
-        return <ConfirmationForm />;
+        return <ConfirmationForm applicationId={applicationId}/>;
       default:
         return null;
     }
