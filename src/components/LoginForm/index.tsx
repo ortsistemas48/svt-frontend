@@ -77,7 +77,10 @@ export default function LoginForm() {
       const isGarageOwner = workshops.some((w: any) => w.user_type_id === 2);
 
       if (isGarageOwner || workshops.length > 1) {
+        
         router.push("/select-workshop");
+        router.refresh();
+
       } else if (workshops.length === 1) {
         router.push(`/dashboard/${workshops[0].workshop_id}`);
       } else {

@@ -40,10 +40,11 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
   }, []);
 
   const isSamePerson = owner && driver && owner.id === driver.id;
+  // const isSamePerson = false
   const showDriver = driver && !isSamePerson;
   return (
     <div className="">
-      <div className="grid max-lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 xl:divide-x">
+      <div className="grid max-lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
         {/* Titular */}
         <div className="px-4">
           <h2 className="max-md:text-base font-regular mb-5 text-xl text-[#000000]">Datos del titular</h2>

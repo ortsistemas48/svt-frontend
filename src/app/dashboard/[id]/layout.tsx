@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import PreLoader from "@/components/PreLoader";
 
 export default function DashboardClientLayout({ children }: { children: React.ReactNode }) {
-  const user = useUser();
+  const { user } = useUser();
   const [isChecking, setIsChecking] = useState(true);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -42,7 +42,7 @@ return (
     <div className="flex flex-1 overflow-hidden">
       <Sidebar />
       <main className="flex-1 p-4 overflow-auto">
-        <div className="bg-white min-h-full rounded-[10px] shadow p-4 pt-8 pl-8 pb-0">
+        <div className="bg-white min-h-full rounded-[10px] shadow p-8">
           {children}
         </div>
       </main>
