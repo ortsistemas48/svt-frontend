@@ -212,8 +212,17 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           disabled={loading}
           className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-7"
         >
-          {loading ? "Guardando..." : step === 3 ? "Finalizar" : "Continuar"}
+          {loading ? "Guardando..." : step === 3 ? "Inspeccionar" : "Continuar"}
         </button>
+        {step === 3 && (
+          <button
+            disabled={loading}
+            className="hover:bg-[#0040B8] hover:text-white border border-[#0040B8] bg-white duration-150 rounded-[4px] text-[#0040B8] flex items-center justify-center gap-2 py-2.5 px-7"
+          >
+            Enviar a la cola
+            <ChevronRight size={18} />
+          </button>
+        )}
       </div>
     </>
   );

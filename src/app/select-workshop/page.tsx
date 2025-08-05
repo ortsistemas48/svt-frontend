@@ -13,14 +13,14 @@ export default function SelectWorkshopPage() {
   const {user} = useUser();
   const [checking, setChecking] = useState(true);
 
-  useEffect(() => {
-    if (user === undefined) return; 
-    if (user === null) {
-      router.push("/");
-    } else {
-      setChecking(false);
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user === undefined) return; 
+  //   if (user === null) {
+  //     router.push("/");
+  //   } else {
+  //     setChecking(false);
+  //   }
+  // }, [user]);
 
   useEffect(() => {
     const fetchData = async () => {

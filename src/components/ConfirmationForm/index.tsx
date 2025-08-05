@@ -40,30 +40,34 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
   }, []);
 
   const isSamePerson = owner && driver && owner.id === driver.id;
-  // const isSamePerson = false
-  const showBothPersonClassname = driver && !isSamePerson ? "xl:grid-cols-3" : "pr-10";
-  return (
-    <div>
-      <h1 className="text-2xl max-md:text-xl font-bold mb-4">Confirmación de Datos</h1>
-      <div className={`grid ${showBothPersonClassname} grid-cols-2 gap-6 max-lg:grid-cols-1`}>
+  const showDriver = driver && !isSamePerson;
+return (
+  <div className="px-4">
+    <div className="grid gap-6 max-lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
+      {/* Titular */}
+      <div className="border rounded-[4px] p-4">
+        <h2 className="text-lg max-md:text-base font-bold mb-3">Datos del titular</h2>
+        {owner ? renderPerson(owner) : <span>Cargando titular...</span>}
+      </div>
 
-        <div className="border rounded-lg p-4">
-          <h1 className="text-lg max-md:text-base font-bold mb-3">Datos del titular</h1>
-          {owner ? renderPerson(owner) : <span>Cargando titular...</span>}
+      {/* Conductor (si es distinto) */}
+      {showDriver && (
+        <div className="border rounded-[4px] p-4">
+          <h2 className="text-lg max-md:text-base font-bold mb-3">Datos del conductor</h2>
+          {renderPerson(driver)}
         </div>
+      )}
 
-        {driver && !isSamePerson && (
-          <div className="border rounded-lg p-4 ">
-            <h1 className="text-lg max-md:text-base font-bold mb-3">Datos del conductor</h1>
-            {renderPerson(driver)}
-          </div>
-        )}
-
-        <div className="border rounded-lg p-4 lg:pb-10">
-          <h1 className="text-lg font-bold">Datos del vehículo</h1>
-          {car ? renderVehicle(car) : <span>Cargando vehículo...</span>}
-        </div>
+      {/* Vehículo */}
+      <div
+        className={`border rounded-[4px] p-4 lg:pb-10 ${
+          showDriver ? "xl:col-span-2 2xl:col-span-1" : ""
+        }`}
+      >
+        <h2 className="text-lg font-bold mb-3">Datos del vehículo</h2>
+        {car ? renderVehicle(car) : <span>Cargando vehículo...</span>}
       </div>
     </div>
-  );
+  </div>
+);
 }

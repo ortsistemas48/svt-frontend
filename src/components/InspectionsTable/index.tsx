@@ -29,10 +29,11 @@ export default function InspectionsTable() {
   const [applications, setApplications] = useState<Application[]>([]);
   const { id } = useParams();
   const [page, setPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
   const [searchText, setSearchText] = useState("");
   const filteredApplications = applications.filter((item) => {
-    if (!searchText.trim()) return true; // si no hay búsqueda, mostrar todo
+    if (!item.car && !item.owner) return false;
+    if (!searchText.trim()) return true; 
 
     const query = searchText.toLowerCase();
 
@@ -71,7 +72,22 @@ export default function InspectionsTable() {
       );
       const data = await res.json();
       console.log(data);
-      setApplications(data);
+      setApplications(
+        data.filter((item: Application) => {
+          const car = item.car;
+          const owner = item.owner;
+
+          const carFilled = car && (
+            car.license_plate || car.brand || car.model
+          );
+
+          const ownerFilled = owner && (
+            owner.first_name || owner.last_name || owner.dni
+          );
+
+          return carFilled || ownerFilled;
+        })
+      );
     } catch (err) {
       console.error("Error al traer aplicaciones", err);
     }
