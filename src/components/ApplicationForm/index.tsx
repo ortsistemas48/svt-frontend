@@ -5,6 +5,7 @@ import PersonForm from "@/components/PersonForm";
 import VehicleForm from "@/components/VehicleForm";
 import ConfirmationForm from "@/components/ConfirmationForm";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter, useParams  } from 'next/navigation'
 
 type Props = {
   applicationId: string;
@@ -18,6 +19,9 @@ type Props = {
 export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const router = useRouter()
+  const params = useParams()
+  const id = params.id 
 
   const [owner, setOwner] = useState<any>({ ...(initialData?.owner || {}) });
   const [driver, setDriver] = useState<any>({});
@@ -52,7 +56,23 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     fetchData();
   }, [step]);
 
+  const sendToQueue = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/queue`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
+      if (!res.ok) throw new Error("Error al enviar a la cola");
+
+      router.push(`/dashboard/${id}/applications`);
+    } catch (err) {
+      console.error("Error al enviar a la cola:", err);
+    }
+  };
 
   const handleNext = async () => {
     setLoading(true);
@@ -217,6 +237,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         {step === 3 && (
           <button
             disabled={loading}
+            onClick={sendToQueue}
             className="hover:bg-[#0040B8] hover:text-white border border-[#0040B8] bg-white duration-150 rounded-[4px] text-[#0040B8] flex items-center justify-center gap-2 py-2.5 px-5"
           >
             Enviar a cola

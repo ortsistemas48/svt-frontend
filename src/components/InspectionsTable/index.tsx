@@ -16,13 +16,14 @@ type Application = {
     dni: string;
   } | null;
   date: string;
-  status: "Completado" | "En curso" | "Pendiente";
+  status: "Completado" | "En curso" | "Pendiente" | "En Cola";
 };
 
 const statusColor: Record<Application["status"], string> = {
   Completado: "text-green-600",
-  "En curso": "text-yellow-600",
+  "En curso": "text-blue-600",
   Pendiente: "text-red-500",
+  "En Cola": "text-yellow-600",
 };
 
 export default function InspectionsTable() {
@@ -175,7 +176,7 @@ export default function InspectionsTable() {
                       <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
                         <Pencil size={16} className="cursor-pointer text-[#0040B8]" />
                         
-                        {(item.status === "En curso" || item.status === "Pendiente") && (
+                        {(item.status === "En curso" || item.status === "Pendiente" || item.status === "En Cola") && (
                           <Play size={16} className="cursor-pointer text-[#0040B8]" />
                         )}
                         
