@@ -71,7 +71,6 @@ export default function InspectionsTable() {
         }
       );
       const data = await res.json();
-      console.log(data);
       setApplications(
         data.filter((item: Application) => {
           const car = item.car;
@@ -115,7 +114,7 @@ export default function InspectionsTable() {
             className="border border-[#0040B8] text-[#0040B8] px-4 py-3 rounded-[4px] flex items-center gap-2"
             onClick={fetchApplications}
           >
-            <RefreshCcw size={16} /> Actualizar
+            <RefreshCcw size={16}/> Actualizar
           </button>
         </div>
       </div>

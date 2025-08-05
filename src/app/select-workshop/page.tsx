@@ -10,7 +10,7 @@ export default function SelectWorkshopPage() {
   const [isGarageOwner, setIsGarageOwner] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const {user} = useUser();
+  const { user } = useUser();
   const [checking, setChecking] = useState(true);
 
   // useEffect(() => {
@@ -44,8 +44,8 @@ export default function SelectWorkshopPage() {
       setLoading(false);
     };
 
-    if (user){
-    fetchData();
+    if (user) {
+      fetchData();
     }
   }, []);
 
@@ -60,19 +60,24 @@ export default function SelectWorkshopPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-white font-sans">
       <section className="w-full max-w-md bg-white rounded-[10px] border border-[#DEDEDE] px-8 py-10 text-center flex flex-col justify-between">
-        <h1 className="mx-2 my-4 font-semibold">Seleccioná el taller a ingresar</h1>
+        <article className="text-center text-3xl">
+          Bienvenido{" "}
+          <span className="font-bold">{`${user?.first_name} ${user?.last_name}` || "Usuario"}</span>
+        </article>
+        <h1 className="mx-2 my-4 text-gray-">Seleccioná el taller a ingresar</h1>
 
-        <section className="flex flex-col gap-4 mt-4">
+        <section className="flex flex-col gap-4 mt-2">
           {workshops.length > 0 ? (
             workshops.map((w) => (
-              <article
+                <article
                 key={w.workshop_id}
                 className="flex justify-between items-center border border-[#CECECE] rounded-[4px] p-4 cursor-pointer"
                 onClick={() => handleSelect(w.workshop_id)}
-              >
+                title={`Ingresa al taller: ${w.workshop_name}`}
+                >
                 <h3>{w.workshop_name}</h3>
                 <MoveRight size={20} />
-              </article>
+                </article>
             ))
           ) : (
             <article className="flex justify-between items-center border border-[#CECECE] rounded-[4px] p-4 text-gray-600">
