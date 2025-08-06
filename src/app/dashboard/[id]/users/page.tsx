@@ -1,10 +1,15 @@
-import { ChevronRight, RefreshCcw, Search, ArrowRight, SlidersHorizontal } from "lucide-react";
+import UserInput from "@/components/UserInput";
+import UserTable from "@/components/UserTable";
+import { fetchUserData } from "@/utils";
+import { ChevronRight, Search, ArrowRight } from "lucide-react";
 
-export default function UsersPage() {
-
-
+export default async function UsersPage( { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const workshopId = Number(id);
+  const usersInWorkshop = await fetchUserData({ workshopId });
+  const { users } = usersInWorkshop;
   return (
-    <div className="min-w-full">
+    <div className="min-w-full">  
       <article className="flex items-center justify-between text-lg mb-6 px-4">
         <div className="flex items-center gap-1">
           <span>Inicio</span>
@@ -44,37 +49,10 @@ export default function UsersPage() {
 
 
       </div>
-      <div className="flex flex-col items-center gap-2 mt-6">
-        <div className="grid grid-cols-[500px_150px_170px] gap-x-3 mt-6">
-          {/* Input con icono */}
-          <div className="flex items-center border border-gray-300 rounded px-2 py-1 h-12">
-            <Search size={20} className="text-gray-500 mr-1" />
-            <input
-              type="email"
-              placeholder="Busca tus usuarios por nombre, email, DNI o telefono"
-              className="flex-1 text-sm focus:outline-none"
-            />
-          </div>
-
-          {/* Botón */}
-          <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 py-2 rounded flex items-center justify-center gap-x-2  ">
-            
-            <SlidersHorizontal size={20} />
-            <span className="text-sm ">
-            Filtrar
-            </span>
-              
-          </button>
-          <button className="bg-white border-2 border-[#0040B8] text-white px-3 py-2 rounded flex items-center justify-center gap-x-2 ">
-            
-            <RefreshCcw size={20} className="text-[#0040B8]"/>
-            <span className="text-[#0040B8] text-sm">
-
-            Actualizar
-            </span>
-          </button>
-        </div>
-      </div>
+      {/* <div className="flex flex-col items-center gap-2 mt-6">
+        <UserInput />
+      </div> */}
+        <UserTable users={users}/>
     </div>
   );
 }

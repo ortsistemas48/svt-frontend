@@ -51,7 +51,6 @@ export default function InspectionsTable() {
       });
   }
   const filteredApplications = applications.filter((item) => {
-    // if (!item.car && !item.owner) return false;
     if (!searchText.trim()) return true;
 
     const query = searchText.toLowerCase();
