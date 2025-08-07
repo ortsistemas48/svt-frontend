@@ -48,7 +48,7 @@ const renderVehicle = (car: CarType) => {
 
   return (
     <div className="space-y-2 mb-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-10 gap-y-8 mt-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-x-10 gap-y-8 mt-5">
         {tableData.map((item) => {
           const rawValue = car[item.key as keyof CarType];
           const isDateKey = item.key === "green_card_expiration" || item.key === "license_expiration";

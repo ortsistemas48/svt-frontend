@@ -2,11 +2,11 @@ import FormTemplate from "../FormTemplate";
 import Dropzone from "@/components/Dropzone";
 
 const formData = [
+  { label: "DNI", placeholder: "Ej: 39.959.950", name: "dni" },
+  { label: "Email", type: "email", placeholder: "Ej: ejemplo@gmail.com", name: "email" },
   { label: "Nombre", placeholder: "Ej: Ángel Isaías Vaquero", name: "first_name" },
   { label: "Apellido", placeholder: "Ej: Ángel Isaías Vaquero", name: "last_name" },
-  { label: "DNI", placeholder: "Ej: 39.959.950", name: "dni" },
   { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number" },
-  { label: "Email", type: "email", placeholder: "Ej: ejemplo@gmail.com", name: "email" },
   { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street" },
   {
     label: "Provincia",

@@ -44,7 +44,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
   const showDriver = driver && !isSamePerson;
   return (
     <div className="">
-      <div className={`grid max-lg:grid-cols-1 ${showDriver ? "xl:grid-cols-2" : "xl:grid-cols-2"} gap-y-8`}>
+      <div className={`grid max-lg:grid-cols-1 ${showDriver ? "grid-cols-2" : "grid-cols-1"} gap-y-8`}>
         {/* Titular */}
         <div className="px-4 ">
           <h2 className="max-md:text-base font-regular mb-5 text-xl text-[#000000]">Datos del titular</h2>

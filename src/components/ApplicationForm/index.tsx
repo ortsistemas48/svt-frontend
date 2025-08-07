@@ -265,13 +265,13 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
   return (
     <>
-      <article className="flex items-center justify-between text-lg mb-6 px-4">
+      <article className="flex max-md:flex-col gap-y-2 items-center justify-between text-lg mb-6 px-4">
         <div className="flex items-center gap-1">
           <span>Inicio</span>
           <ChevronRight size={20} />
           <span className="text-[#0040B8]">Inspecciones</span>
         </div>
-        <span className="text-md mr-4 text-black">Paso {step}/3</span>
+        <span className="text-md mr-4  text-black">Paso {step}/3</span>
       </article>
 
       <div>{renderStepContent()}</div>
@@ -312,6 +312,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
                 disabled={loading}
                 onClick={() => {
                   const missing = validateMissingFields();
+                  console.log(missing, 'missing')
                   setMissingFields(missing);
                   setConfirmAction("queue");
                   setShowConfirmModal(true);
@@ -327,7 +328,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h2 className="text-lg font-semibold mb-3">¿Estás seguro?</h2>
-            {missingFields.length < 0 ? (
+            {missingFields.length > 0 ? (
               <div className="text-sm text-red-600 mb-4">
                 Faltan campos por completar:
                 <ul className="list-disc list-inside mt-2">

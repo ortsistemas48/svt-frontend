@@ -18,16 +18,16 @@ export default function UserTable({ users } : { users: any[] }) {
     });
 
     return (
-        <div className="flex flex-col items-center gap-2 mt-6">
-             <div className="grid grid-cols-[500px_150px_170px] gap-x-3 mt-6">
+        <div className="flex flex-col items-center gap-2 mt-6 ">
+             <div className="flex justify-center gap-x-3 mt-6 w-full">
                 {/* Input con icono */}
-                <div className="flex items-center border border-gray-300 rounded px-2 py-1 h-12">
+                <div className="w-full flex items-center border border-gray-300 rounded px-2 py-1 h-12">
                     <Search size={20} className="text-gray-500 mr-1" />
                     <input
                         type="text"
                         onChange={(e) => setSearchText(e.target.value)}
                         placeholder="Busca tus usuarios por nombre, email, DNI o telefono"
-                        className="flex-1 text-sm focus:outline-none"
+                        className="w-full text-sm focus:outline-none"
                     />
                 </div>
 
@@ -50,7 +50,7 @@ export default function UserTable({ users } : { users: any[] }) {
                 </button>
             </div>
             
-            <div className="border border-gray-300 mt-6 rounded-[4px] overflow-hidden w-[842px]">
+            <div className="border border-gray-300 mt-6 rounded-[4px] overflow-hidden w-full">
                 <table className="w-full">
                     <thead className="bg-[#ffffff] text-[#00000080] s">
                         <tr className="">
