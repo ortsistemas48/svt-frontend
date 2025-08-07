@@ -11,7 +11,7 @@ export default function InspectionsPage() {
                 <div className="flex items-center gap-1">
                     <span>Inicio</span>
                     <ChevronRight size={20} />
-                    <span className="text-[#0040B8]">Trámite</span>
+                    <span className="text-[#0040B8]">Inspecciones</span>
                 </div>
             </article>
 

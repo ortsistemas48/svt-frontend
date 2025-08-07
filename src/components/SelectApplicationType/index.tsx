@@ -35,15 +35,15 @@ export default function SelectApplicationType() {
     {
       key: "new",
       icon: <CircleFadingPlus size={42} strokeWidth={2.5} className="text-[#0040B8]" />,
-      title: "Nueva Revisión",
-      description: "Iniciar una nueva revisión técnica desde cero",
+      title: "Nueva Inspección",
+      description: "Iniciar una nueva inspección desde cero",
       handleOnClick: handleCreateApplication,
     },
     {
       key: "continue",
       icon: <RefreshCw size={42} strokeWidth={2.5} className="text-[#0040B8]" />,
-      title: "Continuar Revisión",
-      description: "Continuar con una revisión existente",
+      title: "Continuar Inspección",
+      description: "Continuar con una inspección existente",
       handleOnClick: () => {
         alert("Funcionalidad en construcción");
       },
@@ -53,9 +53,9 @@ export default function SelectApplicationType() {
   return (
     <div className="space-y-4 my-10 px-4">
       <div>
-        <h3 className="text-lg font-medium text-gray-900">Seleccione el tipo de revisión</h3>
+        <h3 className="text-lg font-medium text-gray-900">Seleccione el tipo de inspección</h3>
         <p className="text-sm text-gray-500">
-          Elija si desea iniciar una nueva revisión o continuar con una existente.
+          Elija si desea iniciar una nueva inspección o continuar con una existente.
         </p>
       </div>
 

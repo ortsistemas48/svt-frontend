@@ -60,7 +60,7 @@ export default function SelectWorkshopPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-white font-sans">
       <section className="w-full max-w-md bg-white rounded-[10px] border border-[#DEDEDE] px-8 py-10 text-center flex flex-col justify-between">
-        <article className="text-center text-3xl">
+        <article className="text-center text-xl">
           Bienvenido{" "}
           <span className="font-bold">{`${user?.first_name} ${user?.last_name}` || "Usuario"}</span>
         </article>

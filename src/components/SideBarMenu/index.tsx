@@ -28,7 +28,7 @@ export default function SideBarMenu(){
 
     const links = [
         { href: `/dashboard/${id}/`, icon: <Home size={20} />, label: "Inicio" }, //todos 
-        { href: `/dashboard/${id}/applications`, icon: <ClipboardList size={20} />, label: "Trámites" }, //todos 
+        { href: `/dashboard/${id}/applications`, icon: <ClipboardList size={20} />, label: "Inspecciones" }, //todos 
         { href: `/dashboard/${id}/inspections-queue`, icon: <Clock size={20} />, label: "Cola de inspecciones" }, //todos 
         { href: `/dashboard/${id}/reprint-crt`, icon: <Printer size={20} />, label: "Reimpresión de CRT" }, //todos 
         { href: `/dashboard/${id}/decals`, icon: <FileText size={20} />, label: "Obleas" }, //todos 

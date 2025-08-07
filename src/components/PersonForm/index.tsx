@@ -39,7 +39,7 @@ export default function PersonForm({
     <div className="">
       <div className="flex justify-center items-center gap-x-4 mb-14">
         <h1 className="text-xl font-regular">
-          ¿El conductor y el propietario son la misma persona?
+          ¿El titular y el conductor son la misma persona?
         </h1>
         <CheckBox label="" checked={isSamePerson} onChange={handleCheckboxChange} />
       </div>

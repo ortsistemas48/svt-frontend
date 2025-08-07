@@ -44,9 +44,9 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
   const showDriver = driver && !isSamePerson;
   return (
     <div className="">
-      <div className="grid max-lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
+      <div className={`grid max-lg:grid-cols-1 ${showDriver ? "xl:grid-cols-2" : "xl:grid-cols-2"} gap-y-8`}>
         {/* Titular */}
-        <div className="px-4">
+        <div className="px-4 ">
           <h2 className="max-md:text-base font-regular mb-5 text-xl text-[#000000]">Datos del titular</h2>
           {owner ? renderPerson(owner) : <span>Cargando titular...</span>}
         </div>
@@ -60,11 +60,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
         )}
 
         {/* Vehículo */}
-        <div
-          className={` px-6 lg:pb-10 ${
-            showDriver ? "xl:col-span-2 2xl:col-span-1" : ""
-          }`}
-        >
+        <div className={`xl:col-span-2 px-6`}>
           <h2 className="max-md:text-base font-regular mb-8 text-xl text-[#000000]">Datos del vehículo</h2>
           {car ? renderVehicle(car) : <span>Cargando vehículo...</span>}
         </div>

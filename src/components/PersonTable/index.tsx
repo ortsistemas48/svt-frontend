@@ -18,9 +18,11 @@ const renderPerson = (person: PersonType) => {
                 <div key={item.key}>
                     <strong className="font-medium opacity-50">{item.label}:</strong>
                     <p className={item.key === "province" || item.key === "city" ? "capitalize" : ""}>
-                        {item.key === "full_name"
+                    {item.key === "full_name"
+                        ? (person.first_name && person.last_name
                             ? `${person.first_name} ${person.last_name}`
-                            : person[item.key as keyof PersonType] || "No disponible"}
+                            : "No disponible")
+                        : person[item.key as keyof PersonType] || "No disponible"}
                     </p>
                 </div>
             ))}
