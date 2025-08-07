@@ -1,6 +1,6 @@
 import UserInput from "@/components/UserInput";
 import UserTable from "@/components/UserTable";
-import { fetchUserData } from "@/utils";
+import { fetchUserData } from "@/app/utils";
 import { ChevronRight, Search, ArrowRight } from "lucide-react";
 
 export default async function UsersPage( { params }: { params: Promise<{ id: string }> }) {

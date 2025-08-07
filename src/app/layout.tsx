@@ -1,8 +1,7 @@
 import "./globals.css";
 import { Poppins } from "next/font/google";
+import ClientLayout from "@/layouts/ClientLayout";
 import { cookies } from "next/headers";
-import ClientLayout from "@/layouts/ClientLayout"; // importás el nuevo wrapper
-
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "600"],
@@ -14,7 +13,7 @@ export const metadata = {
   description: "Sistema RTO",
 };
 
-async function getUserFromCookies() {
+export async function getUserFromCookies() {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore
     .getAll()
@@ -37,8 +36,6 @@ async function getUserFromCookies() {
     return { user: null, workshops: [] };
   }
 }
-
-
 export default async function RootLayout({
   children,
 }: {

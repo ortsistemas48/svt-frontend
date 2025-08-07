@@ -99,7 +99,6 @@ export const ApplicationProvider = ({
   });
 
   useEffect(() => {
-    console.log("Contexto cargado:", { owner, driver, car, userId });
   }, [owner, driver, car, userId]);
 
   return (

@@ -8,7 +8,7 @@ export default function CreateApplicationPage() {
   const params = useParams();
   const applicationId = params?.applicationId as string;
   const [application, setApplication] = useState(null);
-
+  
   useEffect(() => {
     async function fetchApplication(id: string) {
       try {
@@ -28,7 +28,6 @@ export default function CreateApplicationPage() {
         }
 
         const data = await res.json();
-        console.log(data)
         setApplication(data);
       } catch (err) {
         console.error("Error de red:", err);
