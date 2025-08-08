@@ -7,6 +7,7 @@ import ConfirmationForm from "@/components/ConfirmationForm";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useParams } from 'next/navigation'
 import { getMissingPersonFields } from "@/app/utils";
+import MissingDataModal from "../MissingDataModal";
 
 type Props = {
   applicationId: string;
@@ -55,6 +56,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
   const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | null>(null);
   const [missingFields, setMissingFields] = useState<string[]>([]);
+
 
   const [owner, setOwner] = useState<any>({ ...(initialData?.owner || {}) });
   const [driver, setDriver] = useState<any>({});
@@ -136,30 +138,30 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
   const handleNext = async () => {
     setLoading(true);
+    setMissingFields([]);
 
     try {
       let res;
-
       // Paso 1: Guardar titular y conductor
       if (step === 1) {
         if (getMissingPersonFields(owner).length > 0) {
-          setShowMissingDataModal(true);
           const missing = getMissingPersonFields(owner).map(field => `Titular: ${field}`)
           setMissingFields(e => [...e, ...missing]);
-          setLoading(false);
           
+          setShowMissingDataModal(true);
+          setLoading(false);
           if (!isSamePerson) {
             if (getMissingPersonFields(driver).length > 0) {
-            const missing = getMissingPersonFields(driver).map(field => `Conductor: ${field}`)
-
-            setMissingFields(e => [...e, ...missing]);
-
-            setLoading(false);
-            return;
+              const missing = getMissingPersonFields(driver).map(field => `Conductor: ${field}`)
+              setMissingFields(e => [...e, ...missing]);
+              setLoading(false);
+            }
           }
-          }
+
+          console.log("missingFields", missingFields);
+          return
         }
-        
+
         res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/owner`, {
           method: "PUT",
           credentials: "include",
@@ -388,48 +390,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         </div>
       )}
       {
-        showMissingDataModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h2 className="text-lg font-semibold mb-3">No se puede continuar</h2>
-            {missingFields.length > 0 ? (
-              <div className="text-sm text-red-600 mb-4">
-                Faltan campos por completar:
-                <ul className="list-disc list-inside mt-2 grid grid-cols-2">
-                  {missingFields.map((field, i) => (
-                    <li key={i}>
-                      {(() => {
-                        const [section, rawField] = field.split(":").map(s => s.trim());
-                        const label = FIELD_LABELS[rawField] || rawField;
-                        return `${section}: ${label}`;
-                      })()}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-2">¿Deseás continuar de todas formas?</p>
-              </div>
-            ) : (
-              <p className="mb-4">Vas a confirmar el trámite. ¿Deseás continuar?</p>
-            )}
-            <div className="flex justify-center gap-5 mt-10">
-              <button onClick={() => setShowConfirmModal(false)} className="bg-white border border-[#d91e1e] text-[#d91e1e] duration-150 px-4 py-2 rounded-[4px] hover:text-white hover:bg-[#d91e1e]">Cancelar</button>
-              <button
-                onClick={async () => {
-                  setShowConfirmModal(false);
-                  if (confirmAction === "inspect") {
-                    await handleNext(); // paso final
-                  } else if (confirmAction === "queue") {
-                    await sendToQueue();
-                  }
-                }}
-                className="bg-[#0040B8] text-white px-4 py-2 rounded-[4px] hover:bg-[#0032a0]"
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
-        )
+        showMissingDataModal && missingFields && <MissingDataModal missingFields={missingFields} onClose={setShowMissingDataModal}/>
       }
     </>
   );

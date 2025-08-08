@@ -1,33 +1,50 @@
+import { PersonType } from "@/app/types";
+import { getMissingPersonFields } from "@/app/utils";
+import { ChevronLeft } from "lucide-react";
 
 export default function MissingDataModal ( {
-  missingFields,
-  onClose,
+  missingFields, onClose
 }: {
   missingFields: string[];
-  onClose: () => void;
+  onClose: (arg: boolean) => void;
 }) {
+  console.log("missingFields", missingFields);
+  const ownerMissingFields = missingFields.filter(field => field.includes('Titular'))
+  const driverMissingFields = missingFields.filter(field => field.includes('Conductor'));
+  
+  
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
-        <h2 className="text-lg font-semibold mb-3">No se puede continuar</h2>
-        {missingFields.length > 0 ? (
-          <div className="text-sm text-red-600 mb-4">
+        <h2 className="text-xl mb-2 font-bold">No se puede continuar</h2>
+        <div className="mb-4">
+          <h4 className="font-medium text-lg mb-2">
             Faltan campos por completar:
-            <ul className="list-disc list-inside mt-2 grid grid-cols-2">
-              {missingFields.map((field, i) => (
-                <li key={i}>{field}</li>
+          </h4>
+          <ul className="text-red-500 text-sm list-disc list-inside grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1">
+              {ownerMissingFields.map((field) => (
+                <li key={field}>
+                  {field}
+                </li>
               ))}
-            </ul>
-          </div>
-        ) : null}
-        <button
-          onClick={onClose}
-          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Cerrar
-        </button>
+            </div>
+            <div className="grid grid-cols-1">
+              {driverMissingFields.map((field) => (
+                <li key={field}>
+                  {field}
+                </li>
+              ))}
+            </div>
+          </ul>
+        </div>
+        <div className="flex justify-center gap-5 m-5">
+          <button onClick={() => onClose(false)} className="bg-white border border-[#d91e1e] text-[#d91e1e] duration-150 px-4 py-2 rounded-[4px] hover:text-white hover:bg-[#d91e1e] flex">
+            <ChevronLeft size={18} />
+            Volver
+          </button>
+        </div>
       </div>
     </div>
   );
-
 }

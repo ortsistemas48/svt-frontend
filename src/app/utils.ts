@@ -21,8 +21,8 @@ export async function fetchUserData({ workshopId }: { workshopId: number }) {
 }
 
 
-export function getMissingPersonFields(owner: PersonType): (keyof PersonType)[] {
-  const requiredFields: (keyof PersonType)[] = [
+export function getMissingPersonFields(person: any): string[] {
+  const requiredFields = [
     "dni",
     "first_name",
     "last_name",
@@ -31,8 +31,8 @@ export function getMissingPersonFields(owner: PersonType): (keyof PersonType)[] 
     "city",
   ];
 
-  return requiredFields.filter((field) => {
-    const value = owner[field];
+  return requiredFields.filter((field: string) => {
+    const value = person[field];
     return typeof value !== "string" || value.trim() === "";
   });
 }
