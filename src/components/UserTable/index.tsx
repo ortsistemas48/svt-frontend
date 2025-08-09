@@ -18,7 +18,7 @@ export default function UserTable({ users } : { users: any[] }) {
     });
 
     return (
-        <div className="flex flex-col items-center gap-2 mt-6 ">
+        <div className="flex flex-col items-center gap-2 mt-6 px-6">
              <div className="flex justify-center gap-x-3 mt-6 w-full">
                 {/* Input con icono */}
                 <div className="w-full flex items-center border border-gray-300 rounded px-2 py-1 h-12">
@@ -26,7 +26,7 @@ export default function UserTable({ users } : { users: any[] }) {
                     <input
                         type="text"
                         onChange={(e) => setSearchText(e.target.value)}
-                        placeholder="Busca tus usuarios por nombre, email, DNI o telefono"
+                        placeholder="Busca tus usuarios por nombre, email, DNI, rol o teléfono"
                         className="w-full text-sm focus:outline-none"
                     />
                 </div>
@@ -51,13 +51,13 @@ export default function UserTable({ users } : { users: any[] }) {
             </div>
             
             <div className="border border-gray-300 mt-6 rounded-[4px] overflow-hidden w-full">
-                <table className="w-full">
-                    <thead className="bg-[#ffffff] text-[#00000080] s">
+                <table className="w-full text-sm">
+                    <thead className="bg-[#ffffff] text-[#00000080]">
                         <tr className="">
                             <th className="p-3 text-center">Nombre</th>
                             <th className="p-3 text-center">Email</th>
-                            <th className="p-3 text-center">Dni</th>
-                            <th className="p-3 text-center">Telefono</th>
+                            <th className="p-3 text-center">DNI</th>
+                            <th className="p-3 text-center">Teléfono</th>
                             <th className="p-3 text-center">Rol</th>
                         </tr>
                     </thead>
