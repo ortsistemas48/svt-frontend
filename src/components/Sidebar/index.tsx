@@ -16,7 +16,7 @@ export default function Sidebar() {
   const router = useRouter();
 
   const showWorkshops = workshops && workshops.length > 1;
-
+  console.log(workshops)
   const handleWorkshopClick = (workshopId: number) => {
     if (workshopId.toString() !== id) {
       router.push(`/dashboard/${workshopId}`);

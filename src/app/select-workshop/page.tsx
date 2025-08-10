@@ -90,7 +90,15 @@ export default function SelectWorkshopPage() {
         </section>
 
         {isGarageOwner && (
-          <article className="mt-10 flex justify-between items-center bg-[#0040B8] rounded-[4px] p-4 cursor-pointer">
+          <article
+            className="mt-10 flex justify-between items-center bg-[#0040B8] rounded-[4px] p-4 cursor-pointer"
+            onClick={() => router.push("/create-workshop")}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") router.push("/create-workshop");
+            }}
+          >
             <h3 className="mx-auto text-white">Inscribir mi taller</h3>
           </article>
         )}
