@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Pencil, Trash2, Play, RefreshCcw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { isDataEmpty } from "@/app/utils";
+import { filterApplications, isDataEmpty } from "@/app/utils";
 import { Application } from "@/app/types";
 import Table from "../Table";
 
@@ -24,27 +24,9 @@ export default function InspectionsTable() {
   const router = useRouter();
 
   
-  const filteredApplications = applications.filter((item) => {
-    if (!searchText.trim()) return true;
-
-    const query = searchText.toLowerCase();
-
-    const licensePlate = item.car?.license_plate?.toLowerCase() || "";
-    const brand = item.car?.brand?.toLowerCase() || "";
-    const model = item.car?.model?.toLowerCase() || "";
-
-    const firstName = item.owner?.first_name?.toLowerCase() || "";
-    const lastName = item.owner?.last_name?.toLowerCase() || "";
-    const dni = item.owner?.dni?.toLowerCase() || "";
-
-    return (
-      licensePlate.includes(query) ||
-      brand.includes(query) ||
-      model.includes(query) ||
-      firstName.includes(query) ||
-      lastName.includes(query) ||
-      dni.includes(query)
-    );
+  const filteredApplications = filterApplications({
+    applications,
+    searchText
   });
 
   const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);

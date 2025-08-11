@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Play, RefreshCcw } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Application } from "@/app/types";
-import { isDataEmpty } from "@/app/utils";
+import { filterApplications, isDataEmpty } from "@/app/utils";
 import Table from "../Table";
 const statusColor: Record<Application["status"], string> = {
   Completado: "text-green-600",
@@ -19,30 +19,10 @@ export default function QueueTable() {
   const itemsPerPage = 5;
   const [searchText, setSearchText] = useState("");
 
-  const filteredApplications = applications
-    .filter((item) => item.status === "En curso" || item.status === "En Cola")
-    .filter((item) => {
-      if (!searchText.trim()) return true;
-
-      const query = searchText.toLowerCase();
-
-      const licensePlate = item.car?.license_plate?.toLowerCase() || "";
-      const brand = item.car?.brand?.toLowerCase() || "";
-      const model = item.car?.model?.toLowerCase() || "";
-
-      const firstName = item.owner?.first_name?.toLowerCase() || "";
-      const lastName = item.owner?.last_name?.toLowerCase() || "";
-      const dni = item.owner?.dni?.toLowerCase() || "";
-
-      return (
-        licensePlate.includes(query) ||
-        brand.includes(query) ||
-        model.includes(query) ||
-        firstName.includes(query) ||
-        lastName.includes(query) ||
-        dni.includes(query)
-      );
-    });
+  const filteredApplications = filterApplications({
+    applications,
+    searchText,
+  });
 
   const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
   const actions = [
@@ -104,7 +84,7 @@ export default function QueueTable() {
       </div>
 
       <Table applications={applications} currentData={currentData} actions={actions}/>
-
+      
       {filteredApplications.length > itemsPerPage && (
         <div className="flex justify-center items-center mt-6 gap-2 text-sm">
           <button

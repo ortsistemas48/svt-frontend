@@ -1,6 +1,7 @@
 import page from "@/app/page";
 import { Application } from "@/app/types";
-import { Pencil, Play, Trash2 } from "lucide-react";
+import { Inspect, Pencil, Play, Trash2 } from "lucide-react";
+import InspectionTableSkeleton from "../InspectionTableSkeleton";
 const statusColor: Record<Application["status"], string> = {
   Completado: "text-green-600",
   "En curso": "text-blue-600",
@@ -8,13 +9,17 @@ const statusColor: Record<Application["status"], string> = {
   "En Cola": "text-yellow-600",
 };
 interface TableComponentProps {
-    applications: Application[];
-    currentData: Application[];
-    actions: { action: string; icon: React.ReactNode }[];
+  applications: Application[];
+  currentData: Application[];
+  actions: { action: string; icon: React.ReactNode }[];
 }
-export default function TableComponent( { applications, currentData, actions}:  TableComponentProps) {
-    return (
-        <div className="border border-gray-300 rounded-[4px] overflow-hidden">
+export default function TableComponent({ applications, currentData, actions }: TableComponentProps) {
+  return (
+    applications.length === 0 ? (
+      <InspectionTableSkeleton />
+    ) : 
+    (
+      <div className="border border-gray-300 rounded-[4px] overflow-hidden">
         <table className="w-full text-sm">
           <thead className="text-regular bg-[#ffffff] text-[#00000080]">
             <tr>
@@ -27,13 +32,8 @@ export default function TableComponent( { applications, currentData, actions}:  
             </tr>
           </thead>
           <tbody>
-            {applications.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center py-20 text-gray-600">
-                  No se encontraron inspecciones registradas.
-                </td>
-              </tr>
-            ) : (
+            {
+
               currentData.map((item) => {
                 const dateObj = new Date(item.date);
                 const date = dateObj.toLocaleDateString("es-AR");
@@ -69,29 +69,28 @@ export default function TableComponent( { applications, currentData, actions}:  
                     <td className="p-0">
                       <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
                         {actions.map(({ action, icon }, idx) => {
-                            if (
-                                action === "play" &&
-                                !["En curso", "Pendiente", "En Cola"].includes(item.status)
-                            ) {
-                                return null;
-                            }
-                            return (
-                                <span key={action + idx} className="cursor-pointer text-[#0040B8]">
-                                    {icon}
-                                </span>
-                            );
+                          if (
+                            action === "play" &&
+                            !["En curso", "Pendiente", "En Cola"].includes(item.status)
+                          ) {
+                            return null;
+                          }
+                          return (
+                            <span key={action + idx} className="cursor-pointer text-[#0040B8]">
+                              {icon}
+                            </span>
+                          );
                         })}
-                        
+
                       </div>
                     </td>
                   </tr>
                 );
               })
-            )}
+            }
           </tbody>
         </table>
-        
-
       </div>
     )
+  );
 }

@@ -1,4 +1,4 @@
-import { CarType, PersonType } from "./types";
+import { Application, CarType, PersonType } from "./types";
 
 
 export async function fetchUserData({ workshopId }: { workshopId: number }) {
@@ -110,4 +110,29 @@ export function isDataEmpty(obj: any): boolean {
       if (typeof value === "object") return isDataEmpty(value); // Evalúa objetos anidados
       return false;
     });
+}
+
+export function filterApplications({ applications, searchText }: { applications: Application[], searchText: string }) {
+  return applications.filter((item) => {
+    if (!searchText.trim()) return true;
+
+    const query = searchText.toLowerCase();
+
+    const licensePlate = item.car?.license_plate?.toLowerCase() || "";
+    const brand = item.car?.brand?.toLowerCase() || "";
+    const model = item.car?.model?.toLowerCase() || "";
+
+    const firstName = item.owner?.first_name?.toLowerCase() || "";
+    const lastName = item.owner?.last_name?.toLowerCase() || "";
+    const dni = item.owner?.dni?.toLowerCase() || "";
+
+    return (
+      licensePlate.includes(query) ||
+      brand.includes(query) ||
+      model.includes(query) ||
+      firstName.includes(query) ||
+      lastName.includes(query) ||
+      dni.includes(query)
+    );
+  });
 }
