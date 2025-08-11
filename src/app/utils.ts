@@ -31,36 +31,26 @@ export function getMissingPersonFields(person: any): string[] {
     "city",
   ];
 
-  return requiredFields.filter((field: string) => {
-    const value = person[field];
-    return typeof value !== "string" || value.trim() === "";
-  });
+  const fieldTranslations: Record<string, string> = {
+    dni: "DNI",
+    first_name: "Nombre",
+    last_name: "Apellido",
+    street: "Calle",
+    province: "Provincia",
+    city: "Ciudad",
+  };
+
+  return requiredFields
+    .filter((field: string) => {
+      const value = person[field];
+      return typeof value !== "string" || value.trim() === "";
+    })
+    .map((field) => fieldTranslations[field] || field);
 }
 
-// export type CarType = {
-//   id: number;
-//   license_plate: string;
-//   brand: string;
-//   vehicle_type: string;
-//   usage_type: string;
-//   model: string;
-//   engine_number: string;
-//   engine_brand: string;
-//   chassis_number: string;
-//   chassis_brand: string;
-//   weight: number;
-//   fuel_type: string;
-//   green_card_number: string;
-//   green_card_start: string;
-//   license_number: string;
-//   license_expiration: string;
-//   manufacture_year: number;
-//   owner_id: number;
-//   driver_id: number;
-// };
-export function isCarDataComplete(car: CarType): boolean  {
+export function getMissingCarFields(car: any): string[]  {
 
-  const requiredFields: (keyof CarType)[] = [
+  const requiredFields = [
     "license_plate",
     "brand",
     "vehicle_type",
@@ -73,15 +63,34 @@ export function isCarDataComplete(car: CarType): boolean  {
     "weight",
     "fuel_type",
     "green_card_number",
-    "green_card_start",
+    "green_card_expiration",
     "license_number",
     "license_expiration",
     "manufacture_year",
   ];
-
-  return requiredFields.every((field) => {
-    const value = car[field];
-    return typeof value === "string" && value.trim() !== "";
-  });
+  const fieldTranslations = {
+    license_plate: "Dominio",
+    brand: "Marca",
+    model: "Modelo",
+    manufacture_year: "Año",
+    weight: "Peso",
+    fuel_type: "Tipo de combustible",
+    vehicle_type: "Tipo de vehículo",
+    usage_type: "Tipo de uso",
+    engine_brand: "Marca de motor",
+    engine_number: "Número de motor",
+    chassis_number: "Número de chasis",
+    chassis_brand: "Marca de chasis",
+    green_card_number: "N° de la cédula verde",
+    green_card_expiration: "Exp. de la cédula",
+    license_number: "N° de licencia",
+    license_expiration: "Exp. de licencia",
+  };
+  return requiredFields
+    .filter((field: string) => {
+      const value = car[field];
+      return typeof value !== "string" || value.trim() === "";
+    })
+    .map((field) => fieldTranslations[field as keyof typeof fieldTranslations] || field);
 }
     

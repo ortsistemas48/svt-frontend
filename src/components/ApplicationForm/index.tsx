@@ -6,7 +6,7 @@ import VehicleForm from "@/components/VehicleForm";
 import ConfirmationForm from "@/components/ConfirmationForm";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useParams } from 'next/navigation'
-import { getMissingPersonFields } from "@/app/utils";
+import { getMissingCarFields, getMissingPersonFields } from "@/app/utils";
 import MissingDataModal from "../MissingDataModal";
 
 type Props = {
@@ -118,6 +118,9 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     fetchData();
   }, [step]);
 
+  useEffect(() => {
+    setMissingFields([]);
+  }, [step])
   const sendToQueue = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/queue`, {
@@ -142,7 +145,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
     try {
       let res;
-      // Paso 1: Guardar titular y conductor
       if (step === 1) {
         if (getMissingPersonFields(owner).length > 0) {
           const missing = getMissingPersonFields(owner).map(field => `Titular: ${field}`)
@@ -214,6 +216,14 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       // Paso 2: Guardar vehículo
       if (step === 2) {
+        
+        if (getMissingCarFields(car).length > 0) {
+          const missing = getMissingCarFields(car).map(field => `Vehículo: ${field}`)
+          setMissingFields(e => [...e, ...missing]);
+          setShowMissingDataModal(true);
+          setLoading(false);
+          return
+        }
         res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/car`, {
           method: "PUT",
           credentials: "include",
@@ -390,7 +400,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         </div>
       )}
       {
-        showMissingDataModal && missingFields && <MissingDataModal missingFields={missingFields} onClose={setShowMissingDataModal}/>
+        showMissingDataModal && <MissingDataModal missingFields={missingFields} onClose={setShowMissingDataModal}/>
       }
     </>
   );

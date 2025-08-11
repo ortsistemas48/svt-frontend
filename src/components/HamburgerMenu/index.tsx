@@ -13,19 +13,9 @@ import {
   Home
 
 } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useState } from "react";
-const links = [
-  { href: "/dashboard/", icon: <Home size={20} />, label: "Inicio" },
-  { href: "/dashboard/applications", icon: <ClipboardList size={20} />, label: "Trámites" },
-  { href: "/dashboard/inspections-queue", icon: <Clock size={20} />, label: "Cola de inspecciones" },
-  { href: "/dashboard/inspections-history", icon: <History size={20} />, label: "Historial de inspecciones" },
-  { href: "/dashboard/domains-history", icon: <FileClock size={20} />, label: "Historial de dominios" },
-  { href: "/dashboard/reprint-crt", icon: <Printer size={20} />, label: "Reimpresión de CRT" },
-  { href: "/dashboard/decals", icon: <FileText size={20} />, label: "Obleas" },
-  { href: "/dashboard/statistics", icon: <ChartColumn size={20} />, label: "Estadísticas" },
-  { href: "/dashboard/users", icon: <Users size={20} />, label: "Usuarios" },
-];
+
 export default function HamburgerMenu() {
   const pathname = usePathname();
   const getLinkClass = (href: string) => {
@@ -33,11 +23,20 @@ export default function HamburgerMenu() {
       ? "bg-[#0040B826] rounded-lg text-white"
       : "";
   }
-
+  const { id } = useParams();
   const [isOpen, setIsOpen] = useState(false);
 
+  const links = [
+  { href: `/dashboard/${id}/`, icon: <Home size={20} />, label: "Inicio" }, //todos 
+  { href: `/dashboard/${id}/applications`, icon: <ClipboardList size={20} />, label: "Inspecciones" }, //todos 
+  { href: `/dashboard/${id}/inspections-queue`, icon: <Clock size={20} />, label: "Cola de inspecciones" }, //todos 
+  { href: `/dashboard/${id}/reprint-crt`, icon: <Printer size={20} />, label: "Reimpresión de CRT" }, //todos 
+  { href: `/dashboard/${id}/decals`, icon: <FileText size={20} />, label: "Obleas" }, //todos 
+  { href: `/dashboard/${id}/statistics`, icon: <ChartColumn size={20} />, label: "Estadísticas" }, //solo el ingeniero y el garage owner
+  { href: `/dashboard/${id}/users`, icon: <Users size={20} />, label: "Usuarios" }, //solo puede verlo el garage owner 
+];
   return (
-     <div className="block md:hidden relative z-50">
+    <div className="block md:hidden relative z-50">
       <button
         type="button"
         className="p-2 w-10 h-10 text-gray-600 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
