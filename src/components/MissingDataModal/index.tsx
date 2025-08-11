@@ -11,7 +11,7 @@ export default function MissingDataModal({
   const ownerMissingFields = missingFields.filter(field => field.includes('Titular'))
   const driverMissingFields = missingFields.filter(field => field.includes('Conductor'));
   const carMissingFields = missingFields.filter(field => field.includes('Vehículo'));
-
+  
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg max-w-md w-full p-6">

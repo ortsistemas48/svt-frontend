@@ -71,3 +71,19 @@ export type UserType = {
   password: string;
   avatar: string;
 };
+
+export type Application = {
+  application_id: number;
+  car: {
+    license_plate: string;
+    model: string;
+    brand: string;
+  } | null;
+  owner: {
+    first_name: string;
+    last_name: string;
+    dni: string;
+  } | null;
+  date: string;
+  status: "Completado" | "En curso" | "Pendiente" | "En Cola";
+};

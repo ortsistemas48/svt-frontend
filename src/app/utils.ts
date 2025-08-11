@@ -48,7 +48,7 @@ export function getMissingPersonFields(person: any): string[] {
     .map((field) => fieldTranslations[field] || field);
 }
 
-export function getMissingCarFields(car: any): string[]  {
+export function getMissingCarFields(car: any): string[] {
 
   const requiredFields = [
     "license_plate",
@@ -93,4 +93,21 @@ export function getMissingCarFields(car: any): string[]  {
     })
     .map((field) => fieldTranslations[field as keyof typeof fieldTranslations] || field);
 }
-    
+
+export function isDataEmpty(obj: any): boolean {
+  if (!obj) return true;
+
+  return Object.entries(obj)
+    .filter(([key]) => key !== "id")
+    .filter(([key]) => key !== "is_owner")
+    .filter(([key]) => key !== "owner_id")
+    .filter(([key]) => key !== "driver_id")
+
+    .every(([, value]) => {
+      if (typeof value === "string") return value.trim() === "";
+      if (typeof value === "number") return false; // DNI, años, etc. cuentan como datos
+      if (value === null || value === undefined) return true;
+      if (typeof value === "object") return isDataEmpty(value); // Evalúa objetos anidados
+      return false;
+    });
+}

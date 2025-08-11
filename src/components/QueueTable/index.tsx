@@ -2,23 +2,9 @@
 import { useEffect, useState } from "react";
 import { Play, RefreshCcw } from "lucide-react";
 import { useParams } from "next/navigation";
-
-type Application = {
-  application_id: number;
-  car: {
-    license_plate: string;
-    model: string;
-    brand: string;
-  } | null;
-  owner: {
-    first_name: string;
-    last_name: string;
-    dni: string;
-  } | null;
-  date: string;
-  status: "Completado" | "En curso" | "Pendiente" | "En Cola";
-};
-
+import { Application } from "@/app/types";
+import { isDataEmpty } from "@/app/utils";
+import Table from "../Table";
 const statusColor: Record<Application["status"], string> = {
   Completado: "text-green-600",
   "En curso": "text-blue-600",
@@ -32,20 +18,6 @@ export default function QueueTable() {
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
   const [searchText, setSearchText] = useState("");
-
-  function isDataEmpty(obj: any): boolean {
-    if (!obj) return true;
-
-    return Object.entries(obj)
-      .filter(([key]) => key !== "id" && key !== "is_owner" && key !== "owner_id" && key !== "driver_id")
-      .every(([, value]) => {
-        if (typeof value === "string") return value.trim() === "";
-        if (typeof value === "number") return false;
-        if (value === null || value === undefined) return true;
-        if (typeof value === "object") return isDataEmpty(value);
-        return false;
-      });
-  }
 
   const filteredApplications = applications
     .filter((item) => item.status === "En curso" || item.status === "En Cola")
@@ -73,7 +45,12 @@ export default function QueueTable() {
     });
 
   const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
-
+  const actions = [
+    {
+    action: "Iniciar Inspección",
+    icon: <Play size={16} />
+    }
+  ]
   const currentData = filteredApplications.slice(
     (page - 1) * itemsPerPage,
     page * itemsPerPage
@@ -126,90 +103,27 @@ export default function QueueTable() {
         </div>
       </div>
 
-      <div className="border border-gray-300 rounded-[4px] overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="text-regular bg-[#ffffff] text-[#00000080]">
-            <tr>
-              <th className="p-3 text-center">ID</th>
-              <th className="p-3 text-center">Vehículo</th>
-              <th className="p-3 text-center">Titular</th>
-              <th className="p-3 text-center">Fecha de creación</th>
-              <th className="p-3 text-center">Estado</th>
-              <th className="p-3 text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredApplications.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center py-20 text-gray-600">
-                  No se encontraron inspecciones registradas.
-                </td>
-              </tr>
-            ) : (
-              currentData.map((item) => {
-                const dateObj = new Date(item.date);
-                const date = dateObj.toLocaleDateString("es-AR");
-                const time = dateObj.toLocaleTimeString("es-AR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                });
+      <Table applications={applications} currentData={currentData} actions={actions}/>
 
-                return (
-                  <tr key={item.application_id} className="border-t">
-                    <td className="p-3 text-center">{item.application_id}</td>
-                    <td className="p-3 text-center">
-                      <div className="font-medium">{item.car?.license_plate || "-"}</div>
-                      <div className="text-xs text-gray-600">
-                        {item.car?.brand} {item.car?.model}
-                      </div>
-                    </td>
-                    <td className="p-3 text-center">
-                      <div className="font-medium max-w-[160px] truncate mx-auto">
-                        {item.owner?.first_name || "-"} {item.owner?.last_name || ""}
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        {item.owner?.dni || "-"}
-                      </div>
-                    </td>
-                    <td className="p-3 text-center">
-                      <div>{date}</div>
-                      <div className="text-xs">{time}</div>
-                    </td>
-                    <td className={`p-3 font-medium text-center ${statusColor[item.status]}`}>
-                      {item.status}
-                    </td>
-                    <td className="p-0">
-                      <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
-                        <Play size={16} className="cursor-pointer text-[#0040B8]" />
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-
-        {filteredApplications.length > itemsPerPage && (
-          <div className="flex justify-center items-center mt-6 gap-2 text-sm">
-            <button
-              className="px-4 py-2 border rounded-[4px] disabled:opacity-50"
-              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              disabled={page === 1}
-            >
-              Anterior
-            </button>
-            <span>Página {page} de {totalPages}</span>
-            <button
-              className="px-4 py-2 border rounded-[4px] disabled:opacity-50"
-              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={page === totalPages}
-            >
-              Siguiente
-            </button>
-          </div>
-        )}
-      </div>
+      {filteredApplications.length > itemsPerPage && (
+        <div className="flex justify-center items-center mt-6 gap-2 text-sm">
+          <button
+            className="px-4 py-2 border rounded-[4px] disabled:opacity-50"
+            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            disabled={page === 1}
+          >
+            Anterior
+          </button>
+          <span>Página {page} de {totalPages}</span>
+          <button
+            className="px-4 py-2 border rounded-[4px] disabled:opacity-50"
+            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={page === totalPages}
+          >
+            Siguiente
+          </button>
+        </div>
+      )}
     </div>
   );
 }

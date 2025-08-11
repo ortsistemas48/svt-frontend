@@ -1,7 +1,7 @@
 import SearchEmailBar from "@/components/SearchEmailBar";
 import UserTable from "@/components/UserTable";
 import { fetchUserData } from "@/app/utils";
-import { ChevronRight, Search, ArrowRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 export default async function UsersPage( { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -34,9 +34,6 @@ export default async function UsersPage( { params }: { params: Promise<{ id: str
 
 
       </div>
-      {/* <div className="flex flex-col items-center gap-2 mt-6">
-        <UserInput />
-      </div> */}
         <UserTable users={users}/>
     </div>
   );

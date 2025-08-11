@@ -1,5 +1,6 @@
 'use client'
 import { Eye, EllipsisVertical, RefreshCcw, Search, SlidersHorizontal } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 export default function UserTable({ users } : { users: any[] }) {
     
@@ -16,6 +17,11 @@ export default function UserTable({ users } : { users: any[] }) {
             user.role.toLowerCase().includes(query)
         );
     });
+
+    const router = useRouter();
+    const handleRefresh = () => {
+        router.refresh();
+    };
 
     return (
         <div className="flex flex-col items-center gap-2 mt-6 px-6">
@@ -40,11 +46,12 @@ export default function UserTable({ users } : { users: any[] }) {
                     </span>
 
                 </button>
-                <button className="bg-white border-2 border-[#0040B8] text-white px-3 py-2 rounded flex items-center justify-center gap-x-2 ">
-
+                <button
+                    className="bg-white border-2 border-[#0040B8] text-white px-3 py-2 rounded flex items-center justify-center gap-x-2 "
+                    onClick={handleRefresh}
+                >
                     <RefreshCcw size={20} className="text-[#0040B8]" />
                     <span className="text-[#0040B8] text-sm">
-
                         Actualizar
                     </span>
                 </button>
@@ -101,5 +108,5 @@ export default function UserTable({ users } : { users: any[] }) {
                 </table>
             </div>
         </div>
-        )
+    )
 }
