@@ -21,49 +21,43 @@ export default function TableSkeleton({ rows = 5 }: TableSkeletonProps) {
         </thead>
         <tbody>
           {Array.from({ length: rows }).map((_, i) => (
-            <tr key={i} className="border-t animate-pulse">
+            <tr key={i} className="border-t animate-pulse min-h-[60px]">
               {/* ID */}
-              <td className="p-3 text-center">
+              <td className="p-3 text-center align-middle">
                 <Skeleton className="h-4 w-8 mx-auto" />
               </td>
 
               {/* Vehículo */}
-              <td className="p-3 text-center">
-                <div className="font-medium">
-                  <Skeleton className="h-4 w-16 mx-auto" />
-                </div>
-                <div className="text-xs text-gray-600 mt-1">
-                  <Skeleton className="h-3 w-24 mx-auto" />
+              <td className="p-3 text-center align-middle">
+                <div className="flex flex-col items-center gap-1">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-3 w-24" />
                 </div>
               </td>
 
               {/* Titular */}
-              <td className="p-3 text-center">
-                <div className="font-medium max-w-[160px] truncate mx-auto">
-                  <Skeleton className="h-4 w-40 mx-auto" />
-                </div>
-                <div className="text-xs text-gray-600 mt-1">
-                  <Skeleton className="h-3 w-24 mx-auto" />
+              <td className="p-3 text-center align-middle">
+                <div className="flex flex-col items-center gap-1">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-24" />
                 </div>
               </td>
 
               {/* Fecha de creación */}
-              <td className="p-3 text-center">
-                <div>
-                  <Skeleton className="h-4 w-24 mx-auto" />
-                </div>
-                <div className="text-xs mt-1">
-                  <Skeleton className="h-3 w-20 mx-auto" />
+              <td className="p-3 text-center align-middle">
+                <div className="flex flex-col items-center gap-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-20" />
                 </div>
               </td>
 
               {/* Estado */}
-              <td className="p-3 font-medium text-center">
+              <td className="p-3 text-center align-middle">
                 <Skeleton className="h-6 w-20 rounded-full mx-auto" />
               </td>
 
               {/* Acciones */}
-              <td className="p-0">
+              <td className="p-0 align-middle">
                 <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
                   <Skeleton className="h-5 w-5 rounded" />
                   <Skeleton className="h-5 w-5 rounded" />
@@ -79,7 +73,5 @@ export default function TableSkeleton({ rows = 5 }: TableSkeletonProps) {
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return (
-    <div className={`bg-gray-200/80 rounded ${className}`} />
-  );
+  return <div className={`bg-gray-200/80 rounded ${className}`} />;
 }
