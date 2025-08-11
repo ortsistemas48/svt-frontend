@@ -8,7 +8,6 @@ export default function MissingDataModal({
   missingFields: string[];
   onClose: (arg: boolean) => void;
 }) {
-  console.log("missingFields", missingFields);
   const ownerMissingFields = missingFields.filter(field => field.includes('Titular'))
   const driverMissingFields = missingFields.filter(field => field.includes('Conductor'));
   const carMissingFields = missingFields.filter(field => field.includes('Vehículo'));

@@ -35,9 +35,9 @@ export function getMissingPersonFields(person: any): string[] {
     dni: "DNI",
     first_name: "Nombre",
     last_name: "Apellido",
-    street: "Calle",
+    street: "Domicilio",
     province: "Provincia",
-    city: "Ciudad",
+    city: "Localidad",
   };
 
   return requiredFields

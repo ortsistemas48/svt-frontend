@@ -1,22 +1,11 @@
 import FormTemplate from "../FormTemplate";
-// type PersonType = {
-//   id?: number;
-//   first_name?: string;
-//   last_name?: string;
-//   dni?: string;
-//   phone_number?: string;
-//   email?: string;
-//   province?: string;
-//   city?: string;
-//   is_owner?: boolean;
-//   street?: string;
-// };
+
 const formData = [
+    { label: "DNI", placeholder: "Ej: 39.959.950", name: "dni" },
+    { label: "Email", type: "email", placeholder: "Ej: ejemplo@gmail.com", name: "email" },
     { label: "Nombre", placeholder: "Ej: Ángel", name: "first_name" },
     { label: "Apellido", placeholder: "Ej: Vaquero", name: "last_name" },
-    { label: "DNI", placeholder: "Ej: 39.959.950", name: "dni" },
     { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number" },
-    { label: "Email", type: "email", placeholder: "Ej: ejemplo@gmail.com", name: "email" },
     { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street" },
     {
         label: "Provincia",

@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useParams } from 'next/navigation'
 import { getMissingCarFields, getMissingPersonFields } from "@/app/utils";
 import MissingDataModal from "../MissingDataModal";
+import { get } from "node:http";
 
 type Props = {
   applicationId: string;
@@ -116,11 +117,9 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     };
 
     fetchData();
+    setMissingFields([]);
   }, [step]);
 
-  useEffect(() => {
-    setMissingFields([]);
-  }, [step])
   const sendToQueue = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/queue`, {
@@ -146,21 +145,27 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     try {
       let res;
       if (step === 1) {
-        if (getMissingPersonFields(owner).length > 0) {
-          const missing = getMissingPersonFields(owner).map(field => `Titular: ${field}`)
-          setMissingFields(e => [...e, ...missing]);
-          
-          setShowMissingDataModal(true);
-          setLoading(false);
-          if (!isSamePerson) {
+        if (!isSamePerson) {
+          if (getMissingPersonFields(owner).length > 0 || getMissingPersonFields(driver).length > 0) {
+            const missing = getMissingPersonFields(owner).map(field => `Titular: ${field}`)
+            setMissingFields(e => [...e, ...missing]);
+
+            setShowMissingDataModal(true);
+            setLoading(false);
+
             if (getMissingPersonFields(driver).length > 0) {
               const missing = getMissingPersonFields(driver).map(field => `Conductor: ${field}`)
               setMissingFields(e => [...e, ...missing]);
               setLoading(false);
             }
+            return
           }
-
-          console.log("missingFields", missingFields);
+        }
+        else if (getMissingPersonFields(owner).length > 0) {
+          const missing = getMissingPersonFields(owner).map(field => `Titular: ${field}`)
+          setMissingFields(e => [...e, ...missing]);
+          setShowMissingDataModal(true);
+          setLoading(false);
           return
         }
 
@@ -216,7 +221,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       // Paso 2: Guardar vehículo
       if (step === 2) {
-        
+
         if (getMissingCarFields(car).length > 0) {
           const missing = getMissingCarFields(car).map(field => `Vehículo: ${field}`)
           setMissingFields(e => [...e, ...missing]);
@@ -332,8 +337,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             <button
               disabled={loading}
               onClick={() => {
-                const missing = validateMissingFields();
-                setMissingFields(missing);
+
                 setConfirmAction("inspect");
                 setShowConfirmModal(true);
               }}
@@ -344,8 +348,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             <button
               disabled={loading}
               onClick={() => {
-                const missing = validateMissingFields();
-                setMissingFields(missing);
+
                 setConfirmAction("queue");
                 setShowConfirmModal(true);
               }}
@@ -361,26 +364,10 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h2 className="text-lg font-semibold mb-3">¿Estás seguro?</h2>
-            {missingFields.length > 0 ? (
-              <div className="text-sm text-red-600 mb-4">
-                Faltan campos por completar:
-                <ul className="list-disc list-inside mt-2">
-                  {missingFields.map((field, i) => (
-                    <li key={i}>
-                      {(() => {
-                        const [section, rawField] = field.split(":").map(s => s.trim());
-                        const label = FIELD_LABELS[rawField] || rawField;
-                        return `${section}: ${label}`;
-                      })()}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-2">¿Deseás continuar de todas formas?</p>
-              </div>
-            ) : (
-              <p className="mb-4">Vas a confirmar el trámite. ¿Deseás continuar?</p>
-            )}
-            <div className="flex justify-center gap-5 mt-10">
+
+            <p className="mb-4">Vas a confirmar el trámite. ¿Deseás continuar?</p>
+
+            <div className="flex justify-center gap-5 mt-5">
               <button onClick={() => setShowConfirmModal(false)} className="bg-white border border-[#d91e1e] text-[#d91e1e] duration-150 px-4 py-2 rounded-[4px] hover:text-white hover:bg-[#d91e1e]">Cancelar</button>
               <button
                 onClick={async () => {
@@ -400,7 +387,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         </div>
       )}
       {
-        showMissingDataModal && <MissingDataModal missingFields={missingFields} onClose={setShowMissingDataModal}/>
+        showMissingDataModal && <MissingDataModal missingFields={missingFields} onClose={setShowMissingDataModal} />
       }
     </>
   );
