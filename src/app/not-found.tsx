@@ -13,7 +13,10 @@ export default function NotFoundPage() {
         <p className="mt-4 text-gray-600">Lo sentimos, la página que buscas no existe.</p>
         <button className="mt-5 inline-block border-2 bg-black text-white px-4 py-2 rounded-xl" onClick={handleGoBack}>
           <ChevronLeft className="inline mr-2" />
-          Volver
+          <span className="text-center">
+
+            Volver
+          </span>
         </button>
       </div>
     </div>

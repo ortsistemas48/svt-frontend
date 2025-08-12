@@ -86,4 +86,5 @@ export type Application = {
   } | null;
   date: string;
   status: "Completado" | "En curso" | "Pendiente" | "En Cola";
+  result?: "Apto" | "Condicional" | "Rechazado"
 };

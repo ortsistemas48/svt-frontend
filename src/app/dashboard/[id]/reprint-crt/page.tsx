@@ -1,9 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import SearchPlateBar from "@/components/SearchPlateBar";
+import CompletedApplicationsTable from "@/components/CompletedApplicationsTable";
 
 export default async function ReprintCrtPage( { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const workshopId = Number(id);
   return (
     <div className="min-w-full">  
       <article className="flex items-center justify-between text-lg mb-6 px-4">
@@ -16,17 +15,15 @@ export default async function ReprintCrtPage( { params }: { params: Promise<{ id
 
       <div className="flex flex-col items-center gap-2">
         {/* Título */}
-        <h2 className="text-3xl font-semibold text-[#0040B8]">
+        <h2 className="text-3xl text-[#0040B8]">
           Busca tus certificados
-        </h2>
-
-        {/* Subtítulo */}
-        <p className=" text-gray-500 text-center">
-          Aqui podrás reimprimir los certificados realizados
+        </h2> 
+         <p className=" text-gray-500 text-center">
+          Aqui podras crear o asociar usuarios existentes a tu taller.
         </p>
-            <SearchPlateBar workshopId={workshopId} />
+        {/* Subtítulo */}
       </div>
-      
+        <CompletedApplicationsTable />
     </div>
   );
 }

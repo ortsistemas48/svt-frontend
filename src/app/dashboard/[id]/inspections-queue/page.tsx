@@ -12,7 +12,15 @@ export default async function QueuePage() {
           <span className="text-[#0040B8]">Cola de Inspecciones</span>
         </div>
       </article>
-
+      <div className="flex flex-col items-center gap-2">
+        {/* Título */}
+        <h2 className="text-3xl text-[#0040B8]">
+          Cola de Inspecciones
+        </h2> 
+         <p className=" text-gray-500 text-center">
+          Aqui podras iniciar las inspecciones que se encuentren en la cola.
+        </p>
+      </div>
       <QueueTable/>
     </div>
   );

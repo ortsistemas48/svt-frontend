@@ -19,32 +19,6 @@ type Props = {
   };
 };
 
-const FIELD_LABELS: Record<string, string> = {
-  first_name: "Nombre",
-  last_name: "Apellido",
-  dni: "DNI",
-  phone_number: "Teléfono",
-  email: "Email",
-  province: "Provincia",
-  city: "Ciudad",
-  street: "Dirección",
-  license_plate: "Patente",
-  brand: "Marca",
-  model: "Modelo",
-  manufacture_year: "Año",
-  weight: "Peso",
-  fuel_type: "Tipo de combustible",
-  vehicle_type: "Tipo de vehículo",
-  usage_type: "Tipo de uso",
-  engine_brand: "Marca de motor",
-  engine_number: "Número de motor",
-  chassis_number: "Número de chasis",
-  chassis_brand: "Marca de chasis",
-  green_card_number: "Nº de cédula verde",
-  green_card_expiration: "Vencimiento de cédula verde",
-  license_number: "Número de licencia",
-  license_expiration: "Vencimiento de licencia",
-};
 
 export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [step, setStep] = useState(1);
@@ -64,33 +38,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [isSamePerson, setIsSamePerson] = useState(false);
   const [car, setCar] = useState<any>({ ...(initialData?.car || {}) });
 
-  const validateMissingFields = () => {
-    const requiredFields = {
-      owner: ["first_name", "last_name", "dni", "phone_number", "email", "province", "city", "street"],
-      car: ["license_plate", "brand", "model", "manufacture_year", "weight", "fuel_type", "vehicle_type"],
-    };
-
-    const missing: string[] = [];
-
-    for (const key in requiredFields.owner) {
-      const field = requiredFields.owner[key];
-      if (!owner?.[field]) missing.push(`Titular: ${field}`);
-    }
-
-    if (!isSamePerson) {
-      for (const key in requiredFields.owner) {
-        const field = requiredFields.owner[key];
-        if (!driver?.[field]) missing.push(`Conductor: ${field}`);
-      }
-    }
-
-    for (const key in requiredFields.car) {
-      const field = requiredFields.car[key];
-      if (!car?.[field]) missing.push(`Vehículo: ${field}`);
-    }
-
-    return missing;
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -119,7 +66,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     fetchData();
     setMissingFields([]);
   }, [step]);
-
+  
   const sendToQueue = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/queue`, {
