@@ -5,46 +5,42 @@ import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import Spinner from "@/components/Spinner"; // 👈 importa el spinner
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailOrDni, setEmailOrDni] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const {user} = useUser();
+  const [submitting, setSubmitting] = useState(false); // 👈 nuevo
+  const { user } = useUser();
   const router = useRouter();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (user === null) {
-      setChecking(false); 
-    } else if (user) {
-      router.push("/select-workshop"); 
-    }
-  }, [user]);
+    if (user === null) setChecking(false);
+    else if (user) router.push("/select-workshop");
+  }, [user, router]);
 
-  if (checking || user) return null; 
+  if (checking || user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return; // evita doble submit
     setError("");
-    // Validación simple antes de enviar
+
     if (!emailOrDni.trim() || !password.trim()) {
       setError("Por favor completá todos los campos");
       return;
     }
 
     try {
+      setSubmitting(true); // 👈 empieza loading
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: emailOrDni,
-          password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailOrDni, password }),
       });
 
       if (!res.ok) {
@@ -53,11 +49,11 @@ export default function LoginForm() {
         return;
       }
 
-      const data = await res.json();
-      
+      await res.json();
+
       const sessionRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
         method: "GET",
-        credentials: "include"
+        credentials: "include",
       });
 
       if (!sessionRes.ok) {
@@ -69,18 +65,13 @@ export default function LoginForm() {
       const workshops = session.workshops || [];
       const isAdmin = session.user.is_admin;
 
-      if (isAdmin) {
-        router.push("/admin-dashboard");
-        return;
-      }
+      if (isAdmin) return router.push("/admin-dashboard");
 
       const isGarageOwner = workshops.some((w: any) => w.user_type_id === 2);
 
       if (isGarageOwner || workshops.length > 1) {
-        
         router.push("/select-workshop");
         router.refresh();
-
       } else if (workshops.length === 1) {
         router.push(`/dashboard/${workshops[0].workshop_id}`);
       } else {
@@ -89,6 +80,8 @@ export default function LoginForm() {
     } catch (err) {
       console.error("❌ Error de red:", err);
       setError("Ocurrió un error. Intentá de nuevo.");
+    } finally {
+      setSubmitting(false); // 👈 termina loading (si no hubo redirect)
     }
   };
 
@@ -113,6 +106,7 @@ export default function LoginForm() {
               className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[10px] px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
               value={emailOrDni}
               onChange={(e) => setEmailOrDni(e.target.value)}
+              disabled={submitting}
             />
 
             <div className="relative">
@@ -122,11 +116,14 @@ export default function LoginForm() {
                 className="w-full border border-[#DEDEDE] rounded-[10px] px-5 py-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={submitting}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500"
+                disabled={submitting}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {showPassword ? <EyeOff stroke="#0040B8" size={20} /> : <Eye stroke="#0040B8" size={20} />}
               </button>
@@ -136,9 +133,13 @@ export default function LoginForm() {
 
             <button
               type="submit"
-              className="mt-5 w-full bg-[#0040B8] text-white text-lg font-semibold rounded-[4px] py-3.5 hover:bg-[#0038a6] transition"
+              disabled={submitting}
+              aria-busy={submitting}
+              className={`mt-5 w-full bg-[#0040B8] text-white text-lg font-semibold rounded-[4px] py-3.5 transition
+                ${submitting ? "cursor-not-allowed" : "hover:bg-[#0038a6]"}`}
             >
-              Ingresar
+              {/* 👇 reemplaza el texto por el spinner mientras envía */}
+              {submitting ? <Spinner size={22} className="mx-auto text-white" /> : "Ingresar"}
             </button>
           </form>
         </div>
