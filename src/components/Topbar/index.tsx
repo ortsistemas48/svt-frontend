@@ -32,7 +32,7 @@ export default function Topbar() {
       console.error("❌ Error de red:", err);
     }
   };
-
+  
   // Cerrar el menú si se hace clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -50,7 +50,7 @@ export default function Topbar() {
       {/* Logo a la izquierda */}
       <div className="flex items-center">
         <HamburgerMenu />
-        <Link href="/dashboard">
+        <Link href="/">
           <Image src="/images/logo.png" alt="Logo" width={150} height={50} className="p-2" />
         </Link>
       </div>
