@@ -4,19 +4,25 @@ import { useEffect, useState } from "react";
 import { Play, RefreshCcw } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Application } from "@/app/types";
-import { filterApplications, isDataEmpty } from "@/app/utils";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
+
+const statusColor: Record<Application["status"], string> = {
+  Completado: "text-green-600",
+  "En curso": "text-blue-600",
+  Pendiente: "text-red-500",
+  "En Cola": "text-yellow-600",
+};
 
 export default function QueueTable() {
   const { id } = useParams();
-  const [apps, setApps] = useState<Application[]>([]);
+  const [items, setItems] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 5;
+  const [total, setTotal] = useState(0);
 
   const headers: TableHeader[] = [
-    { label: "ID" },
     { label: "Vehículo" },
     { label: "Titular" },
     { label: "Fecha de creación" },
@@ -27,21 +33,26 @@ export default function QueueTable() {
   const fetchApps = async () => {
     try {
       setLoading(true);
+      const usp = new URLSearchParams({
+        page: String(page),
+        per_page: String(perPage),
+        // sólo en cola o en curso
+        status_in: "En Cola,En curso",
+      });
+      if (q.trim()) usp.set("q", q.trim());
+
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/full`,
+        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/full?${usp.toString()}`,
         { credentials: "include" }
       );
-      const data: Application[] = await res.json();
-      setApps(
-        data.filter((it) => {
-          const carEmpty = isDataEmpty(it.car);
-          const ownerEmpty = isDataEmpty(it.owner);
-          return !(carEmpty && ownerEmpty);
-        })
-        .filter((it) => it.status !== "Pendiente")
-        .filter((it) => it.status !== "Completado")
-
-      );
+      if (!res.ok) throw new Error("Error al traer aplicaciones");
+      const data = await res.json();
+      setItems(data.items ?? []);
+      setTotal(data.total ?? 0);
+    } catch (err) {
+      console.error(err);
+      setItems([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -49,14 +60,14 @@ export default function QueueTable() {
 
   useEffect(() => {
     fetchApps();
-  }, [id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, page, q]);
 
-  const filtered = filterApplications({ applications: apps, searchText: q });
-  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
-  const items = filtered.slice((page - 1) * perPage, page * perPage);
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (
     <div className="px-4 pt-10">
+      {/* Búsqueda y actualizar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-3">
         <input
           type="text"
@@ -81,14 +92,13 @@ export default function QueueTable() {
         items={items}
         isLoading={loading}
         emptyMessage="No hay aplicaciones para mostrar."
-        rowsPerSkeleton={5}
+        rowsPerSkeleton={perPage}
         renderRow={(item) => {
           const d = new Date(item.date);
           const date = d.toLocaleDateString("es-AR");
           const time = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
           return (
             <tr key={item.application_id} className="border-t">
-              <td className="p-3 text-center">{item.application_id}</td>
               <td className="p-3 text-center">
                 <div className="font-medium">{item.car?.license_plate || "-"}</div>
                 <div className="text-xs text-gray-600">
@@ -105,9 +115,7 @@ export default function QueueTable() {
                 <div>{date}</div>
                 <div className="text-xs">{time}</div>
               </td>
-              <td className={`p-3 font-medium text-center ${
-                { Completado: "text-green-600", "En curso": "text-blue-600", Pendiente: "text-red-500", "En Cola": "text-yellow-600" }[item.status]
-              }`}>
+              <td className={`p-3 font-medium text-center ${statusColor[item.status]}`}>
                 {item.status}
               </td>
               <td className="p-0">
@@ -117,7 +125,7 @@ export default function QueueTable() {
               </td>
             </tr>
           );
-        }}
+        }}  
         renderSkeletonRow={(cols, i) => (
           <tr key={`sk-row-${i}`} className="border-t animate-pulse min-h-[60px]">
             <td className="p-3 text-center"><Sk className="h-4 w-8 mx-auto" /></td>
@@ -151,13 +159,21 @@ export default function QueueTable() {
         )}
       />
 
-      {!loading && filtered.length > perPage && (
+      {!loading && total > perPage && (
         <div className="flex justify-center items-center mt-6 gap-2 text-sm">
-          <button className="px-4 py-2 border rounded-[4px]" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+          <button
+            className="px-4 py-2 border rounded-[4px]"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
             Anterior
           </button>
           <span>Página {page} de {totalPages}</span>
-          <button className="px-4 py-2 border rounded-[4px]" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+          <button
+            className="px-4 py-2 border rounded-[4px]"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+          >
             Siguiente
           </button>
         </div>

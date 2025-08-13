@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Play, Pencil, Trash2, RefreshCcw } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Application } from "@/app/types";
-import { filterApplications, isDataEmpty } from "@/app/utils";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 
 const statusColor: Record<Application["status"], string> = {
@@ -16,49 +15,57 @@ const statusColor: Record<Application["status"], string> = {
 
 export default function InspectionTable() {
   const { id } = useParams();
-  const [apps, setApps] = useState<Application[]>([]);
+  const [items, setItems] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 5;
+  const [total, setTotal] = useState(0);
 
   const headers: TableHeader[] = [
-    { label: "ID" },
     { label: "Vehículo" },
     { label: "Titular" },
     { label: "Fecha de creación" },
     { label: "Estado" },
     { label: "Acciones" },
   ];
-  
+
   const fetchApps = async () => {
     try {
       setLoading(true);
+      const usp = new URLSearchParams({
+        page: String(page),
+        per_page: String(perPage),
+      });
+      if (q.trim()) usp.set("q", q.trim());
+
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/full`,
+        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/full?${usp.toString()}`,
         { credentials: "include" }
       );
-      const data: Application[] = await res.json();
-      setApps(
-        data.filter((it) => {
-          const carEmpty = isDataEmpty(it.car);
-          const ownerEmpty = isDataEmpty(it.owner);
-          return !(carEmpty && ownerEmpty);
-        })
-      );
+      if (!res.ok) throw new Error("Error al traer aplicaciones");
+      const data = await res.json();
+
+      // data.items ya viene paginado desde el backend
+      setItems(data.items ?? []);
+      setTotal(data.total ?? 0);
+    } catch (err) {
+      console.error(err);
+      setItems([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
 
+  // Cargar al montar y cada vez que cambien id, page o q
   useEffect(() => {
     fetchApps();
-  }, [id]); // recarga si cambia el taller
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, page, q]);
 
-  const filtered = filterApplications({ applications: apps, searchText: q });
-  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
-  const items = filtered.slice((page - 1) * perPage, page * perPage);
-  
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+
   return (
     <div className="px-4">
       {/* Filtros/acciones */}
@@ -68,7 +75,7 @@ export default function InspectionTable() {
           value={q}
           onChange={(e) => {
             setQ(e.target.value);
-            setPage(1);
+            setPage(1); // reset al cambiar búsqueda
           }}
           className="border px-4 py-3 rounded-[4px] w-full flex-1"
           placeholder="Busca inspecciones por su: Dominio, Propietario u Oblea"
@@ -88,15 +95,13 @@ export default function InspectionTable() {
         items={items}
         isLoading={loading}
         emptyMessage="No hay aplicaciones para mostrar."
-        rowsPerSkeleton={5}
-        // Cómo se ve cada fila real:
+        rowsPerSkeleton={perPage}
         renderRow={(item) => {
           const d = new Date(item.date);
           const date = d.toLocaleDateString("es-AR");
           const time = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
           return (
             <tr key={item.application_id} className="border-t">
-              <td className="p-3 text-center">{item.application_id}</td>
               <td className="p-3 text-center">
                 <div className="font-medium">{item.car?.license_plate || "-"}</div>
                 <div className="text-xs text-gray-600">
@@ -126,9 +131,8 @@ export default function InspectionTable() {
             </tr>
           );
         }}
-        // Cómo se ve CADA fila del skeleton (mismo layout que la real):
         renderSkeletonRow={(cols, i) => (
-          <tr  key={`sk-row-${i}`} className="border-t animate-pulse min-h-[60px]">
+          <tr key={`sk-row-${i}`} className="border-t animate-pulse min-h-[60px]">
             <td className="p-3 text-center"><Sk className="h-4 w-8 mx-auto" /></td>
             <td className="p-3 text-center">
               <div className="flex flex-col items-center gap-1">
@@ -162,13 +166,21 @@ export default function InspectionTable() {
         )}
       />
 
-      {!loading && filtered.length > perPage && (
+      {!loading && total > perPage && (
         <div className="flex justify-center items-center mt-6 gap-2 text-sm">
-          <button className="px-4 py-2 border rounded-[4px]" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+          <button
+            className="px-4 py-2 border rounded-[4px]"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
             Anterior
           </button>
-          <span>Página {page} de {totalPages}</span>
-          <button className="px-4 py-2 border rounded-[4px]" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+          <span>Página {page} de {Math.max(1, Math.ceil(total / perPage))}</span>
+          <button
+            className="px-4 py-2 border rounded-[4px]"
+            onClick={() => setPage((p) => Math.min(Math.ceil(total / perPage), p + 1))}
+            disabled={page >= totalPages}
+          >
             Siguiente
           </button>
         </div>
