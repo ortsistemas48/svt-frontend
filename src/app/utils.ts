@@ -136,3 +136,17 @@ export function filterApplications({ applications, searchText }: { applications:
     );
   });
 }
+
+export function genPassword(){
+    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const lower = "abcdefghijkmnopqrstuvwxyz";
+    const nums  = "23456789";
+    const syms  = "!@#$%^&*()-_=+";
+    const all = upper + lower + nums + syms;
+    const pick = (set: string) => set[Math.floor(Math.random() * set.length)];
+    let p = pick(upper) + pick(lower) + pick(nums) + pick(syms);
+    for (let i = 4; i < 12; i++) p += pick(all);
+    p = p.split("").sort(() => Math.random() - 0.5).join("");
+    
+    return p;
+  };

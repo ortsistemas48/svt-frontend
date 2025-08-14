@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { Eye, EyeOff, ChevronRight, ChevronLeft } from "lucide-react";
-
+import { genPassword } from "@/app/utils";
 type User = {
   id: number;
   first_name: string;
@@ -110,20 +110,12 @@ export default function CreateOrAttachUserPage() {
     setShowConfirm(false);
   };
 
-  const genPassword = () => {
-    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-    const lower = "abcdefghijkmnopqrstuvwxyz";
-    const nums  = "23456789";
-    const syms  = "!@#$%^&*()-_=+";
-    const all = upper + lower + nums + syms;
-    const pick = (set: string) => set[Math.floor(Math.random() * set.length)];
-    let p = pick(upper) + pick(lower) + pick(nums) + pick(syms);
-    for (let i = 4; i < 12; i++) p += pick(all);
-    p = p.split("").sort(() => Math.random() - 0.5).join("");
-    setPassword(p);
-    setConfirm(p);
+  const handleGeneratePassword = () => {
+   const generatePassword = genPassword();
+   setPassword(generatePassword);
+    setConfirm(generatePassword);
     setMsg({ type: "success", text: "Contraseña generada" });
-  };
+  }
 
   const submit = async () => {
     setMsg(null);
@@ -277,7 +269,7 @@ export default function CreateOrAttachUserPage() {
                 {showPass ? <EyeOff className="w-5 h-5 text-[#0040B8]" /> : <Eye className="w-5 h-5 text-[#0040B8]" />}
               </button>
               {!isReadOnly && (
-                <button type="button" onClick={genPassword} className="text-xs text-[#0040B8] mt-2">
+                <button type="button" onClick={handleGeneratePassword} className="text-xs text-[#0040B8] mt-2">
                   Generar automáticamente
                 </button>
               )}

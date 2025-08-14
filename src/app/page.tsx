@@ -7,8 +7,9 @@ export const metadata = {
 
 export default function Home() {
   return (
-    <>
-      <LoginForm />;
-    </>
+    <div className="min-h-full grid place-items-center bg-white">
+
+      <LoginForm />
+    </div>
   )
 }

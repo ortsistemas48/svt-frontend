@@ -6,6 +6,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import Spinner from "@/components/Spinner"; // 👈 importa el spinner
+import Link from "next/link";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -86,8 +87,9 @@ export default function LoginForm() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-white font-sans">
-      <div className="w-full max-w-md bg-white rounded-[10px] border border-[#DEDEDE] px-4 py-10 text-center flex flex-col justify-between">
+      <div className="w-full max-w-md bg-white rounded-[10px] border border-[#DEDEDE] px-4 py-10 text-center
+                      flex flex-col justify-between
+                      max-h-[calc(100dvh-2rem)] overflow-auto"> {/* 👈 scroll interno, no en body */}
         <div className="space-y-8">
           <Image
             src="/images/logo.png"
@@ -138,16 +140,19 @@ export default function LoginForm() {
               className={`mt-5 w-full bg-[#0040B8] text-white text-lg font-semibold rounded-[4px] py-3.5 transition
                 ${submitting ? "cursor-not-allowed" : "hover:bg-[#0038a6]"}`}
             >
-              {/* 👇 reemplaza el texto por el spinner mientras envía */}
               {submitting ? <Spinner size={22} className="mx-auto text-white" /> : "Ingresar"}
             </button>
           </form>
         </div>
+        <Link href="#" className="text-sm mt-6 text-[#0040B8] hover:underline">
+          ¿No Tienes Cuenta? Regístrate
+        </Link>
 
-        <a href="#" className="text-sm mt-7 text-[#0040B8] hover:underline">
+        <Link href="#" className="text-sm mt-2 text-[#0040B8] hover:underline">
           ¿Olvidaste tu contraseña?
-        </a>
+        </Link>
       </div>
-    </main>
-  );
+    
+);
+
 }

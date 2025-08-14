@@ -2,6 +2,7 @@ import "./globals.css";
 import { Poppins } from "next/font/google";
 import ClientLayout from "@/layouts/ClientLayout";
 import { cookies } from "next/headers";
+
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "600"],
