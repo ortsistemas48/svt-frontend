@@ -144,11 +144,11 @@ export default function LoginForm() {
             </button>
           </form>
         </div>
-        <Link href="#" className="text-sm mt-6 text-[#0040B8] hover:underline">
+        <Link href="/register-owner" className="text-sm mt-6 text-[#00000099] hover:underline">
           ¿No Tienes Cuenta? Regístrate
         </Link>
 
-        <Link href="#" className="text-sm mt-2 text-[#0040B8] hover:underline">
+        <Link href="#" className="text-sm mt-3 text-[#0040B8] hover:underline">
           ¿Olvidaste tu contraseña?
         </Link>
       </div>
