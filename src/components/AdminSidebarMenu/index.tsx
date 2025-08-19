@@ -2,15 +2,10 @@
 import Link from "next/link"
 import NavItem from "@/components/NavItem"
 import {
-  ClipboardList,
-  Clock,
-  History,
-  FileText,
-  FileClock,
-  Printer,
-  ChartColumn,
+  UserCheck,
+  FilePlus2,
+  ShieldUser,
   Users,
-  Home
 
 } from "lucide-react";
 import { usePathname, useParams } from "next/navigation";
@@ -25,13 +20,12 @@ export default function SideBarMenu(){
         : "";
     }
     
-
+    
     const links = [
-        { href: `/dashboard/${id}/`, icon: <Home size={20} />, label: "Inicio" }, //todos 
-        { href: `/dashboard/${id}/applications`, icon: <ClipboardList size={20} />, label: "Inspecciones" }, //todos 
-        { href: `/dashboard/${id}/reprint-crt`, icon: <Printer size={20} />, label: "Reimpresión de CRT" }, //todos 
-        { href: `/dashboard/${id}/statistics`, icon: <ChartColumn size={20} />, label: "Estadísticas" }, //solo el ingeniero y el garage owner
-        { href: `/dashboard/${id}/users`, icon: <Users size={20} />, label: "Usuarios" }, //solo puede verlo el garage owner 
+        { href: `/admin-dashboard/create-decals`, icon: <FilePlus2 size={20} />, label: "Alta de Obleas" }, 
+        { href: `/admin-dashboard/approve-users`, icon: <UserCheck size={20} />, label: "Aprobar Titulares" }, 
+        { href: `/admin-dashboard/users`, icon: <Users size={20} />, label: "Usuarios" },
+        { href: `/admin-dashboard/support`, icon: <ShieldUser size={20} />, label: "Soporte" },  
     ];
     return (
         <nav className="flex flex-col space-y-2 ">
