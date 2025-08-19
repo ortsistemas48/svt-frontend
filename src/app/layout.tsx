@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Poppins } from "next/font/google";
 import ClientLayout from "@/layouts/ClientLayout";
-import { cookies } from "next/headers";
+import { getUserFromCookies } from "@/auth";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -14,29 +14,7 @@ export const metadata = {
   description: "Sistema RTO",
 };
 
-export async function getUserFromCookies() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((cookie) => `${cookie.name}=${cookie.value}`)
-    .join("; ");
 
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-      headers: {
-        cookie: cookieHeader,
-      },
-      cache: "no-store",
-    });
-
-    if (!res.ok) return { user: null, workshops: [] };
-
-    const data = await res.json();
-    return { user: data.user, workshops: data.workshops };
-  } catch {
-    return { user: null, workshops: [] };
-  }
-}
 export default async function RootLayout({
   children,
 }: {

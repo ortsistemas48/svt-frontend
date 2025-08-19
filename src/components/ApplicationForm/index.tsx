@@ -6,7 +6,7 @@ import VehicleForm from "@/components/VehicleForm";
 import ConfirmationForm from "@/components/ConfirmationForm";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useParams } from 'next/navigation'
-import { getMissingCarFields, getMissingPersonFields } from "@/app/utils";
+import { getMissingCarFields, getMissingPersonFields } from "@/utils";
 import MissingDataModal from "../MissingDataModal";
 import { get } from "node:http";
 

@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { Eye, EyeOff, ChevronRight, ChevronLeft } from "lucide-react";
-import { genPassword } from "@/app/utils";
+import { genPassword } from "@/utils";
 type User = {
   id: number;
   first_name: string;

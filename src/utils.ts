@@ -1,4 +1,5 @@
-import { Application, CarType, PersonType } from "./types";
+import { cookies } from "next/headers";
+import { Application, CarType, PersonType } from "./app/types";
 
 
 export async function fetchUserData({ workshopId }: { workshopId: number }) {

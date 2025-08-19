@@ -1,5 +1,5 @@
 import { PersonType } from "@/app/types";
-import { getMissingPersonFields } from "@/app/utils";
+import { getMissingPersonFields } from "@/utils";
 import { ChevronLeft } from "lucide-react";
 
 export default function MissingDataModal({

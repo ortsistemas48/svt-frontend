@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { RefreshCcw, Eye, Download } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import { Application } from "@/app/types";
-import { filterApplications, isDataEmpty } from "@/app/utils";
+import { filterApplications, isDataEmpty } from "@/utils";
 import { useParams } from "next/navigation";
 
 const statusColor: Record<string, string> = {

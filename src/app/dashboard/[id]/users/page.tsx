@@ -1,6 +1,6 @@
 import SearchEmailBar from "@/components/SearchEmailBar";
 import UserTable from "@/components/UserTable";
-import { fetchUserData } from "@/app/utils";
+import { fetchUserData } from "@/utils";
 import { ChevronRight } from "lucide-react";
 
 export default async function UsersPage( { params }: { params: Promise<{ id: string }> }) {

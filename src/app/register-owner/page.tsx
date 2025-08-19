@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { genPassword } from "../utils";
+import { genPassword } from "../../utils";
 import { EyeOff, Eye } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
