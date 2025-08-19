@@ -98,9 +98,10 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   const isReadOnly = mode === 'view';
 
   const handleChange = (key: string, value: string) => {
+    
     setCar((prev: any) => ({
       ...prev,
-      [key]: value,
+      [key]: key === "license_plate" ? value.toUpperCase() : value,
     }));
   };
   useEffect(() => {
@@ -147,7 +148,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   // 🔹 Paso previo: búsqueda por patente
   if (mode === 'idle') {
     return (
-      <div className="space-y-6 mb-10 px-4 mt-12">
+      <div className="space-y-6 mb-10 px-4 mt-12 ">
         <div>
           <h2 className="text-xl font-regular text-[#000000] mb-1">Datos del vehículo</h2>
           <p className="text-md font-regular text-[#00000080] mb-6">
@@ -249,6 +250,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                   onChange={(val) => handleChange(field.name, val)}
                 />
               ) : (
+
                 <FormField
                   key={index}
                   label={field.label}

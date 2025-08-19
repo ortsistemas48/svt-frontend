@@ -265,6 +265,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       
         <div className="flex gap-x-3 justify-center px-4 pt-8 pb-10">
+          { step !== 1 && (
           <button
             onClick={handlePrev}
             disabled={loading}
@@ -273,6 +274,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             <ChevronLeft size={18} />
             Volver
           </button>
+          )}
           {step !== 3 && !isIdle && (
             <button
               onClick={handleNext}
