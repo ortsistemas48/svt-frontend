@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useParams } from 'next/navigation'
 import { getMissingCarFields, getMissingPersonFields } from "@/utils";
 import MissingDataModal from "../MissingDataModal";
-import { get } from "node:http";
+import { useApplication } from "@/context/ApplicationContext";
 
 type Props = {
   applicationId: string;
@@ -21,6 +21,7 @@ type Props = {
 
 
 export default function ApplicationForm({ applicationId, initialData }: Props) {
+  const { isIdle, setIsIdle } = useApplication();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const router = useRouter()
@@ -66,7 +67,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     fetchData();
     setMissingFields([]);
   }, [step]);
-  
+
   const sendToQueue = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/queue`, {
@@ -223,6 +224,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   };
 
   const handlePrev = () => {
+    setIsIdle(false)
     if (step > 1) setStep(step - 1);
   };
 
@@ -261,51 +263,54 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       <div>{renderStepContent()}</div>
 
-      <div className="flex gap-x-3 justify-center px-4 pt-8 pb-10">
-        <button
-          onClick={handlePrev}
-          disabled={loading}
-          className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5"
-        >
-          <ChevronLeft size={18} />
-          Volver
-        </button>
-        {step !== 3 && (
+      
+        <div className="flex gap-x-3 justify-center px-4 pt-8 pb-10">
           <button
-            onClick={handleNext}
+            onClick={handlePrev}
             disabled={loading}
-            className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5"
+            className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5"
           >
-            {loading ? "Guardando..." : "Continuar"}
+            <ChevronLeft size={18} />
+            Volver
           </button>
-        )}
-        {step === 3 && (
-          <>
+          {step !== 3 && !isIdle && (
             <button
+              onClick={handleNext}
               disabled={loading}
-              onClick={() => {
-
-                setConfirmAction("inspect");
-                setShowConfirmModal(true);
-              }}
               className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5"
             >
-              {loading ? "Guardando..." : "Inspeccionar"}
+              {loading ? "Guardando..." : "Continuar"}
             </button>
-            <button
-              disabled={loading}
-              onClick={() => {
+          )}
+          {step === 3 && (
+            <>
+              <button
+                disabled={loading}
+                onClick={() => {
 
-                setConfirmAction("queue");
-                setShowConfirmModal(true);
-              }}
-              className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5"
-            >
-              Enviar a cola <ChevronRight size={18} />
-            </button>
-          </>
-        )}
-      </div>
+                  setConfirmAction("inspect");
+                  setShowConfirmModal(true);
+                }}
+                className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5"
+              >
+                {loading ? "Guardando..." : "Inspeccionar"}
+              </button>
+              <button
+                disabled={loading}
+                onClick={() => {
+
+                  setConfirmAction("queue");
+                  setShowConfirmModal(true);
+                }}
+                className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5"
+              >
+                Enviar a cola <ChevronRight size={18} />
+              </button>
+            </>
+          )}
+        </div>
+      
+
 
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

@@ -1,7 +1,8 @@
 'use client';
 
 import FormField from "@/components/PersonFormField";
-import React, { useMemo, useState } from "react";
+import { useApplication } from "@/context/ApplicationContext";
+import React, { useEffect, useMemo, useState } from "react";
 
 interface FormFieldData {
   label: string;
@@ -81,15 +82,16 @@ const formData2: FormFieldData[] = [
 type Mode = 'idle' | 'view' | 'edit';
 
 export default function VehicleForm({ car, setCar }: VehicleFormProps) {
+  const { setIsIdle } = useApplication();
   const [plateQuery, setPlateQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>('idle'); // 👈 control del flujo
-
   // Si ya vino un car con patente pre-cargada, mostramos formulario (view por defecto)
   useMemo(() => {
     if (car?.license_plate && mode === 'idle') {
       setMode('view');
+      
     }
   }, [car?.license_plate, mode]);
 
@@ -101,6 +103,9 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
       [key]: value,
     }));
   };
+  useEffect(() => {
+    setIsIdle(mode === 'idle')
+  }, [mode])
 
   const fetchVehicleByPlate = async () => {
     const plate = plateQuery.trim().toUpperCase();
@@ -190,7 +195,6 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     );
   }
 
-  // 🔹 Formulario (modo view = solo lectura, modo edit = editable)
   return (
     <div className="space-y-6 mb-10 px-4 mt-12">
       <div className="flex items-start justify-between gap-4">
@@ -213,7 +217,8 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
           onClick={() => {
             // Volver al buscador, conservando lo tipeado por si quiere reusar
              setSearchError(null);
-              setMode('idle');
+              setMode("idle")
+              setIsIdle(true)
               setPlateQuery('');        // ← limpia el input
               setCar({}); 
           }}

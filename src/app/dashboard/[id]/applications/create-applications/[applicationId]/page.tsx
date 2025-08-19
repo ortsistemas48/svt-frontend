@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import ApplicationForm from "@/components/ApplicationForm";
+import { ApplicationProvider } from "@/context/ApplicationContext";
 
 export default function CreateApplicationPage() {
   const params = useParams();
   const applicationId = params?.applicationId as string;
   const [application, setApplication] = useState(null);
-  
+
   useEffect(() => {
     async function fetchApplication(id: string) {
       try {
@@ -44,6 +45,8 @@ export default function CreateApplicationPage() {
   }
 
   return (
-    <ApplicationForm applicationId={applicationId} initialData={application}/>
+    <ApplicationProvider>
+      <ApplicationForm applicationId={applicationId} initialData={application} />
+    </ApplicationProvider>
   );
 }
