@@ -35,6 +35,11 @@ export default function SelectWorkshopPage() {
       }
 
       const data = await res.json();
+      if (data.user.is_admin) {
+        router.push("/admin-dashboard");
+        return;
+      }
+
       setWorkshops(data.workshops || []);
 
       const hasGarageOwner = (data.workshops || []).some(
