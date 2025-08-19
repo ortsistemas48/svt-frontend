@@ -66,7 +66,11 @@ export default function LoginForm() {
       const workshops = session.workshops || [];
       const isAdmin = session.user.is_admin;
 
-      if (isAdmin) return router.push("/admin-dashboard");
+      if (isAdmin) {
+          router.push("/admin-dashboard");
+          router.refresh();
+          return;
+      }
 
       const isGarageOwner = workshops.some((w: any) => w.user_type_id === 2);
 
