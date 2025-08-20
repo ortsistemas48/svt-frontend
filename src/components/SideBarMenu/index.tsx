@@ -31,7 +31,7 @@ export default function SideBarMenu(){
         { href: `/dashboard/${id}/applications`, icon: <ClipboardList size={20} />, label: "Inspecciones" }, //todos 
         { href: `/dashboard/${id}/inspections-queue`, icon: <Clock size={20} />, label: "Cola de inspecciones" }, //todos 
         { href: `/dashboard/${id}/reprint-crt`, icon: <Printer size={20} />, label: "Reimpresión de CRT" }, //todos 
-        { href: `/dashboard/${id}/decals`, icon: <FileText size={20} />, label: "Obleas" }, //todos 
+        { href: `/dashboard/${id}/reasign-oblea`, icon: <FileText size={20} />, label: "Reasignación de Obleas" }, //todos 
         { href: `/dashboard/${id}/statistics`, icon: <ChartColumn size={20} />, label: "Estadísticas" }, //solo el ingeniero y el garage owner
         { href: `/dashboard/${id}/users`, icon: <Users size={20} />, label: "Usuarios" }, //solo puede verlo el garage owner 
     ];
