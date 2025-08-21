@@ -1,12 +1,9 @@
-import SearchEmailBar from "@/components/SearchEmailBar";
-import UserTable from "@/components/UserTable";
-import { fetchUserData } from "@/utils";
+import UserTable from "@/components/ApproveUserTable";
+import { fetchAdminPendingUserData } from "@/utils";
 import { ChevronRight } from "lucide-react";
 
-export default async function UsersPage( { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const workshopId = Number(id);
-  const usersInWorkshop = await fetchUserData({ workshopId });
+export default async function UsersPage() {
+  const usersInWorkshop = await fetchAdminPendingUserData();
   const { users } = usersInWorkshop;
   return (
     <div className="min-w-full">  
@@ -21,14 +18,12 @@ export default async function UsersPage( { params }: { params: Promise<{ id: str
       <div className="flex flex-col items-center gap-2">
         {/* Título */}
         <h2 className="text-3xl text-[#0040B8]">
-          Crea o añade tus usuarios
+          Aprobar nuevos titulares
         </h2>
-
-        {/* Subtítulo */}
         <p className=" text-gray-500 text-center">
-          Aqui podrás crear o asociar usuarios existentes a tu taller.
+          Aqui podrás aprobar a los titulares registrados en el sistema.
         </p>
-        <SearchEmailBar workshopId={workshopId} />
+
       </div>
         <UserTable users={users}/>
     </div>

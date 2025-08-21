@@ -198,6 +198,8 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             green_card_expiration: car.green_card_expiration,
             license_number: car.license_number,
             license_expiration: car.license_expiration,
+            insurance: car.insurance,
+            sticker_id: car.sticker_id,
           }),
         });
         if (!res.ok) throw new Error("Error al guardar el vehículo");

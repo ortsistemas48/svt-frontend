@@ -2,6 +2,78 @@ import { cookies } from "next/headers";
 import { Application, CarType, PersonType } from "./app/types";
 
 
+export async function fetchAvailableStickers({
+  workshopId,
+  currentCarId,
+  currentLicensePlate,
+}: {
+  workshopId: number;
+  currentCarId?: number;
+  currentLicensePlate?: string;
+}) {
+  const params = new URLSearchParams({ workshop_id: String(workshopId) });
+  if (currentCarId) params.set("current_car_id", String(currentCarId));
+  if (currentLicensePlate) params.set("current_license_plate", currentLicensePlate);
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/available?${params}`, {
+    credentials: "include",
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(t || "No se pudieron cargar las obleas");
+  }
+  return res.json(); // [{id, sticker_number, expiration_date, issued_at, status}]
+}
+
+
+export async function assignStickerToCar(license_plate: string, sticker_id: number, workshop_id?: number) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/assign-to-car`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ license_plate, sticker_id, workshop_id, mark_used: true }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function unassignStickerFromCar(license_plate: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/unassign-from-car`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ license_plate, set_available: true }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+
+export async function fetchAdminPendingUserData({
+  limit = 100,
+  offset = 0,
+}: { limit?: number; offset?: number } = {}) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/users/get_users/pending?limit=${limit}&offset=${offset}`,
+    {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Error al traer usuarios pendientes:", text);
+    return;
+  }
+
+  return res.json();
+}
+
+
 export async function fetchUserData({ workshopId }: { workshopId: number }) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/get_users/workshop/${workshopId}`, {
     method: "GET",
@@ -17,6 +89,32 @@ export async function fetchUserData({ workshopId }: { workshopId: number }) {
     console.error("Error al traer la aplicación:", text);
     return;
   }
+  const data = await res.json();
+  return data;
+}
+
+export async function fetchAdminUserData({
+  limit = 100,
+  offset = 0,
+}: { limit?: number; offset?: number } = {}) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/users/get_users/all?limit=${limit}&offset=${offset}`,
+    {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Error al traer los usuarios:", text);
+    return;
+  }
+
   const data = await res.json();
   return data;
 }

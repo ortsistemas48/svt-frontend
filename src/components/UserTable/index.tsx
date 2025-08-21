@@ -72,7 +72,7 @@ export default function UserTable({ users } : { users: any[] }) {
                         {filteredUsers.length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="text-center py-20 text-gray-600">
-                                    No se usuarios en este taller.
+                                    No hay usuarios en este taller.
                                 </td>
                             </tr>
                         ) : (

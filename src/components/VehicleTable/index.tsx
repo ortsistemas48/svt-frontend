@@ -30,10 +30,8 @@ const tableData = [
   { label: "Exp. de la cédula", key: "green_card_expiration" },
   { label: "Nº de licencia", key: "license_number" },
   { label: "Exp. de la licencia", key: "license_expiration" },
-  {
-    label: "Oblea",
-    key: "oblea_vincular",
-  },
+  { label: "Póliza del seguro", key: "insurance" },
+  { label: "Oblea", key: "sticker_id" },
 ];
 
 const renderVehicle = (car: CarType) => {

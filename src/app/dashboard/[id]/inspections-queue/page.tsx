@@ -18,7 +18,7 @@ export default async function QueuePage() {
           Cola de Inspecciones
         </h2> 
          <p className=" text-gray-500 text-center">
-          Aqui podras iniciar las inspecciones que se encuentren en la cola.
+          Aqui podrás iniciar las inspecciones que se encuentren en la cola.
         </p>
       </div>
       <QueueTable/>

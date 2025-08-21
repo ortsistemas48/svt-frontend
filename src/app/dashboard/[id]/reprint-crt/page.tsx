@@ -1,5 +1,4 @@
 import { ChevronRight } from "lucide-react";
-import SearchPlateBar from "@/components/SearchPlateBar";
 import CompletedApplicationsTable from "@/components/CompletedApplicationsTable";
 
 export default async function ReprintCrtPage( { params }: { params: Promise<{ id: string }> }) {
@@ -19,7 +18,7 @@ export default async function ReprintCrtPage( { params }: { params: Promise<{ id
           Busca tus certificados
         </h2> 
          <p className=" text-gray-500 text-center">
-          Aqui podras crear o asociar usuarios existentes a tu taller.
+          Aqui podrás crear o asociar usuarios existentes a tu taller.
         </p>
         {/* Subtítulo */}
       </div>
