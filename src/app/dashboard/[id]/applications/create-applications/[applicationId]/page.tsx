@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import ApplicationForm from "@/components/ApplicationForm";
 import { ApplicationProvider } from "@/context/ApplicationContext";
 import Skeleton from "@/components/Skeleton";
@@ -44,9 +44,11 @@ function ApplicationSkeleton() {
 
 export default function CreateApplicationPage() {
   const params = useParams();
+  const { id } = params;
+  const workshopId = Number(id);
   const applicationId = params?.applicationId as string;
   const [application, setApplication] = useState(null);
-
+  const router = useRouter();
   useEffect(() => {
     async function fetchApplication(id: string) {
       try {
@@ -58,7 +60,7 @@ export default function CreateApplicationPage() {
           },
           cache: "no-store",
         });
-
+        
         if (!res.ok) {
           const text = await res.text();
           console.error("Error al traer la aplicación:", text);
@@ -66,6 +68,11 @@ export default function CreateApplicationPage() {
         }
 
         const data = await res.json();
+        console.log("workshopId:", workshopId, "data.workshop_id:", data.workshop_id);
+        if (workshopId !== data.workshop_id) {
+          router.push(`/dashboard/${workshopId}/applications`);
+          return;
+        }
         setApplication(data);
       } catch (err) {
         console.error("Error de red:", err);

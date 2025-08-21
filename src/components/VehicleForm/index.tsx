@@ -95,18 +95,14 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     .replace(/[-\s]/g, "");
 
   const loadStickers = async (plateOverride?: string) => {
-    console.log(workshopId)
     try {
-      console.log('try')
       setLoadingStickers(true);
       setStickersError(null);
-      console.log('try2')
       const data = await fetchAvailableStickers({
         workshopId,
         currentCarId: car?.id,
         currentLicensePlate: plateOverride ?? (effectivePlate || undefined),
       });
-      console.log(data)
       setStickerOptions(
         data.map((s: any) => ({
           value: String(s.id),
@@ -164,12 +160,10 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     try {
       setIsSearching(true);
       setSearchError(null);
-
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
         { credentials: "include" }
       );
-
       if (res.status === 404) {
         // no existe, habilitá edición y cargá obleas inmediatamente
         setCar((prev: any) => ({ ...prev, license_plate: plate }));
@@ -183,6 +177,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
       }
 
       const data = await res.json();
+      console.log("Vehículo encontrado:", data);
       setCar((prev: any) => ({ ...prev, ...data }));
       setMode("view");
       // si el auto encontrado ya tiene patente, igual recargá obleas por si querés reasignar

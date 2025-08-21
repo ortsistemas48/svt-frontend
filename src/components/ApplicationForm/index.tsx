@@ -33,7 +33,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | null>(null);
   const [missingFields, setMissingFields] = useState<string[]>([]);
 
-
+  
   const [owner, setOwner] = useState<any>({ ...(initialData?.owner || {}) });
   const [driver, setDriver] = useState<any>({});
   const [isSamePerson, setIsSamePerson] = useState(false);
@@ -177,6 +177,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           setLoading(false);
           return
         }
+        console.log(car)
         res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/car`, {
           method: "PUT",
           credentials: "include",

@@ -109,7 +109,6 @@ export default function CompletedApplicationsTable () {
             hour: "2-digit",
             minute: "2-digit",
           });
-          console.log(item);
           return (
             <tr key={item.application_id} className="border-t">
               <td className="p-3 text-center">{item.application_id}</td>
