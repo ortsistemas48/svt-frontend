@@ -1,0 +1,90 @@
+// app/inspections/[appId]/page.tsx
+import { ChevronRight } from "lucide-react";
+import InspectionStepsClient from "@/components/InspectionsSteps";
+import { cookies } from "next/headers";
+
+type Step = { step_id: number; name: string; description: string; order: number };
+type DetailRow = {
+  order: number;
+  step_id: number;
+  name: string;
+  description: string;
+  detail: null | { detail_id: number; status: "Apto" | "Condicional" | "Rechazado"; observations: string | null };
+};
+
+const API = process.env.NEXT_PUBLIC_API_URL; 
+
+async function ensureInspection(appId: number) {
+  const cookieHeader = cookies().toString(); // reenvía la sesión
+  const res = await fetch(`${API}/inspections/inspections`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      cookie: cookieHeader,
+    },
+    body: JSON.stringify({ application_id: appId }),
+    cache: "no-store",
+  });
+
+  if (!res.ok && res.status !== 200) {
+    const j = await res.json().catch(() => ({}));
+    throw new Error(j?.error || "No se pudo crear o recuperar la inspección");
+  }
+  const data = await res.json();
+  return data.inspection_id as number;
+}
+
+async function fetchSteps(appId: number) {
+  const cookieHeader = cookies().toString();
+  const res = await fetch(`${API}/inspections/applications/${appId}/steps`, {
+    headers: { cookie: cookieHeader },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("No se pudieron obtener los pasos");
+  const steps: Step[] = await res.json();
+  return steps;
+}
+
+async function fetchDetails(inspectionId: number) {
+  const cookieHeader = cookies().toString();
+  const res = await fetch(`${API}/inspections/inspections/${inspectionId}/details`, {
+    headers: { cookie: cookieHeader },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("No se pudieron obtener los detalles");
+  const rows: DetailRow[] = await res.json();
+  return rows;
+}
+
+
+export default async function InspectionPage({ params }: { params: { applicationId: string } }) {
+  const appId = Number(params.applicationId);
+
+  const inspectionId = await ensureInspection(appId);
+  const [steps, details] = await Promise.all([fetchSteps(appId), fetchDetails(inspectionId)]);
+
+  const initialStatuses: Record<number, "Apto" | "Condicional" | "Rechazado" | undefined> = {};
+  details.forEach((r) => {
+    if (r.detail?.status) initialStatuses[r.step_id] = r.detail.status;
+  });
+
+  return (
+    <div className="min-w-full">
+      <article className="flex items-center justify-between text-lg mb-6 px-4">
+        <div className="flex items-center gap-1">
+          <span>Inicio</span>
+          <ChevronRight size={20} />
+          <span className="text-[#0040B8]">Inspección técnica</span>
+        </div>
+      </article>
+
+      <InspectionStepsClient
+        inspectionId={inspectionId}
+        appId={appId}
+        steps={steps.sort((a, b) => a.order - b.order)}
+        initialStatuses={initialStatuses}
+        apiBase={API}
+      />
+    </div>
+  );
+}
