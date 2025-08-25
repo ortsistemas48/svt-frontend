@@ -90,10 +90,10 @@ export default function InspectionStepsClient({
             <section
               key={s.step_id}
               className={"w-full rounded-[10px] border bg-white border-zinc-200"}>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4">
+              <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
                   <h3 className="font-medium text-zinc-900">{s.name}</h3>
-                  <p className="text-sm text-zinc-500">{s.description}</p>
+                  <p className="text-sm md:max-w-[400px] text-zinc-500">{s.description}</p>
                 </div>
 
                 <div className="flex items-center gap-5 flex-wrap">
@@ -103,7 +103,7 @@ export default function InspectionStepsClient({
                       type="button"
                       onClick={() => handlePick(s.step_id, opt)}
                       className={clsx(
-                        "px-4 py-2.5 rounded-[4px] border text-sm transition",
+                        "w-[140px] px-4 py-2.5 rounded-[4px] border text-sm transition",
                         current === opt
                           ? opt === "Apto"
                             ? "border-emerald-600 text-emerald-700 bg-emerald-50"
