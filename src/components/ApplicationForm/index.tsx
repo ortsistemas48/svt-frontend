@@ -330,7 +330,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
                 onClick={async () => {
                   setShowConfirmModal(false);
                   if (confirmAction === "inspect") {
-                    await handleNext(); // paso final
+                    router.push(`/dashboard/${id}/inspections/${applicationId}`)
                   } else if (confirmAction === "queue") {
                     await sendToQueue();
                   }

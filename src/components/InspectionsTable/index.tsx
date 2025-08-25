@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Play, Pencil, Trash2, RefreshCcw } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Application } from "@/app/types";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 
@@ -21,6 +21,7 @@ export default function InspectionTable() {
   const [page, setPage] = useState(1);
   const perPage = 5;
   const [total, setTotal] = useState(0);
+  const router = useRouter(); 
 
   const headers: TableHeader[] = [
     { label: "Vehículo" },
@@ -123,8 +124,14 @@ export default function InspectionTable() {
               </td>
               <td className="p-0">
                 <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
-                  <span className="cursor-pointer text-[#0040B8]"><Play size={16} /></span>
-                  <span className="cursor-pointer text-[#0040B8]"><Pencil size={16} /></span>
+                  <button
+                    type="button"
+                    className="cursor-pointer text-[#0040B8] hover:opacity-80"
+                    title="Abrir inspección"
+                    onClick={() => router.push(`/dashboard/${id}/inspections/${item.application_id}`)} 
+                  >
+                    <Play size={16} />
+                  </button>                  <span className="cursor-pointer text-[#0040B8]"><Pencil size={16} /></span>
                   <span className="cursor-pointer text-[#0040B8]"><Trash2 size={16} /></span>
                 </div>
               </td>

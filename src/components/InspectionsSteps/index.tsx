@@ -4,6 +4,7 @@
 import { useMemo, useState } from "react";
 import clsx from "clsx";
 import { ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Step = { step_id: number; name: string; description: string; order: number };
 type Status = "Apto" | "Condicional" | "Rechazado";
@@ -26,6 +27,7 @@ export default function InspectionStepsClient({
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [globalObs, setGlobalObs] = useState("");
+  const router = useRouter(); 
 
   const hasNonApto = useMemo(
     () => Object.values(statusByStep).some((s) => s && s !== "Apto"),
@@ -155,7 +157,7 @@ export default function InspectionStepsClient({
         <button
           type="button"
           className="px-5 py-2.5 rounded-[4px] border border-zinc-300 text-zinc-700 hover:bg-zinc-50"
-          onClick={() => history.back()}
+          onClick={() => router.back()}
         >
           Cancelar
         </button>
