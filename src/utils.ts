@@ -26,7 +26,6 @@ export async function fetchAvailableStickers({
   return res.json(); // [{id, sticker_number, expiration_date, issued_at, status}]
 }
 
-
 export async function assignStickerToCar(license_plate: string, sticker_id: number, workshop_id?: number) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/assign-to-car`, {
     method: "POST",
