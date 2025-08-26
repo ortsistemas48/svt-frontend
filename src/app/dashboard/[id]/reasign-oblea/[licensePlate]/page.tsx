@@ -155,7 +155,15 @@ export default function ReassignStickerPage() {
 
       {/* Dominio a reasignar */}
       <section className="mb-6">
-        <h2 className="text-lg font-semibold text-[#0f172a] mb-2">Dominio a reasignar</h2>
+        <div className="flex flex-col items-center gap-2 mb-20 mt-10">
+          <h2 className="text-3xl text-[#0040B8]">Reasigna tus Obleas</h2>
+          <p className="text-gray-500 text-center">
+            Busca el dominio del auto para reasignar la oblea
+          </p>
+
+        </div>
+        
+        <h2 className="text-md text-[#000000] mb-2">Dominio a reasignar</h2>
         <div className="border border-[#D9D9D9] rounded-md p-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
             <div>
@@ -209,7 +217,7 @@ export default function ReassignStickerPage() {
           <button
             type="button"
             onClick={handleGenerate}
-            className="rounded px-6 py-3 bg-[#0040B8] text-white font-medium hover:bg-[#0037a3] disabled:opacity-60"
+            className="rounded px-6 py-3 bg-[#0040B8] text-white hover:bg-[#0037a3] disabled:opacity-60"
             disabled={loading}
           >
             Generar
@@ -222,7 +230,7 @@ export default function ReassignStickerPage() {
         <button
           type="button"
           onClick={handleCancel}
-          className="w-56 rounded border border-[#0A4DCC] text-[#0A4DCC] bg-white py-3 font-medium hover:bg-[#0A4DCC] hover:text-white disabled:opacity-60"
+          className="px-6 duration-150 rounded border border-[#0A4DCC] text-[#0A4DCC] bg-white py-3 hover:bg-[#0A4DCC] hover:text-white disabled:opacity-60"
           disabled={loading}
         >
           Cancelar
@@ -230,10 +238,10 @@ export default function ReassignStickerPage() {
         <button
           type="button"
           onClick={handleApply}
-          className="w-56 rounded bg-[#0A4DCC] text-white py-3 font-semibold hover:bg-[#0843B2] disabled:opacity-60"
+          className="px-6 rounded duration-150 bg-[#0A4DCC] text-white py-3 hover:bg-[#0843B2] disabled:opacity-60"
           disabled={!newSticker || loading}
         >
-          Aplicar cambios
+          Aplicar
         </button>
       </div>
     </div>

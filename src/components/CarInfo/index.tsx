@@ -32,10 +32,6 @@ const carInfo = [
     label: "Año"
   },
   {
-    name: "usage_type",
-    label: "Uso"
-  },
-  {
     name: "chassis_number",
     label: "Chasis"
   },
@@ -127,21 +123,20 @@ export default function CarInfo({ licence_plate }: { licence_plate: string }) {
 
       {/* Error */}
       {!loading && error && (
-        <p className="py-3 px-4 border-2 border-red-300 text-red-600 font-bold rounded-2xl text-center">{error}</p>
+        <p className="py-3 px-4 border border-red-300 text-red-600 rounded-[4px] text-center">{error}</p>
       )}
 
       {/* Datos */}
       {!loading && !error && car && (
         <div className="flex flex-col gap-y-2">
-          <div className="p-4 border border-gray-300 rounded">
-            <h3 className="text-xl font-bold mb-4 text-center">Datos del Auto</h3>
+          <div className="p-6 border border-gray-300 rounded-[4px]">
             <div className="grid grid-cols-1  sm:grid-cols-3 gap-x-8 gap-y-6">
               {carInfo.map((info) => (
                 <div
                   key={info.name}
                   className="w-full min-h-[56px] flex flex-col items-center text-center max-md:text-sm"
                 >
-                  <span className="text-gray-500 text-lg">{info.label}</span>
+                  <span className="text-gray-500 text-sm">{info.label}</span>
                   <span className="mt-1 font-medium break-all">
                     {String(car[info.name as keyof Car] ?? "-")}
                   </span>
