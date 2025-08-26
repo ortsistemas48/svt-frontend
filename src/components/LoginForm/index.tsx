@@ -81,6 +81,7 @@ export default function LoginForm() {
       }
 
       router.push("/select-workshop");
+      router.refresh();
     } catch (err) {
       console.error("❌ Error de red:", err);
       setError("Ocurrió un error. Intentá de nuevo.");
