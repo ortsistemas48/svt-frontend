@@ -298,10 +298,10 @@ export default function InspectionStepsClient({
                       </button>
 
                       {openObsStepId === s.step_id && (
-                        <div className="absolute z-40 top-full right-0 mt-2 w-[min(90vw,32rem)] max-h-80 overflow-auto rounded-2xl border border-zinc-200 bg-white shadow-lg">
+                        <div className="absolute z-40 top-full right-0 mt-2 w-[min(90vw,32rem)] max-h-80 overflow-auto rounded-[4px] border border-zinc-200 bg-white shadow-lg">
                           <div className="p-3">
                             <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-medium text-zinc-900 text-sm">Observaciones del paso</h4>
+                              <h4 className="font-medium text-[#00000080] text-sm">Observaciones</h4>
                               <button className="p-1 rounded hover:bg-zinc-100" onClick={() => setOpenObsStepId(null)}>
                                 <X size={16} />
                               </button>
@@ -333,13 +333,13 @@ export default function InspectionStepsClient({
 
                             <div className="mt-3 flex justify-end gap-2">
                               <button
-                                className="px-3 py-1.5 rounded border border-zinc-300 text-zinc-700 hover:bg-zinc-50 text-sm"
+                                className="px-3 py-1.5 rounded-[4px] border border-zinc-300 text-zinc-700 hover:bg-zinc-50 text-sm"
                                 onClick={() => setOpenObsStepId(null)}
                               >
                                 Cerrar
                               </button>
                               <button
-                                className="px-3 py-1.5 rounded bg-[#0040B8] text-white hover:opacity-95 text-sm"
+                                className="px-3 py-1.5 rounded-[4px] bg-[#0040B8] text-white hover:opacity-95 text-sm"
                                 onClick={() => saveObsFromPopover(s.step_id)}
                               >
                                 Guardar
