@@ -139,9 +139,9 @@ export default function CarInfo({ licence_plate }: { licence_plate: string }) {
               {carInfo.map((info) => (
                 <div
                   key={info.name}
-                  className="w-full min-h-[56px] flex flex-col items-center text-center text-lg max-md:text-sm"
+                  className="w-full min-h-[56px] flex flex-col items-center text-center max-md:text-sm"
                 >
-                  <span className="text-gray-500">{info.label}</span>
+                  <span className="text-gray-500 text-lg">{info.label}</span>
                   <span className="mt-1 font-medium break-all">
                     {String(car[info.name as keyof Car] ?? "-")}
                   </span>

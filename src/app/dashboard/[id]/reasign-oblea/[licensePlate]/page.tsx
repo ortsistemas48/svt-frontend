@@ -12,30 +12,39 @@ type CarData = {
   sticker_id?: number | null;
 };
 
-type Sticker = {
+type StickerData = {
   id: number;
-  sticker_number: string;
-  expiration_date?: string | null;
-  issued_at?: string | null;
-  status?: string | null;
-  sticker_order_id?: number;
-  workshop_id?: number;
+  sticker_number: string | null;
+  expiration_date: string | null;
+  issued_at: string | null;
+  status: string | null;
+  sticker_order_id: number | null;
+  workshop_id: number | null;
 };
+
+// Helper: detectar abortos intencionales (razón o DOMException)
+const isAbort = (e: any) =>
+  e?.name === "AbortError" ||
+  e === "cleanup: unmount or deps change" ||
+  e?.code === 20 ||
+  /abort/i.test(String(e?.message ?? e));
 
 export default function ReassignStickerPage() {
   const { id, licensePlate } = useParams<{ id: string; licensePlate: string }>();
   const router = useRouter();
 
   const [car, setCar] = useState<CarData | null>(null);
-  const [sticker, setSticker] = useState<Sticker | null>(null);
+  const [sticker, setSticker] = useState<StickerData | null>(null);
 
   const [loadingCar, setLoadingCar] = useState(false);
   const [loadingSticker, setLoadingSticker] = useState(false);
+
   const [err, setErr] = useState<string>("");
+  const [stickerErr, setStickerErr] = useState<string>("");
 
   const [newSticker, setNewSticker] = useState("");
 
-  // 1) Traer auto por patente
+  // 1) Traer el auto por licensePlate
   useEffect(() => {
     const plate = (licensePlate ?? "").trim().toUpperCase();
     if (!plate) {
@@ -44,69 +53,78 @@ export default function ReassignStickerPage() {
     }
 
     const controller = new AbortController();
+    let active = true;
 
     (async () => {
       try {
         setLoadingCar(true);
         setErr("");
         setCar(null);
-        setSticker(null);
+        setSticker(null); // resetea info de oblea si cambió la patente
 
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
           { credentials: "include", signal: controller.signal }
         );
-
         if (!res.ok) throw new Error("No se pudo cargar el vehículo");
 
         const data = (await res.json()) as CarData;
+        if (!active) return;
         setCar(data);
-      } catch (e) {
+      } catch (e: any) {
+        if (isAbort(e)) return;
         console.error(e);
-        setErr("Ocurrió un error al cargar el auto.");
+        if (active) setErr("Ocurrió un error al cargar el auto.");
       } finally {
-        setLoadingCar(false);
+        if (active) setLoadingCar(false);
       }
     })();
 
-    return () => controller.abort();
+    return () => {
+      active = false;
+      controller.abort("cleanup: unmount or deps change");
+    };
   }, [licensePlate]);
 
-  // 2) Traer oblea si el auto tiene sticker_id
+  // 2) Si el auto tiene sticker_id, traer la oblea
   useEffect(() => {
     if (!car?.sticker_id) {
       setSticker(null);
+      setStickerErr("");
       return;
     }
 
     const controller = new AbortController();
+    let active = true;
 
     (async () => {
       try {
         setLoadingSticker(true);
+        setStickerErr("");
         setSticker(null);
 
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/stickers/${car.sticker_id}`,
           { credentials: "include", signal: controller.signal }
         );
+        if (!res.ok) throw new Error("No se pudo cargar la oblea actual");
 
-        if (!res.ok) {
-          setSticker(null);
-          return;
-        }
-
-        const data = (await res.json()) as Sticker | null;
+        const data = (await res.json()) as StickerData | null;
+        if (!active) return;
         setSticker(data);
-      } catch (e) {
+      } catch (e: any) {
+        if (isAbort(e)) return;
         console.error(e);
-        setSticker(null);
+        if (active) setStickerErr("No se pudo cargar la oblea vinculada.");
       } finally {
-        setLoadingSticker(false);
+        if (active) setLoadingSticker(false);
       }
     })();
 
-    return () => controller.abort();
+    return () => {
+      active = false;
+      controller.abort("cleanup: unmount or deps change");
+    };
   }, [car?.sticker_id]);
 
   const handleGenerate = () => {
@@ -115,18 +133,25 @@ export default function ReassignStickerPage() {
   };
 
   const handleApply = async () => {
-    console.log("Aplicar cambios", { licensePlate, newSticker });
-    // Aquí harías el fetch POST/PUT para reasignar
+    console.log("Aplicar cambios", {
+      workshopId: id,
+      licensePlate,
+      newSticker,
+    });
+    // TODO: POST/PUT a tu endpoint de reasignación
   };
 
-  const handleCancel = () => router.back();
+  const handleCancel = () => {
+    router.back();
+  };
 
   const loading = loadingCar || loadingSticker;
 
   return (
     <div className="px-6 py-8 max-w-3xl mx-auto">
-      {loading && <p className="text-gray-600">Cargando…</p>}
-      {!loading && err && <p className="text-red-600 mb-4">{err}</p>}
+      {/* Estados globales */}
+      {loading && <p className="mb-4 text-gray-600">Cargando…</p>}
+      {!loading && err && <p className="mb-4 text-red-600">{err}</p>}
 
       {/* Dominio a reasignar */}
       <section className="mb-6">
@@ -135,23 +160,29 @@ export default function ReassignStickerPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
             <div>
               <div className="text-gray-500">Dominio</div>
-              <div className="font-medium">{car?.license_plate ?? (licensePlate ?? "").toUpperCase()}</div>
+              <div className="font-medium">
+                {car?.license_plate ?? (licensePlate ?? "").toUpperCase()}
+              </div>
             </div>
             <div>
               <div className="text-gray-500">Marca - Modelo</div>
               <div className="font-medium">
-                {car ? `${car.brand ?? "-"} ${car.model ?? ""}`.trim() : "—"}
+                {car ? `${car.brand ?? "-"} ${car.model ?? ""}` : "—"}
               </div>
             </div>
             <div>
               <div className="text-gray-500">Oblea vinculada</div>
               <div className="font-medium">
-                {car?.sticker_id
-                  ? (sticker?.sticker_number ?? `ID ${car.sticker_id}`)
-                  : "—"}
+                {stickerErr
+                  ? "—"
+                  : sticker
+                  ? sticker.sticker_number ?? `#${sticker.id}`
+                  : car?.sticker_id
+                  ? "Cargando oblea…"
+                  : "No tiene oblea"}
               </div>
               {car?.sticker_id && (
-                <div className="text-xs text-gray-500 mt-2">
+                <div className="text-xs text-gray-500 mt-1">
                   {sticker?.status ? `Estado: ${sticker.status}` : ""}
                   {sticker?.expiration_date
                     ? ` • Vence: ${new Date(sticker.expiration_date).toLocaleDateString()}`
@@ -173,11 +204,13 @@ export default function ReassignStickerPage() {
             className="flex-1 rounded-md border border-[#D9D9D9] px-4 py-3 bg-[#efefef]"
             value={newSticker}
             onChange={(e) => setNewSticker(e.target.value)}
+            disabled={loading}
           />
           <button
             type="button"
             onClick={handleGenerate}
-            className="rounded px-6 py-3 bg-[#0040B8] text-white font-medium hover:bg-[#0037a3]"
+            className="rounded px-6 py-3 bg-[#0040B8] text-white font-medium hover:bg-[#0037a3] disabled:opacity-60"
+            disabled={loading}
           >
             Generar
           </button>
@@ -189,7 +222,8 @@ export default function ReassignStickerPage() {
         <button
           type="button"
           onClick={handleCancel}
-          className="w-56 rounded border border-[#0A4DCC] text-[#0A4DCC] bg-white py-3 font-medium hover:bg-[#0A4DCC] hover:text-white"
+          className="w-56 rounded border border-[#0A4DCC] text-[#0A4DCC] bg-white py-3 font-medium hover:bg-[#0A4DCC] hover:text-white disabled:opacity-60"
+          disabled={loading}
         >
           Cancelar
         </button>
@@ -197,7 +231,7 @@ export default function ReassignStickerPage() {
           type="button"
           onClick={handleApply}
           className="w-56 rounded bg-[#0A4DCC] text-white py-3 font-semibold hover:bg-[#0843B2] disabled:opacity-60"
-          disabled={!newSticker}
+          disabled={!newSticker || loading}
         >
           Aplicar cambios
         </button>
