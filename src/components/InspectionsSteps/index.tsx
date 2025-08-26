@@ -259,7 +259,9 @@ export default function InspectionStepsClient({
               <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
                   <h3 className="font-medium text-zinc-900">{s.name}</h3>
-                  <p className="text-sm md:max-w-[400px] text-zinc-500">{s.description}</p>
+                  <p className="hidden min-[1300px]:block text-sm md:max-w-[400px] text-zinc-500">
+                    {s.description}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-5 flex-wrap">
