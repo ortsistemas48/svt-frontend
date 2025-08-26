@@ -66,22 +66,37 @@ export default function LoginForm() {
       const workshops = session.workshops || [];
       const isAdmin = session.user.is_admin;
 
-      if (isAdmin) {
-          router.push("/admin-dashboard");
-          router.refresh();
-          return;
-      }
-
       const isGarageOwner = workshops.some((w: any) => w.user_type_id === 2);
 
-      if (isGarageOwner || workshops.length > 1) {
+      // Caso 1: es admin
+      if (isAdmin) {
+        router.push("/admin-dashboard");
+        router.refresh();
+        return;
+      }
+
+      // Caso 2: es garage owner (aunque no tenga talleres)
+      if (isGarageOwner) {
         router.push("/select-workshop");
         router.refresh();
-      } else if (workshops.length === 1) {
-        router.push(`/dashboard/${workshops[0].workshop_id}`);
-      } else {
-        setError("No se encontraron talleres asociados");
+        return;
       }
+
+      // Caso 3: tiene más de un taller
+      if (workshops.length > 1) {
+        router.push("/select-workshop");
+        router.refresh();
+        return;
+      }
+
+      // Caso 4: tiene exactamente un taller
+      if (workshops.length === 1) {
+        router.push(`/dashboard/${workshops[0].workshop_id}`);
+        return;
+      }
+
+      // Caso 5: no tiene nada
+      setError("No se encontraron talleres asociados");
     } catch (err) {
       console.error("❌ Error de red:", err);
       setError("Ocurrió un error. Intentá de nuevo.");
