@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { Application, CarType, PersonType } from "./app/types";
+import { Application } from "./app/types";
 
 
 export async function fetchAvailableStickers({
@@ -248,3 +247,24 @@ export function genPassword(){
     
     return p;
   };
+
+  
+export async function markStickerAsUsed(stickerId: number) {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/stickers/${stickerId}/mark-used`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || "No se pudo marcar la oblea como 'En Uso'");
+    }
+    console.log("Oblea marcada como 'En Uso'");
+  } catch (e) {
+    console.error("Error al marcar la oblea:", e);
+  }
+}

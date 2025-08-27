@@ -6,7 +6,7 @@ import VehicleForm from "@/components/VehicleForm";
 import ConfirmationForm from "@/components/ConfirmationForm";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useParams } from 'next/navigation'
-import { getMissingCarFields, getMissingPersonFields } from "@/utils";
+import { getMissingCarFields, getMissingPersonFields, markStickerAsUsed } from "@/utils";
 import MissingDataModal from "../MissingDataModal";
 import { useApplication } from "@/context/ApplicationContext";
 
@@ -33,7 +33,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | null>(null);
   const [missingFields, setMissingFields] = useState<string[]>([]);
 
-  
+
   const [owner, setOwner] = useState<any>({ ...(initialData?.owner || {}) });
   const [driver, setDriver] = useState<any>({});
   const [isSamePerson, setIsSamePerson] = useState(false);
@@ -169,15 +169,26 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       // Paso 2: Guardar vehículo
       if (step === 2) {
-
-        if (getMissingCarFields(car).length > 0) {
-          const missing = getMissingCarFields(car).map(field => `Vehículo: ${field}`)
-          setMissingFields(e => [...e, ...missing]);
+        const missing = getMissingCarFields(car);
+        if (missing.length > 0) {
+          setMissingFields(prev => [...prev, ...missing.map(f => `Vehículo: ${f}`)]);
           setShowMissingDataModal(true);
           setLoading(false);
-          return
+          return;
         }
-        console.log(car)
+
+        // Obtiene el id de la oblea desde el objeto o desde el campo plano
+        const stickerId = car?.sticker?.id ?? car?.sticker_id;
+
+        if (stickerId) {
+          try {
+            await markStickerAsUsed(stickerId);
+          } catch (e) {
+            console.error("No se pudo marcar la oblea como 'En Uso':", e);
+            // opcional: mostrar feedback y/o abortar
+          }
+        }
+        // markStickerAsUsed(car.sticker_id);
         res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/car`, {
           method: "PUT",
           credentials: "include",
@@ -266,9 +277,9 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       <div>{renderStepContent()}</div>
 
-      
-        <div className="flex gap-x-3 justify-center px-4 pt-8 pb-10">
-          { step !== 1 && (
+
+      <div className="flex gap-x-3 justify-center px-4 pt-8 pb-10">
+        {step !== 1 && (
           <button
             onClick={handlePrev}
             disabled={loading}
@@ -277,44 +288,44 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             <ChevronLeft size={18} />
             Volver
           </button>
-          )}
-          {step !== 3 && !isIdle && (
+        )}
+        {step !== 3 && !isIdle && (
+          <button
+            onClick={handleNext}
+            disabled={loading}
+            className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5"
+          >
+            {loading ? "Guardando..." : "Continuar"}
+          </button>
+        )}
+        {step === 3 && (
+          <>
             <button
-              onClick={handleNext}
               disabled={loading}
+              onClick={() => {
+
+                setConfirmAction("inspect");
+                setShowConfirmModal(true);
+              }}
               className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5"
             >
-              {loading ? "Guardando..." : "Continuar"}
+              {loading ? "Guardando..." : "Inspeccionar"}
             </button>
-          )}
-          {step === 3 && (
-            <>
-              <button
-                disabled={loading}
-                onClick={() => {
+            <button
+              disabled={loading}
+              onClick={() => {
 
-                  setConfirmAction("inspect");
-                  setShowConfirmModal(true);
-                }}
-                className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5"
-              >
-                {loading ? "Guardando..." : "Inspeccionar"}
-              </button>
-              <button
-                disabled={loading}
-                onClick={() => {
+                setConfirmAction("queue");
+                setShowConfirmModal(true);
+              }}
+              className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5"
+            >
+              Enviar a cola <ChevronRight size={18} />
+            </button>
+          </>
+        )}
+      </div>
 
-                  setConfirmAction("queue");
-                  setShowConfirmModal(true);
-                }}
-                className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5"
-              >
-                Enviar a cola <ChevronRight size={18} />
-              </button>
-            </>
-          )}
-        </div>
-      
 
 
       {showConfirmModal && (

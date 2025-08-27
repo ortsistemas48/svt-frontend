@@ -14,7 +14,7 @@ export default function SearchPlateBar( { workshopId }: { workshopId: number }) 
 
   const go = () => {
     if (!licencePlate.trim()) return;
-    router.push(`/dashboard/${workshopId}/reasign-oblea?licence_plate=${encodeURIComponent(licencePlate.trim())}`);
+    router.push(`/dashboard/${workshopId}/reassign-oblea?licence_plate=${encodeURIComponent(licencePlate.trim())}`);
   };
 
   return (

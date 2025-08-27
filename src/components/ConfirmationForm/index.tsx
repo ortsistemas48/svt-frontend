@@ -28,6 +28,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
         return;
       }
       const data = await res.json();
+      console.log(data);
       setCar(data.car || null);
       setOwner(data.owner || null);
       if ( data.owner?.id === data.driver?.id ) {

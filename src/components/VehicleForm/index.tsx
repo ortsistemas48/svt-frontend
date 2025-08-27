@@ -2,9 +2,9 @@
 
 import FormField from "@/components/PersonFormField";
 import { useApplication } from "@/context/ApplicationContext";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { fetchAvailableStickers } from "../../utils";
-import { useParams } from "next/navigation"; 
+import { useParams } from "next/navigation";
 
 interface FormFieldData {
   label: string;
@@ -16,7 +16,7 @@ interface FormFieldData {
 }
 
 interface VehicleFormProps {
-  car: any;
+  car: any; // puede incluir: sticker_id y sticker {id, sticker_number, ...}
   setCar: (car: any) => void;
 }
 
@@ -82,17 +82,71 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("idle");
-  const params = useParams<{ id: string; appId?: string }>(); // 👈 lee [id] y [appId]
+
+  const params = useParams<{ id: string; appId?: string }>();
   const workshopId = Number(params?.id);
 
   const [stickerOptions, setStickerOptions] = useState<{ value: string; label: string }[]>([]);
   const [loadingStickers, setLoadingStickers] = useState(false);
   const [stickersError, setStickersError] = useState<string | null>(null);
 
+  // 👇 estados para cargar la oblea si solo tenemos sticker_id
+  const [loadingSticker, setLoadingSticker] = useState(false);
+  const [stickerErr, setStickerErr] = useState<string | null>(null);
+
   const effectivePlate = (car?.license_plate || plateQuery || "")
     .trim()
     .toUpperCase()
     .replace(/[-\s]/g, "");
+
+  // Si hay sticker_id pero no sticker, traemos la oblea y la guardamos en car.sticker
+  useEffect(() => {
+    if (!car?.sticker_id || car?.sticker) return;
+
+    const controller = new AbortController();
+    let active = true;
+
+    (async () => {
+      try {
+        setLoadingSticker(true);
+        setStickerErr(null);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/stickers/${car.sticker_id}`,
+          { credentials: "include", signal: controller.signal }
+        );
+        if (!res.ok) throw new Error("No se pudo cargar la oblea");
+        const data = await res.json(); // { id, sticker_number, expiration_date, status, ... }
+        if (!active) return;
+
+        setCar((prev: any) => ({
+          ...prev,
+          sticker: data || null,
+        }));
+      } catch (e: any) {
+        if (e?.name === "AbortError") return;
+        console.error(e);
+        if (active) setStickerErr("No se pudo cargar la oblea vinculada.");
+      } finally {
+        if (active) setLoadingSticker(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [car?.sticker_id, car?.sticker, setCar]);
+
+  // Label de oblea actual para modo view
+  const currentStickerLabel = useMemo(() => {
+    if (car?.sticker?.sticker_number) return String(car.sticker.sticker_number);
+    if (car?.sticker_id) {
+      const idStr = String(car.sticker_id);
+      const opt = stickerOptions.find((o) => o.value === idStr)?.label;
+      return opt ?? `Oblea #${idStr}`;
+    }
+    return "";
+  }, [car?.sticker, car?.sticker_id, stickerOptions]);
 
   const loadStickers = async (plateOverride?: string) => {
     try {
@@ -103,12 +157,26 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         currentCarId: car?.id,
         currentLicensePlate: plateOverride ?? (effectivePlate || undefined),
       });
-      setStickerOptions(
-        data.map((s: any) => ({
-          value: String(s.id),
-          label: s.sticker_number ?? `Oblea ${s.id}`,
-        }))
-      );
+
+      let options = data.map((s: any) => ({
+        value: String(s.id),
+        label: s.sticker_number ?? `Oblea ${s.id}`,
+      }));
+
+      // Si hay una oblea actual, aseguramos que esté presente en el select con su número
+      if (car?.sticker_id) {
+        const idStr = String(car.sticker_id);
+        const exists = options.some((o:any) => o.value === idStr);
+        if (!exists) {
+          const label =
+            car?.sticker?.sticker_number
+              ? car.sticker.sticker_number
+              : `Oblea ${idStr}`;
+          options = [{ value: idStr, label }, ...options];
+        }
+      }
+
+      setStickerOptions(options);
     } catch (e: any) {
       setStickerOptions([]);
       setStickersError("No se pudieron cargar las obleas disponibles.");
@@ -118,10 +186,9 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     }
   };
 
-  // Carga automática al tener datos suficientes
+  // Carga de obleas cuando no estamos en 'idle'
   useEffect(() => {
     if (!workshopId) return;
-    // carga cuando cambia taller, id del auto, patente o cuando pasás a editar
     if (mode !== "idle") {
       loadStickers();
     }
@@ -160,15 +227,17 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     try {
       setIsSearching(true);
       setSearchError(null);
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
         { credentials: "include" }
       );
+
       if (res.status === 404) {
         // no existe, habilitá edición y cargá obleas inmediatamente
-        setCar((prev: any) => ({ ...prev, license_plate: plate }));
+        setCar((prev: any) => ({ ...prev, license_plate: plate, sticker_id: undefined, sticker: undefined }));
         setMode("edit");
-        await loadStickers(plate); // fuerza carga de opciones para alta
+        await loadStickers(plate);
         return;
       }
       if (!res.ok) {
@@ -176,11 +245,9 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         return;
       }
 
-      const data = await res.json();
-      console.log("Vehículo encontrado:", data);
+      const data = await res.json(); // puede traer sticker_id y sticker{}
       setCar((prev: any) => ({ ...prev, ...data }));
       setMode("view");
-      // si el auto encontrado ya tiene patente, igual recargá obleas por si querés reasignar
       await loadStickers(data.license_plate);
     } catch (e) {
       console.error(e);
@@ -344,20 +411,39 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 />
               )
             )}
-z
-            {/* Select dinámico de obleas */}
-            <FormField
-              label="Vincular oblea"
-              type="select"
-              options={stickerOptions}
-              name="sticker_id"
-              isOwner={true}
-              value={car?.sticker_id ? String(car.sticker_id) : ""}
-              onChange={(val) => handleChange("sticker_id", val)}
-              className="col-span-1"
-            />
+
+            {/* Oblea: vista vs edición */}
+            {isReadOnly ? (
+              <div className="col-span-1">
+                <label className="block text-sm text-gray-700 mb-1">Oblea vinculada</label>
+                <div className="border border-[#DEDEDE] rounded-[10px] px-4 py-3 bg-gray-50">
+                  {loadingSticker ? "Cargando oblea…" : (currentStickerLabel || "—")}
+                  {car?.sticker?.expiration_date && (
+                    <span className="ml-2 text-xs text-gray-500">
+                      (vence: {new Date(car.sticker.expiration_date).toLocaleDateString()})
+                    </span>
+                  )}
+                  {car?.sticker?.status && (
+                    <span className="ml-2 text-xs text-gray-500">• {car.sticker.status}</span>
+                  )}
+                </div>
+                {stickerErr && <p className="text-xs text-red-600 mt-1">{stickerErr}</p>}
+              </div>
+            ) : (
+              <FormField
+                label="Vincular oblea"
+                type="select"
+                options={stickerOptions}
+                name="sticker_id"
+                isOwner={true}
+                value={car?.sticker_id ? String(car.sticker_id) : ""}
+                onChange={(val) => handleChange("sticker_id", val)}
+                className="col-span-1"
+              />
+            )}
+
             {loadingStickers && <p className="text-xs text-gray-500">Cargando obleas...</p>}
-            {!loadingStickers && !stickersError && stickerOptions.length === 0 && (
+            {!loadingStickers && !stickersError && stickerOptions.length === 0 && !isReadOnly && (
               <div className="text-xs text-gray-500">
                 No hay obleas disponibles para este taller.{" "}
                 <button

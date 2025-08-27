@@ -31,7 +31,7 @@ const tableData = [
   { label: "Nº de licencia", key: "license_number" },
   { label: "Exp. de la licencia", key: "license_expiration" },
   { label: "Póliza del seguro", key: "insurance" },
-  { label: "Oblea", key: "sticker_id" },
+  { label: "Oblea", key: "sticker_number" },
 ];
 
 const renderVehicle = (car: CarType) => {
