@@ -16,7 +16,7 @@ interface FormFieldData {
 }
 
 interface VehicleFormProps {
-  car: any; // puede incluir: sticker_id y sticker {id, sticker_number, ...}
+  car: any; // incluye: sticker_id y (opcional) sticker { id, sticker_number, expiration_date, status, ... }
   setCar: (car: any) => void;
 }
 
@@ -86,68 +86,24 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   const params = useParams<{ id: string; appId?: string }>();
   const workshopId = Number(params?.id);
 
+  // Obleas disponibles (solo para modo "edit")
   const [stickerOptions, setStickerOptions] = useState<{ value: string; label: string }[]>([]);
   const [loadingStickers, setLoadingStickers] = useState(false);
   const [stickersError, setStickersError] = useState<string | null>(null);
-
-  // 👇 estados para cargar la oblea si solo tenemos sticker_id
-  const [loadingSticker, setLoadingSticker] = useState(false);
-  const [stickerErr, setStickerErr] = useState<string | null>(null);
 
   const effectivePlate = (car?.license_plate || plateQuery || "")
     .trim()
     .toUpperCase()
     .replace(/[-\s]/g, "");
 
-  // Si hay sticker_id pero no sticker, traemos la oblea y la guardamos en car.sticker
-  useEffect(() => {
-    if (!car?.sticker_id || car?.sticker) return;
-
-    const controller = new AbortController();
-    let active = true;
-
-    (async () => {
-      try {
-        setLoadingSticker(true);
-        setStickerErr(null);
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/stickers/${car.sticker_id}`,
-          { credentials: "include", signal: controller.signal }
-        );
-        if (!res.ok) throw new Error("No se pudo cargar la oblea");
-        const data = await res.json(); // { id, sticker_number, expiration_date, status, ... }
-        if (!active) return;
-
-        setCar((prev: any) => ({
-          ...prev,
-          sticker: data || null,
-        }));
-      } catch (e: any) {
-        if (e?.name === "AbortError") return;
-        console.error(e);
-        if (active) setStickerErr("No se pudo cargar la oblea vinculada.");
-      } finally {
-        if (active) setLoadingSticker(false);
-      }
-    })();
-
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [car?.sticker_id, car?.sticker, setCar]);
-
-  // Label de oblea actual para modo view
+  // Etiqueta a mostrar de la oblea actual (modo view)
   const currentStickerLabel = useMemo(() => {
     if (car?.sticker?.sticker_number) return String(car.sticker.sticker_number);
-    if (car?.sticker_id) {
-      const idStr = String(car.sticker_id);
-      const opt = stickerOptions.find((o) => o.value === idStr)?.label;
-      return opt ?? `Oblea #${idStr}`;
-    }
+    if (car?.sticker_id) return `Oblea #${car.sticker_id}`;
     return "";
-  }, [car?.sticker, car?.sticker_id, stickerOptions]);
+  }, [car?.sticker, car?.sticker_id]);
 
+  // Cargar obleas disponibles (y asegurarnos de incluir la oblea actual si no viene en el listado)
   const loadStickers = async (plateOverride?: string) => {
     try {
       setLoadingStickers(true);
@@ -163,30 +119,29 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         label: s.sticker_number ?? `Oblea ${s.id}`,
       }));
 
-      // Si hay una oblea actual, aseguramos que esté presente en el select con su número
+      // Si hay oblea actual, asegurar que esté en el select con su número
       if (car?.sticker_id) {
         const idStr = String(car.sticker_id);
-        const exists = options.some((o:any) => o.value === idStr);
+        const exists = options.some((o: any) => o.value === idStr);
         if (!exists) {
-          const label =
-            car?.sticker?.sticker_number
-              ? car.sticker.sticker_number
-              : `Oblea ${idStr}`;
+          const label = car?.sticker?.sticker_number
+            ? car.sticker.sticker_number
+            : `Oblea ${idStr}`;
           options = [{ value: idStr, label }, ...options];
         }
       }
 
       setStickerOptions(options);
     } catch (e: any) {
+      console.error(e);
       setStickerOptions([]);
       setStickersError("No se pudieron cargar las obleas disponibles.");
-      console.error(e);
     } finally {
       setLoadingStickers(false);
     }
   };
 
-  // Carga de obleas cuando no estamos en 'idle'
+  // Cargar obleas cuando no estamos en 'idle' (p.ej., en edit o luego de buscar)
   useEffect(() => {
     if (!workshopId) return;
     if (mode !== "idle") {
@@ -195,7 +150,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workshopId, car?.id, car?.license_plate, mode]);
 
-  // Si vino un auto con patente, pasá a vista
+  // Si vino un auto con patente desde el padre o el endpoint, pasamos a vista
   useEffect(() => {
     if (car?.license_plate && mode === "idle") setMode("view");
   }, [car?.license_plate, mode]);
@@ -234,18 +189,24 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
       );
 
       if (res.status === 404) {
-        // no existe, habilitá edición y cargá obleas inmediatamente
-        setCar((prev: any) => ({ ...prev, license_plate: plate, sticker_id: undefined, sticker: undefined }));
+        // no existe → edición con campos vacíos y cargar obleas disponibles
+        setCar((prev: any) => ({
+          ...prev,
+          license_plate: plate,
+          sticker_id: undefined,
+          sticker: undefined,
+        }));
         setMode("edit");
         await loadStickers(plate);
         return;
       }
+
       if (!res.ok) {
         setSearchError("Ocurrió un error al buscar el vehículo.");
         return;
       }
 
-      const data = await res.json(); // puede traer sticker_id y sticker{}
+      const data = await res.json(); // ya incluye sticker_id y (si aplica) sticker {}
       setCar((prev: any) => ({ ...prev, ...data }));
       setMode("view");
       await loadStickers(data.license_plate);
@@ -264,7 +225,9 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         <div className="space-y-6 mb-10 px-8 py-6 mt-12 w-full max-w-2xl bg-white rounded-lg">
           <div>
             <h2 className="text-xl font-regular text-[#000000] mb-1">Datos del vehículo</h2>
-            <p className="text-md font-regular text-[#00000080]">Ingresá la patente para traer los datos del vehículo</p>
+            <p className="text-md font-regular text-[#00000080]">
+              Ingresá la patente para traer los datos del vehículo
+            </p>
           </div>
 
           <div className="w-full">
@@ -299,7 +262,9 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
               </button>
             </div>
             {searchError && <p className="text-sm text-red-600 mt-3">{searchError}</p>}
-            <p className="text-xs text-gray-500 mt-2">Si no se encuentra, podrás cargar los datos manualmente.</p>
+            <p className="text-xs text-gray-500 mt-2">
+              Si no se encuentra, podrás cargar los datos manualmente.
+            </p>
           </div>
         </div>
       </div>
@@ -312,9 +277,13 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         <div>
           <h2 className="text-xl font-regular text-[#000000] mb-1">Datos del vehículo</h2>
           {isReadOnly ? (
-            <p className="text-sm text-[#00000080]">Vehículo encontrado, los campos están bloqueados, solo lectura.</p>
+            <p className="text-sm text-[#00000080]">
+              Vehículo encontrado, los campos están bloqueados, solo lectura.
+            </p>
           ) : (
-            <p className="text-sm text-[#00000080]">Vehículo no registrado, completá los datos para guardarlo.</p>
+            <p className="text-sm text-[#00000080]">
+              Vehículo no registrado, completá los datos para guardarlo.
+            </p>
           )}
         </div>
 
@@ -416,18 +385,15 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
             {isReadOnly ? (
               <div className="col-span-1">
                 <label className="block text-sm text-gray-700 mb-1">Oblea vinculada</label>
-                <div className="border border-[#DEDEDE] rounded-[10px] px-4 py-3 bg-gray-50">
-                  {loadingSticker ? "Cargando oblea…" : (currentStickerLabel || "—")}
+                <div className="flex flex-col justify-center gap-y-1 border border-[#DEDEDE] rounded-[10px] px-4 py-3 bg-gray-50">
+                  {currentStickerLabel || "—"}
                   {car?.sticker?.expiration_date && (
-                    <span className="ml-2 text-xs text-gray-500">
+                    <span className="text-xs text-gray-500">
                       (vence: {new Date(car.sticker.expiration_date).toLocaleDateString()})
                     </span>
                   )}
-                  {car?.sticker?.status && (
-                    <span className="ml-2 text-xs text-gray-500">• {car.sticker.status}</span>
-                  )}
+                  
                 </div>
-                {stickerErr && <p className="text-xs text-red-600 mt-1">{stickerErr}</p>}
               </div>
             ) : (
               <FormField
@@ -446,11 +412,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
             {!loadingStickers && !stickersError && stickerOptions.length === 0 && !isReadOnly && (
               <div className="text-xs text-gray-500">
                 No hay obleas disponibles para este taller.{" "}
-                <button
-                  type="button"
-                  className="text-[#0040B8] underline"
-                  onClick={() => loadStickers()}
-                >
+                <button type="button" className="text-[#0040B8] underline" onClick={() => loadStickers()}>
                   Reintentar
                 </button>
               </div>
