@@ -16,20 +16,20 @@ export default function InspectionStepsClient({
   steps,
   initialStatuses,
   apiBase,
-  initialObsByStep,     
-  initialGlobalObs,     
+  initialObsByStep,
+  initialGlobalObs,
 }: {
   inspectionId: number;
   appId: number;
   steps: Step[];
   initialStatuses: Record<number, Status | undefined>;
   apiBase: string | undefined;
-  initialObsByStep?: Record<number, ObservationRow[]>; 
-  initialGlobalObs?: string;                          
+  initialObsByStep?: Record<number, ObservationRow[]>;
+  initialGlobalObs?: string;
 }) {
-
   const [statusByStep, setStatusByStep] = useState<Record<number, Status | undefined>>(initialStatuses || {});
   const [saving, setSaving] = useState(false);
+  const [certLoading, setCertLoading] = useState(false); // ← NUEVO
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openObsStepId, setOpenObsStepId] = useState<number | null>(null);
@@ -37,7 +37,7 @@ export default function InspectionStepsClient({
   const [summaryOpenByStep, setSummaryOpenByStep] = useState<Record<number, boolean>>({});
   const router = useRouter();
   const [globalObs, setGlobalObs] = useState(initialGlobalObs || "");
-  const [obsByStepList, setObsByStepList] = useState<Record<number, ObservationRow[]>>(initialObsByStep || {}); 
+  const [obsByStepList, setObsByStepList] = useState<Record<number, ObservationRow[]>>(initialObsByStep || {});
 
   const stepNameById = useMemo(() => {
     const map: Record<number, string> = {};
@@ -75,9 +75,7 @@ export default function InspectionStepsClient({
 
   useEffect(() => {
     if (!apiBase) return;
-
-    // solo pasos sin datos iniciales
-    const missing = steps.filter(s => !(s.step_id in (initialObsByStep || {})));
+    const missing = steps.filter((s) => !(s.step_id in (initialObsByStep || {})));
     if (missing.length === 0) return;
 
     const abort = new AbortController();
@@ -95,17 +93,18 @@ export default function InspectionStepsClient({
         const results = await Promise.all(promises);
         setObsByStepList((prev) => {
           const copy = { ...prev };
-          results.forEach((r) => { if (r) copy[r.stepId] = r.data; });
+          results.forEach((r) => {
+            if (r) copy[r.stepId] = r.data;
+          });
           return copy;
         });
       } catch {
-        /* ignoramos errores individuales */
+        /* noop */
       }
     };
     run();
     return () => abort.abort();
   }, [apiBase, inspectionId, steps, initialObsByStep]);
-
 
   const fetchStepObservations = async (stepId: number) => {
     if (!apiBase) {
@@ -212,7 +211,6 @@ export default function InspectionStepsClient({
         })
         .filter(Boolean);
 
-      // guarda detalles y observaciones globales
       const [bulkRes, putRes] = await Promise.all([
         fetch(`${apiBase}/inspections/inspections/${inspectionId}/details/bulk`, {
           method: "POST",
@@ -242,6 +240,38 @@ export default function InspectionStepsClient({
       setError(e.message || "Error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // ← NUEVO: generar certificado
+  const generateCertificate = async () => {
+    if (!apiBase) {
+      setError("Falta configurar NEXT_PUBLIC_API_URL");
+      return;
+    }
+    setCertLoading(true);
+    setError(null);
+    setMsg(null);
+    try {
+      const res = await fetch(`${apiBase}/certificates/certificates/application/${appId}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ condicion: "Apto" }),
+      });
+      const data = await res.json().catch(() => ({} as any));
+      if (!res.ok) {
+        throw new Error(data?.error || "No se pudo generar el certificado");
+      }
+      const url = data?.public_url || data?.template_url;
+      if (!url) throw new Error("No se recibió el link del certificado");
+      window.open(url, "_blank", "noopener,noreferrer");
+      setMsg("Certificado generado");
+      setTimeout(() => setMsg(null), 1500);
+    } catch (e: any) {
+      setError(e.message || "Error generando certificado");
+    } finally {
+      setCertLoading(false);
     }
   };
 
@@ -360,70 +390,77 @@ export default function InspectionStepsClient({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4 mt-8 w-full">
-        {/* izquierda, textarea, no se estira */}
+        {/* izquierda */}
         <div className="rounded-[10px] text-sm border border-zinc-200 bg-white p-4 w-full self-start">
-            <textarea
+          <textarea
             value={globalObs}
             onChange={(e) => setGlobalObs(e.target.value)}
             placeholder="Observaciones generales..."
             className="w-full h-40 outline-none resize-none"
             maxLength={400}
-            />
-            <div className="mt-2 text-right text-xs text-zinc-400">{globalObs.length}/400</div>
+          />
+          <div className="mt-2 text-right text-xs text-zinc-400">{globalObs.length}/400</div>
         </div>
 
-        {/* derecha, acordeón con scroll propio */}
+        {/* derecha */}
         <div className="rounded-[10px] border border-zinc-200 bg-white p-4 w-full self-start">
-            <div className="w-full flex items-center justify-between rounded-[6px] border px-3 py-2 text-sm border-[#0040B8] text-[#0040B8]">
+          <div className="w-full flex items-center justify-between rounded-[6px] border px-3 py-2 text-sm border-[#0040B8] text-[#0040B8]">
             <span>Observaciones marcadas</span>
             <span className="text-xs rounded bg-[#0040B8] text-white px-2 py-0.5">{totalChecked}</span>
-            </div>
+          </div>
 
-            {/* área que crece, con scroll vertical */}
-            <div className="mt-3 space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="mt-3 space-y-3 max-h-[60vh] overflow-y-auto pr-1">
             {summary.map((item) => {
-                const isOpen = !!summaryOpenByStep[item.stepId];
-                const all = item.checked;
-                return (
+              const isOpen = !!summaryOpenByStep[item.stepId];
+              const all = item.checked;
+              return (
                 <div key={item.stepId} className="rounded-[4px] border border-zinc-200 overflow-hidden">
-                    <button
+                  <button
                     type="button"
                     onClick={() => setSummaryOpenByStep((prev) => ({ ...prev, [item.stepId]: !prev[item.stepId] }))}
                     className="w-full flex items-center justify-between px-4 py-3 text-sm bg-white"
-                    >
+                  >
                     <span className={clsx("truncate", isOpen ? "text-zinc-900" : "text-zinc-600")}>
-                        {item.stepName}
+                      {item.stepName}
                     </span>
-                    <svg className={clsx("h-4 w-4 transition-transform", isOpen ? "rotate-180" : "rotate-0")} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                    <svg
+                      className={clsx("h-4 w-4 transition-transform", isOpen ? "rotate-180" : "rotate-0")}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
                     </svg>
-                    </button>
+                  </button>
 
-                    {isOpen && (
+                  {isOpen && (
                     <div className="p-3 space-y-2">
-                        {all.map((o) => (
+                      {all.map((o) => (
                         <div key={o.id} className="flex items-center justify-between rounded border border-zinc-200 bg-white px-3 py-2">
-                            <p className="text-sm text-zinc-800">{o.description}</p>
-                            <button
+                          <p className="text-sm text-zinc-800">{o.description}</p>
+                          <button
                             className="p-1 rounded hover:bg-zinc-100"
                             onClick={() => uncheckFromChip(item.stepId, o.id)}
                             aria-label="Desmarcar observación"
                             title="Desmarcar"
-                            >
+                          >
                             <X size={16} />
-                            </button>
+                          </button>
                         </div>
-                        ))}
+                      ))}
                     </div>
-                    )}
+                  )}
                 </div>
-                );
+              );
             })}
             {summary.length === 0 && <div className="text-xs text-zinc-500">No hay observaciones marcadas todavía.</div>}
-            </div>
+          </div>
         </div>
-        </div>
-
+      </div>
 
       <div className="flex items-center justify-center gap-5 mt-10 w-full">
         <button
@@ -433,6 +470,21 @@ export default function InspectionStepsClient({
         >
           Cancelar
         </button>
+
+        {/* ← NUEVO botón Certificado */}
+        <button
+          type="button"
+          disabled={certLoading}
+          onClick={generateCertificate}
+          className={clsx(
+            "px-5 py-2.5 rounded-[4px] border text-[#0040B8]",
+            certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50"
+          )}
+          title="Generar y abrir certificado"
+        >
+          {certLoading ? "Generando..." : "Certificado"}
+        </button>
+
         <button
           type="button"
           disabled={saving}
@@ -443,12 +495,8 @@ export default function InspectionStepsClient({
         </button>
       </div>
 
-      {msg && (
-        <div className="mt-4 text-sm text-[#41c227] border border-[#41c227] p-3 rounded-[6px] text-center">{msg}</div>
-      )}
-      {error && (
-        <div className="mt-4 text-sm text-[#d11b2d] border border-[#d11b2d] p-3 rounded-[6px] text-center">{error}</div>
-      )}
+      {msg && <div className="mt-4 text-sm text-[#41c227] border border-[#41c227] p-3 rounded-[6px] text-center">{msg}</div>}
+      {error && <div className="mt-4 text-sm text-[#d11b2d] border border-[#d11b2d] p-3 rounded-[6px] text-center">{error}</div>}
     </div>
   );
 }

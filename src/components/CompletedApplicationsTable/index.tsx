@@ -144,7 +144,16 @@ export default function CompletedApplicationsTable () {
               <td className="p-0">
                 <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
                   <Eye className="cursor-pointer text-[#0040B8]" size={18} />
-                  <Download className="cursor-pointer text-[#0040B8]" size={18} />
+                  <Download
+                    onClick={() =>
+                      window.open(
+                        `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`,
+                        "_blank"
+                      )
+                    }
+                    className="cursor-pointer text-[#0040B8]"
+                    size={18}
+                  />
                 </div>
               </td>
             </tr>
