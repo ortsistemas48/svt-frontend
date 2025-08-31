@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { fetchAvailableStickers } from "@/utils";
+import { fetchAvailableStickerOrders } from "@/utils";
 
 type StickerData = {
   id: number;
@@ -12,6 +12,12 @@ type StickerData = {
   expiration_date: string | null;
   issued_at: string | null;
   status: string | null;
+};
+
+type StickerOrderData = {
+  id: number;
+  name: string | null;
+  available_count: number | null;
 };
 
 type CarData = {
@@ -31,10 +37,14 @@ export default function ReassignStickerPage() {
 
   // obleas disponibles para reasignar
   const [stickers, setStickers] = useState<StickerData[]>([]);
+  const [stickerOrders, setStickerOrders] = useState<StickerOrderData[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   const [newSticker, setNewSticker] = useState<string>("");
+  const [newStickerOrderId, setNewStickerOrderId] = useState<string>("");
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string>("");
+  useEffect(() => { setNewStickerOrderId(""); }, [stickerOrders]);
 
   // 1) Traer datos del auto por patente
   useEffect(() => {
@@ -69,34 +79,41 @@ export default function ReassignStickerPage() {
 
   // 2) Traer obleas disponibles para este taller (puede incluir la actual, según tu helper/endpoint)
   useEffect(() => {
-    if (!car) return;
+  if (!car) return;
+  let cancelled = false;
 
-    (async () => {
-      try {
-        const data = await fetchAvailableStickers({
-          workshopId: Number(id),
-          currentCarId: car.id,
-          currentLicensePlate: car.license_plate,
-        });
+  (async () => {
+    try {
+      setLoadingOrders(true);
+      const data = await fetchAvailableStickerOrders({
+        workshopId: Number(id),
+        currentCarId: car.id,
+        currentLicensePlate: car.license_plate,
+      });
+      if (cancelled) return;
 
-        setStickers(data);
+      setStickerOrders(Array.isArray(data) ? data : []);
 
-        // Si hay oblea actual y está entre las opciones → preseleccionar
-        if (car.sticker_id && data.some((s: StickerData) => s.id === car.sticker_id)) {
-          setNewSticker(String(car.sticker_id));
-        } else {
-          setNewSticker(""); // sin selección si no hay opciones o no coincide
-        }
-      } catch (e) {
-        console.error(e);
-        setStickers([]);
+      // no loguees stickerOrders acá, todavía tiene el valor anterior
+      // console.log(stickerOrders);
+    } catch (e) {
+      console.error(e);
+      if (!cancelled) {
+        setStickerOrders([]);
         setNewSticker("");
       }
-    })();
-  }, [car, id]);
+    } finally {
+      if (!cancelled) setLoadingOrders(false);
+    }
+  })();
 
+  return () => { cancelled = true; };
+}, [car, id]);
+
+
+// handleApply actualizado
   const handleApply = async () => {
-    if (!car || !newSticker) return;
+    if (!car || !newStickerOrderId) return;
 
     try {
       setLoading(true);
@@ -108,7 +125,7 @@ export default function ReassignStickerPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           license_plate: car.license_plate,
-          sticker_id: Number(newSticker),
+          sticker_order_id: Number(newStickerOrderId),
         }),
       });
 
@@ -126,7 +143,7 @@ export default function ReassignStickerPage() {
     }
   };
 
-  const noAvailable = stickers.length === 0;
+  const noAvailable = stickerOrders.length === 0;
 
   return (
     <div className="min-h-full">
@@ -192,29 +209,19 @@ export default function ReassignStickerPage() {
           <h3 className="text-sm text-[#0f172a] mb-2">Asignar nueva oblea</h3>
 
           <select
-            className={`w-full border rounded-md px-4 py-3 ${
-              noAvailable
-                ? "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed"
-                : "border-[#D9D9D9]"
-            }`}
-            value={noAvailable ? "" : newSticker}
-            onChange={(e) => setNewSticker(e.target.value)}
+            className={`w-full border rounded-md px-4 py-3 ${noAvailable ? "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed" : "border-[#D9D9D9]"}`}
+            value={noAvailable ? "" : newStickerOrderId}
+            onChange={(e) => setNewStickerOrderId(e.target.value)}
             disabled={loading || noAvailable}
           >
             <option value="">
-              {noAvailable
-                ? "No hay obleas disponibles para este taller"
-                : "Seleccioná una oblea"}
+              {noAvailable ? "No hay obleas disponibles para este taller" : "Seleccioná una orden de obleas"}
             </option>
-            {!noAvailable &&
-              stickers.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.sticker_number ?? `Oblea #${s.id}`}{" "}
-                  {s.expiration_date
-                    ? `(vence: ${new Date(s.expiration_date).toLocaleDateString()})`
-                    : ""}
-                </option>
-              ))}
+            {!noAvailable && stickerOrders.map((s) => (
+              <option key={s.id} value={String(s.id)}>
+                {s.name ?? `Orden #${s.id}`} {typeof s.available_count === "number" ? `(${s.available_count} disp.)` : ""}
+              </option>
+            ))}
           </select>
 
           {noAvailable && (
@@ -229,7 +236,7 @@ export default function ReassignStickerPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="w-56 rounded border border-[#0A4DCC] text-[#0A4DCC] bg-white py-3 font-medium hover:bg-[#0A4DCC] hover:text-white disabled:opacity-60"
+            className="w-56 rounded border border-[#0A4DCC] text-[#0A4DCC] bg-white py-3 hover:bg-[#0A4DCC] hover:text-white disabled:opacity-60"
             disabled={loading}
           >
             Cancelar
@@ -237,8 +244,8 @@ export default function ReassignStickerPage() {
           <button
             type="button"
             onClick={handleApply}
-            disabled={loading || noAvailable || !newSticker}
-            className="w-56 rounded bg-[#0A4DCC] text-white py-3 font-semibold hover:bg-[#0843B2] disabled:opacity-60"
+            disabled={loading || noAvailable || !newStickerOrderId}
+            className="w-56 rounded bg-[#0A4DCC] text-white py-3 hover:bg-[#0843B2] disabled:opacity-60"
           >
             Aplicar cambios
           </button>
