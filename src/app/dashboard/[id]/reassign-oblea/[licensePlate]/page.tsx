@@ -1,4 +1,3 @@
-// app/dashboard/[id]/reasign-oblea/[licensePlate]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -26,7 +25,7 @@ type CarData = {
   brand?: string;
   model?: string;
   sticker_id?: number | null;
-  sticker?: StickerData | null; // el endpoint de vehicle ya puede traer el sticker completo
+  sticker?: StickerData | null;
 };
 
 export default function ReassignStickerPage() {
@@ -35,15 +34,19 @@ export default function ReassignStickerPage() {
 
   const [car, setCar] = useState<CarData | null>(null);
 
-  // obleas disponibles para reasignar
   const [stickers, setStickers] = useState<StickerData[]>([]);
   const [stickerOrders, setStickerOrders] = useState<StickerOrderData[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  const [newSticker, setNewSticker] = useState<string>("");
   const [newStickerOrderId, setNewStickerOrderId] = useState<string>("");
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string>("");
+
+  // Modal de confirmación
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [previewStickerId, setPreviewStickerId] = useState<number | null>(null);
+  const [previewStickerNumber, setPreviewStickerNumber] = useState<string>("");
+
   useEffect(() => { setNewStickerOrderId(""); }, [stickerOrders]);
 
   // 1) Traer datos del auto por patente
@@ -77,47 +80,76 @@ export default function ReassignStickerPage() {
     })();
   }, [licensePlate]);
 
-  // 2) Traer obleas disponibles para este taller (puede incluir la actual, según tu helper/endpoint)
+  // 2) Traer órdenes con disponibilidad
   useEffect(() => {
-  if (!car) return;
-  let cancelled = false;
+    if (!car) return;
+    let cancelled = false;
 
-  (async () => {
-    try {
-      setLoadingOrders(true);
-      const data = await fetchAvailableStickerOrders({
-        workshopId: Number(id),
-        currentCarId: car.id,
-        currentLicensePlate: car.license_plate,
-      });
-      if (cancelled) return;
+    (async () => {
+      try {
+        setLoadingOrders(true);
+        const data = await fetchAvailableStickerOrders({
+          workshopId: Number(id),
+          currentCarId: car.id,
+          currentLicensePlate: car.license_plate,
+        });
+        if (cancelled) return;
 
-      setStickerOrders(Array.isArray(data) ? data : []);
-
-      // no loguees stickerOrders acá, todavía tiene el valor anterior
-      // console.log(stickerOrders);
-    } catch (e) {
-      console.error(e);
-      if (!cancelled) {
-        setStickerOrders([]);
-        setNewSticker("");
+        setStickerOrders(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          setStickerOrders([]);
+        }
+      } finally {
+        if (!cancelled) setLoadingOrders(false);
       }
-    } finally {
-      if (!cancelled) setLoadingOrders(false);
-    }
-  })();
+    })();
 
-  return () => { cancelled = true; };
-}, [car, id]);
+    return () => { cancelled = true; };
+  }, [car, id]);
 
+  const noAvailable = stickerOrders.length === 0;
 
-// handleApply actualizado
+  // Paso 1: al hacer click en "Aplicar", pedimos el preview y abrimos modal
   const handleApply = async () => {
     if (!car || !newStickerOrderId) return;
 
     try {
       setLoading(true);
       setErr("");
+
+      // Pido la próxima oblea disponible para mostrar en el modal
+      const previewRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/stickers/next-available?sticker_order_id=${Number(newStickerOrderId)}`,
+        { credentials: "include" }
+      );
+
+      if (!previewRes.ok) {
+        const errData = await previewRes.json().catch(() => ({}));
+        throw new Error(errData.error || "No hay obleas disponibles en esa orden.");
+      }
+
+      const preview = await previewRes.json() as { id: number; sticker_number: string | null };
+      setPreviewStickerId(preview.id);
+      setPreviewStickerNumber(preview.sticker_number ?? `#${preview.id}`);
+      setConfirmOpen(true); // abrir modal
+    } catch (e: any) {
+      console.error(e);
+      setErr(e.message || "Ocurrió un error al preparar la reasignación.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Paso 2: confirmar en el modal y hacer el POST real
+  const confirmReassign = async () => {
+    if (!car || !newStickerOrderId) return;
+
+    try {
+      setLoading(true);
+      setErr("");
+      setConfirmOpen(false);
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/reassign-sticker`, {
         method: "POST",
@@ -142,8 +174,6 @@ export default function ReassignStickerPage() {
       setLoading(false);
     }
   };
-
-  const noAvailable = stickerOrders.length === 0;
 
   return (
     <div className="min-h-full">
@@ -177,9 +207,9 @@ export default function ReassignStickerPage() {
                 <div className="font-medium">{car?.license_plate ?? licensePlate}</div>
               </div>
               <div>
-                <div className="text-gray-500">Marca - Modelo</div>
+                <div className="text-gray-500">Marca, Modelo</div>
                 <div className="font-medium">
-                  {car ? `${car.brand ?? "-"} ${car.model ?? ""}` : "—"}
+                  {car ? `${car.brand ?? ""} ${car.model ?? ""}`.trim() || "—" : "—"}
                 </div>
               </div>
               <div>
@@ -204,27 +234,27 @@ export default function ReassignStickerPage() {
           </div>
         </section>
 
-        {/* Seleccionar oblea nueva */}
+        {/* Seleccionar orden de obleas */}
         <section className="mb-10">
           <h3 className="text-sm text-[#0f172a] mb-2">Asignar nueva oblea</h3>
 
           <select
-            className={`w-full border rounded-md px-4 py-3 ${noAvailable ? "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed" : "border-[#D9D9D9]"}`}
-            value={noAvailable ? "" : newStickerOrderId}
+            className={`w-full border rounded-md px-4 py-3 ${stickerOrders.length === 0 ? "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed" : "border-[#D9D9D9]"}`}
+            value={stickerOrders.length === 0 ? "" : newStickerOrderId}
             onChange={(e) => setNewStickerOrderId(e.target.value)}
-            disabled={loading || noAvailable}
+            disabled={loading || stickerOrders.length === 0}
           >
             <option value="">
-              {noAvailable ? "No hay obleas disponibles para este taller" : "Seleccioná una orden de obleas"}
+              {stickerOrders.length === 0 ? "No hay obleas disponibles para este taller" : "Seleccioná una orden de obleas"}
             </option>
-            {!noAvailable && stickerOrders.map((s) => (
+            {stickerOrders.map((s) => (
               <option key={s.id} value={String(s.id)}>
                 {s.name ?? `Orden #${s.id}`} {typeof s.available_count === "number" ? `(${s.available_count} disp.)` : ""}
               </option>
             ))}
           </select>
 
-          {noAvailable && (
+          {stickerOrders.length === 0 && (
             <p className="mt-2 text-sm text-gray-500">
               No hay obleas disponibles para este taller
             </p>
@@ -236,7 +266,7 @@ export default function ReassignStickerPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="w-56 rounded border border-[#0A4DCC] text-[#0A4DCC] bg-white py-3 hover:bg-[#0A4DCC] hover:text-white disabled:opacity-60"
+            className="w-56 rounded border duration-150 border-[#0A4DCC] text-[#0A4DCC] bg-white py-3 hover:bg-[#0A4DCC] hover:text-white disabled:opacity-60"
             disabled={loading}
           >
             Cancelar
@@ -244,13 +274,51 @@ export default function ReassignStickerPage() {
           <button
             type="button"
             onClick={handleApply}
-            disabled={loading || noAvailable || !newStickerOrderId}
-            className="w-56 rounded bg-[#0A4DCC] text-white py-3 hover:bg-[#0843B2] disabled:opacity-60"
+            disabled={loading || stickerOrders.length === 0 || !newStickerOrderId}
+            className="w-56 rounded duration-150 bg-[#0A4DCC] text-white py-3 hover:bg-[#0843B2] disabled:opacity-60"
           >
             Aplicar cambios
           </button>
         </div>
       </div>
+
+      {/* Modal de confirmación */}
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmOpen(false)} />
+          <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h4 className="text-xl font-semibold mb-2">Confirmar reasignación</h4>
+            <p className="text-gray-700">
+              Vas a asignar la oblea{" "}
+              <span className="font-semibold">
+                {previewStickerNumber || "desconocida"}
+              </span>{" "}
+              al dominio{" "}
+              <span className="font-semibold">{car?.license_plate}</span>.
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Se toma la primera oblea disponible de la orden seleccionada.
+            </p>
+
+            <div className="mt-6 flex gap-3 justify-center">
+              <button
+                type="button"
+                className="px-4 py-2 rounded border duration-150 border-gray-300 text-gray-700 hover:bg-gray-50"
+                onClick={() => setConfirmOpen(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded duration-150 bg-[#0A4DCC] text-white hover:bg-[#0843B2]"
+                onClick={confirmReassign}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-} 
+}
