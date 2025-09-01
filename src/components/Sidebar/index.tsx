@@ -46,7 +46,7 @@ export default function Sidebar() {
           </div>
         )}
 
-        <div className="border-t border-gray-200 py-5 px-1 mt-4">
+        <div className="border-t border-gray-200 py-5 px-1 pb-10 mt-4">
           <p className="text-xs text-[#00000080] tracking-wide mb-6">Ajustes</p>
           <div className="flex flex-col space-y-6 px-1">
             <Link href={`/dashboard/${id}/settings`}>
