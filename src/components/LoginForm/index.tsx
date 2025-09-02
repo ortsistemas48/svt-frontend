@@ -75,8 +75,10 @@ export default function LoginForm() {
       }
 
       // Caso 4: tiene exactamente un taller
+      console.log("Workshops del usuario:", workshops);
       if (workshops.length === 1) {
         router.push(`/dashboard/${workshops[0].workshop_id}`);
+        router.refresh();
         return;
       }
 

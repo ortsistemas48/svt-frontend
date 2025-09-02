@@ -3,7 +3,6 @@
 import DriverForm from "@/components/DriverForm";
 import OwnerForm from "@/components/OwnerForm";
 import CheckBox from "../CheckBox";
-import { useEffect, useState } from "react";
 
 export default function PersonForm({
   owner,
