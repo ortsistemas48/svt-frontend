@@ -79,7 +79,7 @@ export default function InspectionTable() {
             setPage(1); // reset al cambiar búsqueda
           }}
           className="border px-4 py-3 rounded-[4px] w-full flex-1"
-          placeholder="Busca inspecciones por su: Dominio, Propietario u Oblea"
+          placeholder="Busca revisiones por su: Dominio, Propietario u Oblea"
         />
         <button
           disabled={loading}
@@ -127,7 +127,7 @@ export default function InspectionTable() {
                   <button
                     type="button"
                     className="cursor-pointer text-[#0040B8] hover:opacity-80"
-                    title="Abrir inspección"
+                    title="Abrir revisión"
                     onClick={() => router.push(`/dashboard/${id}/inspections/${item.application_id}`)} 
                   >
                     <Play size={16} />

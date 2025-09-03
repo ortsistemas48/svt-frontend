@@ -10,6 +10,22 @@ type Step = { step_id: number; name: string; description: string; order: number 
 type Status = "Apto" | "Condicional" | "Rechazado";
 type ObservationRow = { id: number; description: string; checked: boolean };
 
+const STATUS_UI: Record<Status, { btn: string; stepBorder: string }> = {
+
+  Apto: {
+    btn: "border-[#0040B8] text-[#0040B8] bg-[#0040B8]/10",
+    stepBorder: "border-[#0040B8]/50", 
+  },
+  Condicional: {
+    btn: "border-amber-600 text-amber-700 bg-amber-50",
+    stepBorder: "border-amber-600/50", 
+  },
+  Rechazado: {
+    btn: "border-black text-black bg-black/5",
+    stepBorder: "border-black/50", 
+  },
+};
+
 export default function InspectionStepsClient({
   inspectionId,
   appId,
@@ -285,7 +301,17 @@ export default function InspectionStepsClient({
           const listForStep = obsByStepList[s.step_id] || [];
 
           return (
-            <section key={s.step_id} className="w-full rounded-[10px] border bg-white border-zinc-200">
+              <section
+                key={s.step_id}
+                className={clsx(
+                  "w-full rounded-[10px] bg-white transition-colors",
+                  // borde por estado si existe, si no gris
+                  statusByStep[s.step_id]
+                    ? STATUS_UI[statusByStep[s.step_id] as Status].stepBorder
+                    : "border-zinc-200",
+                  "border"
+                )}
+              >
               <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
                   <h3 className="font-medium text-zinc-900">{s.name}</h3>
@@ -294,26 +320,25 @@ export default function InspectionStepsClient({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-5 flex-wrap">
-                  {options.map((opt) => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => handlePick(s.step_id, opt)}
-                      className={clsx(
-                        "w-[140px] px-4 py-2.5 rounded-[4px] border text-sm transition",
-                        statusByStep[s.step_id] === opt
-                          ? opt === "Apto"
-                            ? "border-emerald-600 text-emerald-700 bg-emerald-50"
-                            : opt === "Condicional"
-                            ? "border-amber-500 text-amber-700 bg-amber-50"
-                            : "border-rose-600 text-rose-700 bg-rose-50"
-                          : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                      )}
-                    >
-                      {opt}
-                    </button>
-                  ))}
+                  <div className="flex items-center gap-5 flex-wrap">
+                    {options.map((opt) => {
+                      const selected = statusByStep[s.step_id] === opt;
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => handlePick(s.step_id, opt)}
+                          className={clsx(
+                            "w-[140px] px-4 py-2.5 rounded-[4px] border text-sm transition",
+                            selected
+                              ? STATUS_UI[opt].btn
+                              : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                          )}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
 
                   {isNonApto && (
                     <div className="relative">

@@ -32,7 +32,7 @@ async function ensureInspection(appId: number) {
 
   if (!res.ok && res.status !== 200) {
     const j = await res.json().catch(() => ({}));
-    throw new Error(j?.error || "No se pudo crear o recuperar la inspección");
+    throw new Error(j?.error || "No se pudo crear o recuperar la revisión");
   }
   const data = await res.json();
   return data.inspection_id as number;
@@ -49,7 +49,27 @@ async function fetchSteps(appId: number) {
   return steps;
 }
 
-async function fetchDetails(inspectionId: number) {
+function parseObsField(obs: unknown): ObservationRow[] {
+  if (Array.isArray(obs)) return obs as ObservationRow[];
+  if (typeof obs === "string") {
+    try {
+      const parsed = JSON.parse(obs);
+      return Array.isArray(parsed) ? parsed as ObservationRow[] : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function normalizeRows(rows: DetailRow[]): DetailRow[] {
+  return rows.map((it) => ({
+    ...it,
+    observations: parseObsField(it.observations),
+  }));
+}
+
+export async function fetchDetails(inspectionId: number) {
   const cookieHeader = cookies().toString();
   const res = await fetch(`${API}/inspections/inspections/${inspectionId}/details`, {
     headers: { cookie: cookieHeader },
@@ -58,17 +78,29 @@ async function fetchDetails(inspectionId: number) {
   if (!res.ok) throw new Error("No se pudieron obtener los detalles");
 
   const payload = await res.json();
-
-  // soporta respuesta nueva y vieja
+  // viejo: array directo
   if (Array.isArray(payload)) {
-    return { rows: payload as DetailRow[], globalObs: "" as string };
-  } else {
-    const { items, global_observations } = payload as {
-      items: DetailRow[];
-      global_observations: string | null;
-    };
-    return { rows: items, globalObs: global_observations ?? "" };
+    const rows = normalizeRows(payload as DetailRow[]);
+    return { rows, globalObs: "", licensePlate: undefined as string | undefined };
   }
+
+  // nuevo: objeto con items, global_observations y license_plate
+  const {
+    items,
+    global_observations,
+    license_plate,
+  } = payload as {
+    items: DetailRow[];
+    global_observations: string | null;
+    license_plate?: string | null;
+  };
+
+  const rows = normalizeRows(items || []);
+  return {
+    rows,
+    globalObs: global_observations ?? "",
+    licensePlate: license_plate ?? undefined,
+  };
 }
 
 export default async function InspectionPage({ params }: { params: { applicationId: string } }) {
@@ -76,10 +108,11 @@ export default async function InspectionPage({ params }: { params: { application
 
   const inspectionId = await ensureInspection(appId);
   const [steps, detailsResp] = await Promise.all([fetchSteps(appId), fetchDetails(inspectionId)]);
-  const { rows: details, globalObs } = detailsResp;
+  const { rows: details, globalObs, licensePlate } = detailsResp;
 
   const initialStatuses: Record<number, "Apto" | "Condicional" | "Rechazado" | undefined> = {};
   const initialObsByStep: Record<number, ObservationRow[]> = {};
+  const plateLabel = (licensePlate?.trim() || "Sin dominio").toUpperCase();
 
   details.forEach((r) => {
     if (r.detail?.status) initialStatuses[r.step_id] = r.detail.status;
@@ -92,7 +125,9 @@ export default async function InspectionPage({ params }: { params: { application
         <div className="flex items-center gap-1">
           <span>Inicio</span>
           <ChevronRight size={20} />
-          <span className="text-[#0040B8]">Inspección técnica</span>
+          <span className="text-[#0040B8]">Revisión técnica</span>
+          <ChevronRight size={20} />
+          <span className="text-[#0040B8]">{plateLabel}</span>
         </div>
       </article>
 
