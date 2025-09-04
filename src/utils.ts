@@ -303,3 +303,43 @@ export async function markStickerAsUsed(stickerId: number) {
     console.error("Error al marcar la oblea:", e);
   }
 }
+
+const BASE = "https://apis.datos.gob.ar/georef/api";
+
+export type Option = { value: string; label: string; key?: string };
+
+export async function getProvinces(): Promise<Option[]> {
+  const res = await fetch(`${BASE}/provincias?orden=nombre&campos=nombre&max=1000`, { cache: "no-store" });
+  const data = await res.json();
+  return (data?.provincias ?? []).map((p: any) => ({ value: p.nombre, label: p.nombre }));
+}
+
+
+export async function getLocalidadesByProvincia(provinceName: string): Promise<Option[]> {
+  if (!provinceName) return [];
+  const url = `${BASE}/localidades?provincia=${encodeURIComponent(
+    provinceName
+  )}&campos=id,nombre&orden=nombre&max=5000`;
+
+  const res = await fetch(url, { cache: "no-store" });
+  const data = await res.json();
+
+  // Deduplicar por id (más confiable)
+  const seen = new Set<string>();
+  const items = (data?.localidades ?? [])
+    .filter((l: any) => {
+      const k = String(l.id);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
+    .map((l: any) => ({
+      // Podés guardar id como value si te sirve para backend;
+      // si no, dejá el nombre como value y agregá key aparte:
+      value: l.nombre,
+      label: l.nombre,
+      key: String(l.id), // <- único
+    }));
+
+  return items;
+}

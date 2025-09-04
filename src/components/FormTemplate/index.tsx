@@ -1,4 +1,3 @@
-// components/FormTemplate.tsx
 import Dropzone from "../Dropzone";
 import PersonFormField from "../PersonFormField";
 import type { ExistingDoc } from "../Dropzone";
@@ -6,6 +5,7 @@ import type { ExistingDoc } from "../Dropzone";
 export interface FormFieldOption {
   value: string;
   label: string;
+  key?: string;
 }
 
 export interface FormFieldData {
@@ -14,6 +14,7 @@ export interface FormFieldData {
   type?: string;
   options?: FormFieldOption[];
   name: string;
+  disabled?: boolean; // <-- NUEVO para poder desactivar el select de city
 }
 
 export interface FormTemplateProps {
@@ -29,6 +30,8 @@ export interface FormTemplateProps {
   showDropzone?: boolean;
   onPendingDocsChange?: (files: File[]) => void;
   existingDocuments?: ExistingDoc[];
+
+  onChangeField?: (name: string, value: string) => void; // <-- NUEVO
 }
 
 export default function FormTemplate({
@@ -41,13 +44,17 @@ export default function FormTemplate({
   showDropzone = true,
   onPendingDocsChange,
   existingDocuments = [],
-  onDeleteExisting
+  onDeleteExisting,
+  onChangeField, // <-- NUEVO
 }: FormTemplateProps) {
   const handleChange = (name: string, value: string) => {
     setData((prev: any) => ({
       ...prev,
       [name]: value,
     }));
+
+    // Avisamos hacia arriba (OwnerForm) que cambió un campo
+    onChangeField?.(name, value); // <-- NUEVO
   };
 
   return (
@@ -69,6 +76,7 @@ export default function FormTemplate({
               isOwner={isOwner}
               value={data?.[field.name] || ""}
               onChange={(val: string) => handleChange(field.name, val)}
+              disabled={field.disabled ?? false} // <-- NUEVO
             />
           ) : (
             <PersonFormField

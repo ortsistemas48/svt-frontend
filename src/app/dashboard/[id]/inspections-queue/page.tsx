@@ -9,16 +9,16 @@ export default async function QueuePage() {
         <div className="flex items-center gap-1">
           <span>Inicio</span>
           <ChevronRight size={20} />
-          <span className="text-[#0040B8]">Cola de Inspecciones</span>
+          <span className="text-[#0040B8]">Cola de Revisiones</span>
         </div>
       </article>
       <div className="flex flex-col items-center gap-2">
         {/* Título */}
         <h2 className="text-3xl text-[#0040B8]">
-          Cola de Inspecciones
+          Cola de Revisiones
         </h2> 
          <p className=" text-gray-500 text-center">
-          Aqui podrás iniciar las inspecciones que se encuentren en la cola.
+          Aqui podrás iniciar las revisiones que se encuentren en la cola.
         </p>
       </div>
       <QueueTable/>
