@@ -23,12 +23,13 @@ type Doc = { id:number; file_name:string; file_url:string; size_bytes?:number; m
 
 
 export default function ApplicationForm({ applicationId, initialData }: Props) {
-  const { isIdle, setIsIdle } = useApplication();
+  const { isIdle, setIsIdle, errors, setErrors } = useApplication();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const router = useRouter()
   const params = useParams()
   const id = params.id
+  const hasBlockingErrors = step === 1 && Object.values(errors ?? {}).some(Boolean);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showMissingDataModal, setShowMissingDataModal] = useState(false);
   const [pendingOwnerDocs, setPendingOwnerDocs] = useState<File[]>([]);
@@ -36,12 +37,8 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [existingDocsByRole, setExistingDocsByRole] = useState<{
     owner: Doc[]; driver: Doc[]; car: Doc[]; generic: Doc[];
   }>({ owner: [], driver: [], car: [], generic: [] });
-
-
   const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | null>(null);
   const [missingFields, setMissingFields] = useState<string[]>([]);
-
-
   const [owner, setOwner] = useState<any>({ ...(initialData?.owner || {}) });
   const [driver, setDriver] = useState<any>({});
   const [isSamePerson, setIsSamePerson] = useState(false);
@@ -126,6 +123,9 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     setMissingFields([]);
   }, [step]);
 
+  useEffect(() => {
+  setErrors({});
+}, [step, setErrors]);
   const sendToQueue = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/queue`, {
@@ -388,8 +388,8 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         {step !== 3 && !isIdle && (
           <button
             onClick={handleNext}
-            disabled={loading}
-            className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5"
+            disabled={loading || hasBlockingErrors}
+            className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5 disabled:opacity-60"
           >
             {loading ? "Guardando..." : "Continuar"}
           </button>

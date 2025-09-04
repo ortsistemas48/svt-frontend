@@ -5,6 +5,8 @@ import DriverForm from "@/components/DriverForm";
 import OwnerForm from "@/components/OwnerForm";
 import CheckBox from "../CheckBox";
 import type { ExistingDoc } from "../Dropzone";
+import { useApplication } from "@/context/ApplicationContext";
+import { useEffect } from "react";
 
 type Props = {
   owner:any; setOwner:(v:any)=>void;
@@ -19,7 +21,6 @@ type Props = {
   existingDriverDocs?: ExistingDoc[];
   onDeleteOwnerDoc?: (docId:number)=>Promise<void> | void;
   onDeleteDriverDoc?: (docId:number)=>Promise<void> | void;
-
 };
 
 export default function PersonForm({
@@ -34,14 +35,30 @@ export default function PersonForm({
   existingOwnerDocs = [], existingDriverDocs = [],
   onDeleteOwnerDoc,
   onDeleteDriverDoc,
-
 }:  Props) {
+
+  const { setErrors } = useApplication();
+
+  // 🔹 helper: limpia todos los errores del conductor (driver_*)
+  const clearDriverErrors = () => {
+    setErrors(prev => {
+      const next = { ...(prev || {}) };
+      Object.keys(next).forEach(k => {
+        if (k.startsWith("driver_")) delete next[k]; // también podrías: next[k] = ""
+      });
+      return next;
+    });
+  };
 
   const handleCheckboxChange = (value: boolean) => {
     setIsSamePerson(value);
+
     if (value) {
+      // misma persona -> el conductor hereda del titular (solo flag) y limpiamos errores del conductor
       setDriver({ is_owner: true });
+      clearDriverErrors();
     } else {
+      // personas distintas -> reseteamos campos del conductor
       setDriver({
         is_owner: false,
         first_name: "",
@@ -53,8 +70,16 @@ export default function PersonForm({
         city: "",
         street: "",
       });
+      // NO limpiamos errores acá para que validaciones del conductor sigan funcionando si ya tipeó
+      // (si preferís limpiarlos al destildar, podés llamar clearDriverErrors() también aquí)
     }
   };
+
+  // Por si isSamePerson cambia desde afuera, garantizamos la limpieza
+  useEffect(() => {
+    if (isSamePerson) clearDriverErrors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSamePerson]);
 
   return (
     <div className="">
@@ -72,17 +97,19 @@ export default function PersonForm({
       >
         <OwnerForm
           data={owner}
-          applicationId={applicationId}
+          applicationId={applicationId as number}
           setData={setOwner}
           onPendingDocsChange={onPendingOwnerDocsChange}
           existingDocuments={existingOwnerDocs}
           onDeleteExisting={onDeleteOwnerDoc}
         />
+
         {!isSamePerson && <div className="bg-[#dedede] h-full w-px max-xl:w-full max-xl:h-px" />}
+
         {!isSamePerson && (
           <DriverForm
             data={driver}
-            applicationId={applicationId}
+            applicationId={applicationId as number}
             onDeleteExisting={onDeleteDriverDoc}
             setData={setDriver}
             onPendingDocsChange={onPendingDriverDocsChange}

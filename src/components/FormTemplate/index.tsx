@@ -1,3 +1,4 @@
+// components/FormTemplate.tsx
 import Dropzone from "../Dropzone";
 import PersonFormField from "../PersonFormField";
 import type { ExistingDoc } from "../Dropzone";
@@ -14,7 +15,8 @@ export interface FormFieldData {
   type?: string;
   options?: FormFieldOption[];
   name: string;
-  disabled?: boolean; // <-- NUEVO para poder desactivar el select de city
+  disabled?: boolean;
+  maxLength?: number; // si lo estás usando
 }
 
 export interface FormTemplateProps {
@@ -31,7 +33,11 @@ export interface FormTemplateProps {
   onPendingDocsChange?: (files: File[]) => void;
   existingDocuments?: ExistingDoc[];
 
-  onChangeField?: (name: string, value: string) => void; // <-- NUEVO
+  onChangeField?: (name: string, value: string) => void;
+
+  // ⬇️ NUEVO
+  fieldErrors?: Record<string, string>;
+  onBlurField?: (name: string) => void;
 }
 
 export default function FormTemplate({
@@ -45,16 +51,13 @@ export default function FormTemplate({
   onPendingDocsChange,
   existingDocuments = [],
   onDeleteExisting,
-  onChangeField, // <-- NUEVO
+  onChangeField,
+  fieldErrors = {},      // ⬅️ nuevo default
+  onBlurField,           // ⬅️ nuevo
 }: FormTemplateProps) {
   const handleChange = (name: string, value: string) => {
-    setData((prev: any) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Avisamos hacia arriba (OwnerForm) que cambió un campo
-    onChangeField?.(name, value); // <-- NUEVO
+    setData((prev: any) => ({ ...prev, [name]: value }));
+    onChangeField?.(name, value);
   };
 
   return (
@@ -76,7 +79,9 @@ export default function FormTemplate({
               isOwner={isOwner}
               value={data?.[field.name] || ""}
               onChange={(val: string) => handleChange(field.name, val)}
-              disabled={field.disabled ?? false} // <-- NUEVO
+              onBlur={() => onBlurField?.(field.name)}           // ⬅️ nuevo
+              error={fieldErrors[field.name]}                    // ⬅️ nuevo
+              disabled={field.disabled ?? false}
             />
           ) : (
             <PersonFormField
@@ -88,6 +93,8 @@ export default function FormTemplate({
               isOwner={isOwner}
               value={data?.[field.name] || ""}
               onChange={(val: string) => handleChange(field.name, val)}
+              onBlur={() => onBlurField?.(field.name)}           // ⬅️ nuevo
+              error={fieldErrors[field.name]}                    // ⬅️ nuevo
             />
           )
         )}

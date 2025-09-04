@@ -5,14 +5,18 @@ import React, { createContext, useState, useContext } from "react";
 interface ApplicationContextType {
   isIdle: boolean;
   setIsIdle: React.Dispatch<React.SetStateAction<boolean>>;
+  errors: Record<string, string>;
+  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
 const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
 
 export const ApplicationProvider = ({ children }: { children: React.ReactNode }) => {
   const [isIdle, setIsIdle] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
   return (
-    <ApplicationContext.Provider value={{ isIdle, setIsIdle }}>
+    <ApplicationContext.Provider value={{ isIdle, setIsIdle, errors, setErrors }}>
       {children}
     </ApplicationContext.Provider>
   );
