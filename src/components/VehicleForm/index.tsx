@@ -3,7 +3,7 @@
 import FormField from "@/components/PersonFormField";
 import { useApplication } from "@/context/ApplicationContext";
 import React, { useEffect, useMemo, useState } from "react";
-import { fetchAvailableStickers } from "../../utils";
+import { alnumSpaceUpper, clamp, fetchAvailableStickers, lettersSpaceUpper, onlyAlnumUpper, onlyDigits, toUpper } from "../../utils";
 import { useParams } from "next/navigation";
 
 interface FormFieldData {
@@ -45,19 +45,47 @@ const formData1: FormFieldData[] = [
   {
     label: "Tipo de vehículo",
     options: [
-      { value: "auto", label: "Auto" },
-      { value: "camioneta", label: "Camioneta" },
-      { value: "moto", label: "Moto" },
+      { value: "L", label: "L - Vehículo automotor con menos de CUATRO (4) ruedas" },
+      { value: "L1", label: "L1 - 2 Ruedas - Menos de 50 CM3 - Menos de 40 KM/H" },
+      { value: "L2", label: "L2 - 3 Ruedas - Menos de 50 CM3 - Menos de 40 KM/H" },
+      { value: "L3", label: "L3 - 2 Ruedas - Más de 50 CM3 - Más de 40 KM/H" },
+      { value: "L4", label: "L4 - 3 Ruedas - Más de 50 CM3 - Más de 40 KM/H" },
+      { value: "L5", label: "L5 - 3 Ruedas - Más de 50 CM3 - Más de 40 KM/H" },
+
+      { value: "M", label: "M - Vehículo automotor con por lo menos 4 ruedas (o 3 de más de 1.000 KG)" },
+      { value: "M1", label: "M1 - Hasta 8 plazas más conductor y menos de 3.500 KG" },
+      { value: "M2", label: "M2 - Más de 8 plazas excluido conductor y hasta 5.000 KG" },
+      { value: "M3", label: "M3 - Más de 8 plazas excluido conductor y más de 5.000 KG" },
+
+      { value: "N", label: "N - Vehículo automotor con por lo menos 4 ruedas (o 3 de más de 1.000 KG)" },
+      { value: "N1", label: "N1 - Hasta 3.500 KG" },
+      { value: "N2", label: "N2 - Desde 3.500 KG hasta 12.000 KG" },
+      { value: "N3", label: "N3 - Más de 12.000 KG" },
+
+      { value: "O", label: "O - Acoplados y semirremolques" },
+      { value: "O1", label: "O1 - Acoplados/semirremolques hasta 750 KG" },
+      { value: "O2", label: "O2 - Acoplados/semirremolques desde 750 KG hasta 3.500 KG" },
+      { value: "O3", label: "O3 - Acoplados/semirremolques de más de 3.500 KG y hasta 10.000 KG" },
+      { value: "O4", label: "O4 - Acoplados/semirremolques de más de 10.000 KG" },
     ],
     name: "vehicle_type",
   },
   {
     label: "Tipo de uso",
-    options: [
-      { value: "particular", label: "Particular" },
-      { value: "comercial", label: "Comercial" },
-    ],
-    name: "usage_type",
+  options: [
+    
+    { value: "A",  label: "A - Oficial" },
+    { value: "B",  label: "B - Diplomático, Consular u Org. Internacional" },
+    { value: "C",  label: "C - Particular" },
+    { value: "D",  label: "D - De alquiler / alquiler con chofer (Taxi - Remis)" },
+    { value: "E",  label: "E - Transporte público de pasajeros" },
+    { value: "E1", label: "E1 - Servicio internacional (regular y turismo); larga distancia y urbanos cat. M1, M2, M3" },
+    { value: "E2", label: "E2 - Interjurisdiccional y jurisdiccional; regulares/turismo cat. M1, M2, M3" },
+    { value: "F",  label: "F - Transporte escolar" },
+    { value: "G",  label: "G - Cargas (generales/peligrosas), recolección, carretones, servicios industriales y trabajos sobre la vía pública" },
+    { value: "H",  label: "H - Emergencia, seguridad, fúnebres, remolque, maquinaria especial o agrícola y trabajos sobre la vía pública" },
+  ],
+  name: "usage_type",
   },
   { label: "Marca de motor", placeholder: "Ej: Toyota", name: "engine_brand" },
   { label: "Número de motor", placeholder: "Ej: B91099432213123", name: "engine_number" },
@@ -76,12 +104,6 @@ const formData2: FormFieldData[] = [
 type Mode = "idle" | "view" | "edit";
 
 // ---------- Sanitizado / Validación helpers ----------
-const toUpper = (s: string) => s.toUpperCase();
-const onlyDigits = (s: string) => s.replace(/\D+/g, "");
-const onlyAlnumUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9]/g, "");
-const alnumSpaceUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9\s]/g, "");
-const lettersSpaceUpper = (s: string) => toUpper(s).replace(/[^A-ZÁÉÍÓÚÑÜ\s-]/g, "");
-const clamp = (s: string, max: number) => (s.length > max ? s.slice(0, max) : s);
 
 // Mensajes por campo
 const MSG = {
@@ -249,7 +271,6 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     if (car?.license_plate && mode === "idle") setMode("view");
   }, [car?.license_plate, mode]);
 
-  const isReadOnly = mode === "view";
 
   const handleChange = (key: string, value: string) => {
     if (key === "sticker_id") {
@@ -375,9 +396,8 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 id="plate"
                 type="text"
                 placeholder="Ej: ABC123 o AB123CD"
-                className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 uppercase ${
-                  plateErr ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
-                }`}
+                className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 uppercase ${plateErr ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
+                  }`}
                 value={plateQuery}
                 onChange={handlePlateChange}
                 onKeyDown={(e) => {
@@ -392,9 +412,8 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 type="button"
                 onClick={fetchVehicleByPlate}
                 disabled={disableSearch}
-                className={`px-6 rounded-[6px] text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${
-                  disableSearch ? "opacity-70 cursor-not-allowed" : ""
-                }`}
+                className={`px-6 rounded-[6px] text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${disableSearch ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
               >
                 {isSearching ? "Buscando..." : "Buscar"}
               </button>
@@ -567,7 +586,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 isOwner={true}
                 value={car?.sticker_id ? String(car.sticker_id) : ""}
                 onChange={(val) => handleChange("sticker_id", val)}
-                onBlur={() => {}}
+                onBlur={() => { }}
                 error={getCarError("sticker_id")}
                 className="col-span-1"
               />

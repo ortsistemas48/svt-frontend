@@ -353,14 +353,3 @@ export const toUpper = (s: string) => s.toUpperCase();
 export const onlyAlnumUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9]/g, "");
 export const alnumSpaceUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9\s]/g, "");
 export const lettersSpaceUpper = (s: string) => toUpper(s).replace(/[^A-ZÁÉÍÓÚÑÜ\s-]/g, "");
-
-const DRIVER_FIELD_LABEL: Record<string, string> = {
-    dni: "DNI",
-    email: "Email",
-    first_name: "Nombre",
-    last_name: "Apellido",
-    phone_number: "Teléfono",
-    street: "Domicilio",
-    province: "Provincia",
-    city: "Localidad",
-  };
