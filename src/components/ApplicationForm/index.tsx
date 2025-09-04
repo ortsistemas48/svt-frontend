@@ -28,7 +28,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const router = useRouter()
   const params = useParams()
   const id = params.id
-  const hasBlockingErrors = step === 1 && Object.values(errors ?? {}).some(Boolean);
+  const hasBlockingErrors = ( step === 1 || step === 2 ) && Object.values(errors ?? {}).some(Boolean);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showMissingDataModal, setShowMissingDataModal] = useState(false);
   const [pendingOwnerDocs, setPendingOwnerDocs] = useState<File[]>([]);
