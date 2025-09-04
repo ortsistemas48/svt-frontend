@@ -6,21 +6,33 @@ import OwnerForm from "@/components/OwnerForm";
 import CheckBox from "../CheckBox";
 import type { ExistingDoc } from "../Dropzone";
 import { useApplication } from "@/context/ApplicationContext";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 type Props = {
-  owner:any; setOwner:(v:any)=>void;
-  driver:any; setDriver:(v:any)=>void;
-  applicationId:number|string;
-  isSamePerson:boolean; setIsSamePerson:(v:boolean)=>void;
+  owner: any; setOwner: (v: any) => void;
+  driver: any; setDriver: (v: any) => void;
+  applicationId: number | string;
+  isSamePerson: boolean; setIsSamePerson: (v: boolean) => void;
 
-  onPendingOwnerDocsChange?:(files:File[])=>void;
-  onPendingDriverDocsChange?:(files:File[])=>void;
+  onPendingOwnerDocsChange?: (files: File[]) => void;
+  onPendingDriverDocsChange?: (files: File[]) => void;
 
   existingOwnerDocs?: ExistingDoc[];
   existingDriverDocs?: ExistingDoc[];
-  onDeleteOwnerDoc?: (docId:number)=>Promise<void> | void;
-  onDeleteDriverDoc?: (docId:number)=>Promise<void> | void;
+  onDeleteOwnerDoc?: (docId: number) => Promise<void> | void;
+  onDeleteDriverDoc?: (docId: number) => Promise<void> | void;
+};
+
+// Etiquetas legibles para el resumen de errores
+const FIELD_LABEL: Record<string, string> = {
+  dni: "DNI",
+  email: "Email",
+  first_name: "Nombre",
+  last_name: "Apellido",
+  phone_number: "Teléfono",
+  street: "Domicilio",
+  province: "Provincia",
+  city: "Localidad",
 };
 
 export default function PersonForm({
@@ -35,9 +47,9 @@ export default function PersonForm({
   existingOwnerDocs = [], existingDriverDocs = [],
   onDeleteOwnerDoc,
   onDeleteDriverDoc,
-}:  Props) {
+}: Props) {
 
-  const { setErrors } = useApplication();
+  const { errors, setErrors } = useApplication();
 
   // 🔹 helper: limpia todos los errores del conductor (driver_*)
   const clearDriverErrors = () => {
@@ -70,8 +82,8 @@ export default function PersonForm({
         city: "",
         street: "",
       });
-      // NO limpiamos errores acá para que validaciones del conductor sigan funcionando si ya tipeó
-      // (si preferís limpiarlos al destildar, podés llamar clearDriverErrors() también aquí)
+      // si quisieras, también podrías limpiar errores acá:
+      // clearDriverErrors();
     }
   };
 
@@ -81,6 +93,30 @@ export default function PersonForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSamePerson]);
 
+  // ---- Resumen de errores
+  const ownerErrorsList = useMemo(() => {
+    const entries = Object.entries(errors ?? {}).filter(
+      ([k, v]) => k.startsWith("owner_") && Boolean(v)
+    ) as [string, string][];
+    return entries.map(([k, msg]) => {
+      const field = k.replace(/^owner_/, "");
+      return { field, label: FIELD_LABEL[field] ?? field, msg };
+    });
+  }, [errors]);
+
+  const driverErrorsList = useMemo(() => {
+    const entries = Object.entries(errors ?? {}).filter(
+      ([k, v]) => k.startsWith("driver_") && Boolean(v)
+    ) as [string, string][];
+    return entries.map(([k, msg]) => {
+      const field = k.replace(/^driver_/, "");
+      return { field, label: FIELD_LABEL[field] ?? field, msg };
+    });
+  }, [errors]);
+
+  const showAnyErrors =
+    ownerErrorsList.length > 0 || (!isSamePerson && driverErrorsList.length > 0);
+
   return (
     <div className="">
       <div className="flex justify-center items-center gap-x-4 mb-14">
@@ -89,6 +125,39 @@ export default function PersonForm({
         </h1>
         <CheckBox label="" checked={isSamePerson} onChange={handleCheckboxChange} />
       </div>
+
+      {/* Resumen de errores */}
+      {showAnyErrors && (
+        <div className="mx-4 mb-6 border border-red-300 bg-red-50 text-red-700 text-sm rounded-md px-4 py-3">
+          <p className="font-medium mb-1 text-lg">Revisá estos campos:</p>
+
+          {ownerErrorsList.length > 0 && (
+            <>
+              <p className="font-semibold mb-1">Titular</p>
+              <ul className="list-disc pl-5 space-y-1 mb-2">
+                {ownerErrorsList.map(({ field, label, msg }) => (
+                  <li key={`owner-${field}`}>
+                    <span className="font-medium">{label}:</span> {msg}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {!isSamePerson && driverErrorsList.length > 0 && (
+            <>
+              <p className="font-semibold mb-1">Conductor</p>
+              <ul className="list-disc pl-5 space-y-1">
+                {driverErrorsList.map(({ field, label, msg }) => (
+                  <li key={`driver-${field}`}>
+                    <span className="font-medium">{label}:</span> {msg}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
 
       <div
         className={`grid ${

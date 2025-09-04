@@ -162,22 +162,24 @@ export default function DriverForm({
     const err = v && !EMAIL_REGEX.test(v) ? "Formato de email inválido." : "";
     setErrors(prev => ({ ...prev, driver_email: err }));
   };
-
+ 
   return (
-    <FormTemplate
-      formData={dynamicFormData as any}
-      applicationId={applicationId}
-      title="Datos del Conductor"
-      onDeleteExisting={onDeleteExisting}
-      description="Ingrese los datos del conductor del auto"
-      data={data}
-      setData={setData}
-      showDropzone={true}
-      onPendingDocsChange={onPendingDocsChange}
-      existingDocuments={existingDocuments}
-      onChangeField={handleChangeField}
-      onBlurField={handleBlurField}
-      fieldErrors={{ email: errors.driver_email }} // sólo pinta error en Email (Conductor)
-    />
+    <>
+      <FormTemplate
+        formData={dynamicFormData as any}
+        applicationId={applicationId}
+        title="Datos del Conductor"
+        onDeleteExisting={onDeleteExisting}
+        description="Ingrese los datos del conductor del auto"
+        data={data}
+        setData={setData}
+        showDropzone={true}
+        onPendingDocsChange={onPendingDocsChange}
+        existingDocuments={existingDocuments}
+        onChangeField={handleChangeField}
+        onBlurField={handleBlurField}
+        fieldErrors={{ email: errors.driver_email }} // sólo pinta error en Email (Conductor)
+      />
+    </>
   );
 }

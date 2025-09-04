@@ -21,7 +21,6 @@ type Props = {
 
 type Doc = { id:number; file_name:string; file_url:string; size_bytes?:number; mime_type?:string; role: 'owner'|'driver'|'car'|'generic'; created_at?:string };
 
-
 export default function ApplicationForm({ applicationId, initialData }: Props) {
   const { isIdle, setIsIdle, errors, setErrors } = useApplication();
   const [step, setStep] = useState(1);
@@ -37,13 +36,12 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [existingDocsByRole, setExistingDocsByRole] = useState<{
     owner: Doc[]; driver: Doc[]; car: Doc[]; generic: Doc[];
   }>({ owner: [], driver: [], car: [], generic: [] });
-  const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | "confirm_car" | null>(null);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [owner, setOwner] = useState<any>({ ...(initialData?.owner || {}) });
   const [driver, setDriver] = useState<any>({});
   const [isSamePerson, setIsSamePerson] = useState(false);
   const [car, setCar] = useState<any>({ ...(initialData?.car || {}) });
-
 
   const deleteDocument = async (docId: number) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/applications/${applicationId}/documents/${docId}`, {
@@ -70,7 +68,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     if (!files || files.length === 0) return [];
     const form = new FormData();
     files.forEach(f => form.append("files", f, f.name));
-    form.append("role", role); // también podrías usar ?role=owner en la URL
+    form.append("role", role);
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/applications/${applicationId}/documents`, {
       method: "POST",
@@ -124,8 +122,9 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   }, [step]);
 
   useEffect(() => {
-  setErrors({});
-}, [step, setErrors]);
+    setErrors({});
+  }, [step, setErrors]);
+
   const sendToQueue = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/queue`, {
@@ -144,6 +143,56 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     }
   };
 
+  // 🔸 Extraído: guardar vehículo (paso 2)
+  const saveVehicle = async () => {
+    // Validación de campos requeridos
+    const missing = getMissingCarFields(car);
+    if (missing.length > 0) {
+      setMissingFields(prev => [...prev, ...missing.map(f => `Vehículo: ${f}`)]);
+      setShowMissingDataModal(true);
+      return false;
+    }
+
+    // Marcar oblea "en uso" si existe
+    const stickerId = car?.sticker?.id ?? car?.sticker_id;
+    if (stickerId) {
+      try {
+        await markStickerAsUsed(stickerId);
+      } catch (e) {
+        console.error("No se pudo marcar la oblea como 'En Uso':", e);
+      }
+    }
+
+    // Guardar vehículo
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/car`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        license_plate: car.license_plate,
+        brand: car.brand,
+        model: car.model,
+        manufacture_year: car.manufacture_year,
+        weight: car.weight,
+        fuel_type: car.fuel_type,
+        vehicle_type: car.vehicle_type,
+        usage_type: car.usage_type,
+        engine_brand: car.engine_brand,
+        engine_number: car.engine_number,
+        chassis_number: car.chassis_number,
+        chassis_brand: car.chassis_brand,
+        green_card_number: car.green_card_number,
+        green_card_expiration: car.green_card_expiration,
+        license_number: car.license_number,
+        license_expiration: car.license_expiration,
+        insurance: car.insurance,
+        sticker_id: car.sticker_id,
+      }),
+    });
+    if (!res.ok) throw new Error("Error al guardar el vehículo");
+    return true;
+  };
+
   const handleNext = async () => {
     setLoading(true);
     setMissingFields([]);
@@ -153,28 +202,27 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
       if (step === 1) {
         if (!isSamePerson) {
           if (getMissingPersonFields(owner).length > 0 || getMissingPersonFields(driver).length > 0) {
-            const missing = getMissingPersonFields(owner).map(field => `Titular: ${field}`)
-            setMissingFields(e => [...e, ...missing]);
-
+            const missingOwner = getMissingPersonFields(owner).map(field => `Titular: ${field}`)
+            setMissingFields(e => [...e, ...missingOwner]);
             setShowMissingDataModal(true);
             setLoading(false);
 
             if (getMissingPersonFields(driver).length > 0) {
-              const missing = getMissingPersonFields(driver).map(field => `Conductor: ${field}`)
-              setMissingFields(e => [...e, ...missing]);
+              const missingDriver = getMissingPersonFields(driver).map(field => `Conductor: ${field}`)
+              setMissingFields(e => [...e, ...missingDriver]);
               setLoading(false);
             }
-            return
+            return;
           }
-        }
-        else if (getMissingPersonFields(owner).length > 0) {
+        } else if (getMissingPersonFields(owner).length > 0) {
           const missing = getMissingPersonFields(owner).map(field => `Titular: ${field}`)
           setMissingFields(e => [...e, ...missing]);
           setShowMissingDataModal(true);
           setLoading(false);
-          return
+          return;
         }
 
+        // Guardar titular
         res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/owner`, {
           method: "PUT",
           credentials: "include",
@@ -193,9 +241,8 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         });
         if (!res.ok) throw new Error("Error al guardar el titular");
 
+        // Guardar conductor
         if (driver?.is_owner === true) {
-          // es la misma persona
-
           res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/driver`, {
             method: "PUT",
             credentials: "include",
@@ -221,6 +268,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           });
         }
 
+        // Subir docs pendientes
         const uploads: any[] = [];
         if (isSamePerson) {
           if (pendingOwnerDocs.length > 0 || pendingDriverDocs.length > 0) {
@@ -252,11 +300,11 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             generic: [...uploads.filter(d => d.role === 'generic' || !d.role), ...prev.generic],
           }));
         }
-        
+
         if (!res.ok) throw new Error("Error al guardar el conductor");
       }
 
-      // Paso 2: Guardar vehículo
+      // 🔸 Paso 2: en lugar de guardar directo, pedimos confirmación
       if (step === 2) {
         const missing = getMissingCarFields(car);
         if (missing.length > 0) {
@@ -265,56 +313,22 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           setLoading(false);
           return;
         }
-
-        // Obtiene el id de la oblea desde el objeto o desde el campo plano
-        const stickerId = car?.sticker?.id ?? car?.sticker_id;
-
-        if (stickerId) {
-          try {
-            await markStickerAsUsed(stickerId);
-          } catch (e) {
-            console.error("No se pudo marcar la oblea como 'En Uso':", e);
-            // opcional: mostrar feedback y/o abortar
-          }
-        }
-        // markStickerAsUsed(car.sticker_id);
-        res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/car`, {
-          method: "PUT",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            license_plate: car.license_plate,
-            brand: car.brand,
-            model: car.model,
-            manufacture_year: car.manufacture_year,
-            weight: car.weight,
-            fuel_type: car.fuel_type,
-            vehicle_type: car.vehicle_type,
-            usage_type: car.usage_type,
-            engine_brand: car.engine_brand,
-            engine_number: car.engine_number,
-            chassis_number: car.chassis_number,
-            chassis_brand: car.chassis_brand,
-            green_card_number: car.green_card_number,
-            green_card_expiration: car.green_card_expiration,
-            license_number: car.license_number,
-            license_expiration: car.license_expiration,
-            insurance: car.insurance,
-            sticker_id: car.sticker_id,
-          }),
-        });
-        if (!res.ok) throw new Error("Error al guardar el vehículo");
+        // Mostrar modal de confirmación de vehículo
+        setConfirmAction("confirm_car");
+        setShowConfirmModal(true);
+        setLoading(false);
+        return; // no seguimos ahora; esperamos confirmación del modal
       }
 
       // Paso 3: Confirmar trámite
       if (step === 3) {
-        res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/confirm`, {
+        const resConfirm = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/confirm`, {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ date: new Date().toISOString() }),
         });
-        if (!res.ok) throw new Error("Error al confirmar el trámite");
+        if (!resConfirm.ok) throw new Error("Error al confirmar el trámite");
       }
 
       if (step < 3) setStep(step + 1);
@@ -373,7 +387,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       <div>{renderStepContent()}</div>
 
-
       <div className="flex gap-x-3 justify-center px-4 pt-8 pb-10">
         {step !== 1 && (
           <button
@@ -399,7 +412,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             <button
               disabled={loading}
               onClick={() => {
-
                 setConfirmAction("inspect");
                 setShowConfirmModal(true);
               }}
@@ -410,7 +422,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             <button
               disabled={loading}
               onClick={() => {
-
                 setConfirmAction("queue");
                 setShowConfirmModal(true);
               }}
@@ -422,24 +433,54 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         )}
       </div>
 
-
-
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h2 className="text-lg font-semibold mb-3">¿Estás seguro?</h2>
+            {/* Título y cuerpo del modal según acción */}
+            <h2 className="text-lg font-semibold mb-3">
+              {confirmAction === "confirm_car" ? "¿Estás seguro?" : "¿Estás seguro?"}
+            </h2>
 
-            <p className="mb-4">Vas a confirmar el trámite. ¿Deseás continuar?</p>
+            <p className="mb-4">
+              {confirmAction === "confirm_car"
+                ? "Estás por confirmar los datos de tu vehículo. ¿Deseás continuar?"
+                : "Vas a confirmar el trámite. ¿Deseás continuar?"}
+            </p>
 
             <div className="flex justify-center gap-5 mt-5">
-              <button onClick={() => setShowConfirmModal(false)} className="bg-white border border-[#d91e1e] text-[#d91e1e] duration-150 px-4 py-2 rounded-[4px] hover:text-white hover:bg-[#d91e1e]">Cancelar</button>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="bg-white border border-[#d91e1e] text-[#d91e1e] duration-150 px-4 py-2 rounded-[4px] hover:text-white hover:bg-[#d91e1e]"
+              >
+                Cancelar
+              </button>
               <button
                 onClick={async () => {
+                  // Cerrar modal para evitar dobles clics
                   setShowConfirmModal(false);
+
+                  if (confirmAction === "confirm_car") {
+                    try {
+                      setLoading(true);
+                      const ok = await saveVehicle();
+                      if (ok) setStep(3);
+                    } catch (e) {
+                      console.error(e);
+                      alert("Hubo un error al guardar los datos del vehículo.");
+                    } finally {
+                      setLoading(false);
+                    }
+                    return;
+                  }
+
                   if (confirmAction === "inspect") {
-                    router.push(`/dashboard/${id}/inspections/${applicationId}`)
-                  } else if (confirmAction === "queue") {
+                    router.push(`/dashboard/${id}/inspections/${applicationId}`);
+                    return;
+                  }
+
+                  if (confirmAction === "queue") {
                     await sendToQueue();
+                    return;
                   }
                 }}
                 className="bg-[#0040B8] text-white px-4 py-2 rounded-[4px] hover:bg-[#0032a0]"
@@ -450,9 +491,10 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           </div>
         </div>
       )}
-      {
-        showMissingDataModal && <MissingDataModal missingFields={missingFields} onClose={setShowMissingDataModal} />
-      }
+
+      {showMissingDataModal && (
+        <MissingDataModal missingFields={missingFields} onClose={setShowMissingDataModal} />
+      )}
     </>
   );
 }
