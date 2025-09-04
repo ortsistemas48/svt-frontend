@@ -1,5 +1,6 @@
+// components/OwnerForm.tsx
 import FormTemplate from "../FormTemplate";
-import Dropzone from "@/components/Dropzone";
+import type { ExistingDoc } from "../Dropzone";
 
 const formData = [
   { label: "DNI", placeholder: "Ej: 39.959.950", name: "dni" },
@@ -11,17 +12,17 @@ const formData = [
   {
     label: "Provincia",
     options: [
-      { value: "cordoba", label: "Córdoba" },
-      { value: "buenos-aires", label: "Buenos Aires" },
-      { value: "santa-fe", label: "Santa Fe" },
+      { value: "Córdoba", label: "Córdoba" },
+      { value: "Buenos Aires", label: "Buenos Aires" },
+      { value: "Santa Fe", label: "Santa Fe" },
     ],
     name: "province"
   },
   {
     label: "Localidad",
     options: [
-      { value: "cordoba-capital", label: "Córdoba Capital" },
-      { value: "villa-carlos-paz", label: "Villa Carlos Paz" },
+      { value: "Córdoba Capital", label: "Córdoba Capital" },
+      { value: "Villa Carlos Paz", label: "Villa Carlos Paz" },
     ],
     name: "city"
   },
@@ -29,17 +30,28 @@ const formData = [
 
 type Props = {
   data: any;
+  applicationId: number;
   setData: (value: any) => void;
+  onPendingDocsChange?: (files: File[]) => void;
+  existingDocuments?: ExistingDoc[];
+  onDeleteExisting?: (docId:number)=>Promise<void> | void;
 };
 
-export default function OwnerForm({ data, setData }: Props) {
+export default function OwnerForm({
+  data, applicationId, setData, onPendingDocsChange, existingDocuments = [], onDeleteExisting
+}: any) {
   return (
     <FormTemplate
       formData={formData}
+      applicationId={applicationId}
       title="Datos del Titular"
+      onDeleteExisting={onDeleteExisting}
       description="Ingrese los datos del titular del auto"
       data={data}
       setData={setData}
+      showDropzone={true}
+      onPendingDocsChange={onPendingDocsChange}     
+      existingDocuments={existingDocuments}
     />
   );
 }

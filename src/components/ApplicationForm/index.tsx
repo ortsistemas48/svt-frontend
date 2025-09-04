@@ -19,6 +19,8 @@ type Props = {
   };
 };
 
+type Doc = { id:number; file_name:string; file_url:string; size_bytes?:number; mime_type?:string; role: 'owner'|'driver'|'car'|'generic'; created_at?:string };
+
 
 export default function ApplicationForm({ applicationId, initialData }: Props) {
   const { isIdle, setIsIdle } = useApplication();
@@ -29,6 +31,12 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const id = params.id
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showMissingDataModal, setShowMissingDataModal] = useState(false);
+  const [pendingOwnerDocs, setPendingOwnerDocs] = useState<File[]>([]);
+  const [pendingDriverDocs, setPendingDriverDocs] = useState<File[]>([]);
+  const [existingDocsByRole, setExistingDocsByRole] = useState<{
+    owner: Doc[]; driver: Doc[]; car: Doc[]; generic: Doc[];
+  }>({ owner: [], driver: [], car: [], generic: [] });
+
 
   const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | null>(null);
   const [missingFields, setMissingFields] = useState<string[]>([]);
@@ -39,6 +47,45 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [isSamePerson, setIsSamePerson] = useState(false);
   const [car, setCar] = useState<any>({ ...(initialData?.car || {}) });
 
+
+  const deleteDocument = async (docId: number) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/applications/${applicationId}/documents/${docId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error || "No se pudo borrar el documento");
+    }
+  };
+
+  const onDeleteOwnerDoc = async (docId: number) => {
+    await deleteDocument(docId);
+    setExistingDocsByRole(prev => ({ ...prev, owner: prev.owner.filter(d => d.id !== docId) }));
+  };
+
+  const onDeleteDriverDoc = async (docId: number) => {
+    await deleteDocument(docId);
+    setExistingDocsByRole(prev => ({ ...prev, driver: prev.driver.filter(d => d.id !== docId) }));
+  };
+
+  async function uploadPendingDocuments(files: File[], role: 'owner' | 'driver' | 'car' | 'generic') {
+    if (!files || files.length === 0) return [];
+    const form = new FormData();
+    files.forEach(f => form.append("files", f, f.name));
+    form.append("role", role); // también podrías usar ?role=owner en la URL
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/applications/${applicationId}/documents`, {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error || "Error subiendo documentos");
+    }
+    return res.json();
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,11 +106,22 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           setDriver({ ...(json.driver || {}) });
         }
         setCar({ ...(json.car || {}) });
+        const byRole = json.documents_by_role ?? {
+          owner: (json.documents || []).filter((d:Doc) => d.role === 'owner'),
+          driver: (json.documents || []).filter((d:Doc) => d.role === 'driver'),
+          car: (json.documents || []).filter((d:Doc) => d.role === 'car'),
+          generic: (json.documents || []).filter((d:Doc) => !['owner','driver','car'].includes(d.role)),
+        };
+        setExistingDocsByRole({
+          owner: byRole.owner || [],
+          driver: byRole.driver || [],
+          car: byRole.car || [],
+          generic: byRole.generic || [],
+        });
       } catch (err) {
         console.error("Error al cargar los datos:", err);
       }
     };
-
     fetchData();
     setMissingFields([]);
   }, [step]);
@@ -163,7 +221,38 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           });
         }
 
+        const uploads: any[] = [];
+        if (isSamePerson) {
+          if (pendingOwnerDocs.length > 0 || pendingDriverDocs.length > 0) {
+            const merged = [...pendingOwnerDocs, ...pendingDriverDocs];
+            const up = await uploadPendingDocuments(merged, 'owner');
+            uploads.push(...up);
+            setPendingOwnerDocs([]);
+            setPendingDriverDocs([]);
+          }
+        } else {
+          if (pendingOwnerDocs.length > 0) {
+            const up = await uploadPendingDocuments(pendingOwnerDocs, 'owner');
+            uploads.push(...up);
+            setPendingOwnerDocs([]);
+          }
+          if (pendingDriverDocs.length > 0) {
+            const up = await uploadPendingDocuments(pendingDriverDocs, 'driver');
+            uploads.push(...up);
+            setPendingDriverDocs([]);
+          }
+        }
 
+        if (uploads.length > 0) {
+          setExistingDocsByRole(prev => ({
+            ...prev,
+            owner: [...uploads.filter(d => d.role === 'owner'), ...prev.owner],
+            driver: [...uploads.filter(d => d.role === 'driver'), ...prev.driver],
+            car: [...uploads.filter(d => d.role === 'car'), ...prev.car],
+            generic: [...uploads.filter(d => d.role === 'generic' || !d.role), ...prev.generic],
+          }));
+        }
+        
         if (!res.ok) throw new Error("Error al guardar el conductor");
       }
 
@@ -251,8 +340,15 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             setOwner={setOwner}
             driver={driver}
             setDriver={setDriver}
+            applicationId={applicationId}
             isSamePerson={isSamePerson}
             setIsSamePerson={setIsSamePerson}
+            onPendingOwnerDocsChange={setPendingOwnerDocs}
+            onPendingDriverDocsChange={setPendingDriverDocs}
+            existingOwnerDocs={existingDocsByRole.owner}
+            existingDriverDocs={existingDocsByRole.driver}
+            onDeleteOwnerDoc={onDeleteOwnerDoc}
+            onDeleteDriverDoc={onDeleteDriverDoc}
           />
         );
       case 2:
@@ -270,7 +366,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         <div className="flex items-center gap-1">
           <span>Inicio</span>
           <ChevronRight size={20} />
-          <span className="text-[#0040B8]">Inspecciones</span>
+          <span className="text-[#0040B8]">Revisiones</span>
         </div>
         <span className="text-md mr-4  text-black">Paso {step}/3</span>
       </article>

@@ -1,5 +1,7 @@
+// components/FormTemplate.tsx
 import Dropzone from "../Dropzone";
 import PersonFormField from "../PersonFormField";
+import type { ExistingDoc } from "../Dropzone";
 
 export interface FormFieldOption {
   value: string;
@@ -18,9 +20,15 @@ export interface FormTemplateProps {
   formData: FormFieldData[];
   title: string;
   description: string;
+  applicationId: number;
   data: any;
   setData: (value: any) => void;
   isOwner?: boolean;
+
+  onDeleteExisting?: (docId: number) => Promise<void> | void;
+  showDropzone?: boolean;
+  onPendingDocsChange?: (files: File[]) => void;
+  existingDocuments?: ExistingDoc[];
 }
 
 export default function FormTemplate({
@@ -30,6 +38,10 @@ export default function FormTemplate({
   data,
   setData,
   isOwner,
+  showDropzone = true,
+  onPendingDocsChange,
+  existingDocuments = [],
+  onDeleteExisting
 }: FormTemplateProps) {
   const handleChange = (name: string, value: string) => {
     setData((prev: any) => ({
@@ -73,7 +85,15 @@ export default function FormTemplate({
         )}
       </div>
 
-      <Dropzone />
+      {showDropzone && (
+        <div className="pt-4">
+          <Dropzone
+            onPendingChange={onPendingDocsChange}
+            existing={existingDocuments}
+            onDeleteExisting={onDeleteExisting}
+          />
+        </div>
+      )}
     </div>
   );
 }
