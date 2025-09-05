@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ApplicationForm from "@/components/ApplicationForm";
-import { ApplicationProvider } from "@/context/ApplicationContext";
+import { ApplicationProvider, useApplication } from "@/context/ApplicationContext";
 import Skeleton from "@/components/Skeleton";
+import { useDashboard } from "@/context/DashboardContext";
 
 
 function ApplicationSkeleton() {
@@ -48,6 +49,7 @@ export default function CreateApplicationPage() {
   const workshopId = Number(id);
   const applicationId = params?.applicationId as string;
   const [application, setApplication] = useState(null);
+  const { setApplicationErrors } = useDashboard();
   const router = useRouter();
   useEffect(() => {
     async function fetchApplication(id: string) {
@@ -68,9 +70,20 @@ export default function CreateApplicationPage() {
         }
 
         const data = await res.json();
-        console.log("workshopId:", workshopId, "data.workshop_id:", data.workshop_id);
         if (workshopId !== data.workshop_id) {
           router.push(`/dashboard/${workshopId}/applications`);
+          setApplicationErrors(prev => ({
+            ...prev,
+            general: "No se puede editar una revisión que no pertenece a este taller."
+          }));
+          return;
+        }
+        if (data.status !== "Pendiente"){
+          router.push(`/dashboard/${workshopId}/applications`);
+          setApplicationErrors(prev => ({
+            ...prev,
+            general: "No se puede editar una revisión ya iniciada o finalizada."
+          }));
           return;
         }
         setApplication(data);

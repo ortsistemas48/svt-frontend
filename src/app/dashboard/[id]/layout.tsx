@@ -6,6 +6,8 @@ import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 import { useParams, useRouter } from "next/navigation";
 import PreLoader from "@/components/PreLoader";
+import Dashboard from "@/components/Dashboard";
+import { DashboardProvider } from "@/context/DashboardContext";
 
 type MembershipResponse =
   | { error: string } // para 4xx
@@ -98,16 +100,18 @@ export default function DashboardClientLayout({
 
   // 4) Render del dashboard
   return (
-    <div className="h-screen flex flex-col bg-[#f5f5f5]">
-      <Topbar />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 p-4 overflow-auto">
-          <div className="bg-white min-h-full rounded-[10px] shadow p-8">
-            {children}
-          </div>
-        </main>
+    <DashboardProvider>
+      <div className="h-screen flex flex-col bg-[#f5f5f5]">
+        <Topbar />
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar />
+          <main className="flex-1 p-4 overflow-auto">
+            <div className="bg-white min-h-full rounded-[10px] shadow p-8">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </DashboardProvider>
   );
 }
