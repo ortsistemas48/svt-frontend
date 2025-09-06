@@ -21,7 +21,7 @@ export default function InspectionTable() {
   const [page, setPage] = useState(1);
   const perPage = 5;
   const [total, setTotal] = useState(0);
-  const router = useRouter(); 
+  const router = useRouter();
 
   const headers: TableHeader[] = [
     { label: "Vehículo" },
@@ -46,7 +46,6 @@ export default function InspectionTable() {
       );
       if (!res.ok) throw new Error("Error al traer aplicaciones");
       const data = await res.json();
-
       // data.items ya viene paginado desde el backend
       setItems(data.items ?? []);
       setTotal(data.total ?? 0);
@@ -124,14 +123,28 @@ export default function InspectionTable() {
               </td>
               <td className="p-0">
                 <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
-                  <button
-                    type="button"
-                    className="cursor-pointer text-[#0040B8] hover:opacity-80"
-                    title="Abrir revisión"
-                    onClick={() => router.push(`/dashboard/${id}/inspections/${item.application_id}`)} 
-                  >
-                    <Play size={16} />
-                  </button>                  <span className="cursor-pointer text-[#0040B8]"><Pencil size={16} /></span>
+                  {
+                    (item.status !== "Pendiente" && item.status !== "Completado") && (
+                    <button
+                      type="button"
+                      className="cursor-pointer text-[#0040B8] hover:opacity-80"
+                      title="Abrir revisión"
+                      onClick={() => router.push(`/dashboard/${id}/inspections/${item.application_id}`)}
+                    >
+                      <Play size={16} />
+                    </button>)
+                  }
+                  {
+                    item.status === "Pendiente" && (
+                    <button
+                      type="button"
+                      className="cursor-pointer text-[#0040B8] hover:opacity-80"
+                      title="Editar revisión"
+                      onClick={() => router.push(`/dashboard/${id}/applications/create-applications/${item.application_id}`)}
+                    >
+                      <Pencil size={16} />
+                    </button>)
+                  }
                   <span className="cursor-pointer text-[#0040B8]"><Trash2 size={16} /></span>
                 </div>
               </td>

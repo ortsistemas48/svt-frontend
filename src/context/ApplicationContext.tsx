@@ -7,6 +7,8 @@ interface ApplicationContextType {
   setIsIdle: React.Dispatch<React.SetStateAction<boolean>>;
   errors: Record<string, string>;
   setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  applicationErrors: Record<string, string>;
+  setApplicationErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
 const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
@@ -14,9 +16,10 @@ const ApplicationContext = createContext<ApplicationContextType | undefined>(und
 export const ApplicationProvider = ({ children }: { children: React.ReactNode }) => {
   const [isIdle, setIsIdle] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [applicationErrors, setApplicationErrors] = useState<Record<string, string>>({});
   
   return (
-    <ApplicationContext.Provider value={{ isIdle, setIsIdle, errors, setErrors }}>
+    <ApplicationContext.Provider value={{ isIdle, setIsIdle, errors, setErrors, applicationErrors, setApplicationErrors }}>
       {children}
     </ApplicationContext.Provider>
   );
