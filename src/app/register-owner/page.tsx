@@ -48,7 +48,7 @@ export default function RegisterOwnerFormB() {
         setMsg({ type: "error", text: data.error || "Error al registrar" });
         return;
       }
-      setMsg({ type: "success", text: "Email enviado, esperando verificación" });
+      setMsg({ type: "success", text: "Te hemos enviado un email de verificación." });
     } catch (err) {
       setMsg({ type: "error", text: "Error de red" });
     } finally {

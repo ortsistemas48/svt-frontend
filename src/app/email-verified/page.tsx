@@ -59,7 +59,7 @@ export default function EmailVerified() {
         return { title: "Email ya verificado", desc: "Tu email ya fue verificado, aguardá la aprobación de tu cuenta", icon: <CheckCircle size={28} className="text-emerald-600 mx-auto" />, toneClass: "text-emerald-700" };
       case "ok":
       default:
-        return { title: "Email verificado", desc: "Estamos verificando tus datos, te avisaremos cuando puedas usar tu cuenta", icon: <CheckCircle size={28} className="text-emerald-600 mx-auto" />, toneClass: "text-emerald-700" };
+        return { title: "Email verificado", desc: "Email verificado, inicia sesión para crear tu taller.", icon: <CheckCircle size={28} className="text-emerald-600 mx-auto" />, toneClass: "text-emerald-700" };
     }
   }, [status, token]);
 

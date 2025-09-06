@@ -1,10 +1,15 @@
+// app/create-workshop/page.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Info, MoveRight, ChevronLeft, CheckCircle } from "lucide-react";
+import {
+  Info, MoveRight, ChevronLeft, CheckCircle, Plus, UserPlus, X, Mail,
+  Edit3, Check, Eye, EyeOff, Search
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
+/** Provincias */
 const PROVINCES = [
   "Buenos Aires","CABA","Catamarca","Chaco","Chubut","Córdoba","Corrientes",
   "Entre Ríos","Formosa","Jujuy","La Pampa","La Rioja","Mendoza","Misiones",
@@ -12,131 +17,273 @@ const PROVINCES = [
   "Santa Fe","Santiago del Estero","Tierra del Fuego","Tucumán"
 ];
 
-type StepKey = 1 | 2;
+/** Roles fijos */
+type Role = { id: number; name: string };
+const FIXED_ROLES: Role[] = [
+  { id: 3, name: "Ingeniero" },
+  { id: 4, name: "Operador" },
+  { id: 5, name: "Soporte" },
+];
+const ENGINEER_ROLE_ID = 3;
+
+/** Pasos */
+type StepKey = 1 | 2 | 3;
+
+/** Ítems pendientes de procesar en el paso 3 */
+type PendingMember = {
+  id: string;
+  email: string;
+  existingUserId?: string;
+  first_name?: string;
+  last_name?: string;
+  dni?: string | null;
+  phone_number?: string | null;
+  user_type_id: number | "";
+  licence_number?: string | null;
+  title_name?: string | null;
+  password?: string;
+  confirm_password?: string;
+};
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+const STOP_ON_MEMBER_ERROR = false;
 
 export default function CreateWorkshopPage() {
   const router = useRouter();
 
-  // form state
+  /** Paso 1, datos del taller */
   const [name, setName] = useState("");
   const [razonSocial, setRazonSocial] = useState("");
   const [plantNumber, setPlantNumber] = useState<string>("");
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [cuit, setCuit] = useState("");
 
-  // ui state
+  /** Paso 2, lista de pendientes */
+  const [pending, setPending] = useState<PendingMember[]>([]);
+  useEffect(() => {
+    console.log(pending);
+  }, [pending]);
+
+  /** UI general */
   const [step, setStep] = useState<StepKey>(1);
   const [dir, setDir] = useState<1 | -1>(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // stepper meta
-  const steps = useMemo(() => ([
-    { id: 1, title: "Datos básicos" },
-    { id: 2, title: "Datos del taller" },
-  ]), []);
+  const steps = useMemo(() => [
+    { id: 1, title: "Datos del taller" },
+    { id: 2, title: "Agregar personal" },
+    { id: 3, title: "Confirmación" },
+  ], []);
+
+  /** Validaciones del paso 1 */
+  const validateStep1 = () => {
+    if (name.trim().length < 3) return "El nombre debe tener al menos 3 caracteres";
+    if (razonSocial.trim().length < 3) return "Ingresá una razón social válida";
+    if (!province) return "Seleccioná una provincia";
+    if (!city.trim()) return "Ingresá la localidad";
+    if (!address.trim()) return "Ingresá el domicilio";
+    if (!cuit.trim()) return "Ingresá el CUIT";
+    if (!plantNumber.trim()) return "Ingresá el número de planta";
+    return null;
+  };
 
   const goNext = () => {
     if (step === 1) {
-      const trimmed = name.trim();
-      if (trimmed.length < 3) {
-        setError("El nombre debe tener al menos 3 caracteres");
+      const err = validateStep1();
+      if (err) return setError(err);
+      setError(null);
+      setDir(1);
+      setStep(2);
+    } else if (step === 2) {
+      const someoneWithoutRole = pending.some(m => !m.user_type_id);
+      if (someoneWithoutRole) {
+        setError("Todos los miembros deben tener un rol asignado");
+        return;
+      }
+      // Debe haber al menos un Ingeniero seleccionado
+      const hasEngineer = pending.some(m => m.user_type_id === ENGINEER_ROLE_ID);
+      if (!hasEngineer) {
+        setError("Tiene que haber al menos un Ingeniero para continuar");
         return;
       }
       setError(null);
       setDir(1);
-      setStep(2);
+      setStep(3);
     }
   };
 
   const goBack = () => {
-    if (step === 2) {
-      setDir(-1);
-      setStep(1);
-    }
+    if (step === 2) { setDir(-1); setStep(1); }
+    else if (step === 3) { setDir(-1); setStep(2); }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  /** Crear taller y luego procesar pendientes */
+  const handleCreateOnStep3 = async () => {
+    const err = validateStep1();
+    if (err) return setError(err);
     setError(null);
     setSuccess(null);
-
-    const razonSocialTrim = razonSocial.trim();
-    if (razonSocialTrim.length < 3) {
-      setError("Ingresá una razón social válida");
-      return;
-    }
-    if (!province) {
-      setError("Seleccioná una provincia");
-      return;
-    }
-    if (!city.trim()) {
-      setError("Ingresá la localidad");
-      return;
-    }
-
     setSubmitting(true);
+
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workshops/create`, {
+      // 1, crear workshop
+      const rWs = await fetch(`${API_BASE}/workshops/create-unapproved`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           name: name.trim(),
-          razonSocial: razonSocialTrim,
+          razonSocial: razonSocial.trim(),
           plantNumber: plantNumber.trim() ? Number(plantNumber.trim()) : null,
           province,
           city: city.trim(),
+          address: address.trim(),
           phone: phone.trim(),
           cuit: cuit.trim(),
         }),
       });
+      if (!rWs.ok) {
+        const errData = await rWs.json().catch(() => null);
+        throw new Error(errData?.error || "No se pudo crear el taller");
+      }
+      const wsData = await rWs.json();
+      const workshopId: number | undefined = wsData?.workshop?.id;
+      if (!workshopId) throw new Error("No se recibió el id del taller");
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        if (res.status === 409) setError(data.error || "Ya existe un workshop con esos datos");
-        else if (res.status === 400) setError(data.error || "Datos inválidos");
-        else if (res.status === 401) setError("No autorizado, iniciá sesión");
-        else setError("Ocurrió un error al crear el workshop");
-        return;
+      // 2, procesar pendientes
+      const results: { email: string, status: "ok" | "error", message?: string }[] = [];
+      for (const m of pending) {
+        try {
+          if (!m.user_type_id) throw new Error("Seleccioná un rol");
+          if (m.user_type_id === ENGINEER_ROLE_ID) {
+            if (!m.licence_number?.trim() || !m.title_name?.trim()) {
+              throw new Error("Para Ingeniero, completá matrícula y título");
+            }
+          }
+
+          if (m.existingUserId) {
+            const payload: any = {
+              user_id: m.existingUserId,
+              user_type_id: m.user_type_id,
+            };
+            if (m.user_type_id === ENGINEER_ROLE_ID) {
+              payload.licence_number = m.licence_number?.trim() || null;
+              payload.title_name = m.title_name?.trim() || null;
+            }
+            const rAttach = await fetch(`${API_BASE}/users/assign/${workshopId}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(payload),
+            });
+            if (!rAttach.ok) {
+              const e = await rAttach.json().catch(() => null);
+              throw new Error(e?.error || "No se pudo asociar el usuario");
+            }
+            results.push({ email: m.email, status: "ok" });
+          } else {
+            if (!m.password || !m.confirm_password) throw new Error("Ingresá contraseña y confirmación");
+            if (m.password !== m.confirm_password) throw new Error("Las contraseñas no coinciden");
+            if (m.password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres");
+
+            const payload: any = {
+              email: m.email,
+              password: m.password,
+              confirm_password: m.confirm_password,
+              first_name: m.first_name || "",
+              last_name: m.last_name || "",
+              dni: m.dni || null,
+              phone_number: m.phone_number || null,
+              workshop_id: workshopId,
+              user_type_id: m.user_type_id,
+            };
+            if (m.user_type_id === ENGINEER_ROLE_ID) {
+              payload.licence_number = m.licence_number?.trim();
+              payload.title_name = m.title_name?.trim();
+            }
+
+            const rCreate = await fetch(`${API_BASE}/auth/register_bulk`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(payload),
+            });
+            if (!rCreate.ok) {
+              const e = await rCreate.json().catch(() => null);
+              throw new Error(e?.error || "No se pudo crear el usuario");
+            }
+            results.push({ email: m.email, status: "ok" });
+          }
+        } catch (ex: any) {
+          results.push({ email: m.email, status: "error", message: ex?.message || "Error" });
+          if (STOP_ON_MEMBER_ERROR) break;
+        }
       }
 
-      const data = await res.json();
-      setSuccess("Workshop creado");
-      if (data?.workshop?.id) {
-        window.location.href = `/dashboard/${data.workshop.id}`;
+      // 3, feedback
+      const errors = results.filter(r => r.status === "error");
+      if (errors.length) {
+        setSuccess(null);
+        setError(`Taller creado, algunos usuarios fallaron, ${errors.map(e => `${e.email}: ${e.message}`).join(", ")}`);
+        setTimeout(() => router.push(`/dashboard/${workshopId}`), 1400);
       } else {
-        router.push("/select-workshop");
+        setError(null);
+        setSuccess("Taller y usuarios creados. Te avisaremos por email cuando sea aprobado.");
+        setName("");
+        setRazonSocial("");
+        setPlantNumber("");
+        setProvince("");
+        setCity("");
+        setAddress("");
+        setPhone("");
+        setCuit("");
+        setPending([]);
+
       }
-    } catch {
-      setError("No se pudo conectar con el servidor");
+    } catch (e: any) {
+      setError(e?.message || "Error");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // animaciones
-  const variants = {
-    enter: (direction: 1 | -1) => ({ x: direction * 32, opacity: 0 }),
-    center: { x: 0, opacity: 1 },
-    exit: (direction: 1 | -1) => ({ x: direction * -32, opacity: 0 }),
+  const addPendingSafely = (m: PendingMember): { ok: boolean; reason?: string } => {
+    let ok = false;
+    let reason: string | undefined = undefined;
+
+    setPending(prev => {
+      const exists = prev.some(x => x.email.trim().toLowerCase() === m.email.trim().toLowerCase());
+      if (exists) {
+        reason = "Ese email ya está en la lista";
+        return prev;
+      }
+      ok = true;
+      return [m, ...prev];
+    });
+
+    return { ok, reason };
   };
 
-  // progreso
-  const progressPct = step === 1 ? 50 : 100;
+  /** Animaciones y progreso */
+  const variants = {
+    enter: (d: 1 | -1) => ({ x: d * 32, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (d: 1 | -1) => ({ x: d * -32, opacity: 0 }),
+  };
+  const progressPct = step === 1 ? 33 : step === 2 ? 66 : 100;
 
   return (
-    <main className="min-h-screen flex items-center justify-center font-sans px-4">
-      <section className="w-full max-w-3xl bg-white rounded-[10px] border border-[#d3d3d3] px-6 sm:px-10 py-8 sm:py-10">
+    <main className="min-h-screen w-full flex items-center justify-center">
+      <section className="w-full max-w-3xl mx-auto bg-white rounded-[12px] border border-[#d3d3d3]  px-6 sm:px-8 py-8 sm:py-10">
         {/* Header */}
         <header className="mb-6 sm:mb-8">
           <h1 className="text-lg sm:text-xl font-semibold text-[#0F172A] tracking-tight">Crear taller</h1>
-          <p className="mt-1.5 text-sm text-[#64748B]">
-            Completá los datos para registrar tu taller en el sistema.
-          </p>
+          <p className="mt-1.5 text-sm text-[#64748B]">Completá los datos, sumá a tu equipo, confirmá y creamos tu taller.</p>
 
           {/* Stepper */}
           <div className="mt-5">
@@ -146,188 +293,194 @@ export default function CreateWorkshopPage() {
                 const isDone = step > s.id;
                 return (
                   <li key={s.id} className="flex items-center gap-3">
-                    <div
-                      className={[
-                        "w-8 h-8 rounded-full flex items-center justify-center border transition-colors",
-                        isDone ? "bg-[#0040B8] text-white border-[#0040B8]" :
-                        isActive ? "bg-white text-[#0040B8] border-[#0040B8]" :
-                        "bg-white text-[#94A3B8] border-[#E2E8F0]"
-                      ].join(" ")}
-                      aria-current={isActive ? "step" : undefined}
-                    >
+                    <div className={[
+                      "w-8 h-8 rounded-full flex items-center justify-center border transition-colors",
+                      isDone ? "bg-[#0040B8] text-white border-[#0040B8]" :
+                      isActive ? "bg-white text-[#0040B8] border-[#0040B8]" :
+                      "bg-white text-[#94A3B8] border-[#E2E8F0]"
+                    ].join(" ")}>
                       {isDone ? <CheckCircle size={16} /> : s.id}
                     </div>
-                    <span className={isActive ? "text-[#0F172A] text-sm font-medium" : "text-[#64748B] text-sm"}>
-                      {s.title}
-                    </span>
+                    <span className={isActive ? "text-[#0F172A] text-sm font-medium" : "text-[#64748B] text-sm"}>{s.title}</span>
                   </li>
                 );
               })}
             </ol>
-
-            {/* progress bar */}
             <div className="mt-3 h-1.5 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#0040B8] transition-all duration-500"
-                style={{ width: `${progressPct}%` }}
-              />
+              <div className="h-full bg-[#0040B8] transition-all duration-500" style={{ width: `${progressPct}%` }} />
             </div>
           </div>
         </header>
 
-        {/* Form card */}
-        <form
-          onSubmit={step === 2 ? handleSubmit : (e) => { e.preventDefault(); goNext(); }}
-          className="text-left min-h-[320px]"
-        >
+        {/* Contenido */}
+        <form onSubmit={(e)=>e.preventDefault()} className="text-left min-h-[380px]">
           <AnimatePresence mode="popLayout" custom={dir}>
+            {/* Paso 1 */}
             {step === 1 && (
               <motion.div
-                key="step1"
-                custom={dir}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                variants={variants}
-                transition={{ type: "spring", stiffness: 300, damping: 26 }}
-                className="grid grid-cols-1 gap-5"
-              >
-                <Field
-                  id="name"
-                  label="Nombre del taller"
-                  placeholder="Ejemplo, Taller Central"
-                  value={name}
-                  onChange={setName}
-                  required
-                  disabled={submitting}
-                  help="Este es el nombre visible, podés editarlo luego."
-                />
-
-                {error && <Alert type="error" message={error} />}
-                {success && <Alert type="success" message={success} />}
-
-                <div className="mt-2 flex items-center justify-between">
-                  <GhostLink
-                    onClick={() => router.push("/select-workshop")}
-                    disabled={submitting}
-                  >
-                    Volver
-                  </GhostLink>
-
-                  <PrimaryButton
-                    type="button"
-                    onClick={goNext}
-                    loading={submitting}
-                    iconRight={<MoveRight size={20} />}
-                  >
-                    Continuar
-                  </PrimaryButton>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                custom={dir}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                variants={variants}
+                key="step1" custom={dir} initial="enter" animate="center" exit="exit" variants={variants}
                 transition={{ type: "spring", stiffness: 300, damping: 26 }}
                 className="grid grid-cols-1 md:grid-cols-2 gap-5"
               >
-                {/* Razón social y CUIT */}
-                <Field
-                  id="razon-social"
-                  label="Razón social"
-                  placeholder="Ejemplo, Talleres Central S.A."
-                  value={razonSocial}
-                  onChange={setRazonSocial}
-                  disabled={submitting}
-                  required
-                />
-                <Field
-                  id="cuit"
-                  label="CUIT"
-                  placeholder="Ejemplo, 20-12345678-3"
-                  value={cuit}
-                  onChange={setCuit}
-                  disabled={submitting}
-                  inputMode="numeric"
-                  required
-                />
-
-                {/* Provincia y Localidad */}
-                <SelectField
-                  id="province"
-                  label="Provincia"
-                  value={province}
-                  onChange={setProvince}
-                  options={PROVINCES}
-                  disabled={submitting}
-                  required
-                />
-                <Field
-                  id="city"
-                  label="Localidad"
-                  placeholder="Ejemplo, Córdoba Capital"
-                  value={city}
-                  onChange={setCity}
-                  disabled={submitting}
-                  required
-                />
-
-                {/* Teléfono y Número de planta */}
-                <Field
-                  id="phone"
-                  label="Teléfono"
-                  placeholder="Ejemplo, 3511234567"
-                  value={phone}
-                  onChange={setPhone}
-                  disabled={submitting}
-                  inputMode="tel"
-                  required
-                />
-                <Field
-                  id="plant-number"
-                  label="Número de planta"
-                  placeholder="Ejemplo, 3"
-                  value={plantNumber}
-                  onChange={setPlantNumber}
-                  disabled={submitting}
-                  inputMode="numeric"
-                  type="number"
-                  required
-                />
+                <Field id="name" label="Nombre identificatorio" value={name} onChange={setName} required placeholder="Ej, Taller Central" />
+                <Field id="phone" label="Teléfono" value={phone} onChange={setPhone} inputMode="tel" required placeholder="Ej, 3511234567" />
+                <Field id="razon" label="Razón social" value={razonSocial} onChange={setRazonSocial} required placeholder="Ej, Talleres Central S.A." />
+                <Field id="cuit" label="CUIT" value={cuit} onChange={setCuit} inputMode="numeric" required placeholder="Ej, 20-12345678-3" />
+                <SelectField id="province" label="Provincia" value={province} onChange={setProvince} options={PROVINCES} required />
+                <Field id="city" label="Localidad" value={city} onChange={setCity} required placeholder="Ej, Córdoba Capital" />
+                <Field id="address" label="Domicilio" value={address} onChange={setAddress} required placeholder="Calle y número, piso, referencia" />
+                <Field id="plant" label="Número de planta" value={plantNumber} onChange={setPlantNumber} inputMode="numeric" type="number" required placeholder="Ej, 3" />
 
                 <div className="md:col-span-2">
                   {error && <Alert type="error" message={error} />}
                   {success && <Alert type="success" message={success} />}
                 </div>
-
                 <div className="md:col-span-2 mt-1 flex items-center justify-between">
-                  <GhostButton onClick={goBack} disabled={submitting}>
-                    <ChevronLeft size={18} />
-                    Volver
-                  </GhostButton>
+                  <GhostLink onClick={()=>router.push("/select-workshop")}>Cancelar</GhostLink>
+                  <PrimaryButton type="button" onClick={goNext} iconRight={<MoveRight size={20} />}>Continuar</PrimaryButton>
+                </div>
+              </motion.div>
+            )}
 
-                  <div className="flex items-center gap-3">
-                    <GhostLink
-                      onClick={() => router.push("/select-workshop")}
-                      disabled={submitting}
-                    >
-                      Cancelar
-                    </GhostLink>
+            {/* Paso 2, email primero */}
+            {step === 2 && (
+              <motion.div
+                key="step2" custom={dir} initial="enter" animate="center" exit="exit" variants={variants}
+                transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                className="grid grid-cols-1 gap-5"
+              >
+                <AddStaffCard onAdd={addPendingSafely} />
+                <div>
+                  <h3 className="text-sm font-medium text-[#0F172A] mb-2">Pendientes</h3>
+                  <AnimatePresence initial={false}>
+                    {pending.length === 0 ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="text-sm text-[#64748B] border border-dashed border-[#E2E8F0] rounded-[12px] p-5"
+                      >
+                        Aún no agregaste a nadie, cargá un email, elegí su rol y completá los datos.
+                      </motion.div>
+                    ) : (
+                      <ul className="grid grid-cols-1 gap-3">
+                        {pending.map((m)=>(
+                          <motion.li
+                            key={m.id}
+                            initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                            className="rounded-[12px] border border-[#E2E8F0] p-3.5"
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <div>
+                                <div className="text-[15px] text-[#0F172A] font-medium">
+                                  {m.first_name || "Sin nombre"} {m.last_name || ""}
+                                </div>
+                                <div className="text-sm text-[#64748B]">
+                                  {m.email}{m.existingUserId ? ", existente" : ", nuevo"}
+                                </div>
+                                {(m.dni || m.phone_number) && (
+                                  <div className="text-xs text-[#64748B] mt-0.5">
+                                    {m.dni ? `DNI ${m.dni}` : ""}{m.dni && m.phone_number ? ", " : ""}{m.phone_number || ""}
+                                  </div>
+                                )}
+                              </div>
+                              {/* Rol editable inline */}
+                              <div className="flex items-center gap-2">
+                                <label className="text-sm text-[#64748B]">Rol</label>
+                                <select
+                                  className="rounded-[4px] border border-[#E2E8F0] bg-white px-3 py-2 text-sm"
+                                  value={m.user_type_id || ""}
+                                  onChange={(e)=>{
+                                    const val = e.target.value ? Number(e.target.value) : "";
+                                    setPending(p => p.map(x => x.id === m.id ? { ...x, user_type_id: val } : x));
+                                  }}
+                                >
+                                  <option value="">Seleccionar</option>
+                                  {FIXED_ROLES.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                </select>
+                                <IconButton label="Quitar" onClick={()=>setPending(p=>p.filter(x=>x.id!==m.id))}><X size={16} /></IconButton>
 
-                    <PrimaryButton
-                      type="submit"
-                      loading={submitting}
-                      iconRight={<MoveRight size={20} />}
-                    >
-                      Crear taller
-                    </PrimaryButton>
-                  </div>
+                              </div>
+                              {m.existingUserId && m.user_type_id === ENGINEER_ROLE_ID && (
+                                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  <div className="flex flex-col">
+                                    <label className="text-xs text-[#64748B] mb-1">Nro de matrícula</label>
+                                    <input
+                                      className="rounded-[4px] border border-[#E2E8F0] bg-white px-3 py-2 text-sm"
+                                      placeholder="Ej, 12345"
+                                      value={m.licence_number || ""}
+                                      onChange={(e) => {
+                                        const v = e.target.value;
+                                        setPending((p) =>
+                                          p.map((x) => x.id === m.id ? { ...x, licence_number: v } : x)
+                                        );
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <label className="text-xs text-[#64748B] mb-1">Título universitario</label>
+                                    <input
+                                      className="rounded-[4px] border border-[#E2E8F0] bg-white px-3 py-2 text-sm"
+                                      placeholder="Ej, Ing. Mecánico"
+                                      value={m.title_name || ""}
+                                      onChange={(e) => {
+                                        const v = e.target.value;
+                                        setPending((p) =>
+                                          p.map((x) => x.id === m.id ? { ...x, title_name: v } : x)
+                                        );
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                            </div>
+                          </motion.li>
+                        ))}
+                      </ul>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {error && <Alert type="error" message={error} />}
+                {success && <Alert type="success" message={success} />}
+
+                <div className="mt-1 flex items-center justify-between">
+                  <GhostButton onClick={goBack}><ChevronLeft size={18} />Volver</GhostButton>
+                  <PrimaryButton type="button" onClick={goNext} iconRight={<MoveRight size={20} />}>Continuar</PrimaryButton>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Paso 3, confirmación */}
+            {step === 3 && (
+              <motion.div
+                key="step3" custom={dir} initial="enter" animate="center" exit="exit" variants={variants}
+                transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                className="grid grid-cols-1 gap-5"
+              >
+                <SummaryCard
+                  onEdit={()=>setStep(1)}
+                  rows={[
+                    ["Nombre", name || "—"], ["Teléfono", phone || "—"], ["Razón social", razonSocial || "—"],
+                    ["CUIT", cuit || "—"], ["Provincia", province || "—"], ["Localidad", city || "—"],
+                    ["Domicilio", address || "—"], ["Número de planta", plantNumber || "—"],
+                  ]}
+                />
+                <TeamSummary onEdit={()=>setStep(2)} items={pending} />
+
+                {error && <Alert type="error" message={error} />}
+                {success && <Alert type="success" message={success} />}
+                <p className="text-xs text-[#64748B] mt-1 ml-1">
+                  Al crear aceptás nuestros{" "}
+                  <a href="/terminos" target="_blank" rel="noopener noreferrer" className="text-[#0040B8] underline underline-offset-4">
+                    Términos y condiciones
+                  </a>.
+                </p>
+
+                <div className="mt-1 flex items-center justify-between">
+                  <GhostButton onClick={goBack}><ChevronLeft size={18} />Volver</GhostButton>
+                  <PrimaryButton type="button" onClick={handleCreateOnStep3} loading={submitting} iconRight={<Check size={18} />}>
+                    Crear taller
+                  </PrimaryButton>
                 </div>
               </motion.div>
             )}
@@ -338,178 +491,428 @@ export default function CreateWorkshopPage() {
   );
 }
 
-/* ---------- UI subcomponents ---------- */
+/* ===== Subcomponentes, paso 2 ===== */
 
-function Field({
-  id,
-  label,
-  value,
-  onChange,
-  placeholder,
-  help,
-  disabled,
-  required,
-  type = "text",
-  inputMode,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  help?: string;
-  disabled?: boolean;
-  required?: boolean;
-  type?: string;
+function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; reason?: string } }) {
+  const [email, setEmail] = useState("");
+  const [lookupLoading, setLookupLoading] = useState(false);
+
+  // si NO existe, mostramos estos campos
+  const [firstName, setFirstName] = useState("");
+  const [lastName,  setLastName]  = useState("");
+  const [dni, setDni]            = useState("");
+  const [phone, setPhone]        = useState("");
+  const [roleId, setRoleId]      = useState<number | "">("");
+
+  const [licence, setLicence]    = useState("");
+  const [degree, setDegree]      = useState("");
+
+  const [password, setPassword]  = useState("");
+  const [confirm, setConfirm]    = useState("");
+
+  const [showPass, setShowPass]       = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const [msg, setMsg] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+
+  const clearForm = () => {
+    setFirstName(""); setLastName(""); setDni(""); setPhone(""); setRoleId("");
+    setLicence(""); setDegree(""); setPassword(""); setConfirm("");
+    setShowPass(false); setShowConfirm(false);
+  };
+
+  const onChangeRole = (val: number | "") => {
+    setRoleId(val);
+    if (val !== ENGINEER_ROLE_ID) { setLicence(""); setDegree(""); }
+  };
+
+  const searchAndAdd = async () => {
+    setMsg(null);
+    setNotFound(false);
+
+    const normalized = email.trim().toLowerCase();
+    if (!normalized || !/^\S+@\S+\.\S+$/.test(normalized)) {
+      setMsg("Ingresá un email válido");
+      return;
+    }
+
+    setLookupLoading(true); // <<< importante
+
+    try {
+      const url = `${API_BASE}/users/by-email-lite?email=${encodeURIComponent(normalized)}`;
+      const r = await fetch(url, { cache: "no-store", credentials: "include" });
+
+      if (r.ok) {
+        const u = await r.json();
+
+        // Normalizamos el id recibido
+        const idRaw = u?.id;
+        const idStr =
+          typeof idRaw === "string" ? idRaw
+          : typeof idRaw === "number" ? String(idRaw)
+          : idRaw?.toString?.() || null;
+
+        if (idStr) {
+          // Tomamos campos típicos que pueda devolver tu endpoint "lite"
+          const first_name     = u?.first_name || u?.firstName || "";
+          const last_name      = u?.last_name  || u?.lastName  || "";
+          const dni            = u?.dni ?? null;
+          const phone_number   = u?.phone_number ?? u?.phone ?? null;
+          const licence_number = u?.licence_number ?? u?.licenceNumber ?? null;
+          const title_name     = u?.title_name ?? u?.titleName ?? null;
+
+          const newItem: PendingMember = {
+            id: crypto.randomUUID(),
+            email: normalized,
+            existingUserId: idStr,
+            user_type_id: "",              // el rol se elige en la UI
+            first_name,
+            last_name,
+            dni,
+            phone_number,
+            licence_number: licence_number || null,
+            title_name: title_name || null,
+            // para existentes no seteamos password
+          };
+
+          const res = onAdd(newItem);
+          if (!res.ok) {
+            setMsg(res.reason || "Ya está en la lista");
+            return;
+          }
+          setMsg("Usuario existente agregado a la lista");
+          setEmail("");
+          clearForm();
+          return;
+        }
+      }
+
+      // Si no existe
+      setNotFound(true);
+      setMsg("No existe, completá los datos para crearlo");
+    } catch {
+      setMsg("No se pudo verificar el email");
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+
+  const addNewToPending = () => {
+    setMsg(null);
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return setMsg("Ingresá un email");
+    if (!roleId) return setMsg("Seleccioná un rol");
+    if (roleId === ENGINEER_ROLE_ID && (!licence.trim() || !degree.trim())) {
+      return setMsg("Para Ingeniero, completá matrícula y título");
+    }
+    if (!password || !confirm) return setMsg("Ingresá la contraseña y su confirmación");
+    if (password !== confirm) return setMsg("Las contraseñas no coinciden");
+    if (password.length < 8) return setMsg("La contraseña debe tener al menos 8 caracteres");
+
+    const item: PendingMember = {
+      id: crypto.randomUUID(),
+      email: normalized,
+      user_type_id: roleId,
+      first_name: firstName || undefined,
+      last_name: lastName || undefined,
+      dni: dni || null,
+      phone_number: phone || null,
+      licence_number: roleId === ENGINEER_ROLE_ID ? licence.trim() : null,
+      title_name: roleId === ENGINEER_ROLE_ID ? degree.trim() : null,
+      password,
+      confirm_password: confirm,
+    };
+    const res = onAdd(item);
+    if (!res.ok) {
+     setMsg(res.reason || "Ya está en la lista");
+      return;
+    }
+
+    setEmail("");
+    clearForm();
+    setNotFound(false);
+    setMsg("Agregado a la lista");
+    setTimeout(()=>setMsg(null), 1200);
+  };
+
+  return (
+    <div className="rounded-[12px] border border-[#E2E8F0] p-5 sm:p-6 bg-gradient-to-br from-white to-[#F8FAFC]">
+      <div className="flex items-start gap-3">
+        <div className="flex-1">
+          <h2 className="text-base font-semibold text-[#0F172A]">Agregar por email</h2>
+          <p className="text-sm text-[#64748B] mt-0.5">Si existe se suma directo, si no existe completás sus datos.</p>
+
+          {/* Email y buscar, centrado simétrico */}
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-6 gap-3">
+            <TextInput
+              id="email" label="Email" value={email} onChange={setEmail}
+              leftIcon={<Mail size={16} />} className="sm:col-span-4"
+              placeholder="ejemplo@dominio.com"
+            />
+            <div className="sm:col-span-2 flex items-end">
+              <button
+                type="button" onClick={searchAndAdd} disabled={lookupLoading}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-[10px] px-4 py-3 border border-[#E2E8F0]
+                           hover:bg-[#F8FAFC] active:bg-[#E2E8F0] transition disabled:opacity-60"
+              >
+                <Search size={16} />
+                {lookupLoading ? "Buscando..." : "Buscar"}
+              </button>
+            </div>
+          </div>
+
+          {/* Form de alta solo si no existe */}
+          {notFound && (
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
+              <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
+                <div className="col-span-12">
+                  <label className="mb-1.5 text-sm font-medium text-[#0F172A] block">Rol</label>
+                  <select
+                    className="w-full rounded-[10px] border border-[#E2E8F0] px-3.5 py-3"
+                    value={roleId}
+                    onChange={(e)=>onChangeRole(e.target.value ? Number(e.target.value) : "")}
+                  >
+                    <option value="">Seleccionar</option>
+                    {FIXED_ROLES.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select>
+                  <p className="text-xs text-[#64748B] mt-1">Rol dentro del taller.</p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <LabeledInput label="Nombres" value={firstName} onChange={setFirstName} />
+                <LabeledInput label="Apellidos" value={lastName} onChange={setLastName} />
+                <LabeledInput label="DNI" value={dni} onChange={setDni} />
+                <LabeledInput label="Teléfono" value={phone} onChange={setPhone} />
+              </div>
+
+              {roleId === ENGINEER_ROLE_ID && (
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <LabeledInput label="Nro de matrícula" value={licence} onChange={setLicence} />
+                  <LabeledInput label="Título universitario" value={degree} onChange={setDegree} />
+                </div>
+              )}
+
+              {/* <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="relative">
+                  <label className="block text-sm mb-2">Contraseña</label>
+                  <input
+                    className="w-full border rounded p-3 pr-10"
+                    type={showPass ? "text" : "password"}
+                    placeholder="Ingresá una contraseña segura"
+                    value={password}
+                    onChange={(e)=>setPassword(e.target.value)}
+                  />
+                  <button type="button" onClick={()=>setShowPass(v=>!v)} className="absolute right-3 top-9">
+                    {showPass ? <EyeOff className="w-5 h-5 text-[#0040B8]" /> : <Eye className="w-5 h-5 text-[#0040B8]" />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <label className="block text-sm mb-2">Confirmar contraseña</label>
+                  <input
+                    className="w-full border rounded p-3 pr-10"
+                    type={showConfirm ? "text" : "password"}
+                    placeholder="Repetí la contraseña"
+                    value={confirm}
+                    onChange={(e)=>setConfirm(e.target.value)}
+                  />
+                  <button type="button" onClick={()=>setShowConfirm(v=>!v)} className="absolute right-3 top-9">
+                    {showConfirm ? <EyeOff className="w-5 h-5 text-[#0040B8]" /> : <Eye className="w-5 h-5 text-[#0040B8]" />}
+                  </button>
+                </div>
+              </div> */}
+
+              <div className="mt-8 flex justify-center mb-4">
+                <PrimaryButton type="button" onClick={addNewToPending} iconRight={<Plus size={18} />}>
+                  Agregar a la lista
+                </PrimaryButton>
+              </div>
+            </motion.div>
+          )}
+
+          {msg && (
+            <div className="mt-4 text-xs text-[#0F172A] bg-[#F1F5F9] border border-[#E2E8F0] rounded px-3 py-2">
+              {msg}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== Tarjetas de resumen del paso 3 ===== */
+
+function SummaryCard({ rows, onEdit }: { rows: [string, string][]; onEdit: ()=>void; }) {
+  return (
+    <div className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[15px] sm:text-base font-semibold text-[#0F172A]">Revisá los datos</h2>
+          <p className="text-sm text-[#64748B] mt-0.5">Confirmá que esté correcto antes de crear el taller.</p>
+        </div>
+        <button type="button" onClick={onEdit} className="inline-flex items-center gap-1 text-sm text-[#0040B8] hover:opacity-80">
+          <Edit3 size={16} /> Editar
+        </button>
+      </div>
+      <dl className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-[15px]">
+        {rows.map(([k,v])=>(
+          <div key={k}>
+            <dt className="text-sm text-[#64748B]">{k}</dt>
+            <dd className="text-[#0F172A]">{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+function TeamSummary({ items, onEdit }: { items: PendingMember[]; onEdit: ()=>void; }) {
+  return (
+    <div className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-[15px] sm:text-base font-semibold text-[#0F172A]">Equipo a procesar</h3>
+          <p className="text-sm text-[#64748B] mt-0.5">Se crearán o asociarán al confirmar.</p>
+        </div>
+        <button type="button" onClick={onEdit} className="inline-flex items-center gap-1 text-sm text-[#0040B8] hover:opacity-80">
+          <Edit3 size={16} /> Editar
+        </button>
+      </div>
+      {items.length === 0 ? (
+        <div className="mt-3 text-sm text-[#64748B]">Sin miembros por ahora.</div>
+      ) : (
+        <ul className="mt-3 grid grid-cols-1 gap-2">
+          {items.map((m)=>(
+            <li key={m.id} className="flex items-center justify-between border border-[#E2E8F0] rounded-[10px] px-3.5 py-2.5">
+              <div>
+                <div className="text-[15px] text-[#0F172A]">{m.first_name || "Sin nombre"} {m.last_name || ""}</div>
+                <div className="text-sm text-[#64748B]">{m.email}{m.existingUserId ? ", existente" : ", nuevo"}</div>
+              </div>
+              <span className="text-sm text-[#0F172A] font-medium">
+                {m.user_type_id === 3 ? "Ingeniero" : m.user_type_id === 4 ? "Operador" : m.user_type_id === 5 ? "Soporte" : "Sin rol"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ===== UI genéricos ===== */
+
+function Field(props: {
+  id: string; label: string; value: string; onChange: (v: string)=>void; placeholder?: string;
+  help?: string; disabled?: boolean; required?: boolean; type?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
 }) {
+  const { id, label, value, onChange, placeholder, help, disabled, required, type="text", inputMode } = props;
   return (
     <div className="flex flex-col">
-      <label htmlFor={id} className="mb-1.5 text-sm font-medium text-[#0F172A]">
-        {label} {required ? <span className="text-[#EF4444]">*</span> : null}
-      </label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        disabled={disabled}
-        inputMode={inputMode}
+      <label htmlFor={id} className="mb-1.5 text-sm font-medium text-[#0F172A]">{label} {required ? <span className="text-[#EF4444]">*</span> : null}</label>
+      <input id={id} type={type} value={value} onChange={(e)=>onChange(e.target.value)} placeholder={placeholder}
+        disabled={disabled} inputMode={inputMode}
         className="w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-[15px] text-[#0F172A] placeholder:text-[#94A3B8]
-                   outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow"
-      />
+                   outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow" />
       {help ? <p className="text-xs text-[#64748B] mt-1">{help}</p> : null}
     </div>
   );
 }
 
-function SelectField({
-  id,
-  label,
-  value,
-  onChange,
-  options,
-  disabled,
-  required,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-  disabled?: boolean;
-  required?: boolean;
+function TextInput({ id, label, value, onChange, placeholder, leftIcon, className="" }:{
+  id: string; label: string; value: string; onChange: (v: string)=>void; placeholder?: string; leftIcon?: React.ReactNode; className?: string;
+}) {
+  return (
+    <div className={`flex flex-col ${className}`}>
+      <label htmlFor={id} className="mb-1.5 text-sm font-medium text-[#0F172A]">{label}</label>
+      <div className="relative">
+        {leftIcon ? <div className="absolute left-3 top-1/2 -translate-y-1/2 opacity-70">{leftIcon}</div> : null}
+        <input id={id} value={value} onChange={(e)=>onChange(e.target.value)} placeholder={placeholder}
+          className={`w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-[15px] text-[#0F172A] placeholder:text-[#94A3B8] outline-none
+                      focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow ${leftIcon ? "pl-10" : ""}`} />
+      </div>
+    </div>
+  );
+}
+
+function LabeledInput({ label, value, onChange }:{
+  label: string; value: string; onChange: (v: string)=>void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm mb-2">{label}</label>
+      <input className="w-full border rounded p-3" value={value} onChange={(e)=>onChange(e.target.value)} />
+    </div>
+  );
+}
+
+function SelectField({ id, label, value, onChange, options, required }:{
+  id: string; label: string; value: string; onChange: (v: string)=>void; options: string[]; required?: boolean;
 }) {
   return (
     <div className="flex flex-col">
-      <label htmlFor={id} className="mb-1.5 text-sm font-medium text-[#0F172A]">
-        {label} {required ? <span className="text-[#EF4444]">*</span> : null}
-      </label>
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
+      <label htmlFor={id} className="mb-1.5 text-sm font-medium text-[#0F172A]">{label} {required ? <span className="text-[#EF4444]">*</span> : null}</label>
+      <select id={id} value={value} onChange={(e)=>onChange(e.target.value)}
         className="w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-[15px] text-[#0F172A]
-                   outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow"
-      >
+                   outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow">
         <option value="">Seleccionar</option>
-        {options.map((opt) => (
-          <option key={opt} value={opt}>{opt}</option>
-        ))}
+        {options.map((opt)=><option key={opt} value={opt}>{opt}</option>)}
       </select>
     </div>
   );
 }
 
-function Alert({ type, message }: { type: "error" | "success"; message: string }) {
-  const isError = type === "error";
+function IconButton({ children, onClick, label }:{ children: React.ReactNode; onClick?: ()=>void; label?: string; }) {
   return (
-    <div
-      className={[
-        "flex items-center gap-2 rounded-[10px] px-3.5 py-3 text-sm",
-        isError ? "bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]" :
-                  "bg-[#F0FDF4] text-[#14532D] border border-[#BBF7D0]"
-      ].join(" ")}
-      role="alert"
-    >
-      <Info size={18} />
-      <span>{message}</span>
-    </div>
-  );
-}
-
-function PrimaryButton({
-  children,
-  onClick,
-  type = "button",
-  loading,
-  iconRight,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  type?: "button" | "submit";
-  loading?: boolean;
-  iconRight?: React.ReactNode;
-}) {
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={loading}
-      className="inline-flex items-center justify-center gap-2 rounded-[4px] px-5 py-3
-                 bg-[#0040B8] text-white font-medium shadow-sm
-                 hover:brightness-110 active:brightness-95
-                 disabled:opacity-60 disabled:cursor-not-allowed
-                 transition"
-      title="Continuar"
-    >
-      <span>{loading ? "Procesando..." : children}</span>
-      {!loading && iconRight}
-    </button>
-  );
-}
-
-function GhostButton({
-  children,
-  onClick,
-  disabled,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="inline-flex items-center gap-2 text-[#0F172A] rounded-[12px] px-3 py-2
-                 hover:bg-[#F1F5F9] active:bg-[#E2E8F0]
-                 disabled:opacity-60 disabled:cursor-not-allowed transition"
-    >
+    <button type="button" onClick={onClick}
+      className="inline-flex items-center justify-center rounded-[8px] p-2 border border-[#E2E8F0] hover:bg-[#F8FAFC] active:bg-[#E2E8F0] transition"
+      aria-label={label} title={label}>
       {children}
     </button>
   );
 }
 
-function GhostLink({
-  children,
-  onClick,
-  disabled,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
+function Alert({ type, message }:{ type: "error"|"success"; message: string; }) {
+  const isError = type === "error";
+  return (
+    <div className={[
+      "flex items-center gap-2 rounded-[10px] px-3.5 py-3 text-sm",
+      isError ? "bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]" :
+                "bg-[#F0FDF4] text-[#14532D] border border-[#BBF7D0]"
+    ].join(" ")} role="alert">
+      <Info size={18} /><span>{message}</span>
+    </div>
+  );
+}
+
+function PrimaryButton({ children, onClick, type="button", loading, iconRight }:{
+  children: React.ReactNode; onClick?: ()=>void; type?: "button"|"submit"; loading?: boolean; iconRight?: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="text-[#0040B8] underline underline-offset-4 hover:opacity-80 disabled:opacity-60 transition"
-    >
+    <button type={type} onClick={onClick} disabled={loading}
+      className="inline-flex items-center justify-center gap-2 rounded-[4px] px-5 py-3 bg-[#0040B8] text-white font-medium shadow-sm
+                 hover:brightness-110 active:brightness-95 disabled:opacity-60 disabled:cursor-not-allowed transition" title="Continuar">
+      <span>{loading ? "Procesando..." : children}</span>{!loading && iconRight}
+    </button>
+  );
+}
+
+function GhostButton({ children, onClick, disabled }:{ children: React.ReactNode; onClick?: ()=>void; disabled?: boolean; }) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled}
+      className="inline-flex items-center gap-2 text-[#0F172A] rounded-[12px] px-3 py-2 hover:bg-[#F1F5F9] active:bg-[#E2E8F0] disabled:opacity-60 disabled:cursor-not-allowed transition">
+      {children}
+    </button>
+  );
+}
+
+function GhostLink({ children, onClick, disabled }:{ children: React.ReactNode; onClick?: ()=>void; disabled?: boolean; }) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled}
+      className="text-[#0040B8] underline underline-offset-4 hover:opacity-80 disabled:opacity-60 transition">
       {children}
     </button>
   );
