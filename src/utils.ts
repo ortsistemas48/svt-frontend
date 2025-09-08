@@ -60,6 +60,37 @@ export async function fetchAvailableStickerOrders({
 }
 
 
+export async function fetchAdminPendingWorkshops() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workshops/pending`, {
+    cache: "no-store",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("No se pudieron obtener los talleres pendientes");
+  const workshops = await res.json();
+  return { workshops };
+}
+
+
+export async function fetchAdminWorkshopDetail(workshopId: number | string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workshops/${workshopId}`, {
+    cache: "no-store",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("No se pudo obtener el taller");
+  return await res.json();
+}
+
+
+export async function fetchAdminWorkshopMembers(workshopId: number | string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/workshops/${workshopId}/members`, {
+    cache: "no-store",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("No se pudo obtener el personal del taller");
+  return await res.json(); // array de miembros
+}
+
+
 export async function assignStickerToCar(license_plate: string, sticker_id: number, workshop_id?: number) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/assign-to-car`, {
     method: "POST",

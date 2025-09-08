@@ -23,10 +23,11 @@ export default function SideBarMenu(){
     
     const links = [
         { href: `/admin-dashboard/create-decals`, icon: <FilePlus2 size={20} />, label: "Alta de Obleas" }, 
-        { href: `/admin-dashboard/approve-users`, icon: <UserCheck size={20} />, label: "Aprobar Titulares" }, 
+        { href: `/admin-dashboard/approve-workshops`, icon: <UserCheck size={20} />, label: "Aprobar Talleres" }, 
         { href: `/admin-dashboard/users`, icon: <Users size={20} />, label: "Usuarios" },
         { href: `/admin-dashboard/support`, icon: <ShieldUser size={20} />, label: "Soporte" },  
     ];
+    
     return (
         <nav className="flex flex-col space-y-2 ">
             {links.map((link) => (
