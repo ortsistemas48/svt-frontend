@@ -39,6 +39,8 @@ const formData1: FormFieldData[] = [
       { value: "nafta", label: "Nafta" },
       { value: "diesel", label: "Diésel" },
       { value: "electrico", label: "Eléctrico" },
+      { value: "gnc", label: "GNC" },
+      { value: "hidrido", label: "Hídrido" },
     ],
     name: "fuel_type",
   },
