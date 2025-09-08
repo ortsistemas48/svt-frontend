@@ -5,6 +5,7 @@ import { useApplication } from "@/context/ApplicationContext";
 import React, { useEffect, useMemo, useState } from "react";
 import { alnumSpaceUpper, clamp, fetchAvailableStickers, lettersSpaceUpper, onlyAlnumUpper, onlyDigits, toUpper } from "../../utils";
 import { useParams } from "next/navigation";
+import { useRef } from "react";
 
 interface FormFieldData {
   label: string;
@@ -40,7 +41,7 @@ const formData1: FormFieldData[] = [
       { value: "diesel", label: "Diésel" },
       { value: "electrico", label: "Eléctrico" },
       { value: "gnc", label: "GNC" },
-      { value: "hidrido", label: "Hídrido" },
+      { value: "hibrido", label: "Híbrido" },
     ],
     name: "fuel_type",
   },
@@ -74,20 +75,20 @@ const formData1: FormFieldData[] = [
   },
   {
     label: "Tipo de uso",
-  options: [
-    
-    { value: "A",  label: "A - Oficial" },
-    { value: "B",  label: "B - Diplomático, Consular u Org. Internacional" },
-    { value: "C",  label: "C - Particular" },
-    { value: "D",  label: "D - De alquiler / alquiler con chofer (Taxi - Remis)" },
-    { value: "E",  label: "E - Transporte público de pasajeros" },
-    { value: "E1", label: "E1 - Servicio internacional (regular y turismo); larga distancia y urbanos cat. M1, M2, M3" },
-    { value: "E2", label: "E2 - Interjurisdiccional y jurisdiccional; regulares/turismo cat. M1, M2, M3" },
-    { value: "F",  label: "F - Transporte escolar" },
-    { value: "G",  label: "G - Cargas (generales/peligrosas), recolección, carretones, servicios industriales y trabajos sobre la vía pública" },
-    { value: "H",  label: "H - Emergencia, seguridad, fúnebres, remolque, maquinaria especial o agrícola y trabajos sobre la vía pública" },
-  ],
-  name: "usage_type",
+    options: [
+
+      { value: "A", label: "A - Oficial" },
+      { value: "B", label: "B - Diplomático, Consular u Org. Internacional" },
+      { value: "C", label: "C - Particular" },
+      { value: "D", label: "D - De alquiler / alquiler con chofer (Taxi - Remis)" },
+      { value: "E", label: "E - Transporte público de pasajeros" },
+      { value: "E1", label: "E1 - Servicio internacional (regular y turismo); larga distancia y urbanos cat. M1, M2, M3" },
+      { value: "E2", label: "E2 - Interjurisdiccional y jurisdiccional; regulares/turismo cat. M1, M2, M3" },
+      { value: "F", label: "F - Transporte escolar" },
+      { value: "G", label: "G - Cargas (generales/peligrosas), recolección, carretones, servicios industriales y trabajos sobre la vía pública" },
+      { value: "H", label: "H - Emergencia, seguridad, fúnebres, remolque, maquinaria especial o agrícola y trabajos sobre la vía pública" },
+    ],
+    name: "usage_type",
   },
   { label: "Marca de motor", placeholder: "Ej: Toyota", name: "engine_brand" },
   { label: "Número de motor", placeholder: "Ej: B91099432213123", name: "engine_number" },
@@ -191,6 +192,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   const [loadingStickers, setLoadingStickers] = useState(false);
   const [stickersError, setStickersError] = useState<string | null>(null);
 
+  const fetchRef = useRef<{ id: number; ctrl?: AbortController }>({ id: 0 });
   const effectivePlate = (car?.license_plate || plateQuery || "")
     .trim()
     .toUpperCase()
@@ -203,7 +205,14 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     return "";
   }, [car?.sticker, car?.sticker_id]);
 
-  // ---- helpers de error ----
+  const dateForInput = (v?: string) => {
+    if (!v) return "";
+    // Si ya viene como YYYY-MM-DD, devuélvelo tal cual
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+    // Si viene ISO (con Z), cortamos al día sin reinterpretar huso
+    const m = v.match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : "";
+  };
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
 
@@ -291,20 +300,39 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     setIsIdle(mode === "idle");
   }, [mode, setIsIdle]);
 
+  useEffect(() => {
+  if (mode !== "edit") return;
+  const hasCarErrors = Object.entries(errors ?? {}).some(([k, v]) => k.startsWith("car_") && v);
+  if (!hasCarErrors) return;
+
+  const t = setTimeout(() => {
+    setErrors((prev: any) => {
+      if (!prev) return prev;
+      const next: any = {};
+      for (const [k, v] of Object.entries(prev)) {
+        if (!k.startsWith("car_")) next[k] = v; // borramos solo car_
+      }
+      return next;
+    });
+  }, 2000); // 2s, ajustá a gusto
+
+  return () => clearTimeout(t);
+}, [errors, mode, setErrors]);
   // --- Buscar por patente ---
   const fetchVehicleByPlate = async () => {
     const plate = plateQuery.trim().toUpperCase().replace(/[-\s]/g, "");
-    if (!plate) {
-      setSearchError("Ingresá una patente válida.");
-      return;
-    }
-    // ✅ bloquear búsqueda si el formato es inválido
+    if (!plate) { setSearchError("Ingresá una patente válida."); return; }
     if (!PLATE_REGEX.test(plate)) {
       const msg = "Formato de patente inválido. Usá ABC123 o AB123CD.";
-      setCarError("license_plate", msg);
-      setSearchError(msg);
-      return;
+      setCarError("license_plate", msg); setSearchError(msg); return;
     }
+
+    // cancelar request anterior (si sigue viva)
+    if (fetchRef.current.ctrl) fetchRef.current.ctrl.abort();
+
+    const id = ++fetchRef.current.id;
+    const ctrl = new AbortController();
+    fetchRef.current.ctrl = ctrl;
 
     try {
       setIsSearching(true);
@@ -312,35 +340,39 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
-        { credentials: "include" }
+        { credentials: "include", signal: ctrl.signal }
       );
 
+      // si llegó una respuesta vieja, la ignoramos
+      if (id !== fetchRef.current.id) return;
+
       if (res.status === 404) {
-        setCar((prev: any) => ({
-          ...prev,
-          license_plate: plate,
-          sticker_id: undefined,
-          sticker: undefined,
-        }));
+        setCar((prev: any) => ({ ...prev, license_plate: plate, sticker_id: undefined, sticker: undefined }));
         setMode("edit");
         await loadStickers(plate);
+        // limpiar errores anteriores de edición
+        setErrors((prev: any) => {
+          if (!prev) return prev;
+          const next: any = {};
+          for (const k of Object.keys(prev)) if (!k.startsWith("car_")) next[k] = prev[k];
+          return next;
+        });
         return;
       }
 
-      if (!res.ok) {
-        setSearchError("Ocurrió un error al buscar el vehículo.");
-        return;
-      }
+      if (!res.ok) { setSearchError("Ocurrió un error al buscar el vehículo."); return; }
 
       const data = await res.json();
       setCar((prev: any) => ({ ...prev, ...data }));
       setMode("view");
       await loadStickers(data.license_plate);
-    } catch (e) {
-      console.error(e);
-      setSearchError("Ocurrió un error de red.");
+    } catch (e: any) {
+      if (e.name !== "AbortError") {
+        console.error(e);
+        setSearchError("Ocurrió un error de red.");
+      }
     } finally {
-      setIsSearching(false);
+      if (id === fetchRef.current.id) setIsSearching(false);
     }
   };
 
@@ -493,11 +525,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                   options={field.options}
                   name={field.name}
                   isOwner={true}
-                  value={
-                    field.type === "date" && car?.[field.name]
-                      ? new Date(car[field.name]).toISOString().slice(0, 10)
-                      : car?.[field.name] ?? ""
-                  }
+                  value={field.type === "date" ? dateForInput(car?.[field.name]) : (car?.[field.name] ?? "")}
                   onChange={(val) => handleChange(field.name, val)}
                   onBlur={() => handleBlur(field.name)}
                   error={getCarError(field.name)}

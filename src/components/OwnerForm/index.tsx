@@ -42,6 +42,13 @@ const PATTERN: Record<string, RegExp> = {
   email: EMAIL_REGEX,
 };
 
+// Dedup por value (para evitar keys duplicadas en selects)
+const uniqueByValue = (arr: { value: any; label: any }[] = []) => {
+  const m = new Map<string, { value: any; label: any }>();
+  for (const o of arr) m.set(String(o.value).trim().toLowerCase(), { value: String(o.value), label: String(o.label) });
+  return Array.from(m.values());
+};
+
 export default function OwnerForm({
   data,
   applicationId,
@@ -50,44 +57,42 @@ export default function OwnerForm({
   existingDocuments = [],
   onDeleteExisting,
 }: Props) {
-  const { errors, setErrors } = useApplication();
+  const { errors, setErrors } = useApplication() as any;
 
   const [provinceOptions, setProvinceOptions] = useState<{ value: string; label: string }[]>([]);
   const [cityOptions, setCityOptions] = useState<{ value: string; label: string }[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
 
-  // helpers para setear/limpiar errores del owner
+  // helpers de error (prefijo owner_)
   const setOwnerError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`owner_${name}`]: msg }));
 
   const validateOne = (name: string, raw: string) => {
     const val = String(raw ?? "");
     const p = PATTERN[name];
-    if (!p) return;              // sin patrón => no seteamos nada
+    if (!p) return;
     if (!val) {
-      setOwnerError(name, "");   // vacío (opcional) => sin error
+      setOwnerError(name, "");
       return;
     }
     setOwnerError(name, p.test(val) ? "" : MSG[name]);
   };
 
-  // 1) Cargar provincias al montar
+  // Provincias
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const provs = await getProvinces();
-        if (!cancelled) setProvinceOptions(provs);
+        if (!cancelled) setProvinceOptions(uniqueByValue(provs));
       } catch (e) {
         console.error("Error cargando provincias:", e);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
-  // 2) Cuando cambia la provincia, recargar localidades
+  // Localidades
   useEffect(() => {
     let cancelled = false;
 
@@ -103,7 +108,7 @@ export default function OwnerForm({
     (async () => {
       try {
         const locs = await getLocalidadesByProvincia(province);
-        if (!cancelled) setCityOptions(locs);
+        if (!cancelled) setCityOptions(uniqueByValue(locs));
       } catch (e) {
         console.error("Error cargando localidades:", e);
       } finally {
@@ -111,12 +116,10 @@ export default function OwnerForm({
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [data?.province]);
 
-  // 3) Form schema base
+  // Schema base
   const baseFormData = useMemo(
     () => [
       { label: "DNI", placeholder: "Ej: 39959950", name: "dni", type: "text" },
@@ -125,30 +128,13 @@ export default function OwnerForm({
       { label: "Apellido", placeholder: "Ej: Vaquero", name: "last_name" },
       { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number", type: "text" },
       { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street" },
-      { label: "Provincia", options: [], name: "province" },
-      { label: "Localidad", options: [], name: "city" },
+      { label: "Provincia", options: provinceOptions, name: "province" },
+      { label: "Localidad", options: cityOptions, name: "city", disabled: loadingCities || !data?.province },
     ],
-    []
+    [provinceOptions, cityOptions, loadingCities, data?.province]
   );
 
-  // 4) Inyectar opciones dinámicas y deshabilitar Localidad si corresponde
-  const dynamicFormData = useMemo(() => {
-    return baseFormData.map((f) => {
-      if (f.name === "province") {
-        return { ...f, options: provinceOptions };
-      }
-      if (f.name === "city") {
-        return {
-          ...f,
-          options: cityOptions,
-          disabled: loadingCities || !data?.province,
-        };
-      }
-      return f;
-    });
-  }, [baseFormData, provinceOptions, cityOptions, loadingCities, data?.province]);
-
-  // 5) Sanitizado + validaciones al escribir (y setear errores con setErrors)
+  // Sanitizado + validaciones
   const handleChangeField = (name: string, raw: string) => {
     let value = raw;
 
@@ -157,7 +143,7 @@ export default function OwnerForm({
         value = clamp(onlyDigits(value), 9);
         break;
       case "street":
-        value = clamp(value, 40); // sin regla: no seteamos error
+        value = clamp(value, 40);
         break;
       case "phone_number":
         value = clamp(onlyDigits(value), 15);
@@ -170,50 +156,92 @@ export default function OwnerForm({
         value = clamp(sanitizeEmail(value), 60);
         break;
       case "province":
-        // al cambiar provincia, limpiar localidad
         setData((prev: any) => ({ ...prev, city: "" }));
         break;
       default:
         break;
     }
 
-    // Guardar el valor saneado
     setData((prev: any) => ({ ...prev, [name]: value }));
 
-    // Validar en vivo y setear errores del owner
     if (name in PATTERN) {
       validateOne(name, value);
     }
   };
 
-  // 6) Validación en onBlur (email opcional + resto por si hace falta)
   const handleBlurField = (name: string) => {
     if (!(name in PATTERN)) return;
     validateOne(name, String(data?.[name] ?? ""));
   };
 
-  return (
-    <>
-      
+  // limpiar errores owner_ cuando se resetea la búsqueda
+  const clearOwnerErrors = () => {
+    setErrors((prev: any) => {
+      if (!prev) return prev;
+      const next: any = {};
+      for (const k of Object.keys(prev)) if (!k.startsWith("owner_")) next[k] = prev[k];
+      return next;
+    });
+  };
 
-      <FormTemplate
-        formData={dynamicFormData as any}
-        applicationId={applicationId}
-        title="Datos del Titular"
-        onDeleteExisting={onDeleteExisting}
-        description="Ingrese los datos del titular del auto"
-        data={data}
-        setData={setData}
-        showDropzone={true}
-        onPendingDocsChange={onPendingDocsChange}
-        existingDocuments={existingDocuments}
-        onChangeField={handleChangeField}
-        onBlurField={handleBlurField}
-        // si querés pintar más campos en rojo, agregalos acá
-        fieldErrors={{
-          email: errors.owner_email,
-        }}
-      />
-    </>
+  return (
+    <FormTemplate
+      formData={baseFormData as any}
+      applicationId={applicationId}
+      title="Datos del Titular"
+      description="Ingrese los datos del titular del auto"
+      data={data}
+      setData={setData}
+      showDropzone={true}
+      onPendingDocsChange={onPendingDocsChange}
+      existingDocuments={existingDocuments}
+      onDeleteExisting={onDeleteExisting}
+      onChangeField={handleChangeField}
+      onBlurField={handleBlurField}
+      fieldErrors={{
+        email: errors?.owner_email,
+      }}
+      // 🆕: búsqueda reutilizable dentro del template
+      searchConfig={{
+        enabled: true,
+        dataKey: "dni",
+        fieldLabel: "DNI",
+        placeholder: "Ej: 39959950",
+        inputType: "text",
+        sanitize: (s) => clamp(onlyDigits(s), 9),
+        validate: (q) => (q && /^\d{1,9}$/.test(q) ? null : "Ingresá un DNI válido."),
+        buildUrl: (dni) =>
+          `${process.env.NEXT_PUBLIC_API_URL}/persons/get-persons-by-dni/${encodeURIComponent(dni)}`,
+        mapFound: (payload, dni) => {
+          const p = Array.isArray(payload) ? payload[0] : payload;
+          return {
+            dni,
+            first_name: p?.first_name ?? "",
+            last_name: p?.last_name ?? "",
+            phone_number: p?.phone_number ?? "",
+            email: p?.email ?? "",
+            province: p?.province ?? p?.Province ?? "",
+            city: p?.city ?? "",
+            street: p?.street ?? "",
+          };
+        },
+        mapNotFound: (dni) => ({ dni }),
+        notFoundStatus: 404,
+        titleIdle: "Datos del Titular",
+        descIdle: "Ingresá el DNI para traer los datos de la persona",
+        searchButtonLabel: "Buscar",
+        resetButtonLabel: "Buscar otro DNI",
+        onReset: () => {
+          clearOwnerErrors();
+          setData({}); // volver a un estado limpio
+        },
+        onModeChange: (m) => {
+          // opcional: podrías setear descripciones dinámicas aquí si lo necesitás
+          // console.log("OwnerForm mode:", m);
+        },
+      }}
+      // Si quisieras que, sin búsqueda, arranque en edit:
+      defaultMode="edit"
+    />
   );
 }

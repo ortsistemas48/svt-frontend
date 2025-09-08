@@ -117,14 +117,20 @@ export default function PersonForm({
   const showAnyErrors =
     ownerErrorsList.length > 0 || (!isSamePerson && driverErrorsList.length > 0);
 
+  const { isIdle } = useApplication() as any;
   return (
     <div className="">
-      <div className="flex justify-center items-center gap-x-4 mb-14">
-        <h1 className="text-xl font-regular">
-          ¿El titular y el conductor son la misma persona?
-        </h1>
-        <CheckBox label="" checked={isSamePerson} onChange={handleCheckboxChange} />
-      </div>
+      {
+        !isIdle && (
+
+          <div className="flex justify-center items-center gap-x-4 mb-14">
+            <h1 className="text-xl font-regular">
+              ¿El titular y el conductor son la misma persona?
+            </h1>
+            <CheckBox label="" checked={isSamePerson} onChange={handleCheckboxChange} />
+          </div>
+        )
+      }
 
       {/* Resumen de errores */}
       {showAnyErrors && (
@@ -160,9 +166,8 @@ export default function PersonForm({
       )}
 
       <div
-        className={`grid ${
-          !isSamePerson ? "grid-cols-[1fr_1px_1fr]" : "px-4 grid-cols-1"
-        } max-xl:grid-cols-1 max-xl:px-7 px-10 gap-8 mb-4 items-start`}
+        className={`grid ${!isSamePerson ? "grid-cols-[1fr_1px_1fr]" : "px-4 grid-cols-1"
+          } max-xl:grid-cols-1 max-xl:px-7 px-10 gap-8 mb-4 items-start`}
       >
         <OwnerForm
           data={owner}
