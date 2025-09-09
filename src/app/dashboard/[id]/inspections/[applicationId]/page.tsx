@@ -78,13 +78,11 @@ export async function fetchDetails(inspectionId: number) {
   if (!res.ok) throw new Error("No se pudieron obtener los detalles");
 
   const payload = await res.json();
-  // viejo: array directo
   if (Array.isArray(payload)) {
     const rows = normalizeRows(payload as DetailRow[]);
     return { rows, globalObs: "", licensePlate: undefined as string | undefined };
   }
 
-  // nuevo: objeto con items, global_observations y license_plate
   const {
     items,
     global_observations,
@@ -137,8 +135,8 @@ export default async function InspectionPage({ params }: { params: { application
         steps={steps.sort((a, b) => a.order - b.order)}
         initialStatuses={initialStatuses}
         apiBase={API}
-        initialObsByStep={initialObsByStep}   // precarga observaciones por paso
-        initialGlobalObs={globalObs}          // acá va la global
+        initialObsByStep={initialObsByStep}   
+        initialGlobalObs={globalObs}         
       />
     </div>
   );

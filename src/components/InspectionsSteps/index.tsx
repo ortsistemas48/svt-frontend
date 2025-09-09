@@ -11,18 +11,17 @@ type Status = "Apto" | "Condicional" | "Rechazado";
 type ObservationRow = { id: number; description: string; checked: boolean };
 
 const STATUS_UI: Record<Status, { btn: string; stepBorder: string }> = {
-
   Apto: {
     btn: "border-[#0040B8] text-[#0040B8] bg-[#0040B8]/10",
-    stepBorder: "border-[#0040B8]/50", 
+    stepBorder: "border-[#0040B8]/50",
   },
   Condicional: {
     btn: "border-amber-600 text-amber-700 bg-amber-50",
-    stepBorder: "border-amber-600/50", 
+    stepBorder: "border-amber-600/50",
   },
   Rechazado: {
     btn: "border-black text-black bg-black/5",
-    stepBorder: "border-black/50", 
+    stepBorder: "border-black/50",
   },
 };
 
@@ -45,7 +44,7 @@ export default function InspectionStepsClient({
 }) {
   const [statusByStep, setStatusByStep] = useState<Record<number, Status | undefined>>(initialStatuses || {});
   const [saving, setSaving] = useState(false);
-  const [certLoading, setCertLoading] = useState(false); // ← NUEVO
+  const [certLoading, setCertLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openObsStepId, setOpenObsStepId] = useState<number | null>(null);
@@ -54,6 +53,10 @@ export default function InspectionStepsClient({
   const router = useRouter();
   const [globalObs, setGlobalObs] = useState(initialGlobalObs || "");
   const [obsByStepList, setObsByStepList] = useState<Record<number, ObservationRow[]>>(initialObsByStep || {});
+
+  // nuevo: modal de certificado
+  const [certModalOpen, setCertModalOpen] = useState(false);
+  const [certStatus, setCertStatus] = useState<Status>("Apto");
 
   const stepNameById = useMemo(() => {
     const map: Record<number, string> = {};
@@ -115,7 +118,7 @@ export default function InspectionStepsClient({
           return copy;
         });
       } catch {
-        /* noop */
+        // silencio
       }
     };
     run();
@@ -184,7 +187,7 @@ export default function InspectionStepsClient({
       const current = obsByStepList[stepId]?.find((o) => o.id === obsId)?.checked ?? false;
       setCheckedLocal(stepId, obsId, !current);
     } catch {
-      /* noop */
+      // silencio
     }
   };
 
@@ -259,32 +262,88 @@ export default function InspectionStepsClient({
     }
   };
 
-  // ← NUEVO: generar certificado
-  const generateCertificate = async () => {
+  const generateCertificate = async (status: Status) => {
     if (!apiBase) {
       setError("Falta configurar NEXT_PUBLIC_API_URL");
       return;
     }
-    setCertLoading(true);
-    setError(null);
-    setMsg(null);
+
+    const newTab = window.open("about:blank", "_blank");
+    if (!newTab) {
+      setError("El navegador bloqueó la ventana emergente");
+      return;
+    }
+
     try {
+      try { newTab.opener = null; } catch {}
+
+      // HTML con estilos modernos + spinner
+      newTab.document.write(`
+        <html>
+          <head>
+            <title>Generando certificado...</title>
+            <style>
+              body {
+                margin: 0;
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-family: system-ui, sans-serif;
+                background: #fff;
+                color: #0040B8;
+              }
+              .container {
+                text-align: center;
+                animation: fadeIn 0.6s ease;
+              }
+              .spinner {
+                width: 60px;
+                height: 60px;
+                border: 6px solid rgba(255,255,255,0.3);
+                border-top-color:  #0040B8;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 20px;
+              }
+              @keyframes spin { to { transform: rotate(360deg); } }
+              @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="spinner"></div>
+              <h2>Generando certificado</h2>
+              <p>Por favor espera un momento...</p>
+            </div>
+          </body>
+        </html>
+      `);
+      newTab.document.close();
+
+      setCertLoading(true);
+      setError(null);
+      setMsg(null);
+
       const res = await fetch(`${apiBase}/certificates/certificates/application/${appId}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ condicion: "Apto" }),
+        body: JSON.stringify({ condicion: status }),
       });
+
       const data = await res.json().catch(() => ({} as any));
-      if (!res.ok) {
-        throw new Error(data?.error || "No se pudo generar el certificado");
-      }
+      if (!res.ok) throw new Error(data?.error || "No se pudo generar el certificado");
+
       const url = data?.public_url || data?.template_url;
       if (!url) throw new Error("No se recibió el link del certificado");
-      window.open(url, "_blank", "noopener,noreferrer");
+
+      newTab.location.href = url;
+
       setMsg("Certificado generado");
-      setTimeout(() => setMsg(null), 1500);
+      setCertModalOpen(false);
     } catch (e: any) {
+      try { if (!newTab.closed) newTab.close(); } catch {}
       setError(e.message || "Error generando certificado");
     } finally {
       setCertLoading(false);
@@ -301,17 +360,14 @@ export default function InspectionStepsClient({
           const listForStep = obsByStepList[s.step_id] || [];
 
           return (
-              <section
-                key={s.step_id}
-                className={clsx(
-                  "w-full rounded-[10px] bg-white transition-colors",
-                  // borde por estado si existe, si no gris
-                  statusByStep[s.step_id]
-                    ? STATUS_UI[statusByStep[s.step_id] as Status].stepBorder
-                    : "border-zinc-200",
-                  "border"
-                )}
-              >
+            <section
+              key={s.step_id}
+              className={clsx(
+                "w-full rounded-[10px] bg-white transition-colors",
+                statusByStep[s.step_id] ? STATUS_UI[statusByStep[s.step_id] as Status].stepBorder : "border-zinc-200",
+                "border"
+              )}
+            >
               <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
                   <h3 className="font-medium text-zinc-900">{s.name}</h3>
@@ -320,25 +376,23 @@ export default function InspectionStepsClient({
                   </p>
                 </div>
 
-                  <div className="flex items-center gap-5 flex-wrap">
-                    {options.map((opt) => {
-                      const selected = statusByStep[s.step_id] === opt;
-                      return (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => handlePick(s.step_id, opt)}
-                          className={clsx(
-                            "w-[140px] px-4 py-2.5 rounded-[4px] border text-sm transition",
-                            selected
-                              ? STATUS_UI[opt].btn
-                              : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                          )}
-                        >
-                          {opt}
-                        </button>
-                      );
-                    })}
+                <div className="flex items-center gap-5 flex-wrap">
+                  {options.map((opt) => {
+                    const selected = statusByStep[s.step_id] === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => handlePick(s.step_id, opt)}
+                        className={clsx(
+                          "w-[140px] px-4 py-2.5 rounded-[4px] border text-sm transition",
+                          selected ? STATUS_UI[opt].btn : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                        )}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
 
                   {isNonApto && (
                     <div className="relative">
@@ -415,7 +469,6 @@ export default function InspectionStepsClient({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4 mt-8 w-full">
-        {/* izquierda */}
         <div className="rounded-[10px] text-sm border border-zinc-200 bg-white p-4 w-full self-start">
           <textarea
             value={globalObs}
@@ -427,7 +480,6 @@ export default function InspectionStepsClient({
           <div className="mt-2 text-right text-xs text-zinc-400">{globalObs.length}/400</div>
         </div>
 
-        {/* derecha */}
         <div className="rounded-[10px] border border-zinc-200 bg-white p-4 w-full self-start">
           <div className="w-full flex items-center justify-between rounded-[6px] border px-3 py-2 text-sm border-[#0040B8] text-[#0040B8]">
             <span>Observaciones marcadas</span>
@@ -496,11 +548,15 @@ export default function InspectionStepsClient({
           Cancelar
         </button>
 
-        {/* ← NUEVO botón Certificado */}
+        {/* botón Certificado, ahora abre modal */}
         <button
           type="button"
           disabled={certLoading}
-          onClick={generateCertificate}
+          onClick={() => {
+            // si hay algún paso no apto, sugerimos arrancar en Condicional
+            setCertStatus(hasNonApto ? "Condicional" : "Apto");
+            setCertModalOpen(true);
+          }}
           className={clsx(
             "px-5 py-2.5 rounded-[4px] border text-[#0040B8]",
             certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50"
@@ -519,6 +575,79 @@ export default function InspectionStepsClient({
           {saving ? "Guardando..." : "Guardar"}
         </button>
       </div>
+
+      {/* Modal de confirmación de certificado */}
+      {certModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          aria-modal="true"
+          role="dialog"
+        >
+          {/* overlay */}
+          <div
+            className="absolute inset-0 bg-black/30"
+            onClick={() => !certLoading && setCertModalOpen(false)}
+          />
+          {/* content */}
+          <div className="relative z-10 w-[min(92vw,520px)] rounded-[10px] border border-zinc-200 bg-white p-5 shadow-xl">
+            <div className="flex items-start justify-between">
+              <h3 className="text-base font-semibold text-zinc-900">Generar certificado</h3>
+              <button
+                className="p-1 rounded hover:bg-zinc-100"
+                onClick={() => !certLoading && setCertModalOpen(false)}
+                aria-label="Cerrar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="mt-2 text-sm text-zinc-600">
+              Elegí la condición del certificado y confirmá para generarlo.
+            </p>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {(["Apto", "Condicional", "Rechazado"] as Status[]).map((opt) => {
+                const selected = certStatus === opt;
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    disabled={certLoading}
+                    onClick={() => setCertStatus(opt)}
+                    className={clsx(
+                      "w-full px-4 py-2.5 rounded-[4px] border text-sm transition",
+                      selected ? STATUS_UI[opt].btn : "border-zinc-200 text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+                    )}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                disabled={certLoading}
+                className="px-4 py-2 rounded-[4px] border border-zinc-300 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+                onClick={() => setCertModalOpen(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={certLoading}
+                className={clsx(
+                  "px-4 py-2 rounded-[4px] bg-[#0040B8] text-white text-sm hover:opacity-95 disabled:opacity-60"
+                )}
+                onClick={() => generateCertificate(certStatus)}
+              >
+                {certLoading ? "Generando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {msg && <div className="mt-4 text-sm text-[#41c227] border border-[#41c227] p-3 rounded-[6px] text-center">{msg}</div>}
       {error && <div className="mt-4 text-sm text-[#d11b2d] border border-[#d11b2d] p-3 rounded-[6px] text-center">{error}</div>}
