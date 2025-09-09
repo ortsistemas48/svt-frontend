@@ -93,12 +93,35 @@ export default function SelectWorkshopPage() {
             workshops.map((w) => (
               <article
                 key={w.workshop_id}
-                className="flex justify-between items-center border border-[#CECECE] rounded-[4px] p-4 cursor-pointer hover:bg-gray-50"
-                onClick={() => handleSelect(w.workshop_id)}
-                title={`Ingresa al taller: ${w.workshop_name}`}
+                className={`relative group flex justify-between items-center border border-[#CECECE] rounded-[4px] p-4 ${
+                  w.is_approved ? "cursor-pointer hover:bg-gray-50" : "bg-gray-100 cursor-pointer"
+                }`}
+                onClick={() => {
+                  if (w.is_approved) handleSelect(w.workshop_id);
+                }}
+                aria-disabled={!w.is_approved}
+                title={w.is_approved ? `Ingresa al taller: ${w.workshop_name}` : "Pendiente de aprobación"}
               >
-                <h3>{w.workshop_name}</h3>
-                <MoveRight size={20} />
+                {/* Tooltip solo si está pendiente */}
+                {!w.is_approved && (
+                  <div className="absolute left-4 -top-10 hidden group-hover:block">
+                    <div className="bg-black text-white text-xs rounded px-2 py-1 shadow-lg">
+                      Pendiente de aprobación
+                    </div>
+                    <div className="w-2 h-2 bg-black rotate-45 mx-4 -mt-1 shadow-lg" />
+                  </div>
+                )}
+
+                <div className="flex items-baseline">
+                  <h3 className="font-medium">{w.workshop_name}</h3>
+                  {!w.is_approved && (
+                    <span className="ml-2 text-xs" style={{ color: "#00000080" }}>
+                      (Pendiente)
+                    </span>
+                  )}
+                </div>
+
+                {w.is_approved ? <MoveRight size={20} /> : <Info size={20} stroke="#888" />}
               </article>
             ))
           ) : (
@@ -110,6 +133,8 @@ export default function SelectWorkshopPage() {
             </article>
           )}
         </section>
+
+
 
         {isGarageOwner && (
           <article
