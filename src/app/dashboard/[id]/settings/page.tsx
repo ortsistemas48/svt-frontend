@@ -45,8 +45,8 @@ export default function WorkshopSettingsPage() {
 
   // Datos del taller
   const [ws, setWs] = useState<Workshop | null>(null);
-  const [form, setForm] = useState({ name: "", razonSocial: "", phone: "", cuit: "" });
-  const [savingInfo, setSavingInfo] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
 
   // Pasos
   const [steps, setSteps] = useState<StepRow[]>([]);
@@ -77,12 +77,7 @@ export default function WorkshopSettingsPage() {
         const data = (await res.json()) as Workshop;
         if (cancel) return;
         setWs(data);
-        setForm({
-          name: data.name ?? "",
-          razonSocial: data.razonSocial ?? "",
-          phone: data.phone ?? "",
-          cuit: data.cuit ?? "",
-        });
+        setPhone(data.phone ?? "");
       } catch (e: any) {
         if (!cancel) setErr(e.message || "Error al cargar el taller");
       }
@@ -115,32 +110,29 @@ export default function WorkshopSettingsPage() {
     };
   }, [workshopId]);
 
-  // Form handlers
-  const onChange = (key: keyof typeof form, v: string) => setForm((s) => ({ ...s, [key]: v }));
-
-  const saveWorkshopInfo = async () => {
+  // Phone handler
+  const savePhone = async () => {
     try {
-      setSavingInfo(true);
+      setSavingPhone(true);
       setErr("");
       const res = await fetch(`${API}/workshops/${workshopId}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: form.name.trim(),
-          razonSocial: form.razonSocial.trim(),
-          phone: form.phone.trim(),
-          cuit: form.cuit.trim(),
+          phone: phone.trim(),
         }),
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        throw new Error(e.error || "No se pudo guardar");
+        throw new Error(e.error || "No se pudo guardar el teléfono");
       }
+      // Update the workshop data
+      setWs(prev => prev ? { ...prev, phone: phone.trim() } : null);
     } catch (e: any) {
-      setErr(e.message || "Error al guardar");
+      setErr(e.message || "Error al guardar el teléfono");
     } finally {
-      setSavingInfo(false);
+      setSavingPhone(false);
     }
   };
 
@@ -311,33 +303,34 @@ export default function WorkshopSettingsPage() {
       <section className="mb-10 mt-14">
         <h2 className="text-[#0040B8] text-lg">Información del taller</h2>
         <p className="text-sm text-[#00000080] mb-4">
-          Esta información solo la ve el dueño del taller, excepto el nombre.
+          Solo puedes actualizar el número de teléfono. El resto de la información es de solo lectura.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field
             label="Nombre"
-            value={form.name}
-            onChange={(v) => onChange("name", v)}
+            value={ws?.name ?? ""}
             placeholder="Taller BV San Juan 887"
+            readOnly
+            
           />
           <Field
             label="Teléfono"
-            value={form.phone}
-            onChange={(v) => onChange("phone", v)}
+            value={phone}
+            onChange={setPhone}
             placeholder="3510000000"
           />
           <Field
             label="CUIT"
-            value={form.cuit}
-            onChange={(v) => onChange("cuit", v)}
+            value={ws?.cuit ?? ""}
             placeholder="20-00000000-0"
+            readOnly
           />
           <Field
             label="Razón social"
-            value={form.razonSocial}
-            onChange={(v) => onChange("razonSocial", v)}
+            value={ws?.razonSocial ?? ""}
             placeholder="Ejemplo SRL"
+            readOnly
           />
           <Field label="Ubicación" value={ws ? `${ws.city}, ${ws.province}` : ""} readOnly />
           <Field label="Nº de planta" value={ws?.plant_number?.toString() ?? ""} readOnly />
@@ -345,11 +338,11 @@ export default function WorkshopSettingsPage() {
 
         <div className="mt-10">
           <button
-            onClick={saveWorkshopInfo}
-            disabled={savingInfo}
+            onClick={savePhone}
+            disabled={savingPhone}
             className="inline-flex items-center gap-2 rounded-[4px] bg-[#0040B8] duration-150 text-white px-5 py-3 hover:bg-[#0A4DCC] disabled:opacity-60"
           >
-            {savingInfo && <Loader2 className="animate-spin" size={16} />} Guardar cambios
+            {savingPhone && <Loader2 className="animate-spin" size={16} />} Guardar teléfono
           </button>
         </div>
       </section>
@@ -682,10 +675,10 @@ function Field({
 }) {
   return (
     <label className="block text-sm">
-      <span className="text-gray-600">{label}</span>
+      <span className="text-black">{label}</span>
       <input
         className={`mt-1 w-full rounded-[4px] border px-4 py-3 ${
-          readOnly ? "bg-gray-100 text-gray-500 border-gray-200" : "border-gray-300"
+          readOnly ? "bg-gray-100 text-gray-700 border-gray-200" : "border-gray-300"
         }`}
         value={value}
         readOnly={!!readOnly}

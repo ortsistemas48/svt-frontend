@@ -8,13 +8,14 @@ import {
   Edit3, Check, Eye, EyeOff, Search
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { getProvinces, getLocalidadesByProvincia } from "@/utils";
 
-/** Provincias */
-const PROVINCES = [
-  "Buenos Aires","CABA","Catamarca","Chaco","Chubut","Córdoba","Corrientes",
-  "Entre Ríos","Formosa","Jujuy","La Pampa","La Rioja","Mendoza","Misiones",
-  "Neuquén","Río Negro","Salta","San Juan","San Luis","Santa Cruz",
-  "Santa Fe","Santiago del Estero","Tierra del Fuego","Tucumán"
+/** Provincias - will be loaded from API */
+const PROVINCES_STATIC = [
+  "Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes",
+  "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones",
+  "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis", "Santa Cruz",
+  "Santa Fe", "Santiago del Estero", "Tierra del Fuego", "Tucumán"
 ];
 
 /** Roles fijos */
@@ -61,11 +62,66 @@ export default function CreateWorkshopPage() {
   const [phone, setPhone] = useState("");
   const [cuit, setCuit] = useState("");
 
+  /** Province and city options */
+  const [provinceOptions, setProvinceOptions] = useState<{ value: string; label: string }[]>([]);
+  const [cityOptions, setCityOptions] = useState<{ value: string; label: string }[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
+
   /** Paso 2, lista de pendientes */
   const [pending, setPending] = useState<PendingMember[]>([]);
   useEffect(() => {
     console.log(pending);
   }, [pending]);
+
+  // Load provinces on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const provs = await getProvinces();
+        if (!cancelled) {
+          setProvinceOptions(provs);
+        }
+      } catch (e) {
+        console.error("Error cargando provincias:", e);
+        // Fallback to static list
+        if (!cancelled) {
+          setProvinceOptions(PROVINCES_STATIC.map(p => ({ value: p, label: p })));
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Load cities when province changes
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!province) {
+      setCityOptions([]);
+      setCity("");
+      return;
+    }
+
+    setLoadingCities(true);
+    setCityOptions([]);
+    setCity(""); // Clear city when province changes
+
+    (async () => {
+      try {
+        const locs = await getLocalidadesByProvincia(province);
+        if (!cancelled) {
+          setCityOptions(locs);
+        }
+      } catch (e) {
+        console.error("Error cargando localidades:", e);
+      } finally {
+        if (!cancelled) setLoadingCities(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [province]);
 
   /** UI general */
   const [step, setStep] = useState<StepKey>(1);
@@ -278,65 +334,70 @@ export default function CreateWorkshopPage() {
   const progressPct = step === 1 ? 33 : step === 2 ? 66 : 100;
 
   return (
-    <main className="min-h-screen w-full flex items-center justify-center">
-      <section className="w-full max-w-3xl mx-auto bg-white rounded-[12px] border border-[#d3d3d3]  px-6 sm:px-8 py-8 sm:py-10">
+    <main className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6">
+      <section className="w-full max-w-4xl mx-auto bg-white rounded-[12px] border border-[#d3d3d3] px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
         {/* Header */}
         <header className="mb-6 sm:mb-8">
-          <h1 className="text-lg sm:text-xl font-semibold text-[#0F172A] tracking-tight">Crear taller</h1>
-          <p className="mt-1.5 text-sm text-[#64748B]">Completá los datos, sumá a tu equipo, confirmá y creamos tu taller.</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-[#0F172A] tracking-tight">Crear taller</h1>
+          <p className="mt-2 text-sm sm:text-base text-[#64748B]">Completá los datos, sumá a tu equipo, confirmá y creamos tu taller.</p>
 
           {/* Stepper */}
-          <div className="mt-5">
-            <ol className="flex items-center gap-6">
+          <div className="mt-6">
+            <ol className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
               {steps.map((s) => {
                 const isActive = step === s.id;
                 const isDone = step > s.id;
                 return (
-                  <li key={s.id} className="flex items-center gap-3">
+                  <li key={s.id} className="flex items-center gap-3 w-full sm:w-auto">
                     <div className={[
-                      "w-8 h-8 rounded-full flex items-center justify-center border transition-colors",
+                      "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border transition-colors flex-shrink-0",
                       isDone ? "bg-[#0040B8] text-white border-[#0040B8]" :
-                      isActive ? "bg-white text-[#0040B8] border-[#0040B8]" :
-                      "bg-white text-[#94A3B8] border-[#E2E8F0]"
+                        isActive ? "bg-white text-[#0040B8] border-[#0040B8]" :
+                          "bg-white text-[#94A3B8] border-[#E2E8F0]"
                     ].join(" ")}>
-                      {isDone ? <CheckCircle size={16} /> : s.id}
+                      {isDone ? <CheckCircle size={18} /> : s.id}
                     </div>
-                    <span className={isActive ? "text-[#0F172A] text-sm font-medium" : "text-[#64748B] text-sm"}>{s.title}</span>
+                    <span className={`${isActive ? "text-[#0F172A] font-medium" : "text-[#64748B]"} text-sm sm:text-base`}>{s.title}</span>
                   </li>
                 );
               })}
             </ol>
-            <div className="mt-3 h-1.5 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
+            <div className="mt-4 h-2 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
               <div className="h-full bg-[#0040B8] transition-all duration-500" style={{ width: `${progressPct}%` }} />
             </div>
           </div>
         </header>
 
         {/* Contenido */}
-        <form onSubmit={(e)=>e.preventDefault()} className="text-left min-h-[380px]">
+        <form onSubmit={(e) => e.preventDefault()} className="text-left min-h-[400px] sm:min-h-[450px]">
           <AnimatePresence mode="popLayout" custom={dir}>
             {/* Paso 1 */}
             {step === 1 && (
               <motion.div
                 key="step1" custom={dir} initial="enter" animate="center" exit="exit" variants={variants}
                 transition={{ type: "spring", stiffness: 300, damping: 26 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-5"
+                className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
               >
                 <Field id="name" label="Nombre identificatorio" value={name} onChange={setName} required placeholder="Ej, Taller Central" />
                 <Field id="phone" label="Teléfono" value={phone} onChange={setPhone} inputMode="tel" required placeholder="Ej, 3511234567" />
                 <Field id="razon" label="Razón social" value={razonSocial} onChange={setRazonSocial} required placeholder="Ej, Talleres Central S.A." />
                 <Field id="cuit" label="CUIT" value={cuit} onChange={setCuit} inputMode="numeric" required placeholder="Ej, 20-12345678-3" />
-                <SelectField id="province" label="Provincia" value={province} onChange={setProvince} options={PROVINCES} required />
-                <Field id="city" label="Localidad" value={city} onChange={setCity} required placeholder="Ej, Córdoba Capital" />
+                <SelectField id="province" label="Provincia" value={province} onChange={setProvince} options={[...new Set(provinceOptions.map(p => p.value))]} required />
+                <div className="flex flex-col">
+                  <SelectField id="city" label="Localidad" value={city} onChange={setCity} options={[...new Set(cityOptions.map(c => c.value))]} required disabled={loadingCities || !province} />
+                  {loadingCities && province && (
+                    <p className="text-xs text-[#64748B] mt-1">Cargando localidades...</p>
+                  )}
+                </div>
                 <Field id="address" label="Domicilio" value={address} onChange={setAddress} required placeholder="Calle y número, piso, referencia" />
                 <Field id="plant" label="Número de planta" value={plantNumber} onChange={setPlantNumber} inputMode="numeric" type="number" required placeholder="Ej, 3" />
 
-                <div className="md:col-span-2">
+                <div className="lg:col-span-2">
                   {error && <Alert type="error" message={error} />}
                   {success && <Alert type="success" message={success} />}
                 </div>
-                <div className="md:col-span-2 mt-1 flex items-center justify-between">
-                  <GhostLink onClick={()=>router.push("/select-workshop")}>Cancelar</GhostLink>
+                <div className="lg:col-span-2 mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <GhostLink onClick={() => router.push("/select-workshop")}>Cancelar</GhostLink>
                   <PrimaryButton type="button" onClick={goNext} iconRight={<MoveRight size={20} />}>Continuar</PrimaryButton>
                 </div>
               </motion.div>
@@ -347,60 +408,61 @@ export default function CreateWorkshopPage() {
               <motion.div
                 key="step2" custom={dir} initial="enter" animate="center" exit="exit" variants={variants}
                 transition={{ type: "spring", stiffness: 300, damping: 26 }}
-                className="grid grid-cols-1 gap-5"
+                className="grid grid-cols-1 gap-4 sm:gap-6"
               >
                 <AddStaffCard onAdd={addPendingSafely} />
                 <div>
-                  <h3 className="text-sm font-medium text-[#0F172A] mb-2">Pendientes</h3>
+                  <h3 className="text-base sm:text-lg font-medium text-[#0F172A] mb-3">Pendientes</h3>
                   <AnimatePresence initial={false}>
                     {pending.length === 0 ? (
                       <motion.div
                         initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="text-sm text-[#64748B] border border-dashed border-[#E2E8F0] rounded-[12px] p-5"
+                        className="text-sm sm:text-base text-[#64748B] border border-dashed border-[#E2E8F0] rounded-[12px] p-4 sm:p-6"
                       >
                         Aún no agregaste a nadie, cargá un email, elegí su rol y completá los datos.
                       </motion.div>
                     ) : (
-                      <ul className="grid grid-cols-1 gap-3">
-                        {pending.map((m)=>(
+                      <ul className="grid grid-cols-1 gap-3 sm:gap-4">
+                        {pending.map((m) => (
                           <motion.li
                             key={m.id}
                             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                            className="rounded-[12px] border border-[#E2E8F0] p-3.5"
+                            className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-5"
                           >
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                              <div>
-                                <div className="text-[15px] text-[#0F172A] font-medium">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm sm:text-base text-[#0F172A] font-medium truncate">
                                   {m.first_name || "Sin nombre"} {m.last_name || ""}
                                 </div>
-                                <div className="text-sm text-[#64748B]">
+                                <div className="text-xs sm:text-sm text-[#64748B] truncate">
                                   {m.email}{m.existingUserId ? ", existente" : ", nuevo"}
                                 </div>
                                 {(m.dni || m.phone_number) && (
-                                  <div className="text-xs text-[#64748B] mt-0.5">
+                                  <div className="text-xs text-[#64748B] mt-1">
                                     {m.dni ? `DNI ${m.dni}` : ""}{m.dni && m.phone_number ? ", " : ""}{m.phone_number || ""}
                                   </div>
                                 )}
                               </div>
                               {/* Rol editable inline */}
-                              <div className="flex items-center gap-2">
-                                <label className="text-sm text-[#64748B]">Rol</label>
-                                <select
-                                  className="rounded-[4px] border border-[#E2E8F0] bg-white px-3 py-2 text-sm"
-                                  value={m.user_type_id || ""}
-                                  onChange={(e)=>{
-                                    const val = e.target.value ? Number(e.target.value) : "";
-                                    setPending(p => p.map(x => x.id === m.id ? { ...x, user_type_id: val } : x));
-                                  }}
-                                >
-                                  <option value="">Seleccionar</option>
-                                  {FIXED_ROLES.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                                </select>
-                                <IconButton label="Quitar" onClick={()=>setPending(p=>p.filter(x=>x.id!==m.id))}><X size={16} /></IconButton>
-
+                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                                <div className="flex items-center gap-2">
+                                  <label className="text-xs sm:text-sm text-[#64748B] whitespace-nowrap">Rol</label>
+                                  <select
+                                    className="rounded-[4px] border border-[#E2E8F0] bg-white px-2 sm:px-3 py-2 text-xs sm:text-sm min-w-[120px]"
+                                    value={m.user_type_id || ""}
+                                    onChange={(e) => {
+                                      const val = e.target.value ? Number(e.target.value) : "";
+                                      setPending(p => p.map(x => x.id === m.id ? { ...x, user_type_id: val } : x));
+                                    }}
+                                  >
+                                    <option value="">Seleccionar</option>
+                                    {FIXED_ROLES.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                  </select>
+                                </div>
+                                <IconButton label="Quitar" onClick={() => setPending(p => p.filter(x => x.id !== m.id))}><X size={16} /></IconButton>
                               </div>
                               {m.existingUserId && m.user_type_id === ENGINEER_ROLE_ID && (
-                                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                   <div className="flex flex-col">
                                     <label className="text-xs text-[#64748B] mb-1">Nro de matrícula</label>
                                     <input
@@ -431,7 +493,6 @@ export default function CreateWorkshopPage() {
                                   </div>
                                 </div>
                               )}
-
                             </div>
                           </motion.li>
                         ))}
@@ -443,7 +504,7 @@ export default function CreateWorkshopPage() {
                 {error && <Alert type="error" message={error} />}
                 {success && <Alert type="success" message={success} />}
 
-                <div className="mt-1 flex items-center justify-between">
+                <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                   <GhostButton onClick={goBack}><ChevronLeft size={18} />Volver</GhostButton>
                   <PrimaryButton type="button" onClick={goNext} iconRight={<MoveRight size={20} />}>Continuar</PrimaryButton>
                 </div>
@@ -455,17 +516,17 @@ export default function CreateWorkshopPage() {
               <motion.div
                 key="step3" custom={dir} initial="enter" animate="center" exit="exit" variants={variants}
                 transition={{ type: "spring", stiffness: 300, damping: 26 }}
-                className="grid grid-cols-1 gap-5"
+                className="grid grid-cols-1 gap-4 sm:gap-6"
               >
                 <SummaryCard
-                  onEdit={()=>setStep(1)}
+                  onEdit={() => setStep(1)}
                   rows={[
                     ["Nombre", name || "—"], ["Teléfono", phone || "—"], ["Razón social", razonSocial || "—"],
                     ["CUIT", cuit || "—"], ["Provincia", province || "—"], ["Localidad", city || "—"],
                     ["Domicilio", address || "—"], ["Número de planta", plantNumber || "—"],
                   ]}
                 />
-                <TeamSummary onEdit={()=>setStep(2)} items={pending} />
+                <TeamSummary onEdit={() => setStep(2)} items={pending} />
 
                 {error && <Alert type="error" message={error} />}
                 {success && <Alert type="success" message={success} />}
@@ -476,7 +537,7 @@ export default function CreateWorkshopPage() {
                   </a>.
                 </p>
 
-                <div className="mt-1 flex items-center justify-between">
+                <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                   <GhostButton onClick={goBack}><ChevronLeft size={18} />Volver</GhostButton>
                   <PrimaryButton type="button" onClick={handleCreateOnStep3} loading={submitting} iconRight={<Check size={18} />}>
                     Crear taller
@@ -499,18 +560,18 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
 
   // si NO existe, mostramos estos campos
   const [firstName, setFirstName] = useState("");
-  const [lastName,  setLastName]  = useState("");
-  const [dni, setDni]            = useState("");
-  const [phone, setPhone]        = useState("");
-  const [roleId, setRoleId]      = useState<number | "">("");
+  const [lastName, setLastName] = useState("");
+  const [dni, setDni] = useState("");
+  const [phone, setPhone] = useState("");
+  const [roleId, setRoleId] = useState<number | "">("");
 
-  const [licence, setLicence]    = useState("");
-  const [degree, setDegree]      = useState("");
+  const [licence, setLicence] = useState("");
+  const [degree, setDegree] = useState("");
 
-  const [password, setPassword]  = useState("");
-  const [confirm, setConfirm]    = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
 
-  const [showPass, setShowPass]       = useState(false);
+  const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [msg, setMsg] = useState<string | null>(null);
@@ -550,17 +611,17 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
         const idRaw = u?.id;
         const idStr =
           typeof idRaw === "string" ? idRaw
-          : typeof idRaw === "number" ? String(idRaw)
-          : idRaw?.toString?.() || null;
+            : typeof idRaw === "number" ? String(idRaw)
+              : idRaw?.toString?.() || null;
 
         if (idStr) {
           // Tomamos campos típicos que pueda devolver tu endpoint "lite"
-          const first_name     = u?.first_name || u?.firstName || "";
-          const last_name      = u?.last_name  || u?.lastName  || "";
-          const dni            = u?.dni ?? null;
-          const phone_number   = u?.phone_number ?? u?.phone ?? null;
+          const first_name = u?.first_name || u?.firstName || "";
+          const last_name = u?.last_name || u?.lastName || "";
+          const dni = u?.dni ?? null;
+          const phone_number = u?.phone_number ?? u?.phone ?? null;
           const licence_number = u?.licence_number ?? u?.licenceNumber ?? null;
-          const title_name     = u?.title_name ?? u?.titleName ?? null;
+          const title_name = u?.title_name ?? u?.titleName ?? null;
 
           const newItem: PendingMember = {
             id: crypto.randomUUID(),
@@ -626,7 +687,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
     };
     const res = onAdd(item);
     if (!res.ok) {
-     setMsg(res.reason || "Ya está en la lista");
+      setMsg(res.reason || "Ya está en la lista");
       return;
     }
 
@@ -634,28 +695,28 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
     clearForm();
     setNotFound(false);
     setMsg("Agregado a la lista");
-    setTimeout(()=>setMsg(null), 1200);
+    setTimeout(() => setMsg(null), 1200);
   };
 
   return (
-    <div className="rounded-[12px] border border-[#E2E8F0] p-5 sm:p-6 bg-gradient-to-br from-white to-[#F8FAFC]">
+    <div className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-6 bg-gradient-to-br from-white to-[#F8FAFC]">
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <h2 className="text-base font-semibold text-[#0F172A]">Agregar por email</h2>
-          <p className="text-sm text-[#64748B] mt-0.5">Si existe se suma directo, si no existe completás sus datos.</p>
+          <h2 className="text-lg sm:text-xl font-semibold text-[#0F172A]">Agregar por email</h2>
+          <p className="text-sm sm:text-base text-[#64748B] mt-1">Si existe se suma directo, si no existe completás sus datos.</p>
 
           {/* Email y buscar, centrado simétrico */}
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-6 gap-3">
+          <div className="mt-4 grid grid-cols-1 lg:grid-cols-6 gap-3">
             <TextInput
               id="email" label="Email" value={email} onChange={setEmail}
-              leftIcon={<Mail size={16} />} className="sm:col-span-4"
+              leftIcon={<Mail size={16} />} className="lg:col-span-4"
               placeholder="ejemplo@dominio.com"
             />
-            <div className="sm:col-span-2 flex items-end">
+            <div className="lg:col-span-2 flex items-end">
               <button
                 type="button" onClick={searchAndAdd} disabled={lookupLoading}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-[10px] px-4 py-3 border border-[#E2E8F0]
-                           hover:bg-[#F8FAFC] active:bg-[#E2E8F0] transition disabled:opacity-60"
+                           hover:bg-[#F8FAFC] active:bg-[#E2E8F0] transition disabled:opacity-60 text-sm sm:text-base"
               >
                 <Search size={16} />
                 {lookupLoading ? "Buscando..." : "Buscar"}
@@ -666,22 +727,22 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
           {/* Form de alta solo si no existe */}
           {notFound && (
             <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
-              <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
-                <div className="col-span-12">
-                  <label className="mb-1.5 text-sm font-medium text-[#0F172A] block">Rol</label>
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <label className="mb-2 text-sm sm:text-base font-medium text-[#0F172A] block">Rol</label>
                   <select
-                    className="w-full rounded-[10px] border border-[#E2E8F0] px-3.5 py-3"
+                    className="w-full rounded-[10px] border border-[#E2E8F0] px-3.5 py-3 text-sm sm:text-base"
                     value={roleId}
-                    onChange={(e)=>onChangeRole(e.target.value ? Number(e.target.value) : "")}
+                    onChange={(e) => onChangeRole(e.target.value ? Number(e.target.value) : "")}
                   >
                     <option value="">Seleccionar</option>
                     {FIXED_ROLES.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                   </select>
-                  <p className="text-xs text-[#64748B] mt-1">Rol dentro del taller.</p>
+                  <p className="text-xs sm:text-sm text-[#64748B] mt-1">Rol dentro del taller.</p>
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <LabeledInput label="Nombres" value={firstName} onChange={setFirstName} />
                 <LabeledInput label="Apellidos" value={lastName} onChange={setLastName} />
                 <LabeledInput label="DNI" value={dni} onChange={setDni} />
@@ -689,7 +750,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
               </div>
 
               {roleId === ENGINEER_ROLE_ID && (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <LabeledInput label="Nro de matrícula" value={licence} onChange={setLicence} />
                   <LabeledInput label="Título universitario" value={degree} onChange={setDegree} />
                 </div>
@@ -724,7 +785,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
                 </div>
               </div> */}
 
-              <div className="mt-8 flex justify-center mb-4">
+              <div className="mt-6 flex justify-center mb-4">
                 <PrimaryButton type="button" onClick={addNewToPending} iconRight={<Plus size={18} />}>
                   Agregar a la lista
                 </PrimaryButton>
@@ -733,7 +794,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
           )}
 
           {msg && (
-            <div className="mt-4 text-xs text-[#0F172A] bg-[#F1F5F9] border border-[#E2E8F0] rounded px-3 py-2">
+            <div className="mt-4 text-xs sm:text-sm text-[#0F172A] bg-[#F1F5F9] border border-[#E2E8F0] rounded px-3 py-2">
               {msg}
             </div>
           )}
@@ -745,23 +806,23 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
 
 /* ===== Tarjetas de resumen del paso 3 ===== */
 
-function SummaryCard({ rows, onEdit }: { rows: [string, string][]; onEdit: ()=>void; }) {
+function SummaryCard({ rows, onEdit }: { rows: [string, string][]; onEdit: () => void; }) {
   return (
-    <div className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h2 className="text-[15px] sm:text-base font-semibold text-[#0F172A]">Revisá los datos</h2>
-          <p className="text-sm text-[#64748B] mt-0.5">Confirmá que esté correcto antes de crear el taller.</p>
+          <h2 className="text-lg sm:text-xl font-semibold text-[#0F172A]">Revisá los datos</h2>
+          <p className="text-sm sm:text-base text-[#64748B] mt-1">Confirmá que esté correcto antes de crear el taller.</p>
         </div>
-        <button type="button" onClick={onEdit} className="inline-flex items-center gap-1 text-sm text-[#0040B8] hover:opacity-80">
+        <button type="button" onClick={onEdit} className="inline-flex items-center gap-1 text-sm sm:text-base text-[#0040B8] hover:opacity-80 self-start sm:self-auto">
           <Edit3 size={16} /> Editar
         </button>
       </div>
-      <dl className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-[15px]">
-        {rows.map(([k,v])=>(
+      <dl className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-3 text-sm sm:text-base">
+        {rows.map(([k, v]) => (
           <div key={k}>
-            <dt className="text-sm text-[#64748B]">{k}</dt>
-            <dd className="text-[#0F172A]">{v}</dd>
+            <dt className="text-xs sm:text-sm text-[#64748B]">{k}</dt>
+            <dd className="text-[#0F172A] break-words">{v}</dd>
           </div>
         ))}
       </dl>
@@ -769,29 +830,29 @@ function SummaryCard({ rows, onEdit }: { rows: [string, string][]; onEdit: ()=>v
   );
 }
 
-function TeamSummary({ items, onEdit }: { items: PendingMember[]; onEdit: ()=>void; }) {
+function TeamSummary({ items, onEdit }: { items: PendingMember[]; onEdit: () => void; }) {
   return (
-    <div className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h3 className="text-[15px] sm:text-base font-semibold text-[#0F172A]">Equipo a procesar</h3>
-          <p className="text-sm text-[#64748B] mt-0.5">Se crearán o asociarán al confirmar.</p>
+          <h3 className="text-lg sm:text-xl font-semibold text-[#0F172A]">Equipo a procesar</h3>
+          <p className="text-sm sm:text-base text-[#64748B] mt-1">Se crearán o asociarán al confirmar.</p>
         </div>
-        <button type="button" onClick={onEdit} className="inline-flex items-center gap-1 text-sm text-[#0040B8] hover:opacity-80">
+        <button type="button" onClick={onEdit} className="inline-flex items-center gap-1 text-sm sm:text-base text-[#0040B8] hover:opacity-80 self-start sm:self-auto">
           <Edit3 size={16} /> Editar
         </button>
       </div>
       {items.length === 0 ? (
-        <div className="mt-3 text-sm text-[#64748B]">Sin miembros por ahora.</div>
+        <div className="mt-3 text-sm sm:text-base text-[#64748B]">Sin miembros por ahora.</div>
       ) : (
-        <ul className="mt-3 grid grid-cols-1 gap-2">
-          {items.map((m)=>(
-            <li key={m.id} className="flex items-center justify-between border border-[#E2E8F0] rounded-[10px] px-3.5 py-2.5">
-              <div>
-                <div className="text-[15px] text-[#0F172A]">{m.first_name || "Sin nombre"} {m.last_name || ""}</div>
-                <div className="text-sm text-[#64748B]">{m.email}{m.existingUserId ? ", existente" : ", nuevo"}</div>
+        <ul className="mt-4 grid grid-cols-1 gap-3">
+          {items.map((m) => (
+            <li key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-[#E2E8F0] rounded-[10px] px-3.5 py-3 gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="text-sm sm:text-base text-[#0F172A] font-medium truncate">{m.first_name || "Sin nombre"} {m.last_name || ""}</div>
+                <div className="text-xs sm:text-sm text-[#64748B] truncate">{m.email}{m.existingUserId ? ", existente" : ", nuevo"}</div>
               </div>
-              <span className="text-sm text-[#0F172A] font-medium">
+              <span className="text-xs sm:text-sm text-[#0F172A] font-medium self-start sm:self-auto">
                 {m.user_type_id === 3 ? "Ingeniero" : m.user_type_id === 4 ? "Operador" : m.user_type_id === 5 ? "Soporte" : "Sin rol"}
               </span>
             </li>
@@ -805,67 +866,68 @@ function TeamSummary({ items, onEdit }: { items: PendingMember[]; onEdit: ()=>vo
 /* ===== UI genéricos ===== */
 
 function Field(props: {
-  id: string; label: string; value: string; onChange: (v: string)=>void; placeholder?: string;
+  id: string; label: string; value: string; onChange: (v: string) => void; placeholder?: string;
   help?: string; disabled?: boolean; required?: boolean; type?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
 }) {
-  const { id, label, value, onChange, placeholder, help, disabled, required, type="text", inputMode } = props;
+  const { id, label, value, onChange, placeholder, help, disabled, required, type = "text", inputMode } = props;
   return (
     <div className="flex flex-col">
-      <label htmlFor={id} className="mb-1.5 text-sm font-medium text-[#0F172A]">{label} {required ? <span className="text-[#EF4444]">*</span> : null}</label>
-      <input id={id} type={type} value={value} onChange={(e)=>onChange(e.target.value)} placeholder={placeholder}
+      <label htmlFor={id} className="mb-2 text-sm sm:text-base font-medium text-[#0F172A]">{label} {required ? <span className="text-[#EF4444]">*</span> : null}</label>
+      <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
         disabled={disabled} inputMode={inputMode}
-        className="w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-[15px] text-[#0F172A] placeholder:text-[#94A3B8]
+        className="w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8]
                    outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow" />
-      {help ? <p className="text-xs text-[#64748B] mt-1">{help}</p> : null}
+      {help ? <p className="text-xs sm:text-sm text-[#64748B] mt-1">{help}</p> : null}
     </div>
   );
 }
 
-function TextInput({ id, label, value, onChange, placeholder, leftIcon, className="" }:{
-  id: string; label: string; value: string; onChange: (v: string)=>void; placeholder?: string; leftIcon?: React.ReactNode; className?: string;
+function TextInput({ id, label, value, onChange, placeholder, leftIcon, className = "" }: {
+  id: string; label: string; value: string; onChange: (v: string) => void; placeholder?: string; leftIcon?: React.ReactNode; className?: string;
 }) {
   return (
     <div className={`flex flex-col ${className}`}>
-      <label htmlFor={id} className="mb-1.5 text-sm font-medium text-[#0F172A]">{label}</label>
+      <label htmlFor={id} className="mb-2 text-sm sm:text-base font-medium text-[#0F172A]">{label}</label>
       <div className="relative">
         {leftIcon ? <div className="absolute left-3 top-1/2 -translate-y-1/2 opacity-70">{leftIcon}</div> : null}
-        <input id={id} value={value} onChange={(e)=>onChange(e.target.value)} placeholder={placeholder}
-          className={`w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-[15px] text-[#0F172A] placeholder:text-[#94A3B8] outline-none
+        <input id={id} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+          className={`w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8] outline-none
                       focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow ${leftIcon ? "pl-10" : ""}`} />
       </div>
     </div>
   );
 }
 
-function LabeledInput({ label, value, onChange }:{
-  label: string; value: string; onChange: (v: string)=>void;
+function LabeledInput({ label, value, onChange }: {
+  label: string; value: string; onChange: (v: string) => void;
 }) {
   return (
     <div>
-      <label className="block text-sm mb-2">{label}</label>
-      <input className="w-full border rounded p-3" value={value} onChange={(e)=>onChange(e.target.value)} />
+      <label className="block text-sm sm:text-base font-medium text-[#0F172A] mb-2">{label}</label>
+      <input className="w-full border border-[#E2E8F0] rounded-[10px] px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8] outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow" value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }
 
-function SelectField({ id, label, value, onChange, options, required }:{
-  id: string; label: string; value: string; onChange: (v: string)=>void; options: string[]; required?: boolean;
+function SelectField({ id, label, value, onChange, options, required, disabled }: {
+  id: string; label: string; value: string; onChange: (v: string) => void; options: string[]; required?: boolean; disabled?: boolean;
 }) {
   return (
     <div className="flex flex-col">
-      <label htmlFor={id} className="mb-1.5 text-sm font-medium text-[#0F172A]">{label} {required ? <span className="text-[#EF4444]">*</span> : null}</label>
-      <select id={id} value={value} onChange={(e)=>onChange(e.target.value)}
-        className="w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-[15px] text-[#0F172A]
-                   outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow">
-        <option value="">Seleccionar</option>
-        {options.map((opt)=><option key={opt} value={opt}>{opt}</option>)}
+      <label htmlFor={id} className="mb-2 text-sm sm:text-base font-medium text-[#0F172A]">{label} {required ? <span className="text-[#EF4444]">*</span> : null}</label>
+      <select id={id} value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
+        className={`w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm sm:text-base text-[#0F172A]
+                   outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow
+                   ${disabled ? 'opacity-60 cursor-not-allowed bg-gray-50' : ''}`}>
+        <option value="">{disabled ? 'Seleccioná una provincia primero' : 'Seleccionar'}</option>
+        {options.map((opt, index) => <option key={`${opt}-${index}`} value={opt}>{opt}</option>)}
       </select>
     </div>
   );
 }
 
-function IconButton({ children, onClick, label }:{ children: React.ReactNode; onClick?: ()=>void; label?: string; }) {
+function IconButton({ children, onClick, label }: { children: React.ReactNode; onClick?: () => void; label?: string; }) {
   return (
     <button type="button" onClick={onClick}
       className="inline-flex items-center justify-center rounded-[8px] p-2 border border-[#E2E8F0] hover:bg-[#F8FAFC] active:bg-[#E2E8F0] transition"
@@ -875,44 +937,44 @@ function IconButton({ children, onClick, label }:{ children: React.ReactNode; on
   );
 }
 
-function Alert({ type, message }:{ type: "error"|"success"; message: string; }) {
+function Alert({ type, message }: { type: "error" | "success"; message: string; }) {
   const isError = type === "error";
   return (
     <div className={[
       "flex items-center gap-2 rounded-[10px] px-3.5 py-3 text-sm",
       isError ? "bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]" :
-                "bg-[#F0FDF4] text-[#14532D] border border-[#BBF7D0]"
+        "bg-[#F0FDF4] text-[#14532D] border border-[#BBF7D0]"
     ].join(" ")} role="alert">
       <Info size={18} /><span>{message}</span>
     </div>
   );
 }
 
-function PrimaryButton({ children, onClick, type="button", loading, iconRight }:{
-  children: React.ReactNode; onClick?: ()=>void; type?: "button"|"submit"; loading?: boolean; iconRight?: React.ReactNode;
+function PrimaryButton({ children, onClick, type = "button", loading, iconRight }: {
+  children: React.ReactNode; onClick?: () => void; type?: "button" | "submit"; loading?: boolean; iconRight?: React.ReactNode;
 }) {
   return (
     <button type={type} onClick={onClick} disabled={loading}
-      className="inline-flex items-center justify-center gap-2 rounded-[4px] px-5 py-3 bg-[#0040B8] text-white font-medium shadow-sm
-                 hover:brightness-110 active:brightness-95 disabled:opacity-60 disabled:cursor-not-allowed transition" title="Continuar">
+      className="inline-flex items-center justify-center gap-2 rounded-[4px] px-4 sm:px-6 py-3 sm:py-4 bg-[#0040B8] text-white font-medium shadow-sm text-sm sm:text-base
+                 hover:brightness-110 active:brightness-95 disabled:opacity-60 disabled:cursor-not-allowed transition w-full sm:w-auto" title="Continuar">
       <span>{loading ? "Procesando..." : children}</span>{!loading && iconRight}
     </button>
   );
 }
 
-function GhostButton({ children, onClick, disabled }:{ children: React.ReactNode; onClick?: ()=>void; disabled?: boolean; }) {
+function GhostButton({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
-      className="inline-flex items-center gap-2 text-[#0F172A] rounded-[12px] px-3 py-2 hover:bg-[#F1F5F9] active:bg-[#E2E8F0] disabled:opacity-60 disabled:cursor-not-allowed transition">
+      className="inline-flex items-center gap-2 text-[#0F172A] rounded-[12px] px-3 sm:px-4 py-2 sm:py-3 hover:bg-[#F1F5F9] active:bg-[#E2E8F0] disabled:opacity-60 disabled:cursor-not-allowed transition text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start">
       {children}
     </button>
   );
 }
 
-function GhostLink({ children, onClick, disabled }:{ children: React.ReactNode; onClick?: ()=>void; disabled?: boolean; }) {
+function GhostLink({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
-      className="text-[#0040B8] underline underline-offset-4 hover:opacity-80 disabled:opacity-60 transition">
+      className="text-[#0040B8] underline underline-offset-4 hover:opacity-80 disabled:opacity-60 transition text-sm sm:text-base w-full sm:w-auto text-center sm:text-left">
       {children}
     </button>
   );
