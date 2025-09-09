@@ -10,6 +10,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { getMissingCarFields, getMissingPersonFields, markStickerAsUsed } from "@/utils";
 import MissingDataModal from "../MissingDataModal";
 import { useApplication } from "@/context/ApplicationContext";
+import { ApplicationSkeleton } from "../ApplicationSkeleton";
 
 type Props = {
   applicationId: string;
@@ -20,12 +21,13 @@ type Props = {
   };
 };
 
-type Doc = { id:number; file_name:string; file_url:string; size_bytes?:number; mime_type?:string; role: 'owner'|'driver'|'car'|'generic'; created_at?:string };
+type Doc = { id: number; file_name: string; file_url: string; size_bytes?: number; mime_type?: string; role: 'owner' | 'driver' | 'car' | 'generic'; created_at?: string };
 
 export default function ApplicationForm({ applicationId, initialData }: Props) {
   const { isIdle, setIsIdle, errors, setErrors } = useApplication();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const router = useRouter()
   const params = useParams()
   const id = params.id
@@ -41,7 +43,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [owner, setOwner] = useState<any>({ ...(initialData?.owner || {}) });
   const [driver, setDriver] = useState<any>({ ...(initialData?.driver || {}) });
-  const [isSamePerson, setIsSamePerson] = useState(false);
+  const [isSamePerson, setIsSamePerson] = useState(true);
   const [car, setCar] = useState<any>({ ...(initialData?.car || {}) });
 
   const deleteDocument = useCallback(async (docId: number) => {
@@ -96,33 +98,53 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
       }
       setCar({ ...(initialData.car || {}) });
       setMissingFields([]);
+      setIsInitializing(false);
       return;
     }
 
     const fetchData = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/data`, {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/data`,
+          { credentials: "include" }
+        );
         if (!res.ok) throw new Error("Error al obtener los datos");
 
         const json = await res.json();
-        setOwner({ ...(json.owner || {}) });
 
-        if (json.driver?.is_owner || (json.owner?.id && json.driver?.id && json.driver.id === json.owner.id)) {
-          setIsSamePerson(true);
-          setDriver({ ...(json.owner || {}), is_owner: true });
-        } else {
-          setIsSamePerson(false);
-          setDriver({ ...(json.driver || {}) });
-        }
-        setCar({ ...(json.car || {}) });
+        // Normalizamos objetos (pueden venir vacíos en apps nuevas)
+        const ownerData = json.owner ?? {};
+        const driverData = json.driver ?? {};
+        const carData = json.car ?? {};
+
+        const hasOwner = Object.keys(ownerData).length > 0;
+        const hasDriver = Object.keys(driverData).length > 0;
+
+        // ¿Titular y conductor son la misma persona?
+        // - explícito: driver.is_owner === true
+        // - mismo id (cuando existen ambos)
+        // - por defecto: si NO hay driver => true
+        const same =
+          driverData?.is_owner === true ||
+          (hasOwner && hasDriver && ownerData?.id && driverData?.id && ownerData.id === driverData.id) ||
+          !hasDriver;
+
+        // Seteamos estados
+        setOwner({ ...ownerData });
+        setIsSamePerson(same);
+        setDriver(same ? { ...ownerData, is_owner: true } : { ...driverData, is_owner: false });
+        setCar({ ...carData });
+
+        // Documentos por rol (acepta documents_by_role o construye desde documents)
         const byRole = json.documents_by_role ?? {
-          owner: (json.documents || []).filter((d:Doc) => d.role === 'owner'),
-          driver: (json.documents || []).filter((d:Doc) => d.role === 'driver'),
-          car: (json.documents || []).filter((d:Doc) => d.role === 'car'),
-          generic: (json.documents || []).filter((d:Doc) => !['owner','driver','car'].includes(d.role)),
+          owner: (json.documents || []).filter((d: Doc) => d.role === "owner"),
+          driver: (json.documents || []).filter((d: Doc) => d.role === "driver"),
+          car: (json.documents || []).filter((d: Doc) => d.role === "car"),
+          generic: (json.documents || []).filter(
+            (d: Doc) => !["owner", "driver", "car"].includes(d.role)
+          ),
         };
+
         setExistingDocsByRole({
           owner: byRole.owner || [],
           driver: byRole.driver || [],
@@ -131,12 +153,14 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         });
       } catch (err) {
         console.error("Error al cargar los datos:", err);
-      } finally {
-        setMissingFields([]);
-      }
-    };
-    fetchData();
-  }, [applicationId, initialData]);
+        } finally {
+          // limpiamos listado de faltantes para este ciclo
+          setMissingFields([]);
+          setIsInitializing(false);
+        }
+      };
+      fetchData();
+    }, [applicationId, initialData]);
 
   useEffect(() => {
     setErrors({});
@@ -377,6 +401,14 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         return null;
     }
   }, [step, owner, driver, applicationId, isSamePerson, existingDocsByRole.owner, existingDocsByRole.driver, onDeleteOwnerDoc, onDeleteDriverDoc, car]);
+
+  if (isInitializing) {
+    return (
+      <div className="p-6">
+        <ApplicationSkeleton />
+      </div>
+    );
+  }
 
   return (
     <>
