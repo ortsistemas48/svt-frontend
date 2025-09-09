@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import PersonForm from "@/components/PersonForm";
-import VehicleForm from "@/components/VehicleForm";
-import ConfirmationForm from "@/components/ConfirmationForm";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
+const PersonForm = dynamic(() => import("@/components/PersonForm"));
+const VehicleForm = dynamic(() => import("@/components/VehicleForm"));
+const ConfirmationForm = dynamic(() => import("@/components/ConfirmationForm"));
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useParams } from 'next/navigation'
 import { getMissingCarFields, getMissingPersonFields, markStickerAsUsed } from "@/utils";
@@ -28,7 +29,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const router = useRouter()
   const params = useParams()
   const id = params.id
-  const hasBlockingErrors = ( step === 1 || step === 2 ) && Object.values(errors ?? {}).some(Boolean);
+  const hasBlockingErrors = useMemo(() => (step === 1 || step === 2) && Object.values(errors ?? {}).some(Boolean), [errors, step]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showMissingDataModal, setShowMissingDataModal] = useState(false);
   const [pendingOwnerDocs, setPendingOwnerDocs] = useState<File[]>([]);
@@ -39,11 +40,11 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | "confirm_car" | null>(null);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [owner, setOwner] = useState<any>({ ...(initialData?.owner || {}) });
-  const [driver, setDriver] = useState<any>({});
+  const [driver, setDriver] = useState<any>({ ...(initialData?.driver || {}) });
   const [isSamePerson, setIsSamePerson] = useState(false);
   const [car, setCar] = useState<any>({ ...(initialData?.car || {}) });
 
-  const deleteDocument = async (docId: number) => {
+  const deleteDocument = useCallback(async (docId: number) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/applications/${applicationId}/documents/${docId}`, {
       method: "DELETE",
       credentials: "include",
@@ -52,20 +53,20 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err?.error || "No se pudo borrar el documento");
     }
-  };
+  }, [applicationId]);
 
-  const onDeleteOwnerDoc = async (docId: number) => {
+  const onDeleteOwnerDoc = useCallback(async (docId: number) => {
     await deleteDocument(docId);
     setExistingDocsByRole(prev => ({ ...prev, owner: prev.owner.filter(d => d.id !== docId) }));
-  };
+  }, [deleteDocument]);
 
-  const onDeleteDriverDoc = async (docId: number) => {
+  const onDeleteDriverDoc = useCallback(async (docId: number) => {
     await deleteDocument(docId);
     setExistingDocsByRole(prev => ({ ...prev, driver: prev.driver.filter(d => d.id !== docId) }));
-  };
+  }, [deleteDocument]);
 
-  async function uploadPendingDocuments(files: File[], role: 'owner' | 'driver' | 'car' | 'generic') {
-    if (!files || files.length === 0) return [];
+  const uploadPendingDocuments = useCallback(async (files: File[], role: 'owner' | 'driver' | 'car' | 'generic') => {
+    if (!files || files.length === 0) return [] as any[];
     const form = new FormData();
     files.forEach(f => form.append("files", f, f.name));
     form.append("role", role);
@@ -80,9 +81,24 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
       throw new Error(err?.error || "Error subiendo documentos");
     }
     return res.json();
-  }
+  }, [applicationId]);
 
   useEffect(() => {
+    // Si recibimos datos iniciales desde la página, inicializamos estados y evitamos refetch
+    if (initialData && (initialData.owner || initialData.driver || initialData.car)) {
+      setOwner({ ...(initialData.owner || {}) });
+      if (initialData.driver?.is_owner || (initialData.owner?.id && initialData.driver?.id && initialData.driver.id === initialData.owner.id)) {
+        setIsSamePerson(true);
+        setDriver({ ...(initialData.owner || {}), is_owner: true });
+      } else {
+        setIsSamePerson(false);
+        setDriver({ ...(initialData.driver || {}) });
+      }
+      setCar({ ...(initialData.car || {}) });
+      setMissingFields([]);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/data`, {
@@ -115,17 +131,18 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         });
       } catch (err) {
         console.error("Error al cargar los datos:", err);
+      } finally {
+        setMissingFields([]);
       }
     };
     fetchData();
-    setMissingFields([]);
-  }, [step]);
+  }, [applicationId, initialData]);
 
   useEffect(() => {
     setErrors({});
   }, [step, setErrors]);
 
-  const sendToQueue = async () => {
+  const sendToQueue = useCallback(async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/queue`, {
         method: "POST",
@@ -141,10 +158,10 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     } catch (err) {
       console.error("Error al enviar a la cola:", err);
     }
-  };
+  }, [applicationId, id, router]);
 
   // 🔸 Extraído: guardar vehículo (paso 2)
-  const saveVehicle = async () => {
+  const saveVehicle = useCallback(async () => {
     // Validación de campos requeridos
     const missing = getMissingCarFields(car);
     if (missing.length > 0) {
@@ -191,32 +208,22 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     });
     if (!res.ok) throw new Error("Error al guardar el vehículo");
     return true;
-  };
+  }, [applicationId, car]);
 
-  const handleNext = async () => {
+  const handleNext = useCallback(async () => {
     setLoading(true);
     setMissingFields([]);
 
     try {
       let res;
       if (step === 1) {
-        if (!isSamePerson) {
-          if (getMissingPersonFields(owner).length > 0 || getMissingPersonFields(driver).length > 0) {
-            const missingOwner = getMissingPersonFields(owner).map(field => `Titular: ${field}`)
-            setMissingFields(e => [...e, ...missingOwner]);
-            setShowMissingDataModal(true);
-            setLoading(false);
-
-            if (getMissingPersonFields(driver).length > 0) {
-              const missingDriver = getMissingPersonFields(driver).map(field => `Conductor: ${field}`)
-              setMissingFields(e => [...e, ...missingDriver]);
-              setLoading(false);
-            }
-            return;
-          }
-        } else if (getMissingPersonFields(owner).length > 0) {
-          const missing = getMissingPersonFields(owner).map(field => `Titular: ${field}`)
-          setMissingFields(e => [...e, ...missing]);
+        const missingAll: string[] = [];
+        const ownerMissing = getMissingPersonFields(owner);
+        const driverMissing = isSamePerson ? [] : getMissingPersonFields(driver);
+        if (ownerMissing.length) missingAll.push(...ownerMissing.map(f => `Titular: ${f}`));
+        if (driverMissing.length) missingAll.push(...driverMissing.map(f => `Conductor: ${f}`));
+        if (missingAll.length) {
+          setMissingFields(missingAll);
           setShowMissingDataModal(true);
           setLoading(false);
           return;
@@ -269,36 +276,33 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         }
 
         // Subir docs pendientes
-        const uploads: any[] = [];
+        const uploadedDocs: any[] = [];
         if (isSamePerson) {
           if (pendingOwnerDocs.length > 0 || pendingDriverDocs.length > 0) {
             const merged = [...pendingOwnerDocs, ...pendingDriverDocs];
             const up = await uploadPendingDocuments(merged, 'owner');
-            uploads.push(...up);
-            setPendingOwnerDocs([]);
-            setPendingDriverDocs([]);
+            uploadedDocs.push(...up);
           }
         } else {
-          if (pendingOwnerDocs.length > 0) {
-            const up = await uploadPendingDocuments(pendingOwnerDocs, 'owner');
-            uploads.push(...up);
-            setPendingOwnerDocs([]);
-          }
-          if (pendingDriverDocs.length > 0) {
-            const up = await uploadPendingDocuments(pendingDriverDocs, 'driver');
-            uploads.push(...up);
-            setPendingDriverDocs([]);
+          const promises: Promise<any[]>[] = [];
+          if (pendingOwnerDocs.length > 0) promises.push(uploadPendingDocuments(pendingOwnerDocs, 'owner'));
+          if (pendingDriverDocs.length > 0) promises.push(uploadPendingDocuments(pendingDriverDocs, 'driver'));
+          if (promises.length) {
+            const results = await Promise.all(promises);
+            results.forEach(r => uploadedDocs.push(...r));
           }
         }
 
-        if (uploads.length > 0) {
+        if (uploadedDocs.length > 0) {
           setExistingDocsByRole(prev => ({
             ...prev,
-            owner: [...uploads.filter(d => d.role === 'owner'), ...prev.owner],
-            driver: [...uploads.filter(d => d.role === 'driver'), ...prev.driver],
-            car: [...uploads.filter(d => d.role === 'car'), ...prev.car],
-            generic: [...uploads.filter(d => d.role === 'generic' || !d.role), ...prev.generic],
+            owner: [...uploadedDocs.filter(d => d.role === 'owner'), ...prev.owner],
+            driver: [...uploadedDocs.filter(d => d.role === 'driver'), ...prev.driver],
+            car: [...uploadedDocs.filter(d => d.role === 'car'), ...prev.car],
+            generic: [...uploadedDocs.filter(d => d.role === 'generic' || !d.role), ...prev.generic],
           }));
+          setPendingOwnerDocs([]);
+          setPendingDriverDocs([]);
         }
 
         if (!res.ok) throw new Error("Error al guardar el conductor");
@@ -338,14 +342,14 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [step, isSamePerson, owner, driver, applicationId, pendingOwnerDocs, pendingDriverDocs, uploadPendingDocuments, car, router, id]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     setIsIdle(false)
     if (step > 1) setStep(step - 1);
-  };
+  }, [setIsIdle, step]);
 
-  const renderStepContent = () => {
+  const renderStepContent = useMemo(() => {
     switch (step) {
       case 1:
         return (
@@ -372,7 +376,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
       default:
         return null;
     }
-  };
+  }, [step, owner, driver, applicationId, isSamePerson, existingDocsByRole.owner, existingDocsByRole.driver, onDeleteOwnerDoc, onDeleteDriverDoc, car]);
 
   return (
     <>
@@ -385,7 +389,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         <span className="text-md mr-4  text-black">Paso {step}/3</span>
       </article>
 
-      <div>{renderStepContent()}</div>
+      <div>{renderStepContent}</div>
 
       <div className="flex gap-x-3 justify-center px-4 pt-8 pb-10">
         {step !== 1 && (

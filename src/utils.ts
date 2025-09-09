@@ -30,36 +30,6 @@ export async function fetchAvailableStickers({
   return res.json(); // [{id, sticker_number, expiration_date, issued_at, status}]
 }
 
-export async function fetchAvailableStickerOrders({
-  workshopId,
-  currentCarId,
-  currentLicensePlate,
-}: {
-  workshopId: number;
-  currentCarId?: number;
-  currentLicensePlate?: string;
-}) {
-  const params = new URLSearchParams({ workshop_id: String(workshopId) });
-  if (currentCarId) params.set("current_car_id", String(currentCarId));
-  if (currentLicensePlate) params.set("current_license_plate", currentLicensePlate);
-
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/available-orders?${params}`, {
-    credentials: "include",
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(t || "No se pudieron cargar las obleas");
-  }
-  const json = await res.json();
-  if (!Array.isArray(json)) {
-    console.error("La API no devolvió un array:", json);
-    return [];
-  }
-  return json as StickerOrderData[];
-}
-
-
 export async function fetchAdminPendingWorkshops() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workshops/pending`, {
     cache: "no-store",
