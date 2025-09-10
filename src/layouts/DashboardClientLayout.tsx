@@ -21,7 +21,7 @@ export default function DashboardClientLayout({ children }: { children: React.Re
   if (isChecking) return null;
 
 return (
-  <div className="h-screen flex flex-col bg-[#f5f5f5]">
+  <div className="h-screen flex flex-col">
     {/* Topbar ocupa todo el ancho */}
     <Topbar />
 

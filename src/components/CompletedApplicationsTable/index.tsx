@@ -72,13 +72,13 @@ export default function CompletedApplicationsTable () {
   ];
 
   return (
-    <div className="px-4 pt-10">
+    <div className="p-4 sm:p-6">
       {/* Barra de búsqueda y actualizar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
         <input
           type="text"
           placeholder="Ingrese el dominio que desea buscar"
-          className="border px-4 py-3 rounded-[4px] w-full flex-1"
+          className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 rounded-md w-full flex-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
           value={searchText}
           onChange={(e) => {
             setSearchText(e.target.value);
@@ -88,97 +88,118 @@ export default function CompletedApplicationsTable () {
         <button
           disabled={isLoading}
           onClick={fetchApplications}
-          className="border border-[#0040B8] text-[#0040B8] px-4 py-3 rounded-[4px] flex items-center gap-2 disabled:opacity-50"
+          className="border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 text-sm sm:text-base font-medium"
         >
           <RefreshCcw size={16} className={isLoading ? "animate-spin" : ""} />
-          {isLoading ? "Actualizando..." : "Actualizar"}
+          <span className="hidden sm:inline">{isLoading ? "Actualizando..." : "Actualizar"}</span>
+          <span className="sm:hidden">{isLoading ? "..." : "↻"}</span>
         </button>
       </div>
 
       {/* Tabla */}
-      <TableTemplate
-        headers={headers}
-        items={currentData}
-        isLoading={isLoading}
-        emptyMessage="No hay aplicaciones completadas para mostrar."
-        rowsPerSkeleton={itemsPerPage}
-        renderRow={(item: Application) => {
-          const dateObj = new Date(item.date);
-          const date = dateObj.toLocaleDateString("es-AR");
-          const time = dateObj.toLocaleTimeString("es-AR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-          return (
-            <tr key={item.application_id} className="border-t">
-              <td className="p-3 text-center">{item.application_id}</td>
+      <div className="overflow-x-auto">
+        <TableTemplate
+          headers={headers}
+          items={currentData}
+          isLoading={isLoading}
+          emptyMessage="No hay aplicaciones completadas para mostrar."
+          rowsPerSkeleton={itemsPerPage}
+          renderRow={(item: Application) => {
+            const dateObj = new Date(item.date);
+            const date = dateObj.toLocaleDateString("es-AR");
+            const time = dateObj.toLocaleTimeString("es-AR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            return (
+              <tr key={item.application_id} className="border-t hover:bg-gray-50 transition-colors">
+                <td className="p-3 text-center text-sm sm:text-base font-mono">{item.application_id}</td>
 
-              <td className="p-3 text-center">
-                <div className="font-medium">{item.car?.license_plate || "-"}</div>
-                <div className="text-xs text-gray-600">
-                  {item.car?.brand} {item.car?.model}
-                </div>
-              </td>
+                <td className="p-3 text-center">
+                  <div className="font-medium text-sm sm:text-base">{item.car?.license_plate || "-"}</div>
+                  <div className="text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-[160px] mx-auto">
+                    {item.car?.brand} {item.car?.model}
+                  </div>
+                </td>
 
-              <td className="p-3 text-center">
-                <div className="font-medium max-w-[160px] truncate mx-auto">
-                  {item.owner?.first_name || "-"} {item.owner?.last_name || ""}
-                </div>
-                <div className="text-xs text-gray-600">
-                  {item.owner?.dni || "-"}
-                </div>
-              </td>
+                <td className="p-3 text-center">
+                  <div className="font-medium text-sm sm:text-base max-w-[120px] sm:max-w-[160px] truncate mx-auto">
+                    {item.owner?.first_name || "-"} {item.owner?.last_name || ""}
+                  </div>
+                  <div className="text-xs sm:text-sm text-gray-600">
+                    {item.owner?.dni || "-"}
+                  </div>
+                </td>
 
-              <td className="p-3 text-center">
-                {date} {time} hs
-              </td>
+                <td className="p-3 text-center text-sm sm:text-base">
+                  <div>{date}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">{time} hs</div>
+                </td>
 
-              <td
-                className={`p-3 font-medium text-center ${
-                  statusColor[item.result as string] || ""
-                }`}
-              >
-                {item.result}
-              </td>
+                <td
+                  className={`p-3 font-medium text-center text-sm sm:text-base ${
+                    statusColor[item.result as string] || ""
+                  }`}
+                >
+                  <span className="inline-block px-2 py-1 rounded-full text-xs sm:text-sm bg-gray-100">
+                    {item.result}
+                  </span>
+                </td>
 
-              <td className="p-0">
-                <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
-                  <Eye className="cursor-pointer text-[#0040B8]" size={18} />
-                  <Download
-                    onClick={() =>
-                      window.open(
-                        `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`,
-                        "_blank"
-                      )
-                    }
-                    className="cursor-pointer text-[#0040B8]"
-                    size={18}
-                  />
-                </div>
-              </td>
-            </tr>
-          );
-        }}
-      />
+                <td className="p-0">
+                  <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
+                    <button
+                      type="button"
+                      className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                      title="Ver detalles"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        window.open(
+                          `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`,
+                          "_blank"
+                        )
+                      }
+                      className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                      title="Descargar certificado"
+                    >
+                      <Download size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          }}
+        />
+      </div>
 
       {/* Paginación */}
       {filteredApplications.length > itemsPerPage && (
-        <div className="flex justify-center items-center mt-6 gap-2 text-sm">
-          <button
-            className="px-4 py-2 border rounded-[4px] disabled:opacity-50"
-            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-            disabled={page === 1}
-          >
-            Anterior
-          </button>
-          <span>Página {page} de {totalPages}</span>
-          <button
-            className="px-4 py-2 border rounded-[4px] disabled:opacity-50"
-            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={page === totalPages}
-          >
-            Siguiente
-          </button>
+        <div className="flex flex-col sm:flex-row justify-center items-center mt-6 gap-3 sm:gap-2 text-sm">
+          <div className="flex items-center gap-2">
+            <button
+              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page === 1}
+            >
+              <span className="hidden sm:inline">Anterior</span>
+              <span className="sm:hidden">‹</span>
+            </button>
+            <span className="text-gray-600 px-2 py-1 bg-gray-100 rounded text-xs sm:text-sm">
+              Página {page} de {totalPages}
+            </span>
+            <button
+              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={page === totalPages}
+            >
+              <span className="hidden sm:inline">Siguiente</span>
+              <span className="sm:hidden">›</span>
+            </button>
+          </div>
         </div>
       )}
     </div>

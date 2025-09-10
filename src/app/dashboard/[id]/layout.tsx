@@ -57,7 +57,7 @@ export default function DashboardClientLayout({
         credentials: "include", // importante si tu auth va por cookies
         
       });
-      console.log("Membership check response status:", res.status);
+      
       // 401: no autorizado -> a inicio (o página de login)
       if (res.status === 401) {
         router.replace("/");

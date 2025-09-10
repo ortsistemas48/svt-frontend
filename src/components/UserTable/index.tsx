@@ -24,80 +24,91 @@ export default function UserTable({ users } : { users: any[] }) {
     };
 
     return (
-        <div className="flex flex-col items-center gap-2 mt-6 px-6">
-             <div className="flex justify-center gap-x-3 mt-6 w-full">
+        <div className="p-4 sm:p-6">
+             <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
                 {/* Input con icono */}
-                <div className="w-full flex items-center border border-gray-300 rounded px-2 py-1 h-12">
-                    <Search size={20} className="text-gray-500 mr-1" />
+                <div className="flex-1 flex items-center border border-gray-300 rounded-md px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent">
+                    <Search size={18} className="text-gray-500 mr-2 flex-shrink-0" />
                     <input
                         type="text"
                         onChange={(e) => setSearchText(e.target.value)}
                         placeholder="Busca tus usuarios por nombre, email, DNI, rol o teléfono"
-                        className="w-full text-sm focus:outline-none"
+                        className="w-full text-sm sm:text-base focus:outline-none bg-transparent"
                     />
                 </div>
 
-                {/* Botón */}
-                <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 py-2 rounded flex items-center justify-center gap-x-2  ">
-
-                    <SlidersHorizontal size={20} />
-                    <span className="text-sm ">
-                        Filtrar
-                    </span>
-
-                </button>
-                <button
-                    className="bg-white border-2 border-[#0040B8] text-white px-3 py-2 rounded flex items-center justify-center gap-x-2 "
-                    onClick={handleRefresh}
-                >
-                    <RefreshCcw size={20} className="text-[#0040B8]" />
-                    <span className="text-[#0040B8] text-sm">
-                        Actualizar
-                    </span>
-                </button>
+                {/* Botones */}
+                <div className="flex gap-2 sm:gap-3">
+                    <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
+                        <SlidersHorizontal size={16} />
+                        <span className="hidden sm:inline">Filtrar</span>
+                    </button>
+                    <button
+                        className="bg-white border-2 border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
+                        onClick={handleRefresh}
+                    >
+                        <RefreshCcw size={16} />
+                        <span className="hidden sm:inline">Actualizar</span>
+                    </button>
+                </div>
             </div>
             
-            <div className="border border-gray-300 mt-6 rounded-[4px] overflow-hidden w-full">
-                <table className="w-full text-sm">
-                    <thead className="bg-[#ffffff] text-[#00000080]">
-                        <tr className="">
-                            <th className="p-3 text-center">Nombre</th>
-                            <th className="p-3 text-center">Email</th>
-                            <th className="p-3 text-center">DNI</th>
-                            <th className="p-3 text-center">Teléfono</th>
-                            <th className="p-3 text-center">Rol</th>
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm sm:text-base">
+                    <thead className="bg-gray-50 text-gray-600">
+                        <tr>
+                            <th className="p-3 text-center text-xs sm:text-sm font-medium">Nombre</th>
+                            <th className="p-3 text-center text-xs sm:text-sm font-medium">Email</th>
+                            <th className="p-3 text-center text-xs sm:text-sm font-medium">DNI</th>
+                            <th className="p-3 text-center text-xs sm:text-sm font-medium">Teléfono</th>
+                            <th className="p-3 text-center text-xs sm:text-sm font-medium">Rol</th>
+                            <th className="p-3 text-center text-xs sm:text-sm font-medium">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredUsers.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="text-center py-20 text-gray-600">
+                                <td colSpan={6} className="text-center py-12 sm:py-20 text-gray-600 text-sm sm:text-base">
                                     No hay usuarios en este taller.
                                 </td>
                             </tr>
                         ) : (
                             filteredUsers.map((user: any) => {
                                 return (
-                                    <tr key={user.id} className="border-t">
+                                    <tr key={user.id} className="border-t hover:bg-gray-50 transition-colors">
                                         <td className="p-3 text-center">
-                                            <p className="font-medium">{user.first_name} {user.last_name}</p>
+                                            <p className="font-medium text-sm sm:text-base">{user.first_name} {user.last_name}</p>
                                         </td>
                                         <td className="p-3 text-center">
-                                            <p>{user.email}</p>
+                                            <p className="text-xs sm:text-sm text-gray-600 break-all max-w-[200px] mx-auto truncate">{user.email}</p>
                                         </td>
                                         <td className="p-3 text-center">
-                                            <p>{user.dni}</p>
+                                            <p className="text-sm sm:text-base font-mono">{user.dni || "-"}</p>
                                         </td>
                                         <td className="p-3 text-center">
-                                            {user.phone_number}
+                                            <p className="text-sm sm:text-base">{user.phone_number || "-"}</p>
                                         </td>
                                         <td className="p-3 text-center">
-                                            <p>{user.role}</p>
+                                            <span className="inline-block px-2 py-1 rounded-full text-xs sm:text-sm bg-gray-100 text-gray-700">
+                                                {user.role}
+                                            </span>
                                         </td>
                                         <td className="p-0">
-                                            <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
-                                                <Eye size={16} className="cursor-pointer text-[#0040B8]" />
-                                                <EllipsisVertical size={16} className="cursor-pointer text-[#0040B8]" />
+                                            <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
+                                                <button
+                                                    type="button"
+                                                    className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                                                    title="Ver detalles"
+                                                >
+                                                    <Eye size={16} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                                                    title="Más opciones"
+                                                >
+                                                    <EllipsisVertical size={16} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
