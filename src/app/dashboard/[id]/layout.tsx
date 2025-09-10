@@ -59,14 +59,9 @@ export default function DashboardClientLayout({
       });
       
       // 401: no autorizado -> a inicio (o página de login)
-      if (res.status === 401) {
+      if (res.status === 401 || res.status === 404) {
         router.replace("/");
-        return;
-      }
-
-      // 404: taller no existe -> a 404 o a listado de talleres
-      if (res.status === 404) {
-        router.replace("/404"); // o "/dashboard"
+        router.refresh();
         return;
       }
 
@@ -75,6 +70,7 @@ export default function DashboardClientLayout({
       // 200 con is_member false -> sin acceso a ese taller
       if ("is_member" in data && !data.is_member) {
         router.replace("/"); // o "/dashboard"
+        router.refresh();
         return;
       }
 
