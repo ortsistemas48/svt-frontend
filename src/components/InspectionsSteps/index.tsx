@@ -42,6 +42,7 @@ export default function InspectionStepsClient({
   initialObsByStep?: Record<number, ObservationRow[]>;
   initialGlobalObs?: string;
 }) {
+  const [isCompleted, setIsCompleted] = useState(false);
   const [statusByStep, setStatusByStep] = useState<Record<number, Status | undefined>>(initialStatuses || {});
   const [saving, setSaving] = useState(false);
   const [certLoading, setCertLoading] = useState(false);
@@ -81,7 +82,29 @@ export default function InspectionStepsClient({
 
   const hasNonApto = useMemo(() => Object.values(statusByStep).some((s) => s && s !== "Apto"), [statusByStep]);
 
+  // Check if inspection is completed
+  useEffect(() => {
+    const checkApplicationStatus = async () => {
+      if (!apiBase) return;
+      try {
+        const res = await fetch(`${apiBase}/applications/get-applications/${appId}`, {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "Completado") {
+            setIsCompleted(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking application status:", error);
+      }
+    };
+    checkApplicationStatus();
+  }, [apiBase, appId]);
+
   const handlePick = (stepId: number, val: Status) => {
+    if (isCompleted) return; // Prevent changes if completed
     setStatusByStep((prev) => {
       const current = prev[stepId];
       if (current === val) {
@@ -183,6 +206,7 @@ export default function InspectionStepsClient({
   };
 
   const onToggleCheckbox = async (stepId: number, obsId: number) => {
+    if (isCompleted) return; // Prevent changes if completed
     try {
       const current = obsByStepList[stepId]?.find((o) => o.id === obsId)?.checked ?? false;
       setCheckedLocal(stepId, obsId, !current);
@@ -192,6 +216,7 @@ export default function InspectionStepsClient({
   };
 
   const uncheckFromChip = async (stepId: number, obsId: number) => {
+    if (isCompleted) return; // Prevent changes if completed
     try {
       setCheckedLocal(stepId, obsId, false);
       await persistStepObs(stepId);
@@ -352,6 +377,25 @@ export default function InspectionStepsClient({
 
   return (
     <div className="w-full px-4 pb-10">
+      {isCompleted && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">
+                Inspección Completada
+              </h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>Esta inspección ya ha sido completada y no se pueden realizar más modificaciones.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="w-full space-y-4">
         {steps.map((s) => {
           const current = statusByStep[s.step_id];
@@ -383,10 +427,12 @@ export default function InspectionStepsClient({
                       <button
                         key={opt}
                         type="button"
+                        disabled={isCompleted}
                         onClick={() => handlePick(s.step_id, opt)}
                         className={clsx(
                           "w-[140px] px-4 py-2.5 rounded-[4px] border text-sm transition",
-                          selected ? STATUS_UI[opt].btn : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                          selected ? STATUS_UI[opt].btn : "border-zinc-200 text-zinc-700 hover:bg-zinc-50",
+                          isCompleted && "opacity-50 cursor-not-allowed"
                         )}
                       >
                         {opt}
@@ -398,9 +444,11 @@ export default function InspectionStepsClient({
                     <div className="relative">
                       <button
                         type="button"
+                        disabled={isCompleted}
                         className={clsx(
                           "ml-2 px-4 py-2.5 rounded-[4px] border text-sm flex items-center gap-2",
-                          "border-[#0040B8] text-[#0040B8] hover:bg-zinc-50"
+                          "border-[#0040B8] text-[#0040B8] hover:bg-zinc-50",
+                          isCompleted && "opacity-50 cursor-not-allowed"
                         )}
                         onClick={() => toggleObsPopover(s.step_id)}
                       >
@@ -428,8 +476,9 @@ export default function InspectionStepsClient({
                                       id={`obs-${s.step_id}-${o.id}`}
                                       type="checkbox"
                                       checked={o.checked}
+                                      disabled={isCompleted}
                                       onChange={() => onToggleCheckbox(s.step_id, o.id)}
-                                      className="mt-1"
+                                      className={clsx("mt-1", isCompleted && "opacity-50 cursor-not-allowed")}
                                     />
                                     <label htmlFor={`obs-${s.step_id}-${o.id}`} className="text-sm text-zinc-800">
                                       {o.description}
@@ -474,7 +523,8 @@ export default function InspectionStepsClient({
             value={globalObs}
             onChange={(e) => setGlobalObs(e.target.value)}
             placeholder="Observaciones generales..."
-            className="w-full h-40 outline-none resize-none"
+            disabled={isCompleted}
+            className={clsx("w-full h-40 outline-none resize-none", isCompleted && "opacity-50 cursor-not-allowed")}
             maxLength={400}
           />
           <div className="mt-2 text-right text-xs text-zinc-400">{globalObs.length}/400</div>
@@ -520,7 +570,8 @@ export default function InspectionStepsClient({
                         <div key={o.id} className="flex items-center justify-between rounded border border-zinc-200 bg-white px-3 py-2">
                           <p className="text-sm text-zinc-800">{o.description}</p>
                           <button
-                            className="p-1 rounded hover:bg-zinc-100"
+                            className={clsx("p-1 rounded hover:bg-zinc-100", isCompleted && "opacity-50 cursor-not-allowed")}
+                            disabled={isCompleted}
                             onClick={() => uncheckFromChip(item.stepId, o.id)}
                             aria-label="Desmarcar observación"
                             title="Desmarcar"
@@ -551,7 +602,7 @@ export default function InspectionStepsClient({
         {/* botón Certificado, ahora abre modal */}
         <button
           type="button"
-          disabled={certLoading}
+          disabled={certLoading || isCompleted}
           onClick={() => {
             // si hay algún paso no apto, sugerimos arrancar en Condicional
             setCertStatus(hasNonApto ? "Condicional" : "Apto");
@@ -559,18 +610,23 @@ export default function InspectionStepsClient({
           }}
           className={clsx(
             "px-5 py-2.5 rounded-[4px] border text-[#0040B8]",
-            certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50"
+            certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50",
+            isCompleted && "opacity-50 cursor-not-allowed"
           )}
-          title="Generar y abrir certificado"
+          title={isCompleted ? "No se puede generar certificado - Inspección completada" : "Generar y abrir certificado"}
         >
           {certLoading ? "Generando..." : "Certificado"}
         </button>
 
         <button
           type="button"
-          disabled={saving}
+          disabled={saving || isCompleted}
           onClick={saveAll}
-          className={clsx("px-5 py-2.5 rounded-[4px] text-white", saving ? "bg-blue-300" : "bg-[#0040B8] hover:opacity-95")}
+          className={clsx(
+            "px-5 py-2.5 rounded-[4px] text-white", 
+            saving ? "bg-blue-300" : "bg-[#0040B8] hover:opacity-95",
+            isCompleted && "opacity-50 cursor-not-allowed"
+          )}
         >
           {saving ? "Guardando..." : "Guardar"}
         </button>

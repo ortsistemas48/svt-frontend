@@ -27,12 +27,19 @@ const formData1: FormFieldData[] = [
   { label: "Modelo", placeholder: "Ej: Cronos", name: "model" },
   { label: "Año", placeholder: "Ej: 2025", name: "manufacture_year", type: "text" },
   {
-    label: "Peso del auto",
-    options: [
-      { value: "liviano", label: "Liviano" },
-      { value: "pesado", label: "Pesado" },
-    ],
-    name: "weight",
+    label: "Peso del auto (KG)",
+    placeholder: "Ej: 20000 KG",
+    name: "total_weight",
+  },
+  {
+    label: "Peso eje delantero (KG)",
+    placeholder: "Ej: 10000 KG",
+    name: "front_weight",
+  },
+  {
+    label: "Peso eje trasero (KG)",
+    placeholder: "Ej: 10000 KG",
+    name: "back_weight",
   },
   {
     label: "Tipo de combustible",
@@ -90,11 +97,12 @@ const formData1: FormFieldData[] = [
     ],
     name: "usage_type",
   },
-  { label: "Marca de motor", placeholder: "Ej: Toyota", name: "engine_brand" },
-  { label: "Número de motor", placeholder: "Ej: B91099432213123", name: "engine_number" },
+  
 ];
 
 const formData2: FormFieldData[] = [
+  { label: "Marca de motor", placeholder: "Ej: Toyota", name: "engine_brand" },
+  { label: "Número de motor", placeholder: "Ej: B91099432213123", name: "engine_number" },
   { label: "Número de chasis", placeholder: "Ej: 1231415251251451", name: "chassis_number" },
   { label: "Marca de chasis", placeholder: "Ej: MARCA", name: "chassis_brand" },
   { label: "Nº de cédula verde", placeholder: "Ej: ABF45658", name: "green_card_number" },

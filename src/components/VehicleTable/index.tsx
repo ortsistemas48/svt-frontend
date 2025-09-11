@@ -5,7 +5,9 @@ const tableData = [
   { label: "Marca", key: "brand" },
   { label: "Modelo", key: "model" },
   { label: "Año", key: "manufacture_year" },
-  { label: "Peso del auto", key: "weight" },
+  { label: "Peso del auto (KG)", key: "total_weight" },
+  { label: "Peso eje trasero (KG)", key: "back_weight" },
+  { label: "Peso eje delantero (KG)", key: "front_weight" },
   { label: "Tipo de combustible", key: "fuel_type" },
   { label: "Tipo de vehículo", key: "vehicle_type" },
   { label: "Tipo de uso", key: "usage_type" },
@@ -19,7 +21,7 @@ const tableData = [
   { label: "Exp. de la licencia", key: "license_expiration" },
   { label: "Póliza del seguro", key: "insurance" },
   // 👇 campos del sticker (anidados)
-  { label: "Oblea", key: "sticker.sticker_number" },
+
   // (opcional) mostrarlos si querés
   // { label: "Estado de oblea", key: "sticker.status" },
   // { label: "Vencimiento oblea", key: "sticker.expiration_date" },

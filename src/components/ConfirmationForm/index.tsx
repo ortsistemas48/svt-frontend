@@ -42,6 +42,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
       }
 
       const data = await res.json();
+      console.log(data);
       setCar(data.car || null);
       setOwner(data.owner || null);
 

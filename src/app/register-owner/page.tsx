@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Spinner from "@/components/Spinner";
 
-export default function RegisterOwnerFormB() {
+export default function RegisterOwnerForm() {
   const [email, setEmail] = useState("");
   const [dni, setDni] = useState("");
   const [firstName, setFirstName] = useState("");

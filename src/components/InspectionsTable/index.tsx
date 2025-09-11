@@ -92,7 +92,8 @@ export default function InspectionTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <TableTemplate<Application>
+        <div className="min-w-[800px]">
+          <TableTemplate<Application>
           headers={headers}
           items={items}
           isLoading={loading}
@@ -195,6 +196,7 @@ export default function InspectionTable() {
           </tr>
         )}
         />
+        </div>
       </div>
 
       {!loading && total > perPage && (

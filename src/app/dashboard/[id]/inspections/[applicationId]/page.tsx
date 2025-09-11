@@ -2,6 +2,7 @@
 import { ChevronRight } from "lucide-react";
 import InspectionStepsClient from "@/components/InspectionsSteps";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 type Step = { step_id: number; name: string; description: string; order: number };
 type ObservationRow = { id: number; description: string; checked: boolean };
@@ -21,8 +22,27 @@ type DetailRow = {
 
 const API = process.env.NEXT_PUBLIC_API_URL as string;
 
+async function fetchApplicationStatus(appId: number) {
+  const cookieHeader = (await cookies()).toString();
+  const res = await fetch(`${API}/applications/get-applications/${appId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      cookie: cookieHeader,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("No se pudo obtener la información de la aplicación");
+  }
+  
+  const data = await res.json();
+  return data.status as string;
+}
+
 async function ensureInspection(appId: number) {
-  const cookieHeader = cookies().toString();
+  const cookieHeader = (await cookies()).toString();
   const res = await fetch(`${API}/inspections/inspections`, {
     method: "POST",
     headers: { "Content-Type": "application/json", cookie: cookieHeader },
@@ -39,7 +59,7 @@ async function ensureInspection(appId: number) {
 }
 
 async function fetchSteps(appId: number) {
-  const cookieHeader = cookies().toString();
+  const cookieHeader = (await cookies()).toString();
   const res = await fetch(`${API}/inspections/applications/${appId}/steps`, {
     headers: { cookie: cookieHeader },
     cache: "no-store",
@@ -70,7 +90,7 @@ function normalizeRows(rows: DetailRow[]): DetailRow[] {
 }
 
 export async function fetchDetails(inspectionId: number) {
-  const cookieHeader = cookies().toString();
+  const cookieHeader = (await cookies()).toString();
   const res = await fetch(`${API}/inspections/inspections/${inspectionId}/details`, {
     headers: { cookie: cookieHeader },
     cache: "no-store",
@@ -101,8 +121,16 @@ export async function fetchDetails(inspectionId: number) {
   };
 }
 
-export default async function InspectionPage({ params }: { params: { applicationId: string } }) {
+export default async function InspectionPage({ params }: { params: { id: string; applicationId: string } }) {
   const appId = Number(params.applicationId);
+  const workshopId = params.id;
+
+  // Check application status before proceeding
+  const applicationStatus = await fetchApplicationStatus(appId);
+  if (applicationStatus === "Completado") {
+    // Redirect back to applications list if inspection is already completed
+    redirect(`/dashboard/${workshopId}/applications`);
+  }
 
   const inspectionId = await ensureInspection(appId);
   const [steps, detailsResp] = await Promise.all([fetchSteps(appId), fetchDetails(inspectionId)]);

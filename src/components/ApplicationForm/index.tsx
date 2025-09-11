@@ -228,6 +228,9 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         license_expiration: car.license_expiration,
         insurance: car.insurance,
         sticker_id: car.sticker_id,
+        total_weight: car.total_weight,
+        front_weight: car.front_weight,
+        back_weight: car.back_weight,
       }),
     });
     if (!res.ok) throw new Error("Error al guardar el vehículo");

@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ApplicationSkeleton } from "@/components/ApplicationSkeleton";
 
-export default async function CreateApplicationPage({ params }: { params: { id: string; applicationId: string } }) {
-  const workshopId = Number(params.id);
-  const applicationId = params.applicationId;
+export default async function CreateApplicationPage({ params }: { params: Promise<{ id: string; applicationId: string }> }) {
+  const { id, applicationId } = await params;
+  const workshopId = Number(id);
 
   try {
     const cookieHeader = (await headers()).get("cookie") || "";
@@ -20,6 +20,7 @@ export default async function CreateApplicationPage({ params }: { params: { id: 
       cache: "no-store",
       next: { revalidate: 0 },
     });
+
 
     if (!res.ok) {
       redirect(`/dashboard/${workshopId}/applications`);
