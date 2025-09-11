@@ -17,6 +17,7 @@ type Workshop = {
   workshop_id: number;
   workshop_name: string;
   role: string;
+  is_approved: boolean;
 };
 
 type UserContextType = {

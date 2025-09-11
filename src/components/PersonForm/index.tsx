@@ -61,7 +61,7 @@ export default function PersonForm({
       return next;
     });
   };
-
+  
   const handleCheckboxChange = (value: boolean) => {
     setIsSamePerson(value);
 

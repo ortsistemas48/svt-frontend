@@ -24,27 +24,34 @@ export default function InspectionsPage() {
   }, [applicationErrors.general, setApplicationErrors]);
 
   return (
-    <>
-      <article className="flex items-center justify-between text-lg mb-4 px-4">
-        <div className="flex items-center gap-1">
-          <span>Inicio</span>
-          <ChevronRight size={20} />
-          <span className="text-[#0040B8]">Revisiones</span>
-        </div>
-      </article>
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
+          <div className="flex items-center gap-1">
+            <span className="text-gray-600">Inicio</span>
+            <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+            <span className="text-[#0040B8] font-medium">Revisiones</span>
+          </div>
+        </article>
 
-      {showError && applicationErrors.general && (
-        <div className="border border-red-300 bg-red-50 text-red-700 text-sm rounded-md px-4 py-3">
-          {applicationErrors.general}
-        </div>
-      )}
+        {/* Error Message */}
+        {showError && applicationErrors.general && (
+          <div className="border border-red-300 bg-red-50 text-red-700 text-xs sm:text-sm rounded-md px-3 sm:px-4 py-2 sm:py-3 mb-4 sm:mb-6">
+            {applicationErrors.general}
+          </div>
+        )}
 
-      <div>
-        <SelectApplicationType />
+        {/* Select Application Type */}
+        <div className="mb-6 sm:mb-8">
+          <SelectApplicationType />
+        </div>
+
+        {/* Inspections Table */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <InspectionsTable />
+        </div>
       </div>
-      <div className="mt-8">
-        <InspectionsTable />
-      </div>
-    </>
+    </div>
   )
 }

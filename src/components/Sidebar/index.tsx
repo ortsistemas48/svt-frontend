@@ -9,13 +9,17 @@ import NavItem from "@/components/NavItem";
 import SideBarItem from "@/components/SideBarMenu";
 import { useUser } from "@/context/UserContext"; // Asegurate de tener esto
 import { useParams, useRouter } from "next/navigation";
+import WorkshopItem from "../WorkshopItem";
 
 export default function Sidebar() {
-  const { user, workshops } = useUser();
+  const { workshops } = useUser();
   const { id } = useParams(); 
   const router = useRouter();
 
-  const showWorkshops = workshops && workshops.length > 1;
+  // Filter only approved workshops
+  const approvedWorkshops = workshops?.filter(workshop => workshop.is_approved) || [];
+  const showWorkshops = approvedWorkshops.length > 1;
+  
   const handleWorkshopClick = (workshopId: number) => {
     if (workshopId.toString() !== id) {
       router.push(`/dashboard/${workshopId}`);
@@ -29,13 +33,13 @@ export default function Sidebar() {
 
         <SideBarItem />
 
-        {/* Mostrar sección talleres solo si hay más de uno */}
+        {/* Mostrar sección talleres solo si hay más de uno aprobado */}
         {showWorkshops && (
           <div className="mt-5 mb-8 pt-5 border-t border-gray-200">
             <p className="text-xs text-[#00000080] tracking-wide mb-6">Talleres</p>
             <div className="space-y-4">
-              {workshops.map((workshop) => (
-                <TallerItem
+              {approvedWorkshops.map((workshop) => (
+                <WorkshopItem
                   key={workshop.workshop_id}
                   name={workshop.workshop_name}
                   selected={id === workshop.workshop_id.toString()}
@@ -63,23 +67,3 @@ export default function Sidebar() {
   );
 }
 
-function TallerItem({
-  name,
-  selected,
-  onClick
-}: {
-  name: string;
-  selected?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      className={`flex items-center gap-3 text-sm max-[1500px]:text-xs text-[#000000] cursor-pointer 
-        ${selected ? "font-semibold text-[#0040B8]" : "hover:text-[#0040B8]"}`}
-    >
-      <div className={`w-2 h-2  ${selected ? "bg-[#0040B8]" : "bg-gray-400"} rounded-full`} />
-      <span className="truncate max-w-[100px] sm:max-w-[140px] md:max-w-[180px] block">{name}</span>
-    </div>
-  );
-}

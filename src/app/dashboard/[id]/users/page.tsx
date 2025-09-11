@@ -9,28 +9,33 @@ export default async function UsersPage( { params }: { params: Promise<{ id: str
   const usersInWorkshop = await fetchUserData({ workshopId });
   const { users } = usersInWorkshop;
   return (
-    <div className="min-w-full">  
-      <article className="flex items-center justify-between text-lg mb-6 px-4">
-        <div className="flex items-center gap-1">
-          <span>Inicio</span>
-          <ChevronRight size={20} />
-          <span className="text-[#0040B8]">Usuarios</span>
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
+          <div className="flex items-center gap-1">
+            <span className="text-gray-600">Inicio</span>
+            <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+            <span className="text-[#0040B8] font-medium">Usuarios</span>
+          </div>
+        </article>
+
+        {/* Header Section */}
+        <div className="text-center mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl text-[#0040B8] mb-2 sm:mb-3">
+            Crea o añade tus usuarios
+          </h2>
+          <p className="text-sm sm:text-base text-gray-500 max-w-2xl mx-auto leading-relaxed mb-6 sm:mb-8">
+            Aquí podrás crear o asociar usuarios existentes a tu taller.
+          </p>
+          <SearchEmailBar workshopId={workshopId} />
         </div>
-      </article>
 
-      <div className="flex flex-col items-center gap-2">
-        {/* Título */}
-        <h2 className="text-3xl text-[#0040B8]">
-          Crea o añade tus usuarios
-        </h2>
-
-        {/* Subtítulo */}
-        <p className=" text-gray-500 text-center">
-          Aqui podrás crear o asociar usuarios existentes a tu taller.
-        </p>
-        <SearchEmailBar workshopId={workshopId} />
+        {/* User Table */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <UserTable users={users}/>
+        </div>
       </div>
-        <UserTable users={users}/>
     </div>
   );
 }

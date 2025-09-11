@@ -63,8 +63,8 @@ export default function RegisterOwnerFormB() {
   }
 
   return (
-    <main className="min-h-full grid place-items-center bg-white">
-      <div className="w-full max-w-2xl bg-white rounded-[10px] border border-[#DEDEDE] px-6 py-10">
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-2xl bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-6 sm:px-6 sm:py-10">
         <div className="space-y-5">
           <Image
             src="/images/logo.png"
@@ -75,26 +75,25 @@ export default function RegisterOwnerFormB() {
           />
 
           <h1 className="text-center text-lg text-black font-medium">¡Crea tu cuenta en AutoCheck!</h1>
-
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-6 sm:mt-8">
           <div>
-            <label className="block text-sm text-gray-700 mb-1" htmlFor="email">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="email">Email</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nombre@dominio.com"
-              className="w-full border border-[#DEDEDE] rounded-[10px] px-4 py-3 text-sm 
-              focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+              className="w-full border border-gray-300 rounded-md px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
+              focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-1" htmlFor="dni">DNI</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="dni">DNI</label>
             <input
               id="dni"
               type="text"
@@ -102,44 +101,45 @@ export default function RegisterOwnerFormB() {
               value={dni}
               onChange={(e) => setDni(e.target.value)}
               placeholder="Ej: 12345678"
-              className="w-full border border-[#DEDEDE] rounded-[10px] px-4 py-3 text-sm 
-              focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+              className="w-full border border-gray-300 rounded-md px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
+              focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-1" htmlFor="first_name">Nombre/s</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="first_name">Nombre/s</label>
             <input
               id="first_name"
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="Ej: Juan Diego"
-              className="w-full border border-[#DEDEDE] rounded-[10px] px-4 py-3 text-sm 
-              focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+              className="w-full border border-gray-300 rounded-md px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
+              focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-1" htmlFor="last_name">Apellido/s</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="last_name">Apellido/s</label>
             <input
               id="last_name"
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="Ej: Martin"
-              className="w-full border border-[#DEDEDE] rounded-[10px] px-4 py-3 text-sm 
-              focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+              className="w-full border border-gray-300 rounded-md px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
+              focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
               required
             />
           </div>
 
-          <div className="relative">
-              <label className="block text-sm mb-2">Contraseña</label>
+          <div className="relative md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
               <input
-                className="w-full border rounded-[10px] placeholder:text-sm p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+                className="w-full border border-gray-300 rounded-md placeholder:text-sm px-3 py-2.5 sm:px-4 sm:py-3 pr-10 text-sm sm:text-base 
+                focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
                 type={showPass ? "text" : "password"}
                 placeholder={"Ingresá una contraseña"}
                 value={password}
@@ -148,23 +148,28 @@ export default function RegisterOwnerFormB() {
               <button
                 type="button"
                 onClick={()=> setShowPass(v=>!v)}
-                className="absolute right-3 py-4 "
+                className="absolute right-3 top-8 sm:top-9 p-1"
                 tabIndex={-1}
                 aria-label={showPass ? "Ocultar contraseña" : "Ver contraseña"}
                 title={showPass ? "Ocultar contraseña" : "Ver contraseña"}
               >
-                {showPass ? <EyeOff className="w-5 h-5 text-[#0040B8]" /> : <Eye className="w-5 h-5 text-[#0040B8]" />}
+                {showPass ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5 text-[#0040B8]" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-[#0040B8]" />}
               </button>
               
-                <button type="button" onClick={handleGeneratePassword} className="text-xs text-[#0040B8] mt-3">
-                  Generar automáticamente
-                </button>
+              <button 
+                type="button" 
+                onClick={handleGeneratePassword} 
+                className="text-xs sm:text-sm text-[#0040B8] hover:text-[#0035A0] mt-2 transition-colors duration-200"
+              >
+                Generar automáticamente
+              </button>
             </div>
 
-          <div className="relative">
-            <label className="block text-sm mb-2">Confimar Contraseña </label>
+          <div className="relative md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
               <input
-                className="w-full border rounded-[10px] placeholder:text-sm p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+                className="w-full border border-gray-300 rounded-md placeholder:text-sm px-3 py-2.5 sm:px-4 sm:py-3 pr-10 text-sm sm:text-base 
+                focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
                 type={showPass ? "text" : "password"}
                 placeholder={"Repetí la contraseña"}
                 value={confirmPassword}
@@ -173,21 +178,23 @@ export default function RegisterOwnerFormB() {
               <button
                 type="button"
                 onClick={()=> setShowPass(v=>!v)}
-                className="absolute right-3 py-4"
+                className="absolute right-3 top-8 sm:top-9 p-1"
                 tabIndex={-1}
                 aria-label={showPass ? "Ocultar contraseña" : "Ver contraseña"}
                 title={showPass ? "Ocultar contraseña" : "Ver contraseña"}
               >
-                {showPass ? <EyeOff className="w-5 h-5 text-[#0040B8]" /> : <Eye className="w-5 h-5 text-[#0040B8]" />}
+                {showPass ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5 text-[#0040B8]" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-[#0040B8]" />}
               </button>
           </div>
           
           
           {msg && (
-            <div className="flex justify-center mt-2 col-span-2">
+            <div className="flex justify-center mt-4 md:col-span-2">
                 <div
-                className={` rounded-[4px] border px-4 w-full py-3 text-center text-sm ${
-                    msg.type === "error" ? "border-red-300 bg-red-50 text-red-800" : "border-green-300 bg-green-50 text-green-800"
+                className={`rounded-md border px-4 w-full py-3 text-center text-sm sm:text-base ${
+                    msg.type === "error" 
+                      ? "border-red-300 bg-red-50 text-red-800" 
+                      : "border-green-300 bg-green-50 text-green-800"
                 }`}
                 >
                 {msg.text}
@@ -198,16 +205,30 @@ export default function RegisterOwnerFormB() {
           <div className="md:col-span-2">
             <button
               type="submit"
-              className="mt-2 w-full bg-[#0040B8] text-white text-md rounded-[4px] py-3.5 
-              hover:bg-[#0038a6] transition"
+              disabled={loading}
+              className="mt-4 w-full bg-[#0040B8] text-white text-sm sm:text-base font-medium rounded-md py-3 sm:py-3.5 
+              hover:bg-[#0035A0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              {loading ? "Creando cuenta..." : "Crear cuenta"}
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Spinner />
+                  Creando cuenta...
+                </div>
+              ) : (
+                "Crear cuenta"
+              )}
             </button>
           </div>
         </form>
-        <Link href="/" className="flex text-sm mt-6 justify-center text-[#0040B8] hover:underline">
-          ¿Ya Tienes Cuenta? Ingresa
-        </Link>
+        
+        <div className="mt-6 text-center">
+          <Link 
+            href="/" 
+            className="text-sm sm:text-base text-[#0040B8] hover:text-[#0035A0] hover:underline transition-colors duration-200"
+          >
+            ¿Ya tienes cuenta? Ingresa
+          </Link>
+        </div>
 
       </div>
     </main>

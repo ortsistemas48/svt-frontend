@@ -2,6 +2,8 @@ import ApplicationForm from "@/components/ApplicationForm";
 import { ApplicationProvider } from "@/context/ApplicationContext";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { ApplicationSkeleton } from "@/components/ApplicationSkeleton";
 
 export default async function CreateApplicationPage({ params }: { params: { id: string; applicationId: string } }) {
   const workshopId = Number(params.id);
@@ -33,7 +35,9 @@ export default async function CreateApplicationPage({ params }: { params: { id: 
 
     return (
       <ApplicationProvider>
-        <ApplicationForm applicationId={applicationId} initialData={data} />
+        <Suspense fallback={<ApplicationSkeleton />}>
+          <ApplicationForm applicationId={applicationId} initialData={data} />
+        </Suspense>
       </ApplicationProvider>
     );
   } catch (e) {
