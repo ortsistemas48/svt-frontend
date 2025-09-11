@@ -63,9 +63,6 @@ export default function CreateWorkshopPage() {
 
   /** Paso 2, lista de pendientes */
   const [pending, setPending] = useState<PendingMember[]>([]);
-  useEffect(() => {
-    console.log(pending);
-  }, [pending]);
 
   /** UI general */
   const [step, setStep] = useState<StepKey>(1);
@@ -597,7 +594,32 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
       setLookupLoading(false);
     }
   };
+  // Genera una contraseña robusta con al menos 1 minúscula, 1 mayúscula, 1 dígito y 1 símbolo
+  function generatePassword(length = 12) {
+    const lowers = "abcdefghijkmnopqrstuvwxyz"; // sin l
+    const uppers = "ABCDEFGHJKLMNPQRSTUVWXYZ";  // sin O
+    const digits = "23456789";                  // sin 0,1
+    const symbols = "!@#$%^&*()_+[]{};:,./?";
+    const all = lowers + uppers + digits + symbols;
 
+    const pick = (pool: string) => pool[Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (2**32) * pool.length)];
+
+    // garantizamos 1 de cada tipo
+    let pwd = pick(lowers) + pick(uppers) + pick(digits) + pick(symbols);
+
+    // resto aleatorio
+    for (let i = pwd.length; i < length; i++) {
+      pwd += pick(all);
+    }
+
+    // shuffle
+    const arr = pwd.split("");
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (2**32) * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.join("");
+  }
 
   const addNewToPending = () => {
     setMsg(null);
@@ -607,9 +629,14 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
     if (roleId === ENGINEER_ROLE_ID && (!licence.trim() || !degree.trim())) {
       return setMsg("Para Ingeniero, completá matrícula y título");
     }
-    if (!password || !confirm) return setMsg("Ingresá la contraseña y su confirmación");
-    if (password !== confirm) return setMsg("Las contraseñas no coinciden");
-    if (password.length < 8) return setMsg("La contraseña debe tener al menos 8 caracteres");
+
+    // si no cargaron password manualmente, la generamos
+    const auto = password && confirm ? null : generatePassword(12);
+    const finalPassword = password && confirm ? password : auto!;
+    const finalConfirm  = password && confirm ? confirm  : auto!;
+
+    if (finalPassword.length < 8) return setMsg("La contraseña debe tener al menos 8 caracteres");
+    if (finalPassword !== finalConfirm) return setMsg("Las contraseñas no coinciden");
 
     const item: PendingMember = {
       id: crypto.randomUUID(),
@@ -621,20 +648,27 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
       phone_number: phone || null,
       licence_number: roleId === ENGINEER_ROLE_ID ? licence.trim() : null,
       title_name: roleId === ENGINEER_ROLE_ID ? degree.trim() : null,
-      password,
-      confirm_password: confirm,
+      password: finalPassword,
+      confirm_password: finalConfirm,
     };
+
     const res = onAdd(item);
     if (!res.ok) {
-     setMsg(res.reason || "Ya está en la lista");
+      setMsg(res.reason || "Ya está en la lista");
       return;
     }
 
     setEmail("");
     clearForm();
     setNotFound(false);
-    setMsg("Agregado a la lista");
-    setTimeout(()=>setMsg(null), 1200);
+
+    // avisamos si se autogeneró
+    if (auto) {
+      setMsg(`Agregado, contraseña autogenerada: ${auto}`);
+    } else {
+      setMsg("Agregado a la lista");
+    }
+    setTimeout(()=>setMsg(null), 1800);
   };
 
   return (
