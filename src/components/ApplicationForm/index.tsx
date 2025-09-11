@@ -111,7 +111,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         if (!res.ok) throw new Error("Error al obtener los datos");
 
         const json = await res.json();
-
         // Normalizamos objetos (pueden venir vacíos en apps nuevas)
         const ownerData = json.owner ?? {};
         const driverData = json.driver ?? {};

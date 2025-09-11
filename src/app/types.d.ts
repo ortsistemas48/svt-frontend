@@ -88,3 +88,8 @@ export type Application = {
   status: "Completado" | "En curso" | "Pendiente" | "En Cola";
   result?: "Apto" | "Condicional" | "Rechazado"
 };
+
+export type UserTypeInWorkshop = {
+  id: number;
+  name: string;
+};
