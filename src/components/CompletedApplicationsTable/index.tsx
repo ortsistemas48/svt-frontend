@@ -1,18 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
-import { RefreshCcw, Eye, Download } from "lucide-react";
+import { RefreshCcw, Download } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import { Application } from "@/app/types";
 import { filterApplications, isDataEmpty } from "@/utils";
 import { useParams } from "next/navigation";
 
-const statusColor: Record<string, string> = {
-  Apto: "text-green-600",
-  Rechazado: "text-red-500",
-  Condicional: "text-yellow-600",
+/** 1) Tonos de estado, texto fuerte y fondo claro */
+const STATUS_TONES: Record<string, { text: string; bg: string }> = {
+  Apto: { text: "text-green-700", bg: "bg-green-50" },
+  Rechazado: { text: "text-red-700", bg: "bg-red-50" },
+  Condicional: { text: "text-amber-700", bg: "bg-amber-50" },
 };
+const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
 
-export default function CompletedApplicationsTable () {
+export default function CompletedApplicationsTable() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
@@ -20,28 +22,20 @@ export default function CompletedApplicationsTable () {
   const itemsPerPage = 5;
   const { id } = useParams();
 
-  const filteredApplications = filterApplications({
-    applications,
-    searchText,
-  });
-
+  const filteredApplications = filterApplications({ applications, searchText });
   const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
-  const currentData = filteredApplications.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  );
+  const currentData = filteredApplications.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   const fetchApplications = async () => {
     try {
       setIsLoading(true);
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/completed`,
-        { credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
+        {
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
           cache: "no-store",
-         }
+        }
       );
       const data = await res.json();
       setApplications(
@@ -73,7 +67,7 @@ export default function CompletedApplicationsTable () {
 
   return (
     <div className="p-4 sm:p-6">
-      {/* Barra de búsqueda y actualizar */}
+      {/* 3) Barra fuera del borde de la tabla */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
         <input
           type="text"
@@ -96,84 +90,80 @@ export default function CompletedApplicationsTable () {
         </button>
       </div>
 
-      {/* Tabla */}
-      <div className="overflow-x-auto">
-        <TableTemplate
-          headers={headers}
-          items={currentData}
-          isLoading={isLoading}
-          emptyMessage="No hay aplicaciones completadas para mostrar."
-          rowsPerSkeleton={itemsPerPage}
-          renderRow={(item: Application) => {
-            const dateObj = new Date(item.date);
-            const date = dateObj.toLocaleDateString("es-AR");
-            const time = dateObj.toLocaleTimeString("es-AR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-            return (
-              <tr key={item.application_id} className="border-t hover:bg-gray-50 transition-colors">
-                <td className="p-3 text-center text-sm sm:text-base font-mono">{item.application_id}</td>
+      {/* Card de tabla con borde propio */}
+      <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+        <div className="overflow-x-auto">
+          <TableTemplate
+            headers={headers}
+            items={currentData}
+            isLoading={isLoading}
+            emptyMessage="No hay aplicaciones completadas para mostrar."
+            rowsPerSkeleton={itemsPerPage}
+            /** 2) Header blanco y 4) divisores a los bordes
+             * Si tu TableTemplate acepta estas props de clase, genial.
+             * Si no, ver notas abajo para el fallback.
+             */
+            theadClassName="bg-white"
+            
+            tableClassName="w-full border-collapse"
+            renderRow={(item: Application) => {
+              const dateObj = new Date(item.date);
+              const date = dateObj.toLocaleDateString("es-AR");
+              const time = dateObj.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+              const tone = STATUS_TONES[item.result as string] || DEFAULT_TONE;
 
-                <td className="p-3 text-center">
-                  <div className="font-medium text-sm sm:text-base">{item.car?.license_plate || "-"}</div>
-                  <div className="text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-[160px] mx-auto">
-                    {item.car?.brand} {item.car?.model}
-                  </div>
-                </td>
+              return (
+                <tr key={item.application_id} className="hover:bg-gray-50 transition-colors">
+                  <td className="p-3 text-center text-sm sm:text-base font-mono">{item.application_id}</td>
 
-                <td className="p-3 text-center">
-                  <div className="font-medium text-sm sm:text-base max-w-[120px] sm:max-w-[160px] truncate mx-auto">
-                    {item.owner?.first_name || "-"} {item.owner?.last_name || ""}
-                  </div>
-                  <div className="text-xs sm:text-sm text-gray-600">
-                    {item.owner?.dni || "-"}
-                  </div>
-                </td>
+                  <td className="p-3 text-center">
+                    <div className="font-medium text-sm sm:text-base">{item.car?.license_plate || "-"}</div>
+                    <div className="text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-[160px] mx-auto">
+                      {item.car?.brand} {item.car?.model}
+                    </div>
+                  </td>
 
-                <td className="p-3 text-center text-sm sm:text-base">
-                  <div>{date}</div>
-                  <div className="text-xs sm:text-sm text-gray-600">{time} hs</div>
-                </td>
+                  <td className="p-3 text-center">
+                    <div className="font-medium text-sm sm:text-base max-w-[120px] sm:max-w-[160px] truncate mx-auto">
+                      {item.owner?.first_name || "-"} {item.owner?.last_name || ""}
+                    </div>
+                    <div className="text-xs sm:text-sm text-gray-600">{item.owner?.dni || "-"}</div>
+                  </td>
 
-                <td
-                  className={`p-3 font-medium text-center text-sm sm:text-base ${
-                    statusColor[item.result as string] || ""
-                  }`}
-                >
-                  <span className="inline-block px-2 py-1 rounded-full text-xs sm:text-sm bg-gray-100">
-                    {item.result}
-                  </span>
-                </td>
+                  <td className="p-3 text-center text-sm sm:text-base">
+                    <div>{date}</div>
+                    <div className="text-xs sm:text-sm text-gray-600">{time} hs</div>
+                  </td>
 
-                <td className="p-0">
-                  <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
-                    <button
-                      type="button"
-                      className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
-                      title="Ver detalles"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        window.open(
-                          `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`,
-                          "_blank"
-                        )
-                      }
-                      className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
-                      title="Descargar certificado"
-                    >
-                      <Download size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            );
-          }}
-        />
+                  {/* 1) Pill con tonos según estado */}
+                  <td className="p-3 text-center">
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${tone.text} ${tone.bg}`}>
+                      {item.result}
+                    </span>
+                  </td>
+
+                  <td className="p-0">
+                    <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          window.open(
+                            `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`,
+                            "_blank"
+                          )
+                        }
+                        className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                        title="Descargar certificado"
+                      >
+                        <Download size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            }}
+          />
+        </div>
       </div>
 
       {/* Paginación */}

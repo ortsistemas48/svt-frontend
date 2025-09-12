@@ -61,7 +61,7 @@ export default function SelectApplicationType() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto sm:mx-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mx-auto sm:mx-0">
         {options.map((option) => (
           <button
             key={option.key}

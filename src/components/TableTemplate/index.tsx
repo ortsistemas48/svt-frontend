@@ -29,7 +29,7 @@ export default function TableTemplate<T>({
   emptyMessage = "No hay datos para mostrar.",
   rowsPerSkeleton = 5,
   renderSkeletonRow,
-  outerClassName = "border border-gray-300 rounded-[4px] overflow-hidden",
+  outerClassName = "rounded-[4px] overflow-hidden",
   tableClassName = "w-full text-sm",
   theadClassName = "text-regular bg-[#ffffff] text-[#00000080]",
 }: Props<T>) {
@@ -39,7 +39,7 @@ export default function TableTemplate<T>({
         <thead className={theadClassName}>
           <tr>
             {headers.map((h, i) => (
-              <th key={i} className={`p-3 text-center ${h.className ?? ""}`} {...h.thProps}>
+              <th key={i} className={`p-3 text-center text-gray-600 font-light text-sm${h.className ?? ""}`} {...h.thProps}>
                 {h.label}
               </th>
             ))}
@@ -61,7 +61,7 @@ export default function TableTemplate<T>({
             </tr>
           </tbody>
         ) : (
-          <tbody>{items.map((it, i) => renderRow(it, i))}</tbody>
+          <tbody className="border-t divide-y divide-gray-200">{items.map((it, i) => renderRow(it, i))}</tbody>
         )}
       </table>
     </div>

@@ -167,7 +167,7 @@ export default function PersonForm({
 
       <div
         className={`grid ${!isSamePerson ? "grid-cols-[1fr_1px_1fr]" : "px-4 grid-cols-1"
-          } max-xl:grid-cols-1 max-xl:px-7 px-10 gap-8 mb-4 items-start`}
+          } max-xl:grid-cols-1 max-xl:px-7 gap-8 mb-4 items-start`}
       >
         <OwnerForm
           data={owner}

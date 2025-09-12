@@ -10,7 +10,7 @@ export default async function UsersPage( { params }: { params: Promise<{ id: str
   const { users } = usersInWorkshop;
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Breadcrumb */}
         <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
           <div className="flex items-center gap-1">
@@ -32,7 +32,7 @@ export default async function UsersPage( { params }: { params: Promise<{ id: str
         </div>
 
         {/* User Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-hidden">
           <UserTable users={users}/>
         </div>
       </div>

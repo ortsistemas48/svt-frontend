@@ -212,7 +212,7 @@ export default function Dropzone({
             {existing.map((d) => (
               <li
                 key={d.id}
-                className="relative rounded-[4px] border border-[#E6E6E6] bg-white p-3 shadow-sm hover:shadow-md transition"
+                className="relative rounded-[4px] border border-[#E6E6E6] bg-white p-3 min-w-[200px] w-[200px]"
               >
                 {onDeleteExisting && (
                   <button

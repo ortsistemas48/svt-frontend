@@ -14,7 +14,7 @@ type User = {
   dni: string | null;
   phone_number: string | null;
   title_name?: string | null;
-  licence_number?: string | null;
+  license_number?: string | null;
   user_type_id?: number | null; // rol del usuario en ESTE taller
 };
 
@@ -110,7 +110,7 @@ export default function CreateOrAttachUserPage() {
             else setRoleId("");
 
             // Pre-cargar datos de ingeniero si existen
-            setEngineerRegistration(u.licence_number ?? "");
+            setEngineerRegistration(u.license_number ?? "");
             setEngineerDegree(u.title_name ?? "");
           } else {
             setExistingUser(null);
@@ -210,7 +210,7 @@ export default function CreateOrAttachUserPage() {
 
         // En creación: si eligió Ingeniero, mandamos extras
         if (roleId === ENGINEER_ROLE_ID) {
-          payload.licence_number = engineerRegistration.trim();
+          payload.license_number = engineerRegistration.trim();
           payload.title_name     = engineerDegree.trim();
         }
 
@@ -237,7 +237,7 @@ export default function CreateOrAttachUserPage() {
 
         // Si el usuario eligió Ingeniero desde el input (cambio a ingeniero), mandamos/actualizamos extras
         if (engineerEditable && roleId === ENGINEER_ROLE_ID) {
-          payload.licence_number = engineerRegistration.trim() || null;
+          payload.license_number = engineerRegistration.trim() || null;
           payload.title_name     = engineerDegree.trim() || null;
         }
         // Si vino como ingeniero desde el endpoint y no tocó el rol, NO mandamos extras (no editable)
