@@ -1,7 +1,7 @@
 // components/InspectionTable/index.tsx
 "use client";
-import { useEffect, useState } from "react";
-import { Play, Pencil, Trash2, RefreshCcw } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Play, Pencil, Trash2, RefreshCcw, X } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Application } from "@/app/types";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
@@ -24,6 +24,12 @@ export default function InspectionTable() {
   const perPage = 5;
   const [total, setTotal] = useState(0);
   const router = useRouter();
+
+  // Modal
+  const [deleteTarget, setDeleteTarget] = useState<Application | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const headers: TableHeader[] = [
     { label: "Vehículo" },
@@ -54,6 +60,7 @@ export default function InspectionTable() {
       console.error(err);
       setItems([]);
       setTotal(0);
+      setErrorMsg("No se pudieron cargar las aplicaciones");
     } finally {
       setLoading(false);
     }
@@ -66,21 +73,76 @@ export default function InspectionTable() {
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
+  // Datos compactos para el modal
+  const deleteSummary = useMemo(() => {
+    if (!deleteTarget) return null;
+    const lp = deleteTarget.car?.license_plate || "-";
+    const owner = `${deleteTarget.owner?.first_name || "-"} ${deleteTarget.owner?.last_name || ""}`.trim();
+    return { lp, owner, id: deleteTarget.application_id };
+  }, [deleteTarget]);
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      setDeleting(true);
+      setErrorMsg(null);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/applications/${deleteTarget.application_id}/soft-delete`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || "No se pudo eliminar el trámite");
+      }
+
+      setSuccessMsg(`Trámite #${deleteTarget.application_id} eliminado`);
+      setDeleteTarget(null);
+      // Refrescar lista
+      await fetchApps();
+    } catch (e: any) {
+      setErrorMsg(e?.message || "Error eliminando el trámite");
+    } finally {
+      setDeleting(false);
+      // limpiar mensaje de éxito a los 3s
+      setTimeout(() => setSuccessMsg(null), 3000);
+    }
+  };
+
   return (
     <div className="">
+      {/* Mensajes */}
+      {errorMsg && (
+        <div className="mb-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {errorMsg}
+        </div>
+      )}
+      {successMsg && (
+        <div className="mb-3 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+          {successMsg}
+        </div>
+      )}
+
       {/* 3) Input y botón fuera del borde de la tabla */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <input
           disabled={loading}
           value={q}
-          onChange={(e) => { setQ(e.target.value); setPage(1); }}
-          className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 rounded-md w-full flex-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+          onChange={(e) => {
+            setQ(e.target.value);
+            setPage(1);
+          }}
+          className="w-full flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
           placeholder="Busca revisiones por su: Dominio, Propietario u Oblea"
         />
         <button
           disabled={loading}
           onClick={fetchApps}
-          className="border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 text-sm sm:text-base font-medium"
+          className="flex items-center justify-center gap-2 rounded-md border border-[#0040B8] px-3 py-2 text-sm font-medium text-[#0040B8] transition-colors duration-200 hover:bg-[#0040B8] hover:text-white disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
         >
           <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
           <span className="hidden sm:inline">{loading ? "Actualizando..." : "Actualizar"}</span>
@@ -89,7 +151,7 @@ export default function InspectionTable() {
       </div>
 
       {/* Card con borde propio, 2) header blanco, 4) líneas pegadas a los bordes */}
-      <div className="rounded-lg border border-gray-200 overflow-hidden bg-white insp-table">
+      <div className="insp-table overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
             <TableTemplate<Application>
@@ -105,37 +167,37 @@ export default function InspectionTable() {
                 const tone = STATUS_TONES[item.status] || DEFAULT_TONE;
 
                 return (
-                  <tr key={item.application_id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={item.application_id} className="transition-colors hover:bg-gray-50">
                     <td className="p-3 text-center">
-                      <div className="font-medium text-sm sm:text-base">{item.car?.license_plate || "-"}</div>
-                      <div className="text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-[160px] mx-auto">
+                      <div className="text-sm font-medium sm:text-base">{item.car?.license_plate || "-"}</div>
+                      <div className="mx-auto max-w-[120px] truncate text-xs text-gray-600 sm:max-w-[160px] sm:text-sm">
                         {item.car?.brand} {item.car?.model}
                       </div>
                     </td>
                     <td className="p-3 text-center">
-                      <div className="font-medium text-sm sm:text-base max-w-[120px] sm:max-w-[160px] truncate mx-auto">
+                      <div className="mx-auto max-w-[120px] truncate text-sm font-medium sm:max-w-[160px] sm:text-base">
                         {item.owner?.first_name || "-"} {item.owner?.last_name || ""}
                       </div>
-                      <div className="text-xs sm:text-sm text-gray-600">{item.owner?.dni || "-"}</div>
+                      <div className="text-xs text-gray-600 sm:text-sm">{item.owner?.dni || "-"}</div>
                     </td>
                     <td className="p-3 text-center">
                       <div className="text-sm sm:text-base">{date}</div>
-                      <div className="text-xs sm:text-sm text-gray-600">{time}</div>
+                      <div className="text-xs text-gray-600 sm:text-sm">{time}</div>
                     </td>
 
                     {/* 1) Pill con texto y fondo del mismo tono, más claro */}
                     <td className="p-3 text-center">
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${tone.text} ${tone.bg}`}>
+                      <span className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm ${tone.text} ${tone.bg}`}>
                         {item.status}
                       </span>
                     </td>
 
                     <td className="p-0">
-                      <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
+                      <div className="flex h-full min-h-[48px] items-center justify-center gap-2 px-2 sm:gap-3 sm:px-3">
                         {(item.status !== "Pendiente" && item.status !== "Completado") && (
                           <button
                             type="button"
-                            className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                            className="cursor-pointer rounded p-1 text-[#0040B8] transition-colors hover:bg-blue-50 hover:opacity-80"
                             title="Abrir revisión"
                             onClick={() => router.push(`/dashboard/${id}/inspections/${item.application_id}`)}
                           >
@@ -145,7 +207,7 @@ export default function InspectionTable() {
                         {item.status === "Pendiente" && (
                           <button
                             type="button"
-                            className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                            className="cursor-pointer rounded p-1 text-[#0040B8] transition-colors hover:bg-blue-50 hover:opacity-80"
                             title="Editar revisión"
                             onClick={() => router.push(`/dashboard/${id}/applications/create-applications/${item.application_id}`)}
                           >
@@ -154,8 +216,9 @@ export default function InspectionTable() {
                         )}
                         <button
                           type="button"
-                          className="cursor-pointer text-red-500 hover:opacity-80 p-1 rounded hover:bg-red-50 transition-colors"
+                          className="cursor-pointer rounded p-1 text-red-500 transition-colors hover:bg-red-50 hover:opacity-80"
                           title="Eliminar revisión"
+                          onClick={() => setDeleteTarget(item)}
                         >
                           <Trash2 size={16} />
                         </button>
@@ -165,8 +228,8 @@ export default function InspectionTable() {
                 );
               }}
               renderSkeletonRow={(cols, i) => (
-                <tr key={`sk-row-${i}`} className="animate-pulse min-h-[60px]">
-                  <td className="p-3 text-center"><Sk className="h-4 w-8 mx-auto" /></td>
+                <tr key={`sk-row-${i}`} className="min-h-[60px] animate-pulse">
+                  <td className="p-3 text-center"><Sk className="mx-auto h-4 w-8" /></td>
                   <td className="p-3 text-center">
                     <div className="flex flex-col items-center gap-1">
                       <Sk className="h-4 w-16" />
@@ -186,7 +249,7 @@ export default function InspectionTable() {
                     </div>
                   </td>
                   <td className="p-0">
-                    <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
+                    <div className="flex h-full min-h-[48px] items-center justify-center gap-3 px-3">
                       <Sk className="h-5 w-5 rounded" />
                       <Sk className="h-5 w-5 rounded" />
                       <Sk className="h-5 w-5 rounded" />
@@ -200,27 +263,89 @@ export default function InspectionTable() {
       </div>
 
       {!loading && total > perPage && (
-        <div className="flex flex-col sm:flex-row justify-center items-center mt-6 gap-3 sm:gap-2 text-sm">
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 text-sm sm:flex-row sm:gap-2">
           <div className="flex items-center gap-2">
             <button
-              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
+              className="rounded-md border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
               <span className="hidden sm:inline">Anterior</span>
               <span className="sm:hidden">‹</span>
             </button>
-            <span className="text-gray-600 px-2 py-1 bg-gray-100 rounded text-xs sm:text-sm">
+            <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 sm:text-sm">
               Página {page} de {Math.max(1, Math.ceil(total / perPage))}
             </span>
             <button
-              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
+              className="rounded-md border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => Math.min(Math.ceil(total / perPage), p + 1))}
               disabled={page >= totalPages}
             >
               <span className="hidden sm:inline">Siguiente</span>
               <span className="sm:hidden">›</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
+            onClick={() => !deleting && setDeleteTarget(null)}
+          />
+          {/* Caja */}
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl">
+              <div className="p-4 sm:p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-2">
+                      <Trash2 className="h-5 w-5 text-red-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Eliminar trámite</h3>
+                      <p className="mt-1 text-xs text-gray-600 sm:text-sm">
+                        Esta acción marca el trámite como eliminado, no lo borra de forma definitiva
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    className="rounded-md p-1 hover:bg-gray-100"
+                    onClick={() => !deleting && setDeleteTarget(null)}
+                    aria-label="Cerrar"
+                  >
+                    <X className="h-5 w-5 text-gray-500" />
+                  </button>
+                </div>
+
+                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <p className="text-sm text-gray-700">
+                    Confirmás eliminar el trámite #{deleteSummary?.id}
+                    {deleteSummary?.lp && deleteSummary.lp !== "-" ? `, patente ${deleteSummary.lp}` : ""}?
+                  </p>
+                </div>
+
+                <div className="mt-6 flex items-center justify-end gap-3">
+                  <button
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                    onClick={() => setDeleteTarget(null)}
+                    disabled={deleting}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-60"
+                    onClick={handleConfirmDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? "Eliminando..." : "Eliminar"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -238,5 +363,5 @@ export default function InspectionTable() {
 }
 
 function Sk({ className = "" }: { className?: string }) {
-  return <div className={`bg-gray-200/80 rounded ${className}`} />;
+  return <div className={`rounded bg-gray-200/80 ${className}`} />;
 }
