@@ -5,24 +5,16 @@ import { useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
 import { ChevronRight, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Dropzone, { type ExistingDoc as InspDoc } from "@/components/Dropzone";
 
 type Step = { step_id: number; name: string; description: string; order: number };
 type Status = "Apto" | "Condicional" | "Rechazado";
 type ObservationRow = { id: number; description: string; checked: boolean };
 
 const STATUS_UI: Record<Status, { btn: string; stepBorder: string }> = {
-  Apto: {
-    btn: "border-[#0040B8] text-[#0040B8] bg-[#0040B8]/10",
-    stepBorder: "border-[#0040B8]/50",
-  },
-  Condicional: {
-    btn: "border-amber-600 text-amber-700 bg-amber-50",
-    stepBorder: "border-amber-600/50",
-  },
-  Rechazado: {
-    btn: "border-black text-black bg-black/5",
-    stepBorder: "border-black/50",
-  },
+  Apto: { btn: "border-[#0040B8] text-[#0040B8] bg-[#0040B8]/10", stepBorder: "border-[#0040B8]/50" },
+  Condicional: { btn: "border-amber-600 text-amber-700 bg-amber-50", stepBorder: "border-amber-600/50" },
+  Rechazado: { btn: "border-black text-black bg-black/5", stepBorder: "border-black/50" },
 };
 
 export default function InspectionStepsClient({
@@ -54,16 +46,21 @@ export default function InspectionStepsClient({
   const router = useRouter();
   const [globalObs, setGlobalObs] = useState(initialGlobalObs || "");
   const [obsByStepList, setObsByStepList] = useState<Record<number, ObservationRow[]>>(initialObsByStep || {});
+  const [dzResetToken, setDzResetToken] = useState(0);
 
-  // nuevo: modal de certificado
+  // Documentos globales de la inspección
+  const [inspDocs, setInspDocs] = useState<InspDoc[]>([]);
+  const [pendingInspFiles, setPendingInspFiles] = useState<File[]>([]);
+  const [inspDocsLoading, setInspDocsLoading] = useState(false);
+  const [inspDocsDeletingId, setInspDocsDeletingId] = useState<number | null>(null);
+
+  // modal certificado
   const [certModalOpen, setCertModalOpen] = useState(false);
   const [certStatus, setCertStatus] = useState<Status>("Apto");
 
   const stepNameById = useMemo(() => {
     const map: Record<number, string> = {};
-    steps.forEach((s) => {
-      map[s.step_id] = s.name;
-    });
+    steps.forEach((s) => { map[s.step_id] = s.name; });
     return map;
   }, [steps]);
 
@@ -79,42 +76,26 @@ export default function InspectionStepsClient({
   }, [obsByStepList, stepNameById]);
 
   const totalChecked = useMemo(() => summary.reduce((acc, it) => acc + it.checked.length, 0), [summary]);
-
   const hasNonApto = useMemo(() => Object.values(statusByStep).some((s) => s && s !== "Apto"), [statusByStep]);
 
-  // Check if inspection is completed
+  // Estado de la aplicación
   useEffect(() => {
     const checkApplicationStatus = async () => {
       if (!apiBase) return;
       try {
-        const res = await fetch(`${apiBase}/applications/get-applications/${appId}`, {
-          credentials: "include",
-        });
+        const res = await fetch(`${apiBase}/applications/get-applications/${appId}`, { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
-          if (data.status === "Completado") {
-            setIsCompleted(true);
-          }
+          if (data.status === "Completado") setIsCompleted(true);
         }
-      } catch (error) {
-        console.error("Error checking application status:", error);
+      } catch (err) {
+        console.error("Error checking application status:", err);
       }
     };
     checkApplicationStatus();
   }, [apiBase, appId]);
 
-  const handlePick = (stepId: number, val: Status) => {
-    if (isCompleted) return; // Prevent changes if completed
-    setStatusByStep((prev) => {
-      const current = prev[stepId];
-      if (current === val) {
-        const { [stepId]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [stepId]: val };
-    });
-  };
-
+  // Cargar observaciones faltantes
   useEffect(() => {
     if (!apiBase) return;
     const missing = steps.filter((s) => !(s.step_id in (initialObsByStep || {})));
@@ -135,9 +116,7 @@ export default function InspectionStepsClient({
         const results = await Promise.all(promises);
         setObsByStepList((prev) => {
           const copy = { ...prev };
-          results.forEach((r) => {
-            if (r) copy[r.stepId] = r.data;
-          });
+          results.forEach((r) => { if (r) copy[r.stepId] = r.data; });
           return copy;
         });
       } catch {
@@ -148,11 +127,64 @@ export default function InspectionStepsClient({
     return () => abort.abort();
   }, [apiBase, inspectionId, steps, initialObsByStep]);
 
-  const fetchStepObservations = async (stepId: number) => {
+  // Docs globales
+  const fetchInspectionDocuments = async () => {
+    if (!apiBase) return;
+    try {
+      setInspDocsLoading(true);
+      const url = `${apiBase}/inspections/inspections/${inspectionId}/documents?role=global`;
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error || "No se pudieron cargar los documentos");
+      }
+      const data: InspDoc[] = await res.json();
+      setInspDocs(data);
+    } catch (e: any) {
+      setError(e.message || "Error cargando documentos");
+    } finally {
+      setInspDocsLoading(false);
+    }
+  };
+
+  // cargar docs al montar
+  useEffect(() => {
+    if (!apiBase) return;
+    fetchInspectionDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiBase, inspectionId]);
+
+  const onPendingInspectionDocsChange = (files: File[]) => {
+    // se muestran como "pendientes, se van a subir al continuar"
+    setPendingInspFiles(files);
+  };
+
+  const deleteInspectionDocument = async (docId: number) => {
     if (!apiBase) {
       setError("Falta configurar NEXT_PUBLIC_API_URL");
       return;
     }
+    if (isCompleted) return;
+    try {
+      setInspDocsDeletingId(docId);
+      const res = await fetch(
+        `${apiBase}/inspections/inspections/${inspectionId}/documents/${docId}`,
+        { method: "DELETE", credentials: "include" }
+      );
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error || "No se pudo borrar el documento");
+      }
+      await fetchInspectionDocuments();
+    } catch (e: any) {
+      setError(e.message || "Error borrando documento");
+    } finally {
+      setInspDocsDeletingId(null);
+    }
+  };
+
+  const fetchStepObservations = async (stepId: number) => {
+    if (!apiBase) { setError("Falta configurar NEXT_PUBLIC_API_URL"); return; }
     try {
       setObsLoading(true);
       const res = await fetch(`${apiBase}/inspections/inspections/${inspectionId}/steps/${stepId}/observations`, {
@@ -182,10 +214,7 @@ export default function InspectionStepsClient({
   const setCheckedLocal = (stepId: number, obsId: number, checked: boolean) => {
     setObsByStepList((prev) => {
       const list = prev[stepId] || [];
-      return {
-        ...prev,
-        [stepId]: list.map((o) => (o.id === obsId ? { ...o, checked } : o)),
-      };
+      return { ...prev, [stepId]: list.map((o) => (o.id === obsId ? { ...o, checked } : o)) };
     });
   };
 
@@ -206,7 +235,7 @@ export default function InspectionStepsClient({
   };
 
   const onToggleCheckbox = async (stepId: number, obsId: number) => {
-    if (isCompleted) return; // Prevent changes if completed
+    if (isCompleted) return;
     try {
       const current = obsByStepList[stepId]?.find((o) => o.id === obsId)?.checked ?? false;
       setCheckedLocal(stepId, obsId, !current);
@@ -216,7 +245,7 @@ export default function InspectionStepsClient({
   };
 
   const uncheckFromChip = async (stepId: number, obsId: number) => {
-    if (isCompleted) return; // Prevent changes if completed
+    if (isCompleted) return;
     try {
       setCheckedLocal(stepId, obsId, false);
       await persistStepObs(stepId);
@@ -238,15 +267,38 @@ export default function InspectionStepsClient({
     }
   };
 
+  // Sube pendientes del dropzone y luego guarda todo lo demás
   const saveAll = async () => {
     if (!apiBase) {
       setError("Falta configurar NEXT_PUBLIC_API_URL");
       return;
     }
+    if (isCompleted) return;
+
     setSaving(true);
     setMsg(null);
     setError(null);
+
     try {
+      // 1) si hay archivos pendientes, primero subirlos
+      if (pendingInspFiles.length > 0) {
+        const form = new FormData();
+        pendingInspFiles.forEach((f) => form.append("files", f));
+        form.append("role", "global");
+        const uploadRes = await fetch(`${apiBase}/inspections/inspections/${inspectionId}/documents`, {
+          method: "POST",
+          credentials: "include",
+          body: form,
+        });
+        const upData = await uploadRes.json().catch(() => ({}));
+        if (!uploadRes.ok) {
+          throw new Error(upData?.error || "No se pudieron subir los archivos de la inspección");
+        }
+        setPendingInspFiles([]);
+        await fetchInspectionDocuments();
+      }
+
+      // 2) guardar estados de pasos en bulk y observaciones globales
       const items = steps
         .map((s) => {
           const st = statusByStep[s.step_id];
@@ -276,72 +328,41 @@ export default function InspectionStepsClient({
       }
       if (!putRes.ok) {
         const j = await putRes.json().catch(() => ({}));
-        throw new Error(j?.error || "No se pudieron guardar las observaciones globales");
+        throw new Error(j?.error || "No se pudieron guardar las observaciones generales");
       }
 
-      setMsg("Datos guardados");
+      setMsg("Inspección guardada");
+      setPendingInspFiles([]);
+      setDzResetToken(t => t + 1);
+      await fetchInspectionDocuments();
+      setTimeout(() => setMsg(null), 1500);
     } catch (e: any) {
-      setError(e.message || "Error");
+      setError(e.message || "Error al guardar");
     } finally {
       setSaving(false);
     }
   };
 
   const generateCertificate = async (status: Status) => {
-    if (!apiBase) {
-      setError("Falta configurar NEXT_PUBLIC_API_URL");
-      return;
-    }
+    if (!apiBase) { setError("Falta configurar NEXT_PUBLIC_API_URL"); return; }
 
     const newTab = window.open("about:blank", "_blank");
-    if (!newTab) {
-      setError("El navegador bloqueó la ventana emergente");
-      return;
-    }
+    if (!newTab) { setError("El navegador bloqueó la ventana emergente"); return; }
 
     try {
       try { newTab.opener = null; } catch {}
-
-      // HTML con estilos modernos + spinner
       newTab.document.write(`
         <html>
           <head>
             <title>Generando certificado...</title>
             <style>
-              body {
-                margin: 0;
-                height: 100vh;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-family: system-ui, sans-serif;
-                background: #fff;
-                color: #0040B8;
-              }
-              .container {
-                text-align: center;
-                animation: fadeIn 0.6s ease;
-              }
-              .spinner {
-                width: 60px;
-                height: 60px;
-                border: 6px solid rgba(255,255,255,0.3);
-                border-top-color:  #0040B8;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-                margin: 0 auto 20px;
-              }
-              @keyframes spin { to { transform: rotate(360deg); } }
-              @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+              body { margin:0, height:100vh, display:flex, justify-content:center, align-items:center, font-family: system-ui, sans-serif, background:#fff, color:#0040B8 }
+              .container { text-align:center }
+              .spinner { width:60px, height:60px, border:6px solid rgba(0,0,0,.1), border-top-color:#0040B8, border-radius:50%, animation:spin 1s linear infinite, margin:0 auto 20px }
+              @keyframes spin { to { transform: rotate(360deg) } }
             </style>
           </head>
-          <body>
-            <div class="container">
-              <div class="spinner"></div>
-              <h2>Generando certificado</h2>
-              <p>Por favor espera un momento...</p>
-            </div>
-          </body>
+          <body><div class="container"><div class="spinner"></div><h2>Generando certificado</h2><p>Por favor espera un momento...</p></div></body>
         </html>
       `);
       newTab.document.close();
@@ -364,7 +385,6 @@ export default function InspectionStepsClient({
       if (!url) throw new Error("No se recibió el link del certificado");
 
       newTab.location.href = url;
-
       setMsg("Certificado generado");
       setCertModalOpen(false);
     } catch (e: any) {
@@ -386,16 +406,16 @@ export default function InspectionStepsClient({
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">
-                Inspección Completada
-              </h3>
+              <h3 className="text-sm font-medium text-yellow-800">Inspección Completada</h3>
               <div className="mt-2 text-sm text-yellow-700">
-                <p>Esta inspección ya ha sido completada y no se pueden realizar más modificaciones.</p>
+                <p>Esta inspección ya fue completada, no se pueden realizar modificaciones.</p>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Steps */}
       <div className="w-full space-y-4">
         {steps.map((s) => {
           const current = statusByStep[s.step_id];
@@ -415,20 +435,27 @@ export default function InspectionStepsClient({
               <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
                   <h3 className="font-medium text-zinc-900">{s.name}</h3>
-                  <p className="hidden min-[1300px]:block text-sm md:max-w-[400px] text-zinc-500">
-                    {s.description}
-                  </p>
+                  <p className="hidden min-[1300px]:block text-sm md:max-w-[400px] text-zinc-500">{s.description}</p>
                 </div>
 
                 <div className="flex items-center gap-5 flex-wrap">
                   {options.map((opt) => {
-                    const selected = statusByStep[s.step_id] === opt;
+                    const selected = current === opt;
                     return (
                       <button
                         key={opt}
                         type="button"
                         disabled={isCompleted}
-                        onClick={() => handlePick(s.step_id, opt)}
+                        onClick={() =>
+                          setStatusByStep((prev) => {
+                            const cur = prev[s.step_id];
+                            if (cur === opt) {
+                              const { [s.step_id]: _, ...rest } = prev;
+                              return rest;
+                            }
+                            return { ...prev, [s.step_id]: opt };
+                          })
+                        }
                         className={clsx(
                           "w-[140px] px-4 py-2.5 rounded-[4px] border text-sm transition",
                           selected ? STATUS_UI[opt].btn : "border-zinc-200 text-zinc-700 hover:bg-zinc-50",
@@ -517,6 +544,29 @@ export default function InspectionStepsClient({
         })}
       </div>
 
+      {/* Adjuntos globales, sin botones, se suben al guardar */}
+      <section className="rounded-[10px] border border-zinc-200 bg-white p-4 w-full mt-6">
+        <div className="flex items-center justify-between mb-1">
+          <h4 className="text-sm font-medium text-zinc-900">Adjuntos de la inspección</h4>
+          {inspDocsLoading && <span className="text-xs text-zinc-500">Actualizando...</span>}
+        </div>
+        <p className="text-xs text-zinc-500 mb-3">
+          Los archivos que agregues quedan pendientes y se suben cuando guardás la inspección.
+        </p>
+
+        <div className={clsx(isCompleted && "opacity-50")}>
+          <Dropzone
+            onPendingChange={onPendingInspectionDocsChange}
+            existing={inspDocs}
+            onDeleteExisting={(docId) => deleteInspectionDocument(docId)}
+            title=""
+            maxSizeMB={15}
+            resetToken={dzResetToken}
+          />
+        </div>
+      </section>
+
+      {/* Observaciones generales y resumen */}
       <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4 mt-8 w-full">
         <div className="rounded-[10px] text-sm border border-zinc-200 bg-white p-4 w-full self-start">
           <textarea
@@ -547,20 +597,9 @@ export default function InspectionStepsClient({
                     onClick={() => setSummaryOpenByStep((prev) => ({ ...prev, [item.stepId]: !prev[item.stepId] }))}
                     className="w-full flex items-center justify-between px-4 py-3 text-sm bg-white"
                   >
-                    <span className={clsx("truncate", isOpen ? "text-zinc-900" : "text-zinc-600")}>
-                      {item.stepName}
-                    </span>
-                    <svg
-                      className={clsx("h-4 w-4 transition-transform", isOpen ? "rotate-180" : "rotate-0")}
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                        clipRule="evenodd"
-                      />
+                    <span className={clsx("truncate", isOpen ? "text-zinc-900" : "text-zinc-600")}>{item.stepName}</span>
+                    <svg className={clsx("h-4 w-4 transition-transform", isOpen ? "rotate-180" : "rotate-0")} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                     </svg>
                   </button>
 
@@ -590,6 +629,7 @@ export default function InspectionStepsClient({
         </div>
       </div>
 
+      {/* Acciones */}
       <div className="flex items-center justify-center gap-5 mt-10 w-full">
         <button
           type="button"
@@ -599,12 +639,10 @@ export default function InspectionStepsClient({
           Cancelar
         </button>
 
-        {/* botón Certificado, ahora abre modal */}
         <button
           type="button"
           disabled={certLoading || isCompleted}
           onClick={() => {
-            // si hay algún paso no apto, sugerimos arrancar en Condicional
             setCertStatus(hasNonApto ? "Condicional" : "Apto");
             setCertModalOpen(true);
           }}
@@ -613,7 +651,7 @@ export default function InspectionStepsClient({
             certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50",
             isCompleted && "opacity-50 cursor-not-allowed"
           )}
-          title={isCompleted ? "No se puede generar certificado - Inspección completada" : "Generar y abrir certificado"}
+          title={isCompleted ? "No se puede generar certificado, inspección completada" : "Generar y abrir certificado"}
         >
           {certLoading ? "Generando..." : "Certificado"}
         </button>
@@ -623,7 +661,7 @@ export default function InspectionStepsClient({
           disabled={saving || isCompleted}
           onClick={saveAll}
           className={clsx(
-            "px-5 py-2.5 rounded-[4px] text-white", 
+            "px-5 py-2.5 rounded-[4px] text-white",
             saving ? "bg-blue-300" : "bg-[#0040B8] hover:opacity-95",
             isCompleted && "opacity-50 cursor-not-allowed"
           )}
@@ -632,34 +670,19 @@ export default function InspectionStepsClient({
         </button>
       </div>
 
-      {/* Modal de confirmación de certificado */}
+      {/* Modal certificado */}
       {certModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          aria-modal="true"
-          role="dialog"
-        >
-          {/* overlay */}
-          <div
-            className="absolute inset-0 bg-black/30"
-            onClick={() => !certLoading && setCertModalOpen(false)}
-          />
-          {/* content */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center" aria-modal="true" role="dialog">
+          <div className="absolute inset-0 bg-black/30" onClick={() => !certLoading && setCertModalOpen(false)} />
           <div className="relative z-10 w-[min(92vw,520px)] rounded-[10px] border border-zinc-200 bg-white p-5 shadow-xl">
             <div className="flex items-start justify-between">
               <h3 className="text-base font-semibold text-zinc-900">Generar certificado</h3>
-              <button
-                className="p-1 rounded hover:bg-zinc-100"
-                onClick={() => !certLoading && setCertModalOpen(false)}
-                aria-label="Cerrar"
-              >
+              <button className="p-1 rounded hover:bg-zinc-100" onClick={() => !certLoading && setCertModalOpen(false)} aria-label="Cerrar">
                 <X size={18} />
               </button>
             </div>
 
-            <p className="mt-2 text-sm text-zinc-600">
-              Elegí la condición del certificado y confirmá para generarlo.
-            </p>
+            <p className="mt-2 text-sm text-zinc-600">Elegí la condición del certificado y confirmá para generarlo.</p>
 
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
               {(["Apto", "Condicional", "Rechazado"] as Status[]).map((opt) => {
@@ -693,9 +716,7 @@ export default function InspectionStepsClient({
               <button
                 type="button"
                 disabled={certLoading}
-                className={clsx(
-                  "px-4 py-2 rounded-[4px] bg-[#0040B8] text-white text-sm hover:opacity-95 disabled:opacity-60"
-                )}
+                className="px-4 py-2 rounded-[4px] bg-[#0040B8] text-white text-sm hover:opacity-95 disabled:opacity-60"
                 onClick={() => generateCertificate(certStatus)}
               >
                 {certLoading ? "Generando..." : "Confirmar"}

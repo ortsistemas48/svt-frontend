@@ -19,6 +19,9 @@ type Props = {
   title?: string;
   maxSizeMB?: number;
   onDeleteExisting?: (docId: number) => Promise<void> | void;
+
+  /** (OPCIONAL) Si cambia este token, el Dropzone limpia la cola de pendientes. */
+  resetToken?: number | string;
 };
 
 const prettySize = (bytes?: number) => {
@@ -43,13 +46,14 @@ export default function Dropzone({
   existing = [],
   title,
   maxSizeMB = 15,
-  onDeleteExisting
+  onDeleteExisting,
+  resetToken, // 👈 NUEVO prop
 }: Props) {
   const [isDragging, setIsDragging] = useState(false);
   const [queue, setQueue] = useState<File[]>([]);
   const [previews, setPreviews] = useState<(string | null)[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null); 
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const handleDelete = async (docId: number) => {
     if (!onDeleteExisting) return;
@@ -79,6 +83,12 @@ export default function Dropzone({
     setPreviews(urls);
     return () => { urls.forEach(u => { if (u) URL.revokeObjectURL(u); }); };
   }, [queue]);
+
+  // 👇 NUEVO: limpiar cola de pendientes cuando cambia el token
+  useEffect(() => {
+    if (resetToken === undefined) return;
+    setQueue([]);
+  }, [resetToken]);
 
   const onBrowse = () => inputRef.current?.click();
 
@@ -185,7 +195,7 @@ export default function Dropzone({
                   <div className="flex items-center gap-3">
                     <div className="w-14 h-14 rounded-lg bg-[#F5F7FF] flex items-center justify-center overflow-hidden">
                       {url ? (
-                        <img src={url} alt={f.name} className="w-full h-full object-cover" />
+                        <img src={url} alt={f.name} className="w/full h/full object-cover" />
                       ) : (
                         <span className="text-xl">{iconByMime(f.type)}</span>
                       )}
@@ -235,12 +245,12 @@ export default function Dropzone({
                       <span className="text-xl">{iconByMime(d.mime_type)}</span>
                     )}
                   </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{d.file_name}</p>
-                      <p className="text-xs text-[#7a7a7a]">
-                        {d.mime_type || "archivo"} · {prettySize(d.size_bytes)}
-                      </p>
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{d.file_name}</p>
+                    <p className="text-xs text-[#7a7a7a]">
+                      {d.mime_type || "archivo"} · {prettySize(d.size_bytes)}
+                    </p>
+                  </div>
 
                 </div>
               </li>
