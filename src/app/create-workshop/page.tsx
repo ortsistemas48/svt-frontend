@@ -61,6 +61,7 @@ export default function CreateWorkshopPage() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [cuit, setCuit] = useState("");
+  const [dispositionNumber, setDispositionNumber] = useState<string>("");
 
   /** Province and city options */
   const [provinceOptions, setProvinceOptions] = useState<{ value: string; label: string }[]>([]);
@@ -142,6 +143,7 @@ export default function CreateWorkshopPage() {
     if (!address.trim()) return "Ingresá el domicilio";
     if (!cuit.trim()) return "Ingresá el CUIT";
     if (!plantNumber.trim()) return "Ingresá el número de planta";
+    if (!dispositionNumber.trim()) return "Ingresá el número de disposición";
     return null;
   };
 
@@ -198,6 +200,7 @@ export default function CreateWorkshopPage() {
           address: address.trim(),
           phone: phone.trim(),
           cuit: cuit.trim(),
+          dispositionNumber: dispositionNumber.trim(),
         }),
       });
       if (!rWs.ok) {
@@ -295,6 +298,7 @@ export default function CreateWorkshopPage() {
         setAddress("");
         setPhone("");
         setCuit("");
+        setDispositionNumber("");
         setPending([]);
 
       }
@@ -375,7 +379,7 @@ export default function CreateWorkshopPage() {
                 transition={{ type: "spring", stiffness: 300, damping: 26 }}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
               >
-                <Field id="name" label="Nombre identificatorio" value={name} onChange={setName} required placeholder="Ej, Taller Central" />
+                <Field id="name" label="Nombre identificatorio" value={name} onChange={setName} required placeholder="Ej, Taller Central" className="lg:col-span-2"/>
                 <Field id="phone" label="Teléfono" value={phone} onChange={setPhone} inputMode="tel" required placeholder="Ej, 3511234567" />
                 <Field id="razon" label="Razón social" value={razonSocial} onChange={setRazonSocial} required placeholder="Ej, Talleres Central S.A." />
                 <Field id="cuit" label="CUIT" value={cuit} onChange={setCuit} inputMode="numeric" required placeholder="Ej, 20-12345678-3" />
@@ -388,6 +392,16 @@ export default function CreateWorkshopPage() {
                 </div>
                 <Field id="address" label="Domicilio" value={address} onChange={setAddress} required placeholder="Calle y número, piso, referencia" />
                 <Field id="plant" label="Número de planta" value={plantNumber} onChange={setPlantNumber} inputMode="numeric" type="number" required placeholder="Ej, 3" />
+                <Field
+                  id="disposition"
+                  label="Número de disposición"
+                  value={dispositionNumber}
+                  onChange={setDispositionNumber}
+                  inputMode="numeric"
+                  type="text"
+                  required
+                  placeholder="Ingresa el número de disposición"
+                />
 
                 <div className="lg:col-span-2">
                   {error && <Alert type="error" message={error} />}
@@ -458,6 +472,7 @@ export default function CreateWorkshopPage() {
                                 </div>
                                 <IconButton label="Quitar" onClick={() => setPending(p => p.filter(x => x.id !== m.id))}><X size={16} /></IconButton>
                               </div>
+                            </div>
                               {m.existingUserId && m.user_type_id === ENGINEER_ROLE_ID && (
                                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                   <div className="flex flex-col">
@@ -490,7 +505,6 @@ export default function CreateWorkshopPage() {
                                   </div>
                                 </div>
                               )}
-                            </div>
                           </motion.li>
                         ))}
                       </ul>
@@ -521,6 +535,7 @@ export default function CreateWorkshopPage() {
                     ["Nombre", name || "—"], ["Teléfono", phone || "—"], ["Razón social", razonSocial || "—"],
                     ["CUIT", cuit || "—"], ["Provincia", province || "—"], ["Localidad", city || "—"],
                     ["Domicilio", address || "—"], ["Número de planta", plantNumber || "—"],
+                    ["Número de disposición", dispositionNumber || "—"],
                   ]}
                 />
                 <TeamSummary onEdit={() => setStep(2)} items={pending} />
@@ -903,10 +918,11 @@ function Field(props: {
   id: string; label: string; value: string; onChange: (v: string) => void; placeholder?: string;
   help?: string; disabled?: boolean; required?: boolean; type?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  className?: string;  
 }) {
-  const { id, label, value, onChange, placeholder, help, disabled, required, type = "text", inputMode } = props;
+  const { id, label, value, onChange, placeholder, help, disabled, required, type = "text", inputMode, className  } = props;
   return (
-    <div className="flex flex-col">
+    <div className={`flex flex-col ${className || ""}`}>
       <label htmlFor={id} className="mb-2 text-sm sm:text-base font-medium text-[#0F172A]">{label} {required ? <span className="text-[#EF4444]">*</span> : null}</label>
       <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
         disabled={disabled} inputMode={inputMode}

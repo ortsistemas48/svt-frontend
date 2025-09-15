@@ -1,5 +1,5 @@
 'use client';
-import { Eye, EllipsisVertical, RefreshCcw, Search, SlidersHorizontal, X, Mail, Shield } from "lucide-react";
+import { Eye, EllipsisVertical, RefreshCcw, Search, SlidersHorizontal, X, Mail, Shield, Trash2, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -39,6 +39,9 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
   const [searchText, setSearchText] = useState("");
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<AnyUser | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const router = useRouter();
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -61,6 +64,31 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
 
   function openDrawer(user: AnyUser) { setSelected(user); setOpen(true); }
   function closeDrawer() { setOpen(false); setTimeout(() => setSelected(null), 200); }
+
+  async function doDelete() {
+    if (!selected) return;
+    try {
+      setDeleting(true);
+      setDeleteError(null);
+      const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "";
+      const res = await fetch(`${API}/users/delete/${selected.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || `Error ${res.status}`);
+      }
+      setConfirmOpen(false);
+      closeDrawer();
+      router.refresh();
+    } catch (err: any) {
+      setDeleteError(err.message || "No se pudo eliminar");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -105,12 +133,12 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
         </div>
 
         <div className="flex gap-2 sm:gap-3">
-          <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
+          {/* <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
             <SlidersHorizontal size={16} />
             <span className="hidden sm:inline">Filtrar</span>
-          </button>
+          </button> */}
           <button
-            className="bg-white border-2 border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
+            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
             onClick={handleRefresh}
           >
             <RefreshCcw size={16} />
@@ -253,12 +281,87 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                   </>
                 )}
               </div>
+              {/* Acciones peligrosas */}
+              <div className="mt-4 p-4 ">
+                {deleteError && (
+                  <p className="text-sm text-rose-700 mb-2">{deleteError}</p>
+                )}
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmOpen(true)}
+                    disabled={deleting}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
+                  >
+                    <Trash2 size={16} />
+                    {deleting ? "Desvinculando..." : "Desvincular usuario del taller"}
+                  </button>
+
+                </div>
+              </div>
+
             </div>
           ) : (
             <p className="text-sm text-gray-600">Selecciona un usuario para ver sus datos.</p>
           )}
         </div>
       </aside>
+      {confirmOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          aria-modal="true"
+          role="dialog"
+          aria-labelledby="confirm-title"
+          aria-describedby="confirm-desc"
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setConfirmOpen(false)}
+          />
+
+          {/* Modal card */}
+          <div className="relative bg-white w-[92%] max-w-md rounded-lg shadow-xl border border-gray-200 p-5">
+            <div className="flex items-start gap-3">
+              <div className="mt-1">
+                <AlertTriangle size={20} className="text-amber-600" />
+              </div>
+              <div className="min-w-0">
+                <h3 id="confirm-title" className="text-base font-semibold">
+                  Confirmar desvinculación
+                </h3>
+                <p id="confirm-desc" className="mt-1 text-sm text-gray-600">
+                  Vas a desvincular a {selected ? fullName(selected) : "este usuario"} del taller, esta acción es reversible desde administración.
+                </p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <p className="mt-3 text-sm text-rose-700">{deleteError}</p>
+            )}
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                className="px-4 py-2 rounded-md border border-gray-300 bg-white text-sm hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={doDelete}
+                disabled={deleting}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
+              >
+                <Trash2 size={16} />
+                {deleting ? "Desvinculando..." : "Sí, desvincular"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
