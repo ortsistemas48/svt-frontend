@@ -2,6 +2,7 @@
 import { Eye, EllipsisVertical, RefreshCcw, Search, SlidersHorizontal, X, Mail, Shield, Trash2, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useParams } from "next/navigation";
 
 type AnyUser = {
   id: string | number;
@@ -42,6 +43,8 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const pathname = usePathname();
+  const { id } = useParams();
 
   const router = useRouter();
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -65,26 +68,31 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
   function openDrawer(user: AnyUser) { setSelected(user); setOpen(true); }
   function closeDrawer() { setOpen(false); setTimeout(() => setSelected(null), 200); }
 
-  async function doDelete() {
+  async function doDelete(workshopId: number) {
     if (!selected) return;
     try {
       setDeleting(true);
       setDeleteError(null);
-      const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "";
-      const res = await fetch(`${API}/users/delete/${selected.id}`, {
-        method: "POST",
+
+      const API = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
+      const url = `${API}/workshops/${encodeURIComponent(workshopId)}/members/${encodeURIComponent(selected.id)}`;
+
+      const res = await fetch(url, {
+        method: "DELETE",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
+
+      const body = await res.json().catch(() => ({} as any));
+      if (!res.ok || body?.ok !== true) {
         throw new Error(body?.error || `Error ${res.status}`);
       }
+
       setConfirmOpen(false);
       closeDrawer();
       router.refresh();
     } catch (err: any) {
-      setDeleteError(err.message || "No se pudo eliminar");
+      setDeleteError(err?.message || "No se pudo desvincular");
     } finally {
       setDeleting(false);
     }
@@ -350,7 +358,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
               </button>
               <button
                 type="button"
-                onClick={doDelete}
+                onClick={() => doDelete(Number(id))}
                 disabled={deleting}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
               >

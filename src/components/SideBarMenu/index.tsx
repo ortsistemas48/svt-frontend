@@ -35,7 +35,7 @@ export default function SideBarMenu({
     }
     
     const allLinks = [
-        { href: `/dashboard/${id}/`, icon: <Home size={20} />, label: "Inicio", roles: ["all"] }, //todos 
+        { href: `/dashboard/${id}`, icon: <Home size={20} />, label: "Inicio", roles: ["all"] }, //todos 
         { href: `/dashboard/${id}/applications`, icon: <ClipboardList size={20} />, label: "Revisiones", roles: ["all"] }, //todos 
         { href: `/dashboard/${id}/inspections-queue`, icon: <Clock size={20} />, label: "Cola de revisiones", roles: ["all"] }, //todos 
         { href: `/dashboard/${id}/reprint-crt`, icon: <Printer size={20} />, label: "Reimpresión de CRT", roles: ["all"] }, //todos 
