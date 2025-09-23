@@ -24,7 +24,6 @@ type Role = { id: number; name: string };
 const FIXED_ROLES: Role[] = [
   { id: 3, name: "Ingeniero" },
   { id: 4, name: "Operador" },
-  { id: 5, name: "Soporte" },
 ];
 
 const ENGINEER_ROLE_ID = 3;
