@@ -40,7 +40,7 @@ type PendingMember = {
   dni?: string | null;
   phone_number?: string | null;
   user_type_id: number | "";
-  licence_number?: string | null;
+  license_number?: string | null;
   title_name?: string | null;
   password?: string;
   confirm_password?: string;
@@ -217,7 +217,7 @@ export default function CreateWorkshopPage() {
         try {
           if (!m.user_type_id) throw new Error("Seleccioná un rol");
           if (m.user_type_id === ENGINEER_ROLE_ID) {
-            if (!m.licence_number?.trim() || !m.title_name?.trim()) {
+            if (!m.license_number?.trim() || !m.title_name?.trim()) {
               throw new Error("Para Ingeniero, completá matrícula y título");
             }
           }
@@ -228,7 +228,7 @@ export default function CreateWorkshopPage() {
               user_type_id: m.user_type_id,
             };
             if (m.user_type_id === ENGINEER_ROLE_ID) {
-              payload.licence_number = m.licence_number?.trim() || null;
+              payload.license_number = m.license_number?.trim() || null;
               payload.title_name = m.title_name?.trim() || null;
             }
             const rAttach = await fetch(`${API_BASE}/users/assign/${workshopId}`, {
@@ -259,7 +259,7 @@ export default function CreateWorkshopPage() {
               user_type_id: m.user_type_id,
             };
             if (m.user_type_id === ENGINEER_ROLE_ID) {
-              payload.licence_number = m.licence_number?.trim();
+              payload.license_number = m.license_number?.trim();
               payload.title_name = m.title_name?.trim();
             }
 
@@ -480,11 +480,11 @@ export default function CreateWorkshopPage() {
                                     <input
                                       className="rounded-[4px] border border-[#E2E8F0] bg-white px-3 py-2 text-sm"
                                       placeholder="Ej, 12345"
-                                      value={m.licence_number || ""}
+                                      value={m.license_number || ""}
                                       onChange={(e) => {
                                         const v = e.target.value;
                                         setPending((p) =>
-                                          p.map((x) => x.id === m.id ? { ...x, licence_number: v } : x)
+                                          p.map((x) => x.id === m.id ? { ...x, license_number: v } : x)
                                         );
                                       }}
                                     />
@@ -577,7 +577,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
   const [phone, setPhone] = useState("");
   const [roleId, setRoleId] = useState<number | "">("");
 
-  const [licence, setLicence] = useState("");
+  const [license, setlicense] = useState("");
   const [degree, setDegree] = useState("");
 
   const [password, setPassword] = useState("");
@@ -591,13 +591,13 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
 
   const clearForm = () => {
     setFirstName(""); setLastName(""); setDni(""); setPhone(""); setRoleId("");
-    setLicence(""); setDegree(""); setPassword(""); setConfirm("");
+    setlicense(""); setDegree(""); setPassword(""); setConfirm("");
     setShowPass(false); setShowConfirm(false);
   };
 
   const onChangeRole = (val: number | "") => {
     setRoleId(val);
-    if (val !== ENGINEER_ROLE_ID) { setLicence(""); setDegree(""); }
+    if (val !== ENGINEER_ROLE_ID) { setlicense(""); setDegree(""); }
   };
 
   const searchAndAdd = async () => {
@@ -632,7 +632,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
           const last_name = u?.last_name || u?.lastName || "";
           const dni = u?.dni ?? null;
           const phone_number = u?.phone_number ?? u?.phone ?? null;
-          const licence_number = u?.licence_number ?? u?.licenceNumber ?? null;
+          const license_number = u?.license_number ?? u?.licenseNumber ?? null;
           const title_name = u?.title_name ?? u?.titleName ?? null;
 
           const newItem: PendingMember = {
@@ -644,7 +644,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
             last_name,
             dni,
             phone_number,
-            licence_number: licence_number || null,
+            license_number: license_number || null,
             title_name: title_name || null,
             // para existentes no seteamos password
           };
@@ -702,7 +702,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
     const normalized = email.trim().toLowerCase();
     if (!normalized) return setMsg("Ingresá un email");
     if (!roleId) return setMsg("Seleccioná un rol");
-    if (roleId === ENGINEER_ROLE_ID && (!licence.trim() || !degree.trim())) {
+    if (roleId === ENGINEER_ROLE_ID && (!license.trim() || !degree.trim())) {
       return setMsg("Para Ingeniero, completá matrícula y título");
     }
 
@@ -722,7 +722,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
       last_name: lastName || undefined,
       dni: dni || null,
       phone_number: phone || null,
-      licence_number: roleId === ENGINEER_ROLE_ID ? licence.trim() : null,
+      license_number: roleId === ENGINEER_ROLE_ID ? license.trim() : null,
       title_name: roleId === ENGINEER_ROLE_ID ? degree.trim() : null,
       password: finalPassword,
       confirm_password: finalConfirm,
@@ -800,7 +800,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
 
               {roleId === ENGINEER_ROLE_ID && (
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <LabeledInput label="Nro de matrícula" value={licence} onChange={setLicence} />
+                  <LabeledInput label="Nro de matrícula" value={license} onChange={setlicense} />
                   <LabeledInput label="Título universitario" value={degree} onChange={setDegree} />
                 </div>
               )}
