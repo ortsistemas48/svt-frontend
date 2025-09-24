@@ -23,7 +23,8 @@ type Role = { id: number; name: string };
 const FIXED_ROLES: Role[] = [
   { id: 2, name: "Titular" },
   { id: 3, name: "Ingeniero" },
-  { id: 4, name: "Operador" },
+  { id: 4, name: "Administrativo" },
+  { id: 6, name: "Personal de planta" },
 ];
 const ENGINEER_ROLE_ID = 3;
 
@@ -902,7 +903,7 @@ function TeamSummary({ items, onEdit }: { items: PendingMember[]; onEdit: () => 
                 <div className="text-xs sm:text-sm text-[#64748B] truncate">{m.email}{m.existingUserId ? ", existente" : ", nuevo"}</div>
               </div>
               <span className="text-xs sm:text-sm text-[#0F172A] font-medium self-start sm:self-auto">
-                {m.user_type_id === 2 ? "Titular" : m.user_type_id === 3 ? "Ingeniero" : m.user_type_id === 4 ? "Operador" : "Sin rol"}
+                {m.user_type_id === 2 ? "Titular" : m.user_type_id === 3 ? "Ingeniero" : m.user_type_id === 4 ? "Administrativo" : m.user_type_id === 6 ? "Personal de planta" : "Sin rol"}
               </span>
             </li>
           ))}
