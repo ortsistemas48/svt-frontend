@@ -22,6 +22,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 type Role = { id: number; name: string };
 
 const FIXED_ROLES: Role[] = [
+  { id: 2, name: "Titular" },
   { id: 3, name: "Ingeniero" },
   { id: 4, name: "Operador" },
 ];
