@@ -50,19 +50,28 @@ export default function CompletedApplicationsTable() {
           cache: "no-store",
         }
       );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const data: ApiResponse = await res.json();
-      
-      // Filter applications on the client side for search functionality
-      const filteredData = data.applications.filter((item: Application) => {
-        const carEmpty = isDataEmpty(item.car);
-        const ownerEmpty = isDataEmpty(item.owner);
-        return !(carEmpty && ownerEmpty);
-      });
-      
-      setApplications(filteredData);
-      setPagination(data.pagination);
+      console.log(data);
+      // Check if data and applications exist before filtering
+      if (data && Array.isArray(data
+      )) {
+        setApplications(data);
+        setPagination(data.pagination);
+      } else {
+        // Handle case where data.applications is undefined or not an array
+        console.warn("API response doesn't contain applications array:", data);
+        setApplications([]);
+        setPagination(null);
+      }
     } catch (err) {
       console.error("Error al traer aplicaciones completadas", err);
+      setApplications([]);
+      setPagination(null);
     } finally {
       setIsLoading(false);
     }
@@ -86,13 +95,13 @@ export default function CompletedApplicationsTable() {
           const firstName = item.owner?.first_name?.toLowerCase() || '';
           const lastName = item.owner?.last_name?.toLowerCase() || '';
           const dni = item.owner?.dni?.toLowerCase() || '';
-          
-          return licensePlate.includes(searchLower) || 
-                 brand.includes(searchLower) || 
-                 model.includes(searchLower) ||
-                 firstName.includes(searchLower) ||
-                 lastName.includes(searchLower) ||
-                 dni.includes(searchLower);
+
+          return licensePlate.includes(searchLower) ||
+            brand.includes(searchLower) ||
+            model.includes(searchLower) ||
+            firstName.includes(searchLower) ||
+            lastName.includes(searchLower) ||
+            dni.includes(searchLower);
         });
         setApplications(filteredData);
       } else {
@@ -156,7 +165,7 @@ export default function CompletedApplicationsTable() {
              * Si no, ver notas abajo para el fallback.
              */
             theadClassName="bg-white"
-            
+
             tableClassName="w-full border-collapse"
             renderRow={(item: Application) => {
               const dateObj = new Date(item.date);

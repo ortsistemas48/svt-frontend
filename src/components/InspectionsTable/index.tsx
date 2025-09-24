@@ -1,7 +1,7 @@
 // components/InspectionTable/index.tsx
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { Play, Pencil, Trash2, RefreshCcw, X } from "lucide-react";
+import { Play, Pencil, Trash2, RefreshCcw, X, Search, SlidersHorizontal } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Application } from "@/app/types";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
@@ -19,10 +19,15 @@ export default function InspectionTable() {
   const { id } = useParams();
   const [items, setItems] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(""); // Displayed search value
+  const [searchQuery, setSearchQuery] = useState(""); // Actual search query used for API
   const [page, setPage] = useState(1);
   const perPage = 5;
   const [total, setTotal] = useState(0);
+  
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>(""); // Empty means all statuses
   const router = useRouter();
 
   // Modal
@@ -47,7 +52,8 @@ export default function InspectionTable() {
         page: String(page),
         per_page: String(perPage),
       });
-      if (q.trim()) usp.set("q", q.trim());
+      if (searchQuery.trim()) usp.set("q", searchQuery.trim());
+      if (statusFilter) usp.set("status", statusFilter);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/full?${usp.toString()}`,
@@ -70,7 +76,7 @@ export default function InspectionTable() {
   useEffect(() => {
     fetchApps();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, page, q]);
+  }, [id, page, searchQuery, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
@@ -128,28 +134,107 @@ export default function InspectionTable() {
         </div>
       )}
 
-      {/* 3) Input y botón fuera del borde de la tabla */}
+      {/* Search and filters section */}
       <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-        <input
-          disabled={loading}
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setPage(1);
-          }}
-          className="w-full flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
-          placeholder="Busca revisiones por su: Dominio, Propietario u Oblea"
-        />
-        <button
-          disabled={loading}
-          onClick={fetchApps}
-          className="flex items-center justify-center gap-2 rounded-md border border-[#0040B8] px-3 py-2 text-sm font-medium text-[#0040B8] transition-colors duration-200 hover:bg-[#0040B8] hover:text-white disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
-        >
-          <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
-          <span className="hidden sm:inline">{loading ? "Actualizando..." : "Actualizar"}</span>
-          <span className="sm:hidden">{loading ? "..." : "↻"}</span>
-        </button>
+        <div className="flex flex-1 gap-3">
+          <input
+            disabled={loading}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
+            placeholder="Busca revisiones por su: Dominio, Propietario u Oblea"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                setSearchQuery(q);
+                setPage(1);
+              }
+            }}
+          />
+          <button
+            disabled={loading}
+            onClick={() => {
+              setSearchQuery(q);
+              setPage(1);
+            }}
+            className="flex items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+          >
+            <Search size={16} />
+            <span className="hidden sm:inline">Buscar</span>
+          </button>
+            <button
+              disabled={loading}
+              onClick={() => {
+                setShowFilters(!showFilters);
+                setPage(1);
+              }}
+              className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+            >
+              <SlidersHorizontal size={16} className="text-white" />
+              <span className="hidden sm:inline text-white">Filtrar</span>
+            </button>
+        </div>
       </div>
+
+      {/* Filter overlay */}
+      {showFilters && (
+        <div className="mb-4 relative">
+          <div className="absolute top-0 left-0 right-0 z-10 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-gray-900">Filtros</h3>
+              <button
+                onClick={() => {
+                  setShowFilters(false);
+                  setPage(1);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Estado
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+                >
+                  <option value="">Todos los estados</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="En curso">En curso</option>
+                  <option value="Completado">Completado</option>
+                  <option value="En Cola">En Cola</option>
+                </select>
+              </div>
+              {/*
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    setStatusFilter("");
+                    setPage(1);
+                  }}
+                  className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  Limpiar filtros
+                </button>
+                <button
+                  onClick={() => {
+                    setShowFilters(false);
+                    setPage(1);
+                  }}
+                  className="flex-1 px-3 py-2 text-sm font-medium text-white bg-[#0040B8] rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Aplicar filtros
+                </button>
+              </div>
+              */}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Card con borde propio, 2) header blanco, 4) líneas pegadas a los bordes */}
       <div className="insp-table overflow-hidden rounded-lg border border-gray-200 bg-white">
@@ -266,8 +351,9 @@ export default function InspectionTable() {
         </div>
       </div>
 
-      {!loading && total > perPage && (
-        <div className="mt-6 flex flex-col items-center justify-center gap-3 text-sm sm:flex-row sm:gap-2">
+      {/* Pagination and refresh button section */}
+      <div className="mt-6 flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
+        {!loading && total > perPage && (
           <div className="flex items-center gap-2">
             <button
               className="rounded-md border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
@@ -289,13 +375,24 @@ export default function InspectionTable() {
               <span className="sm:hidden">›</span>
             </button>
           </div>
-        </div>
-      )}
+        )}
+        
+        {/* Refresh button */}
+        <button
+          disabled={loading}
+          onClick={fetchApps}
+          className="flex items-center justify-center gap-2 rounded-md border border-[#0040B8] px-3 py-2 text-sm font-medium text-[#0040B8] transition-colors duration-200 hover:bg-[#0040B8] hover:text-white disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+        >
+          <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
+          <span className="hidden sm:inline">{loading ? "Actualizando..." : "Actualizar"}</span>
+          <span className="sm:hidden">{loading ? "..." : "↻"}</span>
+        </button>
+      </div>
 
       {/* Modal de confirmación */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50">
-          {/* Backdrop */}
+          {/* Backdrop */}  
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
             onClick={() => !deleting && setDeleteTarget(null)}

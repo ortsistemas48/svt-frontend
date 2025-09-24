@@ -1,7 +1,6 @@
 
 'use client'
 
-import { useApplication } from "@/context/ApplicationContext";
 import React from "react";
 
 type FormFieldProps = {
@@ -25,14 +24,10 @@ export default function PersonFormField({
 }: FormFieldProps) {
 
     const id = isOwner ? `owner-${label}` : `driver-${label}`; // Unique ID for the field based on context
-    const { setCar } = useApplication();
     const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        // Handle change logic here, e.g., update form state
-        setCar((prev) => ({
-            ...prev,
-            [name]: event.target.value
-        }));
-
+        // Handle change logic here - this component appears to be for person data, not car data
+        // The actual state management should be handled by the parent component
+        console.log(`Field ${name} changed to:`, event.target.value);
     }
     return (
         <div className={`flex flex-col justify-center w-full ${className}`}>

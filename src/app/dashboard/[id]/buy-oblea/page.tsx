@@ -1,9 +1,7 @@
 import { ChevronRight, ShoppingCart, TicketPercent } from "lucide-react";
 import Link from "next/link";
 
-export default async function BuyObleaPage({ params }: { params: { id: string } }) {
-    const { id } = await params;
-    const workshopId = id;
+export default async function BuyObleaPage() {
 
     return (
         <div className="min-h-screen">
@@ -23,7 +21,7 @@ export default async function BuyObleaPage({ params }: { params: { id: string } 
                     </div>
                     <div className="flex gap-4 mt-4 sm:mt-0">
                         <Link
-                            href={`/dashboard/${workshopId}/my-obleas`}
+                            href={``}
                             className="border border-[#0040B8] text-[#0040B8] bg-white hover:bg-[#f0f6ff] font-medium rounded px-4 py-3 text-sm flex items-center transition"
                             type="button"
                         >

@@ -89,7 +89,7 @@ function normalizeRows(rows: DetailRow[]): DetailRow[] {
   }));
 }
 
-export async function fetchDetails(inspectionId: number) {
+async function fetchDetails(inspectionId: number) {
   const cookieHeader = (await cookies()).toString();
   const res = await fetch(`${API}/inspections/inspections/${inspectionId}/details`, {
     headers: { cookie: cookieHeader },
@@ -121,9 +121,10 @@ export async function fetchDetails(inspectionId: number) {
   };
 }
 
-export default async function InspectionPage({ params }: { params: { id: string; applicationId: string } }) {
-  const appId = Number(params.applicationId);
-  const workshopId = params.id;
+export default async function InspectionPage({ params }: { params: Promise<{ id: string; applicationId: string }> }) {
+  const { id, applicationId } = await params;
+  const appId = Number(applicationId);
+  const workshopId = id;
 
   // Check application status before proceeding
   const applicationStatus = await fetchApplicationStatus(appId);
