@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { RefreshCcw, Download } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import { Application } from "@/app/types";
-import { filterApplications, isDataEmpty } from "@/utils";
+import { isDataEmpty } from "@/utils";
 import { useParams } from "next/navigation";
 
 /** 1) Tonos de estado, texto fuerte y fondo claro */
@@ -14,37 +14,53 @@ const STATUS_TONES: Record<string, { text: string; bg: string }> = {
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
 
+interface PaginationData {
+  page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+  next_page: number | null;
+  prev_page: number | null;
+}
+
+interface ApiResponse {
+  applications: Application[];
+  pagination: PaginationData;
+}
+
 export default function CompletedApplicationsTable() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationData | null>(null);
   const itemsPerPage = 5;
   const { id } = useParams();
 
-  const filteredApplications = filterApplications({ applications, searchText });
-  const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
-  const currentData = filteredApplications.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-
-  const fetchApplications = async () => {
+  const fetchApplications = async (pageNum: number = page) => {
     try {
       setIsLoading(true);
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/completed`,
+        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/completed?page=${pageNum}&per_page=${itemsPerPage}`,
         {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           cache: "no-store",
         }
       );
-      const data = await res.json();
-      setApplications(
-        data.filter((item: Application) => {
-          const carEmpty = isDataEmpty(item.car);
-          const ownerEmpty = isDataEmpty(item.owner);
-          return !(carEmpty && ownerEmpty);
-        })
-      );
+      const data: ApiResponse = await res.json();
+      
+      // Filter applications on the client side for search functionality
+      const filteredData = data.applications.filter((item: Application) => {
+        const carEmpty = isDataEmpty(item.car);
+        const ownerEmpty = isDataEmpty(item.owner);
+        return !(carEmpty && ownerEmpty);
+      });
+      
+      setApplications(filteredData);
+      setPagination(data.pagination);
     } catch (err) {
       console.error("Error al traer aplicaciones completadas", err);
     } finally {
@@ -56,8 +72,40 @@ export default function CompletedApplicationsTable() {
     fetchApplications();
   }, []);
 
+  // Handle search with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchText) {
+        // For search, we'll filter on the client side for now
+        // In the future, you might want to implement server-side search
+        const filteredData = applications.filter((item: Application) => {
+          const searchLower = searchText.toLowerCase();
+          const licensePlate = item.car?.license_plate?.toLowerCase() || '';
+          const brand = item.car?.brand?.toLowerCase() || '';
+          const model = item.car?.model?.toLowerCase() || '';
+          const firstName = item.owner?.first_name?.toLowerCase() || '';
+          const lastName = item.owner?.last_name?.toLowerCase() || '';
+          const dni = item.owner?.dni?.toLowerCase() || '';
+          
+          return licensePlate.includes(searchLower) || 
+                 brand.includes(searchLower) || 
+                 model.includes(searchLower) ||
+                 firstName.includes(searchLower) ||
+                 lastName.includes(searchLower) ||
+                 dni.includes(searchLower);
+        });
+        setApplications(filteredData);
+      } else {
+        // If no search text, refetch from server
+        fetchApplications();
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchText]);
+
   const headers: TableHeader[] = [
-    { label: "ID" },
+    { label: "CRT" },
     { label: "Vehículo" },
     { label: "Titular" },
     { label: "Fecha de creación" },
@@ -81,7 +129,11 @@ export default function CompletedApplicationsTable() {
         />
         <button
           disabled={isLoading}
-          onClick={fetchApplications}
+          onClick={() => {
+            setPage(1);
+            setSearchText("");
+            fetchApplications(1);
+          }}
           className="border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 text-sm sm:text-base font-medium"
         >
           <RefreshCcw size={16} className={isLoading ? "animate-spin" : ""} />
@@ -95,7 +147,7 @@ export default function CompletedApplicationsTable() {
         <div className="overflow-x-auto">
           <TableTemplate
             headers={headers}
-            items={currentData}
+            items={applications}
             isLoading={isLoading}
             emptyMessage="No hay aplicaciones completadas para mostrar."
             rowsPerSkeleton={itemsPerPage}
@@ -167,24 +219,32 @@ export default function CompletedApplicationsTable() {
       </div>
 
       {/* Paginación */}
-      {filteredApplications.length > itemsPerPage && (
+      {pagination && pagination.total_pages > 1 && !searchText && (
         <div className="flex flex-col sm:flex-row justify-center items-center mt-6 gap-3 sm:gap-2 text-sm">
           <div className="flex items-center gap-2">
             <button
               className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
-              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              disabled={page === 1}
+              onClick={() => {
+                const newPage = page - 1;
+                setPage(newPage);
+                fetchApplications(newPage);
+              }}
+              disabled={!pagination.has_prev}
             >
               <span className="hidden sm:inline">Anterior</span>
               <span className="sm:hidden">‹</span>
             </button>
             <span className="text-gray-600 px-2 py-1 bg-gray-100 rounded text-xs sm:text-sm">
-              Página {page} de {totalPages}
+              Página {pagination.page} de {pagination.total_pages}
             </span>
             <button
               className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
-              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={page === totalPages}
+              onClick={() => {
+                const newPage = page + 1;
+                setPage(newPage);
+                fetchApplications(newPage);
+              }}
+              disabled={!pagination.has_next}
             >
               <span className="hidden sm:inline">Siguiente</span>
               <span className="sm:hidden">›</span>

@@ -422,7 +422,7 @@ export default function CreateWorkshopPage() {
               >
                 <AddStaffCard onAdd={addPendingSafely} />
                 <div>
-                  <h3 className="text-base sm:text-lg font-medium text-[#0F172A] mb-3">Pendientes</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0F172A] mb-3">Pendientes</h3>
                   <AnimatePresence initial={false}>
                     {pending.length === 0 ? (
                       <motion.div
@@ -750,7 +750,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
     <div className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-6 bg-gradient-to-br from-white to-[#F8FAFC]">
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <h2 className="text-lg sm:text-xl font-semibold text-[#0F172A]">Agregar por email</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-[#0F172A]">Agregar personal al taller</h2>
           <p className="text-sm sm:text-base text-[#64748B] mt-1">Si existe se suma directo, si no existe completás sus datos.</p>
 
           {/* Email y buscar, centrado simétrico */}
@@ -883,7 +883,7 @@ function TeamSummary({ items, onEdit }: { items: PendingMember[]; onEdit: () => 
     <div className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg sm:text-xl font-semibold text-[#0F172A]">Equipo a procesar</h3>
+          <h3 className="text-lg sm:text-xl font-semibold text-[#0F172A]">Personal de planta registrado</h3>
           <p className="text-sm sm:text-base text-[#64748B] mt-1">Se crearán o asociarán al confirmar.</p>
         </div>
         <button type="button" onClick={onEdit} className="inline-flex items-center gap-1 text-sm sm:text-base text-[#0040B8] hover:opacity-80 self-start sm:self-auto">

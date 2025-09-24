@@ -32,6 +32,7 @@ export default function InspectionTable() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const headers: TableHeader[] = [
+    { label: "CRT" },
     { label: "Vehículo" },
     { label: "Titular" },
     { label: "Fecha de creación" },
@@ -168,6 +169,9 @@ export default function InspectionTable() {
 
                 return (
                   <tr key={item.application_id} className="transition-colors hover:bg-gray-50">
+                    <td className="p-3 text-center">
+                      <div className="text-sm font-mono font-medium sm:text-base">{item.application_id || "-"}</div>
+                    </td>
                     <td className="p-3 text-center">
                       <div className="text-sm font-medium sm:text-base">{item.car?.license_plate || "-"}</div>
                       <div className="mx-auto max-w-[120px] truncate text-xs text-gray-600 sm:max-w-[160px] sm:text-sm">

@@ -74,12 +74,18 @@ export type UserType = {
 
 export type Application = {
   application_id: number;
+  user_id: number;
   car: {
     license_plate: string;
     model: string;
     brand: string;
   } | null;
   owner: {
+    first_name: string;
+    last_name: string;
+    dni: string;
+  } | null;
+  driver: {
     first_name: string;
     last_name: string;
     dni: string;

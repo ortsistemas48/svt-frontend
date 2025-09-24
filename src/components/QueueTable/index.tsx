@@ -25,6 +25,7 @@ export default function QueueTable() {
   const [total, setTotal] = useState(0);
 
   const headers: TableHeader[] = [
+    { label: "CRT" },
     { label: "Vehículo" },
     { label: "Titular" },
     { label: "Fecha de creación" },
@@ -109,6 +110,7 @@ export default function QueueTable() {
 
               return (
                 <tr key={item.application_id} className="hover:bg-gray-50 transition-colors">
+                  <td className="p-3 text-center text-sm sm:text-base font-mono">{item.application_id}</td>
                   <td className="p-3 text-center">
                     <div className="font-medium text-sm sm:text-base">{item.car?.license_plate || "-"}</div>
                     <div className="text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-[160px] mx-auto">

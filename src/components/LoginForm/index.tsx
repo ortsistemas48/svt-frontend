@@ -65,7 +65,7 @@ export default function LoginForm() {
       const session = await sessionRes.json();
       const workshops = session.workshops || [];
       const isAdmin = session.user.is_admin;
-
+      
 
       // Caso 1: es admin
       if (isAdmin) {

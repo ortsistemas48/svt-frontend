@@ -307,6 +307,43 @@ export async function markStickerAsUsed(stickerId: number) {
   }
 }
 
+export async function fetchStickerOrders(workshopId: number) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/orders?workshop_id=${workshopId}`, {
+    credentials: "include",
+    cache: "no-store",
+  });
+  
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || "No se pudieron cargar las órdenes de obleas");
+  }
+  const data = await res.json();
+  console.log(data);
+  return data; // [{id, name, status, amount, created_at}]
+
+}
+
+export async function fetchStickersByWorkshop(workshopId: number, page: number = 1, perPage: number = 10) {
+  const params = new URLSearchParams({
+    page: String(page),
+    per_page: String(perPage)
+  });
+  
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/workshop/${workshopId}?${params}`, {
+    credentials: "include",
+    cache: "no-store",
+  });
+  
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || "No se pudieron cargar las obleas");
+  }
+  
+  const data = await res.json();
+  console.log(data);
+  return data; // {stickers: [...], pagination: {...}}
+}
+
 const BASE = "https://apis.datos.gob.ar/georef/api";
 
 export type Option = { value: string; label: string; key?: string };
