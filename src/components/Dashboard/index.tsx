@@ -213,7 +213,7 @@ export default function Dashboard() {
               {MOCK.crt_stock <= 10 && (
                 <Link
                   href={`/dashboard/${id}/store/obleas`}
-                  className="mt-5 block rounded-[4px] border bg-rose-100 text-rose-800 border-rose-300 px-4 py-3 text-sm text-emerald-800 hover:bg-emerald-100"
+                  className="mt-5 block rounded-[4px] border bg-rose-100 border-rose-300 px-4 py-3 text-sm text-emerald-800 hover:bg-emerald-100"
                 >
                   Stock bajo de obleas, hacé tu compra
                 </Link>
