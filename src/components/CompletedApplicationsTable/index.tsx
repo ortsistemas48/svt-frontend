@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { RefreshCcw, Download } from "lucide-react";
+import { Download, Search, SlidersHorizontal } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import { Application } from "@/app/types";
-import { isDataEmpty } from "@/utils";
 import { useParams } from "next/navigation";
+import { isDataEmpty } from "@/utils";
+import TableFilters from "../TableFilters";
+import RefreshButton from "../RefreshButton";
 
 /** 1) Tonos de estado, texto fuerte y fondo claro */
 const STATUS_TONES: Record<string, { text: string; bg: string }> = {
@@ -13,7 +15,7 @@ const STATUS_TONES: Record<string, { text: string; bg: string }> = {
   Condicional: { text: "text-amber-700", bg: "bg-amber-50" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
-
+const TABLE_FILTERS = ["Todos", "Apto", "Rechazado", "Condicional"];
 interface PaginationData {
   page: number;
   per_page: number;
@@ -33,17 +35,30 @@ interface ApiResponse {
 export default function CompletedApplicationsTable() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchText, setSearchText] = useState("");
+  const [q, setQ] = useState(""); // Displayed search value
+  const [searchQuery, setSearchQuery] = useState(""); // Actual search query used for API
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<PaginationData | null>(null);
   const itemsPerPage = 5;
   const { id } = useParams();
+  
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [resultFilter, setResultFilter] = useState<string>("Todos"); // Empty means all statuses
 
   const fetchApplications = async (pageNum: number = page) => {
     try {
       setIsLoading(true);
+      const usp = new URLSearchParams({
+        page: String(pageNum),
+        per_page: String(itemsPerPage),
+      });
+      if (searchQuery.trim()) usp.set("q", searchQuery.trim());
+      if (resultFilter === "Todos") usp.delete("result");
+      else if (resultFilter) usp.set("result", resultFilter);
+
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/completed?page=${pageNum}&per_page=${itemsPerPage}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/completed?${usp.toString()}`,
         {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -56,11 +71,15 @@ export default function CompletedApplicationsTable() {
       }
 
       const data: ApiResponse = await res.json();
-      console.log(data);
       // Check if data and applications exist before filtering
-      if (data && Array.isArray(data
+      if (data && Array.isArray(data.applications
       )) {
-        setApplications(data);
+        const filteredData = data.applications.filter((item: Application) => {
+          const carEmpty = isDataEmpty(item.car);
+          const ownerEmpty = isDataEmpty(item.owner);
+          return !(carEmpty && ownerEmpty);
+        });
+        setApplications(filteredData);
         setPagination(data.pagination);
       } else {
         // Handle case where data.applications is undefined or not an array
@@ -79,39 +98,9 @@ export default function CompletedApplicationsTable() {
 
   useEffect(() => {
     fetchApplications();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, page, searchQuery, resultFilter]);
 
-  // Handle search with debouncing
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchText) {
-        // For search, we'll filter on the client side for now
-        // In the future, you might want to implement server-side search
-        const filteredData = applications.filter((item: Application) => {
-          const searchLower = searchText.toLowerCase();
-          const licensePlate = item.car?.license_plate?.toLowerCase() || '';
-          const brand = item.car?.brand?.toLowerCase() || '';
-          const model = item.car?.model?.toLowerCase() || '';
-          const firstName = item.owner?.first_name?.toLowerCase() || '';
-          const lastName = item.owner?.last_name?.toLowerCase() || '';
-          const dni = item.owner?.dni?.toLowerCase() || '';
-
-          return licensePlate.includes(searchLower) ||
-            brand.includes(searchLower) ||
-            model.includes(searchLower) ||
-            firstName.includes(searchLower) ||
-            lastName.includes(searchLower) ||
-            dni.includes(searchLower);
-        });
-        setApplications(filteredData);
-      } else {
-        // If no search text, refetch from server
-        fetchApplications();
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchText]);
 
   const headers: TableHeader[] = [
     { label: "CRT" },
@@ -124,32 +113,49 @@ export default function CompletedApplicationsTable() {
 
   return (
     <div className="p-4 sm:p-6">
-      {/* 3) Barra fuera del borde de la tabla */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-        <input
-          type="text"
-          placeholder="Ingrese el dominio que desea buscar"
-          className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 rounded-md w-full flex-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-          value={searchText}
-          onChange={(e) => {
-            setSearchText(e.target.value);
-            setPage(1);
-          }}
-        />
-        <button
-          disabled={isLoading}
-          onClick={() => {
-            setPage(1);
-            setSearchText("");
-            fetchApplications(1);
-          }}
-          className="border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 text-sm sm:text-base font-medium"
-        >
-          <RefreshCcw size={16} className={isLoading ? "animate-spin" : ""} />
-          <span className="hidden sm:inline">{isLoading ? "Actualizando..." : "Actualizar"}</span>
-          <span className="sm:hidden">{isLoading ? "..." : "↻"}</span>
-        </button>
+      {/* Search and filters section */}
+      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 gap-3">
+          <input
+            disabled={isLoading}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
+            placeholder="Busca aplicaciones completadas por: Dominio, Propietario u Oblea"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                setSearchQuery(q);
+                setPage(1);
+              }
+            }}
+          />
+          <button
+            disabled={isLoading}
+            onClick={() => {
+              setSearchQuery(q);
+              setPage(1);
+            }}
+            className="flex items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+          >
+            <Search size={16} />
+            <span className="hidden sm:inline">Buscar</span>
+          </button>
+          <button
+            disabled={isLoading}
+            onClick={() => {
+              setShowFilters(!showFilters);
+              setPage(1);
+            }}
+            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+          >
+            <SlidersHorizontal size={16} className="text-white" />
+            <span className="hidden sm:inline text-white">Filtrar</span>
+          </button>
+        </div>
       </div>
+
+      {/* Filter overlay */}
+      {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={resultFilter} setStatusFilter={setResultFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
       {/* Card de tabla con borde propio */}
       <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
@@ -227,9 +233,9 @@ export default function CompletedApplicationsTable() {
         </div>
       </div>
 
-      {/* Paginación */}
-      {pagination && pagination.total_pages > 1 && !searchText && (
-        <div className="flex flex-col sm:flex-row justify-center items-center mt-6 gap-3 sm:gap-2 text-sm">
+      {/* Pagination and refresh button section */}
+      <div className="mt-6 flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
+        {pagination && pagination.total_pages > 1 && !searchQuery && (
           <div className="flex items-center gap-2">
             <button
               className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
@@ -259,8 +265,11 @@ export default function CompletedApplicationsTable() {
               <span className="sm:hidden">›</span>
             </button>
           </div>
-        </div>
-      )}
+        )}
+        
+        {/* Refresh button */}
+        <RefreshButton loading={isLoading} fetchApps={fetchApplications} />
+      </div>
     </div>
   );
 }

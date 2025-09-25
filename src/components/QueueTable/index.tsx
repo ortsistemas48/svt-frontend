@@ -1,10 +1,12 @@
 // components/QueueTable/index.tsx
 "use client";
 import { useEffect, useState } from "react";
-import { Play, RefreshCcw } from "lucide-react";
+import { Play, Search, SlidersHorizontal } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Application } from "@/app/types";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
+import TableFilters from "../TableFilters";
+import RefreshButton from "../RefreshButton";
 
 const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> = {
   Completado: { text: "text-green-700", bg: "bg-green-50" },
@@ -13,16 +15,21 @@ const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> 
   "En Cola": { text: "text-amber-700", bg: "bg-amber-50" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
-
+const TABLE_FILTERS = ["Todos", "En curso", "En Cola"];
 export default function QueueTable() {
   const { id } = useParams();
   const router = useRouter();
   const [items, setItems] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(""); // Displayed search value
+  const [searchQuery, setSearchQuery] = useState(""); // Actual search query used for API
   const [page, setPage] = useState(1);
   const perPage = 5;
   const [total, setTotal] = useState(0);
+  
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("Todos"); // Empty means all statuses
 
   const headers: TableHeader[] = [
     { label: "CRT" },
@@ -41,7 +48,9 @@ export default function QueueTable() {
         per_page: String(perPage),
         status_in: "En Cola,En curso",
       });
-      if (q.trim()) usp.set("q", q.trim());
+      if (searchQuery.trim()) usp.set("q", searchQuery.trim());
+      if (statusFilter === "Todos") usp.delete("status");
+      else if (statusFilter) usp.set("status", statusFilter);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/full?${usp.toString()}`,
@@ -49,6 +58,7 @@ export default function QueueTable() {
       );
       if (!res.ok) throw new Error("Error al traer aplicaciones");
       const data = await res.json();
+      console.log(data);
       setItems(data.items ?? []);
       setTotal(data.total ?? 0);
     } catch (err) {
@@ -63,32 +73,55 @@ export default function QueueTable() {
   useEffect(() => {
     fetchApps();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, page, q]);
+  }, [id, page, searchQuery, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (
     <div className="p-4 sm:p-6">
-      {/* 3) Búsqueda y actualizar fuera del borde de la tabla */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-        <input
-          type="text"
-          placeholder="Busca inspecciones por su: Dominio, Propietario u Oblea"
-          className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 rounded-md w-full flex-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-          value={q}
-          onChange={(e) => { setQ(e.target.value); setPage(1); }}
-          disabled={loading}
-        />
-        <button
-          className="border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 text-sm sm:text-base font-medium"
-          onClick={fetchApps}
-          disabled={loading}
-        >
-          <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
-          <span className="hidden sm:inline">{loading ? "Actualizando..." : "Actualizar"}</span>
-          <span className="sm:hidden">{loading ? "..." : "↻"}</span>
-        </button>
+      {/* Search and filters section */}
+      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 gap-3">
+          <input
+            disabled={loading}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
+            placeholder="Busca inspecciones por su: Dominio, Propietario u Oblea"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                setSearchQuery(q);
+                setPage(1);
+              }
+            }}
+          />
+          <button
+            disabled={loading}
+            onClick={() => {
+              setSearchQuery(q);
+              setPage(1);
+            }}
+            className="flex items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+          >
+            <Search size={16} />
+            <span className="hidden sm:inline">Buscar</span>
+          </button>
+          <button
+            disabled={loading}
+            onClick={() => {
+              setShowFilters(!showFilters);
+              setPage(1);
+            }}
+            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+          >
+            <SlidersHorizontal size={16} className="text-white" />
+            <span className="hidden sm:inline text-white">Filtrar</span>
+          </button>
+        </div>
       </div>
+
+      {/* Filter overlay */}
+      {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
       {/* Card con borde propio, header blanco y líneas pegadas a los bordes */}
       <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
@@ -185,8 +218,9 @@ export default function QueueTable() {
         </div>
       </div>
 
-      {!loading && total > perPage && (
-        <div className="flex flex-col sm:flex-row justify-center items-center mt-6 gap-3 sm:gap-2 text-sm">
+      {/* Pagination and refresh button section */}
+      <div className="mt-6 flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
+        {!loading && total > perPage && (
           <div className="flex items-center gap-2">
             <button
               className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
@@ -208,8 +242,11 @@ export default function QueueTable() {
               <span className="sm:hidden">›</span>
             </button>
           </div>
-        </div>
-      )}
+        )}
+        
+        {/* Refresh button */}
+        <RefreshButton loading={loading} fetchApps={fetchApps} />
+      </div>
     </div>
   );
 }

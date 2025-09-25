@@ -206,13 +206,6 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     .toUpperCase()
     .replace(/[-\s]/g, "");
 
-  // Etiqueta de la oblea actual (modo view)
-  const currentStickerLabel = useMemo(() => {
-    if (car?.sticker?.sticker_number) return String(car.sticker.sticker_number);
-    if (car?.sticker_id) return `Oblea #${car.sticker_id}`;
-    return "";
-  }, [car?.sticker, car?.sticker_id]);
-
   const dateForInput = (v?: string) => {
     if (!v) return "";
     // Si ya viene como YYYY-MM-DD, devuélvelo tal cual
@@ -259,6 +252,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         label: s.sticker_number ?? `Oblea ${s.id}`,
       }));
 
+      // Always ensure current sticker is in options, even if not available
       if (car?.sticker_id) {
         const idStr = String(car.sticker_id);
         const exists = options.some((o: any) => o.value === idStr);
@@ -286,6 +280,16 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workshopId, car?.id, car?.license_plate, mode]);
 
+  // Ensure sticker data is properly loaded when car data changes
+  useEffect(() => {
+    console.log("Car sticker_id:", car?.sticker_id, "Mode:", mode, "Sticker options length:", stickerOptions.length);
+    if (car?.sticker_id && mode !== "idle" && stickerOptions.length === 0) {
+      console.log("Loading stickers because car has sticker_id but no options loaded");
+      loadStickers();
+    }
+  }, [car?.sticker_id, mode, stickerOptions.length]);
+
+
   useEffect(() => {
     if (car?.license_plate && mode === "idle") setMode("view");
   }, [car?.license_plate, mode]);
@@ -293,6 +297,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
 
   const handleChange = (key: string, value: string) => {
     if (key === "sticker_id") {
+      console.log("Changing sticker from", car?.sticker_id, "to", value);
       setCar((prev: any) => ({ ...prev, sticker_id: Number(value) }));
       return;
     }
@@ -308,24 +313,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     setIsIdle(mode === "idle");
   }, [mode, setIsIdle]);
 
-  useEffect(() => {
-  if (mode !== "edit") return;
-  const hasCarErrors = Object.entries(errors ?? {}).some(([k, v]) => k.startsWith("car_") && v);
-  if (!hasCarErrors) return;
-
-  const t = setTimeout(() => {
-    setErrors((prev: any) => {
-      if (!prev) return prev;
-      const next: any = {};
-      for (const [k, v] of Object.entries(prev)) {
-        if (!k.startsWith("car_")) next[k] = v; // borramos solo car_
-      }
-      return next;
-    });
-  }, 2000); // 2s, ajustá a gusto
-
-  return () => clearTimeout(t);
-}, [errors, mode, setErrors]);
+  // Removed automatic error clearing - errors will only clear when user fixes validation issues
   // --- Buscar por patente ---
   const fetchVehicleByPlate = async () => {
     const plate = plateQuery.trim().toUpperCase().replace(/[-\s]/g, "");
@@ -520,7 +508,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         </div>
       )}
 
-      <fieldset disabled={mode === "view"} className={mode === "view" ? "opacity-95" : ""}>
+      <fieldset className={mode === "view" ? "opacity-95" : ""}>
         <div className="grid grid-cols-[1fr_1px_1fr] max-xl:grid-cols-1 gap-10 items-start">
           {/* Columna izquierda */}
           <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8 self-start">
@@ -537,6 +525,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                   onChange={(val) => handleChange(field.name, val)}
                   onBlur={() => handleBlur(field.name)}
                   error={getCarError(field.name)}
+                  disabled={mode === "view"}
                 />
               ) : (
                 <FormField
@@ -554,6 +543,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                   onChange={(val) => handleChange(field.name, val)}
                   onBlur={() => handleBlur(field.name)}
                   error={getCarError(field.name)}
+                  disabled={mode === "view"}
                 />
               )
             )}
@@ -581,6 +571,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                   onChange={(val) => handleChange(field.name, val)}
                   onBlur={() => handleBlur(field.name)}
                   error={getCarError(field.name)}
+                  disabled={mode === "view"}
                 />
               ) : (
                 <FormField
@@ -598,26 +589,15 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                   onChange={(val) => handleChange(field.name, val)}
                   onBlur={() => handleBlur(field.name)}
                   error={getCarError(field.name)}
+                  disabled={mode === "view"}
                 />
               )
             )}
 
-            {/* Oblea: vista vs edición */}
-            {mode === "view" ? (
-              <div className="col-span-1">
-                <label className="block text-sm text-gray-700 mb-1">Oblea vinculada</label>
-                <div className="flex flex-col justify-center gap-y-1 border border-[#DEDEDE] rounded-[10px] px-4 py-3 bg-gray-50">
-                  {currentStickerLabel || "—"}
-                  {car?.sticker?.expiration_date && (
-                    <span className="text-xs text-gray-500">
-                      (vence: {new Date(car.sticker.expiration_date).toLocaleDateString()})
-                    </span>
-                  )}
-                </div>
-              </div>
-            ) : (
+            {/* Oblea: siempre editable, incluso en modo view */}
+            <div className="col-span-1">
               <FormField
-                label="Vincular oblea"
+                label={mode === "view" ? "Oblea vinculada" : "Vincular oblea"}
                 type="select"
                 options={stickerOptions}
                 name="sticker_id"
@@ -626,9 +606,10 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 onChange={(val) => handleChange("sticker_id", val)}
                 onBlur={() => { }}
                 error={getCarError("sticker_id")}
-                className="col-span-1"
+                disabled={false} // Always enabled for oblea field
               />
-            )}
+              
+            </div>
 
             {loadingStickers && <p className="text-xs text-gray-500">Cargando obleas...</p>}
             {!loadingStickers && !stickersError && stickerOptions.length === 0 && mode !== "view" && (
