@@ -4,7 +4,7 @@ import Link from "next/link";
 export default async function BuyObleaPage() {
 
     return (
-        <div className="min-h-screen">
+        <div className="">
             <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
                 <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
@@ -17,7 +17,7 @@ export default async function BuyObleaPage() {
                 <section className="bg-white rounded-[10px] border-gray-100 border-2 shadow-sm p-6 px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
                     <div>
                         <h2 className="text-[#0040B8] text-base mb-0">Obleas</h2>
-                        <p className="text-gray-400 text-sm mt-1">Aquí podrás comprar y ver todas tus obleas</p>
+                        <p className="text-gray-400 text-sm mt-1">Aquí podrás asignar y ver todas tus obleas</p>
                     </div>
                     <div className="flex gap-4 mt-4 sm:mt-0">
                         <Link
@@ -33,8 +33,8 @@ export default async function BuyObleaPage() {
                             className="bg-[#0040B8] hover:bg-[#003080] text-white font-medium rounded px-4 py-2 text-sm flex items-center transition"
                             type="button"
                         >
-                            <ShoppingCart size={16} className="mr-2" />
-                            Comprar obleas
+                            Asignar
+                            <ChevronRight size={16} className="ml-2" />
                         </Link>
                     </div>
                 </section>

@@ -35,6 +35,21 @@ export default function Sidebar() {
 
   const showWorkshops = approvedWorkshops.length > 1;
 
+  const logOutFunction = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) return;
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      console.error("Error de red:", err);
+    }
+  };
+
   useEffect(() => {
     const run = async () => {
       if (!user?.id || !id) return;
@@ -100,7 +115,7 @@ export default function Sidebar() {
       <div
         ref={scrollRef}
         className="
-          relative h-full overflow-y-auto
+          relative h-full overflow-y-auto pb-8
           [scrollbar-width:none] [-ms-overflow-style:none]
           [&::-webkit-scrollbar]:hidden
         "
@@ -184,18 +199,31 @@ export default function Sidebar() {
           <div className="flex flex-col space-y-3">
             {userType?.name?.toLowerCase() === "titular" && (
               <Link href={`/dashboard/${id}/settings`}>
-                <div className="group flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50">
+                <div className="group flex items-center gap-3 rounded-[4px] px-3 py-3 hover:bg-gray-50">
                   <Settings size={20} className="text-[#0A58F5]" />
                   <span className="text-sm text-gray-800">Configuración</span>
                 </div>
               </Link>
             )}
             <Link href={`/dashboard/${id}/help`}>
-              <div className="group flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50">
+              <div className="group flex items-center gap-3 rounded-[4px] px-3 py-3 hover:bg-gray-50">
                 <HelpCircle size={20} className="text-[#0A58F5]" />
                 <span className="text-sm text-gray-800">Centro de ayuda</span>
               </div>
             </Link>
+            <button
+              onClick={logOutFunction}
+              className="w-full flex items-center gap-3 px-3 py-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-[4px] transition-colors duration-150 group"
+            >
+              <svg
+                className="w-4 h-4 group-hover:scale-110 transition-transform duration-150"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Cerrar sesión
+            </button>
           </div>
         </div>
       </div>
