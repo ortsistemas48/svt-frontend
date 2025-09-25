@@ -113,7 +113,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
     el.scrollBy({ top: 240, behavior: "smooth" });
   };
 
-  const fullName = user?.first_name || "Usuario";
+  const fullName = `${user?.first_name} ${user?.last_name}`|| "Usuario";
 
   return (
     <aside className="relative h-[calc(100vh-32px)] w-[290px] max-[1500px]:w-[256px] bg-white md:shadow rounded-[10px] p-4">
@@ -167,7 +167,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
             <div className="min-w-0 text-left">
               <p className="text-sm font-medium text-gray-900 truncate">{fullName}</p>
               <p className="text-xs text-gray-500 mt-1 truncate">
-                Rol de taller: {userType?.name}
+                Rol: {userType?.name}
               </p>
             </div>
           </div>

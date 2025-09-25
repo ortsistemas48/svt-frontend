@@ -1,5 +1,6 @@
 import { ChevronRight, ShoppingCart, TicketPercent } from "lucide-react";
 import Link from "next/link";
+import StickerOrdersTable from '@/components/StickerOrdersTable'
 
 export default async function BuyObleaPage() {
 
@@ -14,7 +15,7 @@ export default async function BuyObleaPage() {
                         <span className="text-[#0040B8] font-medium">Obleas</span>
                     </div>
                 </article>
-                <section className="bg-white rounded-[10px] border-gray-100 border-2 shadow-sm p-6 px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
+                <section className="bg-white rounded-[10px] border-gray-300 border p-6 px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
                     <div>
                         <h2 className="text-[#0040B8] text-base mb-0">Obleas</h2>
                         <p className="text-gray-400 text-sm mt-1">Aquí podrás asignar y ver todas tus obleas</p>
@@ -37,7 +38,14 @@ export default async function BuyObleaPage() {
                             <ChevronRight size={16} className="ml-2" />
                         </Link>
                     </div>
+
                 </section>
+
+                <div className="">
+                    <StickerOrdersTable/>
+                </div>
+
+
             </div>
         </div>
     )

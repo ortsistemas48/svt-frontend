@@ -117,6 +117,7 @@ export default function QueueTable() {
             <SlidersHorizontal size={16} className="text-white" />
             <span className="hidden sm:inline text-white">Filtrar</span>
           </button>
+          <RefreshButton loading={loading} fetchApps={fetchApps} />
         </div>
       </div>
 
@@ -245,7 +246,6 @@ export default function QueueTable() {
         )}
         
         {/* Refresh button */}
-        <RefreshButton loading={loading} fetchApps={fetchApps} />
       </div>
     </div>
   );

@@ -151,6 +151,7 @@ export default function CompletedApplicationsTable() {
             <SlidersHorizontal size={16} className="text-white" />
             <span className="hidden sm:inline text-white">Filtrar</span>
           </button>
+          <RefreshButton loading={isLoading} fetchApps={fetchApplications} />
         </div>
       </div>
 
@@ -268,7 +269,6 @@ export default function CompletedApplicationsTable() {
         )}
         
         {/* Refresh button */}
-        <RefreshButton loading={isLoading} fetchApps={fetchApplications} />
       </div>
     </div>
   );

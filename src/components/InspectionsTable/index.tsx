@@ -175,6 +175,8 @@ export default function InspectionTable() {
             <SlidersHorizontal size={16} className="text-white" />
             <span className="hidden sm:inline text-white">Filtrar</span>
           </button>
+          {/* Refresh button */}
+          <RefreshButton loading={loading} fetchApps={fetchApps} />
         </div>
       </div>
 
@@ -321,9 +323,6 @@ export default function InspectionTable() {
             </button>
           </div>
         )}
-
-        {/* Refresh button */}
-        <RefreshButton loading={loading} fetchApps={fetchApps} />
       </div>
 
       {/* Modal de confirmación */}
