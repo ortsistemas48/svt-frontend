@@ -139,7 +139,7 @@ export default function InspectionTable() {
 
       {/* Search and filters section */}
       <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 gap-3">
+        <div className="flex flex-1 gap-3 px-[1.5px] pt-1">
           <input
             disabled={loading}
             value={q}

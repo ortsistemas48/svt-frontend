@@ -24,7 +24,7 @@ export default function InspectionsPage() {
   }, [applicationErrors.general, setApplicationErrors]);
 
   return (
-    <div className="min-h-screen">
+    <div className="">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Breadcrumb */}
         <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">

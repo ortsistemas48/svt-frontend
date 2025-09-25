@@ -174,9 +174,10 @@ export default function DashboardClientLayout({
   return (
     <DashboardProvider>
       <div className="h-screen flex flex-col bg-[#f5f5f5]">
-        <Topbar />
         <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
+          <div className="pl-4 min-h-full pt-4">
+            <Sidebar />
+          </div>
           <main className="flex-1 p-4 overflow-auto">
             <div className="bg-white min-h-full rounded-[10px] shadow p-8">
               {children}

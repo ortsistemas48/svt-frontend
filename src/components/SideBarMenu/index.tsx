@@ -1,86 +1,79 @@
-'use client'
-import Link from "next/link"
-import NavItem from "@/components/NavItem"
+"use client";
+
+import Link from "next/link";
+import { usePathname, useParams } from "next/navigation";
 import {
   ClipboardList,
   Clock,
-  
   FilePlus,
   Printer,
   ChartColumn,
   Users,
   Home
-
 } from "lucide-react";
-import { usePathname, useParams } from "next/navigation";
+import NavItem from "@/components/NavItem";
 import { UserTypeInWorkshop } from "@/app/types";
 
+type Props = {
+  userId: string;
+  userType: UserTypeInWorkshop | null;
+  loading: boolean;
+};
 
-export default function SideBarMenu({ 
-    userId, 
-    userType, 
-    loading 
-}: { 
-    userId: string;
-    userType: UserTypeInWorkshop | null;
-    loading: boolean;
-}){
-    const pathname = usePathname();
-    const { id } = useParams();
+export default function SideBarMenu({ userType, loading }: Props) {
+  const pathname = usePathname();
+  const { id } = useParams();
 
-    const getLinkClass = (href: string) => {
-      return pathname === href
-        ? "bg-[#0040B826] rounded-lg text-white"
-        : "";
+  const links = [
+    { href: `/dashboard/${id}`, icon: Home, label: "Inicio", roles: ["all"] },
+    { href: `/dashboard/${id}/applications`, icon: ClipboardList, label: "Inspección", roles: ["all"] },
+    { href: `/dashboard/${id}/inspections-queue`, icon: Clock, label: "Cola de inspecciones", roles: ["all"] },
+    { href: `/dashboard/${id}/reprint-crt`, icon: Printer, label: "Reimpresión de CRT", roles: ["all"] },
+    { href: `/dashboard/${id}/buy-oblea`, icon: FilePlus, label: "Obleas", roles: ["titular"] },
+    { href: `/dashboard/${id}/statistics`, icon: ChartColumn, label: "Estadísticas", roles: ["titular", "ingeniero"] },
+    { href: `/dashboard/${id}/users`, icon: Users, label: "Usuarios", roles: ["titular"] },
+  ];
+
+  const role = userType?.name?.toLowerCase();
+  const filtered = role
+    ? links.filter(l => l.roles.includes("all") || l.roles.includes(role))
+    : links.filter(l => l.roles.includes("all"));
+
+    const baseHref = `/dashboard/${id}`;
+
+    const isActive = (href: string) => {
+    // Inicio solo activo en la ruta exacta
+    if (href === baseHref) {
+        return pathname === href;
     }
-    
-    const allLinks = [
-        { href: `/dashboard/${id}`, icon: <Home size={20} />, label: "Inicio", roles: ["all"] }, //todos 
-        { href: `/dashboard/${id}/applications`, icon: <ClipboardList size={20} />, label: "Revisiones", roles: ["all"] }, //todos 
-        { href: `/dashboard/${id}/inspections-queue`, icon: <Clock size={20} />, label: "Cola de revisiones", roles: ["all"] }, //todos 
-        { href: `/dashboard/${id}/reprint-crt`, icon: <Printer size={20} />, label: "Reimpresión de CRT", roles: ["all"] }, //todos 
-        { href: `/dashboard/${id}/buy-oblea`, icon: <FilePlus size={20} />, label: "Comprar obleas", roles: ["titular"] }, //todos 
-        { href: `/dashboard/${id}/statistics`, icon: <ChartColumn size={20} />, label: "Estadísticas", roles: ["titular", "ingeniero"] }, //solo el ingeniero y el titular
-        { href: `/dashboard/${id}/users`, icon: <Users size={20} />, label: "Usuarios", roles: ["titular"] }, //solo puede verlo el titular 
-    ];
-
-    // Filter links based on user type
-    const getFilteredLinks = () => {
-        if (!userType) return allLinks.filter(link => link.roles.includes("all"));
-        
-        const userTypeName = userType.name.toLowerCase();
-        
-        return allLinks.filter(link => 
-            link.roles.includes("all") || 
-            link.roles.includes(userTypeName)
-        );
+    // Para el resto, activo si es exacto o subruta
+    return pathname === href || pathname.startsWith(href + "/");
     };
 
-    const links = getFilteredLinks();
-    
-    if (loading) {
-        return (
-            <nav className="flex flex-col space-y-2">
-                <div className="px-2 py-3 animate-pulse">
-                    <div className="h-6 bg-gray-200 rounded"></div>
-                </div>
-                <div className="px-2 py-3 animate-pulse">
-                    <div className="h-6 bg-gray-200 rounded"></div>
-                </div>
-                <div className="px-2 py-3 animate-pulse">
-                    <div className="h-6 bg-gray-200 rounded"></div>
-                </div>
-            </nav>
-        );
-    }
-
+  if (loading) {
     return (
-        <nav className="flex flex-col space-y-2 ">
-            {links.map((link) => (
-                <Link key={link.href} href={link.href} className={`px-2 py-3 ${getLinkClass(link.href)}`} >
-                    <NavItem icon={link.icon} label={link.label}/>
-                </Link>
-            ))}     
-        </nav>
-    )
+      <nav className="flex flex-col gap-2 px-1">
+        {[0,1,2,3].map(i => (
+          <div key={i} className="h-9 rounded-lg bg-gray-200 animate-pulse" />
+        ))}
+      </nav>
+    );
+  }
+
+  return (
+    <nav className="flex flex-col gap-3">
+      {filtered.map(({ href, icon: Icon, label }) => {
+        const active = isActive(href);
+        return (
+          <Link key={href} href={href} className="block">
+            <NavItem
+              icon={<Icon size={20} className="text-[#0A58F5]" />}
+              label={label}
+              active={active}
+            />
+          </Link>
+        );
+      })}
+    </nav>
+  );
 }

@@ -62,18 +62,17 @@ export default function UserProfile() {
     <div className="relative flex items-center gap-2" ref={menuRef}>
       {/* Trigger tipo avatar como en la imagen */}
       <button
-        onClick={() => setOpenMenu(prev => !prev)}
-        className="relative block rounded-full focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-offset-2"
+        className="relative block rounded-full "
         aria-label="Abrir menú de usuario"
       >
         {avatarUrl ? (
           <img
             src={avatarUrl}
             alt={`${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim() || "Usuario"}
-            className="w-10 h-10 rounded-full object-cover ring-1 ring-gray-200 hover:ring-[#0040B8] transition"
+            className="w-10 h-10 rounded-full object-cover ring-1 ring-gray-200 transition"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-[#0040B8] text-white grid place-items-center font-medium ring-1 ring-[#0040B8]/30 hover:ring-[#0040B8] transition">
+          <div className="w-10 h-10 rounded-full bg-[#0040B8] text-white grid place-items-center font-medium ring-1 ring-[#0040B8]/30  transition">
             {initials || <UserIcon size={18} />}
           </div>
         )}
