@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Settings, HelpCircle, ChevronDown, ChevronDown as ChevronIcon } from "lucide-react";
+import {
+  Settings,
+  HelpCircle,
+  ChevronDown,
+  ChevronDown as ChevronIcon,
+  ChevronRight,
+  X,
+  PanelLeftClose,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useUser } from "@/context/UserContext";
@@ -10,7 +18,11 @@ import WorkshopItem from "@/components/WorkshopItem";
 import { UserTypeInWorkshop } from "@/app/types";
 import UserProfile from "../UserProfile";
 
-export default function Sidebar() {
+type SidebarProps = {
+  onToggleSidebar?: () => void; // <- NUEVO: el padre controla abrir, cerrar
+};
+
+export default function Sidebar({ onToggleSidebar }: SidebarProps) {
   const { workshops, user } = useUser();
   const { id } = useParams();
   const router = useRouter();
@@ -18,6 +30,7 @@ export default function Sidebar() {
   const [userType, setUserType] = useState<UserTypeInWorkshop | null>(null);
   const [loading, setLoading] = useState(true);
   const [openWorkshops, setOpenWorkshops] = useState(true);
+  const [openProfileModal, setOpenProfileModal] = useState(false);
 
   // hint de scroll
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -59,12 +72,8 @@ export default function Sidebar() {
           `${process.env.NEXT_PUBLIC_API_URL}/users/user-type-in-workshop?userId=${user.id}&workshopId=${id}`,
           { credentials: "include" }
         );
-        if (res.ok) {
-          const data = await res.json();
-          setUserType(data);
-        } else {
-          console.error("Error fetching user type,", await res.text());
-        }
+        if (res.ok) setUserType(await res.json());
+        else console.error("Error fetching user type,", await res.text());
       } catch (e) {
         console.error("Error fetching user type,", e);
       } finally {
@@ -74,23 +83,18 @@ export default function Sidebar() {
     run();
   }, [user?.id, id]);
 
-  // lógica del indicador
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-
     const update = () => {
       const canScroll = el.scrollHeight > el.clientHeight + 4;
       const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 16;
       setShowScrollHint(canScroll && !nearBottom);
     };
-
     update();
     el.addEventListener("scroll", update, { passive: true });
-    // por si cambia el contenido
     const ro = new ResizeObserver(update);
     ro.observe(el);
-
     return () => {
       el.removeEventListener("scroll", update);
       ro.disconnect();
@@ -109,31 +113,65 @@ export default function Sidebar() {
     el.scrollBy({ top: 240, behavior: "smooth" });
   };
 
+  const fullName = user?.first_name || "Usuario";
+
   return (
-    <aside className="relative max-md:hidden h-[calc(100vh-32px)] w-[290px] max-[1500px]:w-[256px] bg-white shadow rounded-[10px] p-4">
-      {/* Scroll interno, oculto */}
+    <aside className="relative h-[calc(100vh-32px)] w-[290px] max-[1500px]:w-[256px] bg-white md:shadow rounded-[10px] p-4">
+      {/* HEADER: logo + botón cerrar */}
+      <div className="mb-6 flex items-center justify-between px-1">
+        <Link
+          href={`/dashboard/${id ?? ""}`}
+          className="flex items-center gap-2 group"
+          aria-label="Ir al inicio"
+        >
+          {/* logo minimal, podés reemplazar por <img src="/logo.svg" .../> */}
+          <img src="/images/logo.svg" alt="" />
+        </Link>
+
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="md:hidden inline-flex h-8 w-8 items-center justify-center"
+          aria-label="Cerrar sidebar"
+          title="Cerrar sidebar"
+        >
+          <PanelLeftClose className="h-5 w-5 text-[#0040B8]" />
+        </button>
+      </div>
+
+      {/* Scroll interno */}
       <div
         ref={scrollRef}
-        className="
-          relative h-full overflow-y-auto pb-8
-          [scrollbar-width:none] [-ms-overflow-style:none]
-          [&::-webkit-scrollbar]:hidden
-        "
+        className="relative h-full overflow-y-auto pb-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
-        {/* Header usuario */}
-        <div className="flex items-center gap-3 p-3">
-          <div className="relative">
-            <UserProfile />
-            <span className="absolute -right-0 -bottom-0 h-3 w-3 rounded-full bg-green-500 ring-2 ring-white" />
+        {/* Header usuario clickeable, corregido sin button dentro de button */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setOpenProfileModal(true)}
+          onKeyDown={e => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setOpenProfileModal(true);
+            }
+          }}
+          className="w-full flex items-center justify-between rounded-[8px] p-3 hover:bg-gray-50 transition cursor-pointer"
+          aria-label="Abrir perfil"
+          title="Abrir perfil"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="relative">
+              <UserProfile />
+              <span className="absolute -right-0 -bottom-0 h-3 w-3 rounded-full bg-green-500 ring-2 ring-white" />
+            </div>
+            <div className="min-w-0 text-left">
+              <p className="text-sm font-medium text-gray-900 truncate">{fullName}</p>
+              <p className="text-xs text-gray-500 mt-1 truncate">
+                Rol de taller: {userType?.name}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.first_name || "Usuario"}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {user?.email || "email@ejemplo.com"}
-            </p>
-          </div>
+          <ChevronRight size={18} className="text-gray-400 ml-6 shrink-0" />
         </div>
 
         <div className="my-4 h-px bg-gray-200" />
@@ -149,7 +187,7 @@ export default function Sidebar() {
             <button
               type="button"
               onClick={() => setOpenWorkshops(v => !v)}
-              className="mb-2 flex w-full items-center justify-between px-3"
+              className="mb-4 flex w-full items-center justify-between px-3"
               aria-expanded={openWorkshops}
               aria-controls="workshops-list"
             >
@@ -170,23 +208,23 @@ export default function Sidebar() {
                     onClick={() => handleWorkshopClick(w.workshop_id)}
                   />
                 ))}
-
-                {/* Inscribir taller */}
                 <Link href="/dashboard/register-workshop">
                   <div className="mt-4 flex items-center gap-2 rounded-[4px] border border-dashed border-slate-300 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
                     <svg width="18" height="18" viewBox="0 0 24 24" className="text-[#0A58F5]">
-                      <path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/>
+                      <path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />
                     </svg>
                     Inscribir taller
                   </div>
                 </Link>
               </div>
             ) : (
-              <div id="workshops-list" className="pl-2">
+              <div id="workshops-list">
                 <WorkshopItem
                   name={currentWorkshop?.workshop_name || "Taller actual"}
                   selected
-                  onClick={() => currentWorkshop && handleWorkshopClick(currentWorkshop.workshop_id)}
+                  onClick={() =>
+                    currentWorkshop && handleWorkshopClick(currentWorkshop.workshop_id)
+                  }
                 />
               </div>
             )}
@@ -195,7 +233,7 @@ export default function Sidebar() {
 
         {/* Ajustes */}
         <div className="mt-6 border-t border-gray-200 pt-5 pb-3 px-1">
-          <p className="text-[11px] tracking-wide text-black/50 mb-3">Ajustes</p>
+          <p className="text-[11px] tracking-wide text-black/50 mb-3 px-3">Ajustes</p>
           <div className="flex flex-col space-y-3">
             {userType?.name?.toLowerCase() === "titular" && (
               <Link href={`/dashboard/${id}/settings`}>
@@ -217,10 +255,16 @@ export default function Sidebar() {
             >
               <svg
                 className="w-4 h-4 group-hover:scale-110 transition-transform duration-150"
-                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
               </svg>
               Cerrar sesión
             </button>
@@ -232,13 +276,11 @@ export default function Sidebar() {
       <div
         className={[
           "pointer-events-none absolute inset-x-0 bottom-0 px-4 pb-3 transition-opacity duration-300",
-          showScrollHint ? "opacity-100" : "opacity-0"
+          showScrollHint ? "opacity-100" : "opacity-0",
         ].join(" ")}
         aria-hidden={!showScrollHint}
       >
-        {/* fade */}
         <div className="h-12 w-full bg-gradient-to-t from-white to-white/0 rounded-b-[10px]" />
-        {/* botón flotante */}
         <div className="pointer-events-auto absolute inset-x-0 bottom-6 flex justify-center">
           <button
             type="button"
@@ -254,6 +296,118 @@ export default function Sidebar() {
           </button>
         </div>
       </div>
+
+      {/* Modal perfil */}
+      {openProfileModal && (
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          onKeyDown={e => e.key === "Escape" && setOpenProfileModal(false)}
+        >
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpenProfileModal(false)} />
+          <div className="relative w-[900px] max-w-[95vw] bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <UserProfile />
+                  <span className="absolute -right-0 -bottom-0 h-3 w-3 rounded-full bg-green-500 ring-2 ring-white" />
+                </div>
+                <div>
+                  <p className="text-base font-semibold text-gray-900">{fullName}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+              </div>
+              <button
+                className="p-2 rounded-md hover:bg-gray-100"
+                onClick={() => setOpenProfileModal(false)}
+                aria-label="Cerrar"
+                title="Cerrar"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-[220px_1fr]">
+              <div className="bg-gray-50/60 border-r p-4">
+                <ul className="space-y-2">
+                  <li>
+                    <button className="w-full text-left px-3 py-2 rounded-md bg-white shadow-sm text-sm font-medium">
+                      General
+                    </button>
+                  </li>
+                  <li>
+                    <button className="w-full text-left px-3 py-2 rounded-md hover:bg-white text-sm">
+                      Perfil
+                    </button>
+                  </li>
+                  <li>
+                    <button className="w-full text-left px-3 py-2 rounded-md hover:bg-white text-sm">
+                      Notificaciones
+                    </button>
+                  </li>
+                  <li>
+                    <button className="w-full text-left px-3 py-2 rounded-md hover:bg-white text-sm">
+                      Suscripción
+                    </button>
+                  </li>
+                </ul>
+
+                <div className="mt-6">
+                  <button
+                    onClick={logOutFunction}
+                    className="w-full text-left px-3 py-2 rounded-md text-red-600 hover:bg-red-50 text-sm"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6">General</h2>
+                <div className="space-y-6 max-w-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Username</span>
+                    <span className="text-sm text-gray-900">{fullName}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Email</span>
+                    <span className="text-sm text-gray-900">{user?.email}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Ejemplo</span>
+                    <label className="inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0A58F5] transition" />
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Ejemplo</span>
+                    <label className="inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0A58F5] transition" />
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Ejemplo</span>
+                    <label className="inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" />
+                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0A58F5] transition" />
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Ejemplo</span>
+                    <select className="text-sm border rounded-md px-2 py-1">
+                      <option>Ejemplo</option>
+                      <option>Opción 2</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

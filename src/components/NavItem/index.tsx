@@ -14,7 +14,7 @@ export default function NavItem({
   return (
     <div
       className={[
-        "flex items-center gap-4 px-3 py-2.5 rounded-[4px] transition-colors",
+        "flex items-center gap-4 px-3 py-3 rounded-[4px] transition-colors",
         active
           ? "bg-[#0040B8]/10 text-[#0040B8]"
           : "text-gray-800 hover:bg-gray-50"
