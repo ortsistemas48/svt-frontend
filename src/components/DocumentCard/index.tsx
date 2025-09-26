@@ -1,6 +1,31 @@
 import { Paperclip, Download, Eye } from "lucide-react";
 
 const renderDocument = (name: string, url?: string) => {
+    const handleDownload = async (fileUrl: string, fileName: string) => {
+        try {
+            const response = await fetch(fileUrl);
+            if (!response.ok) {
+                throw new Error('Failed to fetch file');
+            }
+            
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            
+            // Cleanup
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            // Fallback: open in new tab
+            window.open(fileUrl, '_blank');
+        }
+    };
     const getFileIcon = (fileName: string) => {
       const extension = fileName.split('.').pop()?.toLowerCase();
       switch (extension) {
@@ -25,9 +50,9 @@ const renderDocument = (name: string, url?: string) => {
     };
 
     return (
-      <div className="group flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors duration-200">
+      <div className="group flex items-center bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors duration-200 flex-shrink-0">
             <span className="text-lg">{getFileIcon(name)}</span>
           </div>
           <div className="flex-1 min-w-0">
@@ -40,7 +65,7 @@ const renderDocument = (name: string, url?: string) => {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0 ml-3">
           {url && (
             <a
               href={url}
@@ -53,14 +78,13 @@ const renderDocument = (name: string, url?: string) => {
             </a>
           )}
           {url && (
-            <a
-              href={url}
-              download
+            <button
+              onClick={() => handleDownload(url, name)}
               className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
               title="Descargar documento"
             >
               <Download size={16} />
-            </a>
+            </button>
           )}
         </div>
       </div>

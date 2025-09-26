@@ -218,18 +218,18 @@ export default function Dropzone({
       {existing.length > 0 && (
         <div className="mt-6">
           <p className="text-sm text-[#5c5c5c] mb-2">Ya subidos</p>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
             {existing.map((d) => (
-              <li
+              <div
                 key={d.id}
-                className="relative rounded-[4px] border border-[#E6E6E6] bg-white p-3 min-w-[200px] w-[200px]"
+                className="relative rounded-lg border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 {onDeleteExisting && (
                   <button
                     type="button"
                     onClick={() => handleDelete(d.id)}
                     disabled={deletingId === d.id}
-                    className="absolute top-2 right-2 rounded-full bg-white/90 border border-[#E6E6E6] p-1 hover:bg-white disabled:opacity-60"
+                    className="absolute top-2 right-2 rounded-full bg-white/90 border border-[#E6E6E6] p-1 hover:bg-white disabled:opacity-60 z-10"
                     aria-label="Borrar documento"
                     title="Borrar"
                   >
@@ -237,25 +237,26 @@ export default function Dropzone({
                   </button>
                 )}
 
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-lg bg-[#F5F7FF] flex items-center justify-center overflow-hidden">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className="w-16 h-16 rounded-lg bg-[#F5F7FF] flex items-center justify-center overflow-hidden">
                     {d.mime_type?.startsWith("image/") ? (
                       <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-xl">{iconByMime(d.mime_type)}</span>
+                      <span className="text-2xl">{iconByMime(d.mime_type)}</span>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{d.file_name}</p>
-                    <p className="text-xs text-[#7a7a7a]">
+                  <div className="w-full">
+                    <p className="text-sm font-medium text-gray-900 truncate" title={d.file_name}>
+                      {d.file_name}
+                    </p>
+                    <p className="text-xs text-[#7a7a7a] mt-1">
                       {d.mime_type || "archivo"} · {prettySize(d.size_bytes)}
                     </p>
                   </div>
-
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>

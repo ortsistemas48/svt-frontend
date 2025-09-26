@@ -120,8 +120,7 @@ export default function FormTemplate({
   }, [searchConfig, data, mode]);
 
   useEffect(() => {
-      
-      if (title !== "Datos del Conductor") setIsIdle(mode === "idle");
+      setIsIdle(mode === "idle");
     }, [mode, setIsIdle]);
   // ----- Handlers de campos -----
   const handleChange = (name: string, value: string) => {

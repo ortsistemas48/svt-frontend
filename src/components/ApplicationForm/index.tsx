@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 const PersonForm = dynamic(() => import("@/components/PersonForm"));
 const VehicleForm = dynamic(() => import("@/components/VehicleForm"));
-const ConfirmationForm = dynamic(() => import("@/components/AdminSidebarMenu/ConfirmationForm"));
+const ConfirmationForm = dynamic(() => import("@/components/ConfirmationForm"));
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useParams } from 'next/navigation'
 import { getMissingCarFields, getMissingPersonFields, markStickerAsUsed } from "@/utils";
