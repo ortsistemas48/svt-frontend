@@ -37,13 +37,13 @@ export default function StickerOrdersTable() {
   const [showFilters, setShowFilters] = useState(false);
 
   const [page, setPage] = useState(1);
-  const perPage = 5;
+  const perPage = 6;
 
   const headers: TableHeader[] = [
-    { label: "Grupo" },
     { label: "Nombre" },
     { label: "Creación" },
     { label: "Disponibles" },
+    { label: "Cantidad Inicial" },
   ];
 
   const fetchOrders = async () => {
@@ -110,9 +110,21 @@ export default function StickerOrdersTable() {
     setPage(1);
   }, [searchQuery, statusFilter]);
 
-  const toneForAvailable = (n: number) => {
-    if (n > 0) return { text: "text-green-700", bg: "bg-green-50" };
-    return { text: "text-gray-700", bg: "bg-gray-100" };
+  const toneForAvailable = (available: number, initial?: number) => {
+    if (!available || available <= 0) {
+      return { text: "text-red-700", bg: "bg-red-50" };
+    }
+
+    // si tenemos cantidad inicial, usamos ratio
+    if (typeof initial === "number" && initial > 0) {
+      const ratio = available / initial; // ej 0.18 = pocas
+      if (ratio <= 0.2) return { text: "text-yellow-800", bg: "bg-yellow-50" }; // pocas
+      return { text: "text-green-700", bg: "bg-green-50" }; // muchas
+    }
+
+    // fallback por valores absolutos si no hay initial
+    if (available <= 25) return { text: "text-yellow-800", bg: "bg-yellow-50" };
+    return { text: "text-green-700", bg: "bg-green-50" };
   };
 
   return (
@@ -218,9 +230,6 @@ export default function StickerOrdersTable() {
                 return (
                   <tr key={item.id} className="transition-colors hover:bg-gray-50">
                     <td className="p-3 text-center">
-                      <div className="text-sm font-mono font-medium sm:text-base">{item.id}</div>
-                    </td>
-                    <td className="p-3 text-center">
                       <div className="mx-auto max-w-[200px] truncate text-sm font-medium sm:text-base">
                         {item.name || "-"}
                       </div>
@@ -234,6 +243,13 @@ export default function StickerOrdersTable() {
                         className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm ${tone.text} ${tone.bg}`}
                       >
                         {item.available_count ?? 0}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <span
+                        className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm text-gray-800 bg-[#f3f3f3]`}
+                      >
+                        {item.amount ?? 0}
                       </span>
                     </td>
                   </tr>

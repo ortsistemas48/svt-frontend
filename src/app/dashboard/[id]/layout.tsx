@@ -175,13 +175,13 @@ export default function DashboardClientLayout({
       <div className="h-screen flex flex-col bg-[#f5f5f5]">
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar desktop, siempre visible */}
-          <div className="pl-4 min-h-full pt-4 hidden md:block">
+          <div className="pl-4 min-h-full pt-4 hidden lg:block">
             <Sidebar />
           </div>
 
           {/* Sidebar mobile/tablet, off-canvas */}
           {sidebarOpen && (
-            <div className="md:hidden fixed inset-0 z-40">
+            <div className="lg:hidden fixed inset-0 z-40">
               {/* backdrop */}
               <button
                 aria-label="Cerrar sidebar"
@@ -200,7 +200,7 @@ export default function DashboardClientLayout({
           {/* Contenido principal */}
           <main className="flex-1 p-4 overflow-auto relative">
             {/* Botón abrir, solo mobile/tablet, sticky con padding del main */}
-            <div className="md:hidden sticky top-4 z-20 mb-2">
+            <div className="lg:hidden sticky top-4 z-20 mb-2">
               {!sidebarOpen && (
                 <button
                   onClick={() => setSidebarOpen(true)}

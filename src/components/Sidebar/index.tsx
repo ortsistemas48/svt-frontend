@@ -8,6 +8,7 @@ import {
   ChevronDown as ChevronIcon,
   ChevronRight,
   X,
+  LogOut,
   PanelLeftClose,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -116,7 +117,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
   const fullName = `${user?.first_name} ${user?.last_name}`|| "Usuario";
 
   return (
-    <aside className="relative h-[calc(100vh-32px)] w-[290px] max-[1500px]:w-[256px] bg-white md:shadow rounded-[10px] p-4">
+    <aside className="overflow-hidden relative h-[calc(100vh-32px)] w-[290px] max-[1500px]:w-[256px] bg-white md:shadow rounded-[10px] p-4">
       {/* HEADER: logo + botón cerrar */}
       <div className="mb-6 flex items-center justify-between px-1">
         <Link
@@ -131,7 +132,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="md:hidden inline-flex h-8 w-8 items-center justify-center"
+          className="lg:hidden inline-flex h-8 w-8 items-center justify-center"
           aria-label="Cerrar sidebar"
           title="Cerrar sidebar"
         >
@@ -210,7 +211,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                 ))}
                 <Link href="/dashboard/register-workshop">
                   <div className="mt-4 flex items-center gap-2 rounded-[4px] border border-dashed border-slate-300 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                    <svg width="18" height="18" viewBox="0 0 24 24" className="text-[#0A58F5]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" className="text-[#0040B8]">
                       <path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />
                     </svg>
                     Inscribir taller
@@ -232,41 +233,28 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
         )}
 
         {/* Ajustes */}
-        <div className="mt-6 border-t border-gray-200 pt-5 pb-3 px-1">
+        <div className="mt-6 border-t border-gray-200 pt-5 pb-10 px-1">
           <p className="text-[11px] tracking-wide text-black/50 mb-3 px-3">Ajustes</p>
           <div className="flex flex-col space-y-3">
             {userType?.name?.toLowerCase() === "titular" && (
               <Link href={`/dashboard/${id}/settings`}>
-                <div className="group flex items-center gap-3 rounded-[4px] px-3 py-3 hover:bg-gray-50">
-                  <Settings size={20} className="text-[#0A58F5]" />
+                <div className="group flex items-center gap-3 rounded-[4px] px-3 py-3 hover:bg-gray-50  duration-150 transition-colors">
+                  <Settings size={20} className="text-[#0040B8]" />
                   <span className="text-sm text-gray-800">Configuración</span>
                 </div>
               </Link>
             )}
             <Link href={`/dashboard/${id}/help`}>
-              <div className="group flex items-center gap-3 rounded-[4px] px-3 py-3 hover:bg-gray-50">
-                <HelpCircle size={20} className="text-[#0A58F5]" />
+              <div className="group flex items-center gap-3 rounded-[4px] px-3 py-3 hover:bg-gray-50  duration-150 transition-colors">
+                <HelpCircle size={20} className="text-[#0040B8]" />
                 <span className="text-sm text-gray-800">Centro de ayuda</span>
               </div>
             </Link>
-            <button
-              onClick={logOutFunction}
-              className="w-full flex items-center gap-3 px-3 py-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-[4px] transition-colors duration-150 group"
-            >
-              <svg
-                className="w-4 h-4 group-hover:scale-110 transition-transform duration-150"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
-              Cerrar sesión
+            <button onClick={logOutFunction}>
+              <div className="group flex items-center gap-3 rounded-[4px] px-3 py-3 hover:bg-red-50 duration-150 transition-colors">
+                <LogOut size={20} className="text-red-600" />
+                <span className="text-sm text-red-600">Cerrar sesión</span>
+              </div>
             </button>
           </div>
         </div>
@@ -275,7 +263,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
       {/* Indicador de más contenido abajo */}
       <div
         className={[
-          "pointer-events-none absolute inset-x-0 bottom-0 px-4 pb-3 transition-opacity duration-300",
+          "pointer-events-none absolute inset-x-0 bottom-0 px-4 transition-opacity duration-300",
           showScrollHint ? "opacity-100" : "opacity-0",
         ].join(" ")}
         aria-hidden={!showScrollHint}
@@ -378,21 +366,21 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                     <span className="text-sm text-gray-600">Ejemplo</span>
                     <label className="inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0A58F5] transition" />
+                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0040B8] transition" />
                     </label>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Ejemplo</span>
                     <label className="inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0A58F5] transition" />
+                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0040B8] transition" />
                     </label>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Ejemplo</span>
                     <label className="inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" />
-                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0A58F5] transition" />
+                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0040B8] transition" />
                     </label>
                   </div>
                   <div className="flex items-center justify-between">

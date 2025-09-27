@@ -67,7 +67,7 @@ export default function SideBarMenu({ userType, loading }: Props) {
         return (
           <Link key={href} href={href} className="block">
             <NavItem
-              icon={<Icon size={20} className="text-[#0A58F5]" />}
+              icon={<Icon size={20} className="text-[#0040B8]" />}
               label={label}
               active={active}
             />
