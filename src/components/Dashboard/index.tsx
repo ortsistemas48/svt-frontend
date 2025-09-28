@@ -7,7 +7,7 @@ import {
   RefreshCw,
   ClipboardList,
   FileBadge2,
-  TicketPercent,
+  ScrollText,
   Users,
   ChevronRight,
   AlertTriangle,
@@ -59,7 +59,7 @@ export default function Dashboard() {
     { key: 'queue', title: 'Cola de revisiones', desc: 'Ver pendientes y en proceso', href: `/dashboard/${id}/queue`, icon: RefreshCw },
     { key: 'list', title: 'Revisiones', desc: 'Listado y búsqueda', href: `/dashboard/${id}/applications/list`, icon: ClipboardList },
     { key: 'crt', title: 'Reimpresión de CRT', desc: 'Reimprimir certificados', href: `/dashboard/${id}/crt`, icon: FileBadge2 },
-    { key: 'obleas', title: 'Comprar obleas', desc: 'Stock para el taller', href: `/dashboard/${id}/store/obleas`, icon: TicketPercent },
+    { key: 'obleas', title: 'Comprar obleas', desc: 'Stock para el taller', href: `/dashboard/${id}/store/obleas`, icon: ScrollText },
     { key: 'users', title: 'Usuarios', desc: 'Permisos y roles', href: `/dashboard/${id}/users`, icon: Users },
   ];
 

@@ -15,7 +15,8 @@ type User = {
   phone_number: string | null;
   title_name?: string | null;
   license_number?: string | null;
-  user_type_id?: number | null; // rol del usuario en ESTE taller
+  user_type_id?: number | null; 
+  engineer_kind?: "Titular" | "Suplente" | null; 
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
@@ -36,6 +37,7 @@ export default function CreateOrAttachUserPage() {
   const search = useSearchParams();
   const email = search.get("email") ?? "";
   const router = useRouter();
+  const [engineerKind, setEngineerKind] = useState<"" | "Titular" | "Suplente">("");
 
   const [loading, setLoading] = useState(true);
   const [roles] = useState<Role[]>(FIXED_ROLES);
@@ -113,6 +115,7 @@ export default function CreateOrAttachUserPage() {
             // Pre-cargar datos de ingeniero si existen
             setEngineerRegistration(u.license_number ?? "");
             setEngineerDegree(u.title_name ?? "");
+            setEngineerKind((u as any).engineer_kind ?? "");
           } else {
             setExistingUser(null);
             resetFormExceptEmail();
@@ -140,6 +143,7 @@ export default function CreateOrAttachUserPage() {
     setEngineerDegree("");
     setPassword("");
     setConfirm("");
+    setEngineerKind("");
     setShowPass(false);
     setShowConfirm(false);
     setUserChoseEngineer(false);
@@ -148,7 +152,10 @@ export default function CreateOrAttachUserPage() {
   // Manejo del cambio de rol: marcamos si el user selecciona Ingeniero desde el input
   const onChangeRole = (val: number | "") => {
     setRoleId(val);
-    setUserChoseEngineer(val === ENGINEER_ROLE_ID); // true solo si el usuario eligió Ingeniero manualmente
+    setUserChoseEngineer(val === ENGINEER_ROLE_ID);
+    if (val !== ENGINEER_ROLE_ID) {
+      setEngineerKind(""); // NUEVO
+    }
   };
 
   // Si cambia a rol distinto de Ingeniero, limpiamos campos de ingeniero (opcional)
@@ -156,8 +163,10 @@ export default function CreateOrAttachUserPage() {
     if (roleId !== ENGINEER_ROLE_ID) {
       setEngineerRegistration("");
       setEngineerDegree("");
+      setEngineerKind(""); // limpiar tipo (Titular/Suplente)
     }
   }, [roleId]);
+
 
   const handleGeneratePassword = () => {
     const p = genPassword();
@@ -177,6 +186,10 @@ export default function CreateOrAttachUserPage() {
     if (engineerEditable && roleId === ENGINEER_ROLE_ID) {
       if (!engineerRegistration.trim() || !engineerDegree.trim()) {
         setMsg({ type: "error", text: "Para Ingeniero, completá Nro de matrícula y Título universitario" });
+        return;
+      }
+      if (!engineerKind) {
+        setMsg({ type: "error", text: "Elegí si el ingeniero es Titular o Suplente" });
         return;
       }
     }
@@ -209,10 +222,10 @@ export default function CreateOrAttachUserPage() {
           user_type_id: roleId,
         };
 
-        // En creación: si eligió Ingeniero, mandamos extras
         if (roleId === ENGINEER_ROLE_ID) {
           payload.license_number = engineerRegistration.trim();
           payload.title_name     = engineerDegree.trim();
+          payload.engineer_kind  = engineerKind;       
         }
 
         const r = await fetch(`${API_BASE}/auth/register`, {
@@ -230,18 +243,16 @@ export default function CreateOrAttachUserPage() {
         resetFormExceptEmail();
         setMsg({ type: "success", text: "Usuario creado" });
       } else {
-        // asociar usuario existente
         const payload: any = {
           user_id: existingUser.id,
           user_type_id: roleId,
         };
 
-        // Si el usuario eligió Ingeniero desde el input (cambio a ingeniero), mandamos/actualizamos extras
         if (engineerEditable && roleId === ENGINEER_ROLE_ID) {
           payload.license_number = engineerRegistration.trim() || null;
           payload.title_name     = engineerDegree.trim() || null;
+          payload.engineer_kind  = engineerKind || null;  
         }
-        // Si vino como ingeniero desde el endpoint y no tocó el rol, NO mandamos extras (no editable)
 
         const rAttach = await fetch(`${API_BASE}/users/assign/${workshopId}`, {
           method: "POST",
@@ -359,6 +370,20 @@ export default function CreateOrAttachUserPage() {
               {roleId === ENGINEER_ROLE_ID && (
                 <>
                   <div>
+                    <label className="block text-sm mb-2">Tipo de ingeniero</label>
+                    <select
+                      className={engineerInputCls}
+                      value={engineerKind}
+                      onChange={(e)=>setEngineerKind(e.target.value as "Titular" | "Suplente" | "")}
+                      disabled={!engineerEditable}
+                    >
+                      <option value="">Seleccionar</option>
+                      <option value="Titular">Titular</option>
+                      <option value="Suplente">Suplente</option>
+                    </select>
+                  </div>
+
+                  <div>
                     <label className="block text-sm mb-2">Nro de matrícula</label>
                     <input
                       className={engineerInputCls}
@@ -369,6 +394,7 @@ export default function CreateOrAttachUserPage() {
                       disabled={!engineerEditable}
                     />
                   </div>
+
                   <div>
                     <label className="block text-sm mb-2">Título universitario</label>
                     <input
@@ -382,6 +408,7 @@ export default function CreateOrAttachUserPage() {
                   </div>
                 </>
               )}
+
 
               {/* Passwords */}
               <div className="relative">

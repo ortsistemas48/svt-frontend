@@ -15,50 +15,52 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 
+/* ===================== Config ===================== */
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+
 /* ===================== Tipos ===================== */
-type RangeInput = {
-  id: string;
-  lead: string;
-  start: string;
-  end: string;
-  tail: string;
-};
+type RangeInput = { id: string; lead: string; start: string; end: string; tail: string; };
 
 type Group = {
   id: string;
   name: string;
-  note?: string;
   ranges: RangeInput[];
   obleas: string[];
   createdAt: string;
 };
 
+type CreateOrderResponse = {
+  ok: boolean;
+  order: {
+    id: number;
+    name: string;
+    workshop_id: number;
+    status: string;
+    created_at?: string | null;
+    amount: number;
+  };
+  inserted: number;
+  duplicates: string[];
+};
+
 /* ===================== Utils ===================== */
 const uid = () => Math.random().toString(36).slice(2, 10);
-
-function digitsOnly(v: string) {
-  return v.replace(/\D/g, "");
-}
-function toNumberOrNaN(v: string): number {
+const digitsOnly = (v: string) => v.replace(/\D/g, "");
+const toNumberOrNaN = (v: string): number => {
   const d = digitsOnly(v);
   if (d === "") return NaN;
   const n = Number(d);
   return Number.isFinite(n) ? n : NaN;
-}
+};
 
-/** Genera un rango, respeta el ancho según lo escrito en start/end */
 function genRange(r: RangeInput): { list: string[]; error?: string } {
   const startDigits = digitsOnly(r.start);
   const endDigits = digitsOnly(r.end);
   const start = toNumberOrNaN(r.start);
   const end = toNumberOrNaN(r.end);
 
-  if (Number.isNaN(start) || Number.isNaN(end)) {
-    return { list: [], error: "Ingresá números válidos en inicio y fin." };
-  }
-  if (end < start) {
-    return { list: [], error: "El fin no puede ser menor que el inicio." };
-  }
+  if (Number.isNaN(start) || Number.isNaN(end)) return { list: [], error: "Ingresá números válidos en inicio y fin." };
+  if (end < start) return { list: [], error: "El fin no puede ser menor que el inicio." };
 
   const width = Math.max(startDigits.length, endDigits.length, 1);
   const items: string[] = [];
@@ -75,12 +77,8 @@ function flattenUnique<T>(arrs: T[][]): { list: T[]; dups: Set<T> } {
   const out: T[] = [];
   for (const list of arrs) {
     for (const it of list) {
-      if (seen.has(it)) {
-        dups.add(it);
-        continue;
-      }
-      seen.add(it);
-      out.push(it);
+      if (seen.has(it)) { dups.add(it as any); continue; }
+      seen.add(it); out.push(it);
     }
   }
   return { list: out, dups };
@@ -88,20 +86,22 @@ function flattenUnique<T>(arrs: T[][]): { list: T[]; dups: Set<T> } {
 
 /* ===================== Componente ===================== */
 export default function AsignarObleasPage() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
+  const workshopId = Number(params.id);
 
-  // Form del grupo
   const [groupName, setGroupName] = useState("");
-  const [groupNote, setGroupNote] = useState("");
-  const [ranges, setRanges] = useState<RangeInput[]>([
-    { id: uid(), lead: "", start: "", end: "", tail: "" },
-  ]);
+  const [ranges, setRanges] = useState<RangeInput[]>([{ id: uid(), lead: "", start: "", end: "", tail: "" }]);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Grupos guardados locales
-  const [groups, setGroups] = useState<Group[]>([]);
+  // vencimiento del grupo, al lado del nombre
+  const [noExpiry, setNoExpiry] = useState(false);
+  const [expirationDate, setExpirationDate] = useState<string>(""); // "YYYY-MM-DD" o ""
 
-  // Preview
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+  const [okMsg, setOkMsg] = useState<string | null>(null);
+
   const preview = useMemo(() => {
     const results = ranges.map((r) => genRange(r));
     const anyError = results.find((r) => r.error)?.error;
@@ -109,7 +109,6 @@ export default function AsignarObleasPage() {
     return { total: list.length, items: list, dupCount: dups.size, error: anyError };
   }, [ranges]);
 
-  /* ===================== Handlers ===================== */
   const addRange = () => setRanges((prev) => [...prev, { id: uid(), lead: "", start: "", end: "", tail: "" }]);
   const removeRange = (rid: string) => setRanges((prev) => prev.filter((r) => r.id !== rid));
   const updateRange = (rid: string, patch: Partial<RangeInput>) =>
@@ -117,33 +116,72 @@ export default function AsignarObleasPage() {
 
   const resetForm = () => {
     setGroupName("");
-    setGroupNote("");
     setRanges([{ id: uid(), lead: "", start: "", end: "", tail: "" }]);
     setShowPreview(false);
+    setNoExpiry(false);
+    setExpirationDate("");
   };
 
-  const canSave = groupName.trim().length > 0 && ranges.length > 0 && !preview.error && preview.total > 0;
+  const canSave =
+    !!workshopId &&
+    groupName.trim().length > 0 &&
+    ranges.length > 0 &&
+    !preview.error &&
+    preview.total > 0 &&
+    (noExpiry || !!expirationDate);
 
-  const saveGroup = () => {
+  const saveGroup = async () => {
+    setErrMsg(null);
+    setOkMsg(null);
     if (!canSave) return;
-    const newGroup: Group = {
-      id: uid(),
-      name: groupName.trim(),
-      note: groupNote.trim() || undefined,
-      ranges,
-      obleas: preview.items,
-      createdAt: new Date().toISOString(),
-    };
-    setGroups((prev) => [newGroup, ...prev]);
-    resetForm();
+
+    try {
+      setIsSaving(true);
+
+      const body = {
+        workshop_id: workshopId,
+        name: groupName.trim(),
+        stickers: preview.items,
+        expiration_date: noExpiry ? null : expirationDate || null,
+      };
+
+      const res = await fetch(`${API}/stickers/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e?.error || `Error ${res.status}`);
+      }
+
+      const data: CreateOrderResponse = await res.json();
+
+      const newGroup: Group = {
+        id: String(data.order.id),
+        name: data.order.name,
+        ranges,
+        obleas: preview.items,
+        createdAt: data.order.created_at || new Date().toISOString(),
+      };
+      setGroups((prev) => [newGroup, ...prev]);
+
+      let msg = `Orden creada, ${data.inserted} obleas insertadas`;
+      if (data.duplicates?.length) msg += `, ${data.duplicates.length} duplicadas`;
+      setOkMsg(msg);
+
+      resetForm();
+    } catch (err: any) {
+      setErrMsg(err?.message || "Error al guardar la orden");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  /* ===================== UI ===================== */
   return (
     <div className="bg-white">
-      {/* contenedor ancho completo con px-6 */}
       <div className="w-full px-6 py-6">
-        {/* Migas */}
         <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
           <div className="flex items-center gap-1">
             <span className="text-gray-600">Inicio</span>
@@ -152,7 +190,6 @@ export default function AsignarObleasPage() {
           </div>
         </article>
 
-        {/* Header centrado */}
         <div className="text-center mb-8 sm:mb-10">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl text-[#0040B8] mb-2 sm:mb-3">
             Asignar obleas al taller
@@ -162,40 +199,66 @@ export default function AsignarObleasPage() {
           </p>
         </div>
 
+        {(errMsg || okMsg) && (
+          <div className="mb-4">
+            {errMsg && (
+              <div className="rounded-md border border-rose-300 bg-rose-50 text-rose-700 px-3 py-2 text-sm">
+                {errMsg}
+              </div>
+            )}
+            {okMsg && (
+              <div className="rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 px-3 py-2 text-sm">
+                {okMsg}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Sección principal full width */}
         <section className="w-full">
           <div className="rounded-[10px] border border-[#d3d3d3] bg-white">
             {/* Datos del grupo */}
-            <div className="p-5 border-b border-gray-100">
-              <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                <Layers className="h-5 w-5 text-[#0040B8]" />
-                Nuevo grupo
-              </h2>
+           <div className="p-5 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <Layers className="h-5 w-5 text-[#0040B8]" />
+              Nuevo grupo
+            </h2>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-700 mb-1">Nombre del grupo</label>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 mb-1">Nombre del grupo</label>
+                <input
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  placeholder="Ej, Obleas Septiembre 2025"
+                  className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                />
+              </div>
+
+              <div className="md:col-span-1">
+                <label className="block text-sm text-gray-700 mb-1">Fecha de vencimiento</label>
+                <input
+                  type="date"
+                  value={noExpiry ? "" : expirationDate}
+                  onChange={(e) => setExpirationDate(e.target.value)}
+                  disabled={noExpiry}
+                  className={clsx(
+                    "w-full rounded-md border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent",
+                    noExpiry ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed" : "border-gray-300"
+                  )}
+                />
+                <label className="inline-flex items-center gap-2 text-sm mt-2">
                   <input
-                    type="text"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    placeholder="Ej, Obleas Septiembre 2025"
-                    className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                    type="checkbox"
+                    checked={noExpiry}
+                    onChange={(e) => setNoExpiry(e.target.checked)}
+                    className="h-4 w-4"
                   />
-                </div>
-                <div className="md:col-span-1">
-                  <label className="block text-sm text-gray-700 mb-1">Nota, opcional</label>
-                  <input
-                    type="text"
-                    value={groupNote}
-                    onChange={(e) => setGroupNote(e.target.value)}
-                    placeholder="Observaciones"
-                    className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
-                  />
-                </div>
+                  Sin vencimiento
+                </label>
               </div>
             </div>
+          </div>
 
             {/* Rangos */}
             <div className="p-5">
@@ -213,6 +276,7 @@ export default function AsignarObleasPage() {
                 </button>
               </div>
 
+              {/* Lista de rangos */}
               <div className="mt-4 space-y-3">
                 {ranges.map((r, idx) => (
                   <div key={r.id} className="rounded-md border border-gray-200 p-3">
@@ -235,6 +299,7 @@ export default function AsignarObleasPage() {
                           className="w-full rounded-md border border-gray-300 px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
                           placeholder="0001"
                           inputMode="numeric"
+                          pattern="[0-9]*"
                         />
                         <p className="mt-1 text-[11px] text-gray-500">Podés usar ceros, por ejemplo 0001</p>
                       </div>
@@ -247,6 +312,7 @@ export default function AsignarObleasPage() {
                           className="w-full rounded-md border border-gray-300 px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
                           placeholder="0050"
                           inputMode="numeric"
+                          pattern="[0-9]*"
                         />
                       </div>
 
@@ -339,31 +405,44 @@ export default function AsignarObleasPage() {
                 </div>
               </div>
 
-              {/* Acciones */}
               <div className="mt-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
                 <button
                   onClick={resetForm}
-                  className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50"
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-60"
                 >
                   Limpiar
                 </button>
                 <button
                   onClick={saveGroup}
-                  disabled={!canSave}
+                  disabled={!canSave || isSaving}
                   className={clsx(
                     "inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm text-white",
-                    canSave ? "bg-[#0040B8] hover:bg-[#00379f]" : "bg-[#0040B8]/50 cursor-not-allowed"
+                    canSave && !isSaving ? "bg-[#0040B8] hover:bg-[#00379f]" : "bg-[#0040B8]/50 cursor-not-allowed"
                   )}
                 >
                   <Save className="h-4 w-4" />
-                  Guardar grupo
+                  {isSaving ? "Guardando..." : "Guardar grupo"}
                 </button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* espacio inferior */}
+        {groups.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">Últimos grupos creados</h3>
+            <ul className="space-y-2">
+              {groups.map((g) => (
+                <li key={g.id} className="rounded border border-gray-200 p-3 text-sm">
+                  <div className="font-medium">{g.name}</div>
+                  <div className="text-gray-500">{g.obleas.length} obleas</div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="h-2" />
       </div>
     </div>

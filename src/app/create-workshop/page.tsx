@@ -30,6 +30,7 @@ const ENGINEER_ROLE_ID = 3;
 
 /** Pasos */
 type StepKey = 1 | 2 | 3;
+type EngineerKind = "Titular" | "Suplente";
 
 /** Ítems pendientes de procesar en el paso 3 */
 type PendingMember = {
@@ -45,6 +46,7 @@ type PendingMember = {
   title_name?: string | null;
   password?: string;
   confirm_password?: string;
+  engineer_kind?: EngineerKind; 
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
@@ -156,21 +158,28 @@ export default function CreateWorkshopPage() {
       setDir(1);
       setStep(2);
     } else if (step === 2) {
-      const someoneWithoutRole = pending.some(m => !m.user_type_id);
-      if (someoneWithoutRole) {
-        setError("Todos los miembros deben tener un rol asignado");
-        return;
+        const someoneWithoutRole = pending.some(m => !m.user_type_id);
+        if (someoneWithoutRole) { setError("Todos los miembros deben tener un rol asignado"); return; }
+
+        const engineers = pending.filter(m => m.user_type_id === ENGINEER_ROLE_ID);
+
+        // NUEVO: validar que todos los ingenieros tengan tipo
+        const missingKind = engineers.some(e => !e.engineer_kind);
+        if (missingKind) {
+          setError("Todos los ingenieros deben indicar si son Titular o Suplente");
+          return;
+        }
+
+        if (engineers.length === 0) { setError("Tiene que haber al menos un Ingeniero"); return; }
+
+        const titulares = engineers.filter(e => e.engineer_kind === "Titular").length;
+        const suplentes  = engineers.filter(e => e.engineer_kind === "Suplente").length;
+
+        if (titulares !== 1) { setError("Debe haber exactamente 1 Ingeniero Titular"); return; }
+        if (suplentes < 1) { setError("Debe haber al menos 1 Ingeniero Suplente"); return; }
+
+        setError(null); setDir(1); setStep(3);
       }
-      // Debe haber al menos un Ingeniero seleccionado
-      const hasEngineer = pending.some(m => m.user_type_id === ENGINEER_ROLE_ID);
-      if (!hasEngineer) {
-        setError("Tiene que haber al menos un Ingeniero para continuar");
-        return;
-      }
-      setError(null);
-      setDir(1);
-      setStep(3);
-    }
   };
 
   const goBack = () => {
@@ -224,14 +233,16 @@ export default function CreateWorkshopPage() {
           }
 
           if (m.existingUserId) {
-            const payload: any = {
-              user_id: m.existingUserId,
-              user_type_id: m.user_type_id,
-            };
-            if (m.user_type_id === ENGINEER_ROLE_ID) {
-              payload.license_number = m.license_number?.trim() || null;
-              payload.title_name = m.title_name?.trim() || null;
-            }
+              const payload: any = {
+                user_id: m.existingUserId,
+                user_type_id: m.user_type_id,
+              };
+              if (m.user_type_id === ENGINEER_ROLE_ID) {
+                payload.license_number = m.license_number?.trim() || null;
+                payload.title_name     = m.title_name?.trim() || null;
+                payload.engineer_kind  = m.engineer_kind || null;
+              }
+
             const rAttach = await fetch(`${API_BASE}/users/assign/${workshopId}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -261,7 +272,8 @@ export default function CreateWorkshopPage() {
             };
             if (m.user_type_id === ENGINEER_ROLE_ID) {
               payload.license_number = m.license_number?.trim();
-              payload.title_name = m.title_name?.trim();
+              payload.title_name     = m.title_name?.trim();
+              payload.engineer_kind  = m.engineer_kind || null; 
             }
 
             const rCreate = await fetch(`${API_BASE}/auth/register_bulk`, {
@@ -464,7 +476,14 @@ export default function CreateWorkshopPage() {
                                     value={m.user_type_id || ""}
                                     onChange={(e) => {
                                       const val = e.target.value ? Number(e.target.value) : "";
-                                      setPending(p => p.map(x => x.id === m.id ? { ...x, user_type_id: val } : x));
+                                      setPending(p => p.map(x => {
+                                        if (x.id !== m.id) return x;
+                                        if (val !== ENGINEER_ROLE_ID) {
+                                          const { license_number, title_name, engineer_kind, ...rest } = x;
+                                          return { ...rest, user_type_id: val }; // engineer_kind queda undefined
+                                        }
+                                        return { ...x, user_type_id: val };
+                                      }));
                                     }}
                                   >
                                     <option value="">Seleccionar</option>
@@ -475,7 +494,29 @@ export default function CreateWorkshopPage() {
                               </div>
                             </div>
                               {m.existingUserId && m.user_type_id === ENGINEER_ROLE_ID && (
-                                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                                  <div className="flex flex-col">
+                                    <label className="text-xs text-[#64748B] mb-1">Tipo de ingeniero</label>
+                                    <select
+                                      className="rounded-[4px] border border-[#E2E8F0] bg-white px-3 py-2 text-sm"
+                                      value={m.engineer_kind ?? ""}  // <- muestra "" si no hay valor
+                                      onChange={(e) => {
+                                        const v = e.target.value as EngineerKind | ""; // "Titular" | "Suplente" | ""
+                                        setPending((p) =>
+                                          p.map((x) =>
+                                            x.id === m.id
+                                              ? { ...x, engineer_kind: v === "" ? undefined : v } // <- nunca ""
+                                              : x
+                                          )
+                                        );
+                                      }}
+                                    >
+                                      <option value="">Seleccionar</option>
+                                      <option value="Titular">Titular</option>
+                                      <option value="Suplente">Suplente</option>
+                                    </select>
+                                  </div>
+
                                   <div className="flex flex-col">
                                     <label className="text-xs text-[#64748B] mb-1">Nro de matrícula</label>
                                     <input
@@ -490,6 +531,7 @@ export default function CreateWorkshopPage() {
                                       }}
                                     />
                                   </div>
+
                                   <div className="flex flex-col">
                                     <label className="text-xs text-[#64748B] mb-1">Título universitario</label>
                                     <input
@@ -506,6 +548,7 @@ export default function CreateWorkshopPage() {
                                   </div>
                                 </div>
                               )}
+
                           </motion.li>
                         ))}
                       </ul>
@@ -570,6 +613,7 @@ export default function CreateWorkshopPage() {
 function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; reason?: string } }) {
   const [email, setEmail] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
+  const [engineerKind, setEngineerKind] = useState<EngineerKind | "">("");
 
   // si NO existe, mostramos estos campos
   const [firstName, setFirstName] = useState("");
@@ -593,12 +637,17 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
   const clearForm = () => {
     setFirstName(""); setLastName(""); setDni(""); setPhone(""); setRoleId("");
     setlicense(""); setDegree(""); setPassword(""); setConfirm("");
+    setEngineerKind(""); // <<< NUEVO
     setShowPass(false); setShowConfirm(false);
   };
 
   const onChangeRole = (val: number | "") => {
     setRoleId(val);
-    if (val !== ENGINEER_ROLE_ID) { setlicense(""); setDegree(""); }
+    if (val !== ENGINEER_ROLE_ID) {
+      setlicense("");
+      setDegree("");
+      setEngineerKind("");
+    }
   };
 
   const searchAndAdd = async () => {
@@ -714,6 +763,9 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
 
     if (finalPassword.length < 8) return setMsg("La contraseña debe tener al menos 8 caracteres");
     if (finalPassword !== finalConfirm) return setMsg("Las contraseñas no coinciden");
+    if (roleId === ENGINEER_ROLE_ID) {
+      if (!engineerKind) return setMsg("Elegí si el ingeniero es Titular o Suplente");
+    }
 
     const item: PendingMember = {
       id: crypto.randomUUID(),
@@ -727,6 +779,9 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
       title_name: roleId === ENGINEER_ROLE_ID ? degree.trim() : null,
       password: finalPassword,
       confirm_password: finalConfirm,
+      engineer_kind: roleId === ENGINEER_ROLE_ID
+    ? (engineerKind === "" ? undefined : engineerKind)
+    : undefined,
     };
 
     const res = onAdd(item);
@@ -800,7 +855,20 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
               </div>
 
               {roleId === ENGINEER_ROLE_ID && (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="flex flex-col">
+                    <label className="block text-sm sm:text-base font-medium text-[#0F172A] mb-2">Tipo Ingeniero</label>
+                    <select
+                      className="w-full border border-[#E2E8F0] rounded-[10px] px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8] outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow"
+                      value={engineerKind}
+                      onChange={(e) => setEngineerKind(e.target.value as "Titular" | "Suplente" | "")}
+                    >
+                      <option value="">Seleccionar</option>
+                      <option value="Titular">Titular</option>
+                      <option value="Suplente">Suplente</option>
+                    </select>
+                  </div>
+
                   <LabeledInput label="Nro de matrícula" value={license} onChange={setlicense} />
                   <LabeledInput label="Título universitario" value={degree} onChange={setDegree} />
                 </div>
@@ -903,7 +971,11 @@ function TeamSummary({ items, onEdit }: { items: PendingMember[]; onEdit: () => 
                 <div className="text-xs sm:text-sm text-[#64748B] truncate">{m.email}{m.existingUserId ? ", existente" : ", nuevo"}</div>
               </div>
               <span className="text-xs sm:text-sm text-[#0F172A] font-medium self-start sm:self-auto">
-                {m.user_type_id === 2 ? "Titular" : m.user_type_id === 3 ? "Ingeniero" : m.user_type_id === 4 ? "Administrativo" : m.user_type_id === 6 ? "Personal de planta" : "Sin rol"}
+                {m.user_type_id === 2 ? "Titular"
+                  : m.user_type_id === 3 ? `Ingeniero${m.engineer_kind ? ` (${m.engineer_kind})` : ""}`
+                  : m.user_type_id === 4 ? "Administrativo"
+                  : m.user_type_id === 6 ? "Personal de planta"
+                  : "Sin rol"}
               </span>
             </li>
           ))}

@@ -1,4 +1,4 @@
-import { ChevronRight, TicketPercent } from "lucide-react";
+import { ChevronRight, ScrollText } from "lucide-react";
 import Link from "next/link";
 import StickerOrdersTable from "@/components/StickerOrdersTable";
 
@@ -29,7 +29,7 @@ export default function BuyObleaPage({ params }: Props) {
               href={`/dashboard/${id}/stickers/all`}
               className="border border-[#0040B8] text-[#0040B8] bg-white hover:bg-[#f0f6ff] font-medium rounded px-4 py-3 text-sm flex items-center transition"
             >
-              <TicketPercent size={16} className="mr-2" />
+              <ScrollText size={16} className="mr-2" />
               Mis obleas
             </Link>
 
