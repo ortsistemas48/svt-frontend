@@ -99,3 +99,21 @@ export type UserTypeInWorkshop = {
   id: number;
   name: string;
 };
+
+export type DailyStatistics = {
+  date: string;
+  workshop_id: number;
+  applications: {
+    total: number;
+    in_queue: number;
+    completed: number;
+    approved: number;
+    approval_rate: number;
+  };
+  sticker_stock: {
+    total: number;
+    available: number;
+    used: number;
+    unavailable: number;
+  };
+};

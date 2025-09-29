@@ -1,4 +1,4 @@
-import { Application } from "./app/types";
+import { Application, DailyStatistics } from "./app/types";
 
 type StickerOrderData = {
   id: number;
@@ -393,3 +393,130 @@ export const toUpper = (s: string) => s.toUpperCase();
 export const onlyAlnumUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9]/g, "");
 export const alnumSpaceUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9\s]/g, "");
 export const lettersSpaceUpper = (s: string) => toUpper(s).replace(/[^A-ZÁÉÍÓÚÑÜ\s-]/g, "");
+
+
+export async function fetchDailyStatistics(workshopId: number, date?: string): Promise<DailyStatistics> {
+  const { cookies } = await import('next/headers');
+  const cookieHeader = (await cookies()).toString();
+  
+  // Build URL with optional date parameter
+  const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${workshopId}/daily-statistics`;
+  const url = date ? `${baseUrl}?date=${date}` : baseUrl;
+  
+  console.log(url);
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+        cookie: cookieHeader,
+      },
+    });
+    console.log('Response status:', response.status);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      throw new Error(`Failed to fetch daily statistics: ${response.status} - ${errorText}`);
+    }
+    const data = await response.json();
+    console.log('Success response:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching daily statistics:', error);
+    // Return default values if API fails
+    return {
+      date: new Date().toISOString().split('T')[0],
+      workshop_id: workshopId,
+      applications: {
+        total: 0,
+        in_queue: 0,
+        completed: 0,
+        approved: 0,
+        approval_rate: 0,
+      },
+      sticker_stock: {
+        total: 0,
+        available: 0,
+        used: 0,
+        unavailable: 0,
+      },
+    };
+  }
+}
+
+
+export async function fetchLatestApplications(workshopId: number, perPage: number = 5) {
+  const { cookies } = await import('next/headers');
+  const cookieHeader = (await cookies()).toString();
+  
+  try {
+    const params = new URLSearchParams({
+      page: '1',
+      per_page: perPage.toString()
+    });
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${workshopId}/full?${params.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: cookieHeader,
+        },
+        cache: "no-store",
+        credentials: "include",
+      }
+    );
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Error fetching latest applications:", errorText);
+      throw new Error(`Failed to fetch latest applications: ${res.status} - ${errorText}`);
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching latest applications:", error);
+    throw error;
+  }
+}
+
+export async function fetchQueueApplications(workshopId: number, perPage: number = 10) {
+  const { cookies } = await import('next/headers');
+  const cookieHeader = (await cookies()).toString();
+  
+  try {
+    const params = new URLSearchParams({
+      page: '1',
+      per_page: perPage.toString(),
+      status_in: 'En Cola,En curso'
+    });
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${workshopId}/full?${params.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: cookieHeader,
+        },
+        cache: "no-store",
+        credentials: "include",
+      }
+    );
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Error fetching queue applications:", errorText);
+      throw new Error(`Failed to fetch queue applications: ${res.status} - ${errorText}`);
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching queue applications:", error);
+    throw error;
+  }
+}

@@ -27,8 +27,8 @@ export default function SideBarMenu({ userType, loading }: Props) {
 
   const links = [
     { href: `/dashboard/${id}`, icon: Home, label: "Inicio", roles: ["all"] },
-    { href: `/dashboard/${id}/applications`, icon: ClipboardList, label: "Inspección", roles: ["all"] },
-    { href: `/dashboard/${id}/inspections-queue`, icon: Clock, label: "Cola de inspecciones", roles: ["all"] },
+    { href: `/dashboard/${id}/applications`, icon: ClipboardList, label: "Revisiones", roles: ["all"] },
+    { href: `/dashboard/${id}/inspections-queue`, icon: Clock, label: "Cola de revisiones", roles: ["all"] },
     { href: `/dashboard/${id}/reprint-crt`, icon: Printer, label: "Reimpresión de CRT", roles: ["all"] },
     { href: `/dashboard/${id}/stickers`, icon: ScrollText, label: "Obleas", roles: ["titular"] },
     { href: `/dashboard/${id}/payment`, icon: BanknoteIcon, label: "Pagos", roles: ["titular"] },
