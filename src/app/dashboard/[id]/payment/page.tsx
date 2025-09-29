@@ -97,6 +97,20 @@ export default function PaymentPage() {
     fetchWorkshop();
   }, [workshopId]);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function to restore scroll when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showModal]);
+
   const zone = useMemo(() => {
     if (!ws) return "CENTRO" as const;
     return ZONE_BY_PROVINCE[ws.province] ?? "CENTRO";
@@ -321,29 +335,29 @@ export default function PaymentPage() {
 
         {/* Modal transferencia, layout vertical y más limpio */}
         {showModal && (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-            <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4 overflow-y-auto overscroll-none">
+            <div className="w-full max-w-xs sm:max-w-lg md:max-w-2xl max-h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl my-4 flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between border-b p-4">
-                <h3 className="text-lg font-semibold">Transferencia bancaria</h3>
+              <div className="flex items-center justify-between border-b p-3 sm:p-4 flex-shrink-0">
+                <h3 className="text-base sm:text-lg font-semibold">Transferencia bancaria</h3>
                 <button className="rounded-full border p-1 hover:bg-gray-50" onClick={closeModal} aria-label="Cerrar">
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               {/* Body en columna, pasos simples */}
-              <div className="space-y-6 p-5">
+              <div className="space-y-4 sm:space-y-6 p-3 sm:p-5 overflow-y-auto flex-1 scrollbar-hide">
                 {/* Paso 1, monto */}
-                <section className="rounded-[4px] border bg-white/60 p-4">
+                <section className="rounded-[4px] border bg-white/60 p-3 sm:p-4">
                   <h4 className="text-sm font-semibold text-gray-900">1- Monto a transferir</h4>
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-[#0040B8]">{formatARS(total)}</p>
-                  <p className="mt-1 text-sm text-gray-600">Concepto: Revisiones - {qty} - {zone}</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#0040B8]">{formatARS(total)}</p>
+                  <p className="mt-1 text-xs sm:text-sm text-gray-600 break-words">Concepto: Revisiones - {qty} - {zone}</p>
                 </section>
 
                 {/* Paso 2, datos bancarios copiable */}
-                <section className="rounded-[4px] border bg-gradient-to-b from-[#F8FAFF] to-white p-4">
+                <section className="rounded-[4px] border bg-gradient-to-b from-[#F8FAFF] to-white p-3 sm:p-4">
                   <h4 className="text-sm font-semibold text-gray-900">2- Datos para transferencia</h4>
-                  <ul className="mt-3 space-y-2 text-sm text-gray-800">
+                  <ul className="mt-3 space-y-2 text-xs sm:text-sm text-gray-800">
                     <CopyRow label="Titular" value="Talleres SRL" onCopy={copy} copiedKey={copied} k="titular" />
                     <CopyRow label="CUIT" value="30-00000000-0" onCopy={copy} copiedKey={copied} k="cuit" />
                     <CopyRow label="Banco" value="Banco Demo" onCopy={copy} copiedKey={copied} k="banco" />
@@ -355,7 +369,7 @@ export default function PaymentPage() {
 
                 {/* Paso 3, comprobante */}
                 <section className={clsx(
-                "rounded-[4px] border bg-white/60 p-4",
+                "rounded-[4px] border bg-white/60 p-3 sm:p-4",
                 proofError ? "border-rose-300" : "border-gray-200" // <--- resalta si falta
                 )}>
                 <h4 className="text-sm font-semibold text-gray-900">3- Subí el comprobante <span className="text-rose-600">*</span></h4>
@@ -372,10 +386,10 @@ export default function PaymentPage() {
               </div>
 
                 {/* Footer del modal */}
-                <div className="flex items-center justify-end gap-3 border-t bg-white p-4">
+                <div className="flex items-center justify-end gap-2 sm:gap-3 border-t bg-white p-3 sm:p-4 flex-shrink-0">
                 <button
                     onClick={closeModal}
-                    className="rounded-[4px] border px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="rounded-[4px] border px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
                     type="button"
                 >
                     Cancelar
@@ -384,7 +398,7 @@ export default function PaymentPage() {
                     onClick={onConfirmPayment}
                     disabled={submitting || pendingFiles.length === 0}
                     className={clsx(
-                    "rounded-[4px] px-4 py-2 text-sm text-white",
+                    "rounded-[4px] px-3 sm:px-4 py-2 text-xs sm:text-sm text-white",
                     submitting || pendingFiles.length === 0
                         ? "bg-[#0040B8]/60 cursor-not-allowed"
                         : "bg-[#0040B8] hover:bg-[#00379f]"
