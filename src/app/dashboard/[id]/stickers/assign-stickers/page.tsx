@@ -282,7 +282,7 @@ export default function AsignarObleasPage() {
                   <div key={r.id} className="rounded-md border border-gray-200 p-3">
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                       <div className="sm:col-span-3">
-                        <label className="block text-xs text-gray-600 mb-1">Prefijo</label>
+                        <label className="block text-xs text-gray-600 mb-1">Prefijo (opcional)</label>
                         <input
                           value={r.lead}
                           onChange={(e) => updateRange(r.id, { lead: e.target.value })}
@@ -317,7 +317,7 @@ export default function AsignarObleasPage() {
                       </div>
 
                       <div className="sm:col-span-3">
-                        <label className="block text-xs text-gray-600 mb-1">Sufijo</label>
+                        <label className="block text-xs text-gray-600 mb-1">Sufijo (opcional)</label>
                         <input
                           value={r.tail}
                           onChange={(e) => updateRange(r.id, { tail: e.target.value })}
