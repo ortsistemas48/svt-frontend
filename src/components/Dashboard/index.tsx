@@ -43,7 +43,7 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-white">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* breadcrumb simple, igual al de tus pantallas */}
         <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
