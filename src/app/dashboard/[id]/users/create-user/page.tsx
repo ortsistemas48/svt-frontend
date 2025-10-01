@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
-import { Eye, EyeOff, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { genPassword } from "@/utils";
 
 type User = {
@@ -15,8 +15,8 @@ type User = {
   phone_number: string | null;
   title_name?: string | null;
   license_number?: string | null;
-  user_type_id?: number | null; 
-  engineer_kind?: "Titular" | "Suplente" | null; 
+  user_type_id?: number | null;
+  engineer_kind?: "Titular" | "Suplente" | null;
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
@@ -37,6 +37,7 @@ export default function CreateOrAttachUserPage() {
   const search = useSearchParams();
   const email = search.get("email") ?? "";
   const router = useRouter();
+
   const [engineerKind, setEngineerKind] = useState<"" | "Titular" | "Suplente">("");
 
   const [loading, setLoading] = useState(true);
@@ -54,35 +55,27 @@ export default function CreateOrAttachUserPage() {
   const [engineerRegistration, setEngineerRegistration] = useState("");
   const [engineerDegree, setEngineerDegree]             = useState("");
 
+  // Password autogenerada, no visible en UI
   const [password, setPassword] = useState("");
   const [confirm, setConfirm]   = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   const [msg, setMsg] = useState<{type: "success"|"error", text: string} | null>(null);
 
   const isExisting = !!existingUser;
-  const [userChoseEngineer, setUserChoseEngineer] = useState(false); // <- NUEVO: si el user eligió Ingeniero desde el select
+  const [userChoseEngineer, setUserChoseEngineer] = useState(false);
 
-  // 🔒 Regla de edición de los extras de ingeniero:
-  // - Creación: editable si el rol es Ingeniero
-  // - Usuario existente: editable SOLO si el usuario lo selecciona desde el input (no por venir del endpoint)
   const engineerEditable = roleId === ENGINEER_ROLE_ID && (!isExisting || userChoseEngineer);
   const ctaLabel = isExisting ? "Asociar al taller" : "Crear usuario";
 
-  // Clases de estilo
   const roCls = isExisting ? "opacity-75 bg-gray-50 cursor-not-allowed" : "";
   const inputCls = `w-full border rounded p-3 ${roCls}`;
-  const passInputCls = `w-full border rounded p-3 pr-10 ${roCls}`;
   const engineerInputCls = `w-full border rounded p-3 ${engineerEditable ? "" : "opacity-75 bg-gray-50 cursor-not-allowed"}`;
 
-  // Buscar usuario por email (con workshop_id)
+  // Buscar usuario por email
   useEffect(() => {
     let mounted = true;
     (async () => {
-      // cada vez que cambia el email de búsqueda, asumimos que aún NO eligió ingeniero manualmente
       setUserChoseEngineer(false);
-
       if (!email) {
         resetFormExceptEmail();
         setExistingUser(null);
@@ -101,18 +94,13 @@ export default function CreateOrAttachUserPage() {
 
           if (u) {
             setExistingUser(u);
-
-            // Pre-cargar datos básicos
             setFirstName(u.first_name ?? "");
             setLastName(u.last_name ?? "");
             setDni(u.dni ?? "");
             setPhone(u.phone_number ?? "");
-
-            // Si ya tiene rol en este taller, lo preseleccionamos
             if (typeof u.user_type_id === "number") setRoleId(u.user_type_id);
             else setRoleId("");
 
-            // Pre-cargar datos de ingeniero si existen
             setEngineerRegistration(u.license_number ?? "");
             setEngineerDegree(u.title_name ?? "");
             setEngineerKind((u as any).engineer_kind ?? "");
@@ -133,6 +121,15 @@ export default function CreateOrAttachUserPage() {
     return () => { mounted = false; };
   }, [email, workshopId]);
 
+  // Autogenerar password cuando sea usuario nuevo
+  useEffect(() => {
+    if (!isExisting) {
+      const p = genPassword();
+      setPassword(p);
+      setConfirm(p);
+    }
+  }, [isExisting, email]);
+
   const resetFormExceptEmail = () => {
     setFirstName("");
     setLastName("");
@@ -144,36 +141,24 @@ export default function CreateOrAttachUserPage() {
     setPassword("");
     setConfirm("");
     setEngineerKind("");
-    setShowPass(false);
-    setShowConfirm(false);
     setUserChoseEngineer(false);
   };
 
-  // Manejo del cambio de rol: marcamos si el user selecciona Ingeniero desde el input
   const onChangeRole = (val: number | "") => {
     setRoleId(val);
     setUserChoseEngineer(val === ENGINEER_ROLE_ID);
     if (val !== ENGINEER_ROLE_ID) {
-      setEngineerKind(""); // NUEVO
+      setEngineerKind("");
     }
   };
 
-  // Si cambia a rol distinto de Ingeniero, limpiamos campos de ingeniero (opcional)
   useEffect(() => {
     if (roleId !== ENGINEER_ROLE_ID) {
       setEngineerRegistration("");
       setEngineerDegree("");
-      setEngineerKind(""); // limpiar tipo (Titular/Suplente)
+      setEngineerKind("");
     }
   }, [roleId]);
-
-
-  const handleGeneratePassword = () => {
-    const p = genPassword();
-    setPassword(p);
-    setConfirm(p);
-    setMsg({ type: "success", text: "Contraseña generada" });
-  };
 
   const submit = async () => {
     setMsg(null);
@@ -182,7 +167,6 @@ export default function CreateOrAttachUserPage() {
       return;
     }
 
-    // Requerido SOLO cuando el rol Ingeniero fue elegido desde el input (creación o cambio de rol)
     if (engineerEditable && roleId === ENGINEER_ROLE_ID) {
       if (!engineerRegistration.trim() || !engineerDegree.trim()) {
         setMsg({ type: "error", text: "Para Ingeniero, completá Nro de matrícula y Título universitario" });
@@ -196,17 +180,14 @@ export default function CreateOrAttachUserPage() {
 
     try {
       if (!isExisting) {
-        // crear usuario
+        // reforzar autogeneración por si alguien reentró
         if (!password || !confirm) {
-          setMsg({ type: "error", text: "Ingresá la contraseña y su confirmación" });
-          return;
+          const p = genPassword();
+          setPassword(p);
+          setConfirm(p);
         }
-        if (password !== confirm) {
-          setMsg({ type: "error", text: "Las contraseñas no coinciden" });
-          return;
-        }
-        if (password.length < 8) {
-          setMsg({ type: "error", text: "La contraseña debe tener al menos 8 caracteres" });
+        if ((password || "").length < 8) {
+          setMsg({ type: "error", text: "La contraseña generada es inválida" });
           return;
         }
 
@@ -225,7 +206,7 @@ export default function CreateOrAttachUserPage() {
         if (roleId === ENGINEER_ROLE_ID) {
           payload.license_number = engineerRegistration.trim();
           payload.title_name     = engineerDegree.trim();
-          payload.engineer_kind  = engineerKind;       
+          payload.engineer_kind  = engineerKind;
         }
 
         const r = await fetch(`${API_BASE}/auth/register`, {
@@ -251,7 +232,7 @@ export default function CreateOrAttachUserPage() {
         if (engineerEditable && roleId === ENGINEER_ROLE_ID) {
           payload.license_number = engineerRegistration.trim() || null;
           payload.title_name     = engineerDegree.trim() || null;
-          payload.engineer_kind  = engineerKind || null;  
+          payload.engineer_kind  = engineerKind || null;
         }
 
         const rAttach = await fetch(`${API_BASE}/users/assign/${workshopId}`, {
@@ -366,7 +347,6 @@ export default function CreateOrAttachUserPage() {
                 </p>
               </div>
 
-              {/* Campos adicionales para Ingeniero (antes de contraseñas) */}
               {roleId === ENGINEER_ROLE_ID && (
                 <>
                   <div>
@@ -389,7 +369,7 @@ export default function CreateOrAttachUserPage() {
                       className={engineerInputCls}
                       value={engineerRegistration}
                       onChange={(e)=>setEngineerRegistration(e.target.value)}
-                      placeholder="Ej: 12345"
+                      placeholder="Ej, 12345"
                       readOnly={!engineerEditable}
                       disabled={!engineerEditable}
                     />
@@ -401,68 +381,13 @@ export default function CreateOrAttachUserPage() {
                       className={engineerInputCls}
                       value={engineerDegree}
                       onChange={(e)=>setEngineerDegree(e.target.value)}
-                      placeholder="Ej: Ing. Mecánico"
+                      placeholder="Ej, Ing. Mecánico"
                       readOnly={!engineerEditable}
                       disabled={!engineerEditable}
                     />
                   </div>
                 </>
               )}
-
-
-              {/* Passwords */}
-              <div className="relative">
-                <label className="block textsm mb-2">Contraseña</label>
-                <input
-                  className={passInputCls}
-                  type={showPass ? "text" : "password"}
-                  placeholder={isExisting ? "" : "Ingresá una contraseña segura"}
-                  value={isExisting ? "••••••••" : password}
-                  onChange={(e)=>!isExisting && setPassword(e.target.value)}
-                  readOnly={isExisting}
-                  disabled={isExisting}
-                />
-                <button
-                  type="button"
-                  onClick={()=>setShowPass(v=>!v)}
-                  className={`absolute right-3 py-4 ${isExisting ? "pointer-events-none opacity-50" : ""}`}
-                  tabIndex={isExisting ? -1 : 0}
-                  disabled={isExisting}
-                  aria-label={showPass ? "Ocultar contraseña" : "Ver contraseña"}
-                  title={showPass ? "Ocultar contraseña" : "Ver contraseña"}
-                >
-                  {showPass ? <EyeOff className="w-5 h-5 text-[#0040B8]" /> : <Eye className="w-5 h-5 text-[#0040B8]" />}
-                </button>
-                {!isExisting && (
-                  <button type="button" onClick={handleGeneratePassword} className="text-xs text-[#0040B8] mt-2">
-                    Generar automáticamente
-                  </button>
-                )}
-              </div>
-
-              <div className="relative">
-                <label className="block text-sm mb-2">Confirmar Contraseña</label>
-                <input
-                  className={passInputCls}
-                  type={showConfirm ? "text" : "password"}
-                  placeholder={isExisting ? "" : "Repetí la contraseña"}
-                  value={isExisting ? "••••••••" : confirm}
-                  onChange={(e)=>!isExisting && setConfirm(e.target.value)}
-                  readOnly={isExisting}
-                  disabled={isExisting}
-                />
-                <button
-                  type="button"
-                  onClick={()=>setShowConfirm(v=>!v)}
-                  className={`absolute right-3 py-4 ${isExisting ? "pointer-events-none opacity-50" : ""}`}
-                  tabIndex={isExisting ? -1 : 0}
-                  disabled={isExisting}
-                  aria-label={showConfirm ? "Ocultar confirmación" : "Ver confirmación"}
-                  title={showConfirm ? "Ocultar confirmación" : "Ver confirmación"}
-                >
-                  {showConfirm ? <EyeOff className="w-5 h-5 text-[#0040B8]" /> : <Eye className="w-5 h-5 text-[#0040B8]" />}
-                </button>
-              </div>
             </div>
 
             {msg && (

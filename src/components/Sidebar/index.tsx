@@ -209,7 +209,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                     onClick={() => handleWorkshopClick(w.workshop_id)}
                   />
                 ))}
-                <Link href="/dashboard/register-workshop">
+                <Link href="/create-workshop">
                   <div className="mt-4 flex items-center gap-2 rounded-[4px] border border-dashed border-slate-300 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
                     <svg width="18" height="18" viewBox="0 0 24 24" className="text-[#0040B8]">
                       <path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />

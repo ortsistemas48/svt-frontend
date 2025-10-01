@@ -65,6 +65,7 @@ export default function CreateWorkshopPage() {
   const [phone, setPhone] = useState("");
   const [cuit, setCuit] = useState("");
   const [dispositionNumber, setDispositionNumber] = useState<string>("");
+  const [swornChecked, setSwornChecked] = useState(false);
 
   /** Province and city options */
   const [provinceOptions, setProvinceOptions] = useState<{ value: string; label: string }[]>([]);
@@ -177,17 +178,21 @@ export default function CreateWorkshopPage() {
 
         if (titulares !== 1) { setError("Debe haber exactamente 1 Ingeniero Titular"); return; }
         if (suplentes < 1) { setError("Debe haber al menos 1 Ingeniero Suplente"); return; }
+        if (!swornChecked) {
+          setError("Debés aceptar la declaración jurada para continuar");
+          return;
+        }
 
         setError(null); setDir(1); setStep(3);
       }
   };
 
   const goBack = () => {
-    if (step === 2) { setDir(-1); setStep(1); }
+    if (step === 2) { setDir(-1); setStep(1); setSwornChecked(false); }
     else if (step === 3) { setDir(-1); setStep(2); }
   };
 
-  /** Crear taller y luego procesar pendientes */
+
   const handleCreateOnStep3 = async () => {
     const err = validateStep1();
     if (err) return setError(err);
@@ -313,6 +318,7 @@ export default function CreateWorkshopPage() {
         setCuit("");
         setDispositionNumber("");
         setPending([]);
+        setSwornChecked(false);
 
       }
     } catch (e: any) {
@@ -558,6 +564,25 @@ export default function CreateWorkshopPage() {
 
                 {error && <Alert type="error" message={error} />}
                 {success && <Alert type="success" message={success} />}
+                {/* Declaración jurada, obligatorio */}
+                <div className="rounded-[12px] border border-[#E2E8F0] p-4 sm:p-5 bg-[#F8FAFC]">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={swornChecked}
+                      onChange={(e) => setSwornChecked(e.target.checked)}
+                      className="mt-1 h-4 w-4"
+                    />
+                    <span className="text-sm text-[#0F172A] leading-relaxed">
+                      Como responsable del taller de Revisión Técnica Obligatoria, certifico en carácter de declaración jurada, que el taller se encuentra debidamente registrado bajo acto administrativo otorgado por la Agencia Nacional de Seguridad Vial y los datos que registro en el presente, son fehacientes y se encuentras vigentes.
+                    </span>
+                  </label>
+                  {!swornChecked && (
+                    <p className="mt-2 text-xs text-[#64748B]">
+                      Tenés que aceptar esto para poder continuar.
+                    </p>
+                  )}
+                </div>
 
                 <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                   <GhostButton onClick={goBack}><ChevronLeft size={18} />Volver</GhostButton>
