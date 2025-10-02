@@ -3,7 +3,7 @@ import PaymentApprovalTable from "@/components/AdminPaymentsTable";
 import { headers } from "next/headers";
 import { ChevronRight } from "lucide-react";
 
-export const revalidate = 0; // sin caché en build
+export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 type PaymentOrder = {
@@ -53,9 +53,7 @@ async function fetchAdminOrders(params: {
   const url = buildURL("/payments_admin/orders", params);
   const res = await fetch(url, {
     method: "GET",
-    headers: {
-      cookie,
-    },
+    headers: { cookie },
     cache: "no-store",
   });
   if (!res.ok) {
@@ -65,11 +63,13 @@ async function fetchAdminOrders(params: {
   return res.json();
 }
 
-export default async function AdminPaymentsPage({
-  searchParams,
-}: {
-  searchParams?: Record<string, string | string[] | undefined>;
-}) {
+// 🔑 este es el tipo que espera Next
+type NextPageProps = {
+  params?: { [key: string]: string | string[] };
+  searchParams?: { [key: string]: string | string[] | undefined };
+};
+
+export default async function AdminPaymentsPage({ searchParams }: NextPageProps) {
   const q = searchParams?.q as string | undefined;
   const status = searchParams?.status as
     | "PENDING"
@@ -81,7 +81,6 @@ export default async function AdminPaymentsPage({
   const page_size = searchParams?.page_size ? Number(searchParams.page_size) : 50;
 
   const data = await fetchAdminOrders({ q, status, page, page_size });
-
 
   return (
     <div className="min-w-full">
@@ -99,6 +98,7 @@ export default async function AdminPaymentsPage({
           Aqui podrás aprobar los pagos de revisiones del sistema.
         </p>
       </div>
+
       <PaymentApprovalTable orders={data.items} />
     </div>
   );
