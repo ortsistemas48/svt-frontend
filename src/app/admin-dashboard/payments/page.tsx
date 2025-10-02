@@ -1,4 +1,4 @@
-// app/admin/payments/page.tsx
+// app/admin-dashboard/payments/page.tsx
 import PaymentApprovalTable from "@/components/AdminPaymentsTable";
 import { headers } from "next/headers";
 import { ChevronRight } from "lucide-react";
@@ -63,13 +63,11 @@ async function fetchAdminOrders(params: {
   return res.json();
 }
 
-// 🔑 este es el tipo que espera Next
-type NextPageProps = {
-  params?: { [key: string]: string | string[] };
-  searchParams?: { [key: string]: string | string[] | undefined };
-};
-
-export default async function AdminPaymentsPage({ searchParams }: NextPageProps) {
+export default async function AdminPaymentsPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, unknown>;
+}) {
   const q = searchParams?.q as string | undefined;
   const status = searchParams?.status as
     | "PENDING"
