@@ -2,9 +2,8 @@ import { ChevronRight, ScrollText } from "lucide-react";
 import Link from "next/link";
 import StickerOrdersTable from "@/components/StickerOrdersTable";
 
-type Props = { params: { id: string } };
 
-export default function BuyObleaPage({ params }: Props) {
+export default function BuyObleaPage({ params }: any) {
   const { id } = params;
 
   return (
