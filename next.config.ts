@@ -14,23 +14,24 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Opcional, si usás CSP manual
   async headers() {
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",      // permite los inlines que Next inyecta
+      "style-src 'self' 'unsafe-inline'",       // estilos inline usados por Next y Tailwind
+      "img-src 'self' data: https:",
+      "connect-src 'self' wss: https://apis.datos.gob.ar", // fetch y HMR
+      "font-src 'self' https: data:",
+      "frame-ancestors 'self'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; ");
+
     return [
       {
         source: "/(.*)",
         headers: [
-          // con proxy, connect-src 'self' alcanza
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "img-src 'self' data: https:",
-              "style-src 'self' 'unsafe-inline'",
-              "script-src 'self'",
-              "connect-src 'self'",
-            ].join("; "),
-          },
+          { key: "Content-Security-Policy", value: csp },
         ],
       },
     ];
