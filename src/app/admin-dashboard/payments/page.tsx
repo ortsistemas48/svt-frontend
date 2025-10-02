@@ -62,12 +62,10 @@ async function fetchAdminOrders(params: {
   }
   return res.json();
 }
-// @ts-expect-error next type bug with searchParams
-export default async function AdminPaymentsPage({
-  searchParams,
-}: {
-  searchParams?: Record<string, unknown>;
-}) {
+export default async function AdminPaymentsPage(
+  // @ts-expect-error searchParams typing bug in Next.js
+  { searchParams }: { searchParams?: Record<string, unknown> }
+) {
   const q = searchParams?.q as string | undefined;
   const status = searchParams?.status as
     | "PENDING"
@@ -80,7 +78,7 @@ export default async function AdminPaymentsPage({
 
   const data = await fetchAdminOrders({ q, status, page, page_size });
 
-  return (
+}  return (
     <div className="min-w-full">
       <article className="flex items-center justify-between text-lg mb-6 px-4">
         <div className="flex items-center gap-1">
