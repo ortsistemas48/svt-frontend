@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import Spinner from "@/components/Spinner"; // 👈 importa el spinner
+import Spinner from "@/components/Spinner"; 
 import Link from "next/link";
 
 export default function LoginForm() {
@@ -13,12 +13,13 @@ export default function LoginForm() {
   const [emailOrDni, setEmailOrDni] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false); // 👈 nuevo
+  const [submitting, setSubmitting] = useState(false); 
   const { user } = useUser();
   const router = useRouter();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    console.log("API_URL =", process.env.NEXT_PUBLIC_API_URL);
     if (user === null) setChecking(false);
     else if (user) router.push("/select-workshop");
   }, [user, router]);
@@ -27,7 +28,7 @@ export default function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitting) return; // evita doble submit
+    if (submitting) return; 
     setError("");
 
     if (!emailOrDni.trim() || !password.trim()) {
@@ -36,7 +37,7 @@ export default function LoginForm() {
     }
 
     try {
-      setSubmitting(true); // 👈 empieza loading
+      setSubmitting(true); 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: "POST",
         credentials: "include",
@@ -85,14 +86,14 @@ export default function LoginForm() {
       console.error("❌ Error de red:", err);
       setError("Ocurrió un error. Intentá de nuevo.");
     } finally {
-      setSubmitting(false); // 👈 termina loading (si no hubo redirect)
+      setSubmitting(false); // x termina loading (si no hubo redirect)
     }
   };
 
   return (
       <div className="w-full max-w-md bg-white rounded-[10px] border border-[#DEDEDE] px-4 py-10 text-center
                       flex flex-col justify-between
-                      max-h-[calc(100dvh-2rem)] overflow-auto"> {/* 👈 scroll interno, no en body */}
+                      max-h-[calc(100dvh-2rem)] overflow-auto"> {/*  scroll interno, no en body */}
         <div className="space-y-8">
           <Image
             src="/images/logo.png"
