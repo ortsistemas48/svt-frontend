@@ -62,7 +62,7 @@ async function fetchAdminOrders(params: {
   }
   return res.json();
 }
-
+// @ts-expect-error next type bug with searchParams
 export default async function AdminPaymentsPage({
   searchParams,
 }: {
