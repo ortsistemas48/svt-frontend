@@ -62,10 +62,8 @@ async function fetchAdminOrders(params: {
   }
   return res.json();
 }
-export default async function AdminPaymentsPage(
-  // @ts-expect-error searchParams typing bug in Next.js
-  { searchParams }: { searchParams?: Record<string, unknown> }
-) {
+// @ts-ignore - Next.js searchParams typing bug
+export default async function AdminPaymentsPage({ searchParams }: any) {
   const q = searchParams?.q as string | undefined;
   const status = searchParams?.status as
     | "PENDING"
