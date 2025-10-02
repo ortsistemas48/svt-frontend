@@ -78,7 +78,7 @@ export default async function AdminPaymentsPage(
 
   const data = await fetchAdminOrders({ q, status, page, page_size });
 
-}  return (
+  return (
     <div className="min-w-full">
       <article className="flex items-center justify-between text-lg mb-6 px-4">
         <div className="flex items-center gap-1">
