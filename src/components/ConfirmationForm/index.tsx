@@ -29,7 +29,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
 
   useEffect(() => {
     async function fetchData() {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/data`, {
+      const res = await fetch(`/api/applications/${applicationId}/data`, {
         method: "GET",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

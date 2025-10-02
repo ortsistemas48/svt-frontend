@@ -20,7 +20,7 @@ type DetailRow = {
   observations: ObservationRow[]; // viene del backend en obs_list
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL as string;
+const API = "/api";
 
 async function fetchApplicationStatus(appId: number) {
   const cookieHeader = (await cookies()).toString();

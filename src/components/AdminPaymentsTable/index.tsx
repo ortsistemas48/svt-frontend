@@ -13,7 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect, useRef } from "react";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
+const API_BASE = "/api";
 
 type PaymentOrder = {
   id: number;

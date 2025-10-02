@@ -58,7 +58,7 @@ export default function CompletedApplicationsTable() {
       else if (resultFilter) usp.set("result", resultFilter);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/completed?${usp.toString()}`,
+        `/api/applications/workshop/${id}/completed?${usp.toString()}`,
         {
           credentials: "include",
           headers: { "Content-Type": "application/json" },

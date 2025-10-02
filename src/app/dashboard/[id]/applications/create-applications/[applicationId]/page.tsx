@@ -11,7 +11,7 @@ export default async function CreateApplicationPage({ params }: { params: Promis
 
   try {
     const cookieHeader = (await headers()).get("cookie") || "";
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/get-applications/${applicationId}`, {
+    const res = await fetch(`/api/applications/get-applications/${applicationId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

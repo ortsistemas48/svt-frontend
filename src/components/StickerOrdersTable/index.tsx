@@ -53,7 +53,7 @@ export default function StickerOrdersTable() {
       setErrorMsg(null);
       const usp = new URLSearchParams({ workshop_id: String(id) });
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/stickers/list-orders?${usp.toString()}`,
+        `/api/stickers/list-orders?${usp.toString()}`,
         { credentials: "include" }
       );
       if (!res.ok) {

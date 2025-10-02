@@ -74,8 +74,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
       setDeleting(true);
       setDeleteError(null);
 
-      const API = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
-      const url = `${API}/workshops/${encodeURIComponent(workshopId)}/members/${encodeURIComponent(selected.id)}`;
+      const url = `/api/workshops/${encodeURIComponent(workshopId)}/members/${encodeURIComponent(selected.id)}`;
 
       const res = await fetch(url, {
         method: "DELETE",

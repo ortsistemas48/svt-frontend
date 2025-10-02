@@ -16,7 +16,7 @@ import {
 import clsx from "clsx";
 
 /* ===================== Config ===================== */
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+const API = "/api";
 
 /* ===================== Tipos ===================== */
 type RangeInput = { id: string; lead: string; start: string; end: string; tail: string; };

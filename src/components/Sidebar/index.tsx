@@ -51,7 +51,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
 
   const logOutFunction = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+      const res = await fetch(`/api/auth/logout`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -70,7 +70,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
       try {
         setLoading(true);
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/user-type-in-workshop?userId=${user.id}&workshopId=${id}`,
+          `/api/users/user-type-in-workshop?userId=${user.id}&workshopId=${id}`,
           { credentials: "include" }
         );
         if (res.ok) setUserType(await res.json());

@@ -59,7 +59,7 @@ export default function InspectionTable() {
       else if (statusFilter) usp.set("status", statusFilter);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${id}/full?${usp.toString()}`,
+        `/api/applications/workshop/${id}/full?${usp.toString()}`,
         { credentials: "include" }
       );
       if (!res.ok) throw new Error("Error al traer aplicaciones");
@@ -98,7 +98,7 @@ export default function InspectionTable() {
       setErrorMsg(null);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/applications/${deleteTarget.application_id}/soft-delete`,
+        `/api/applications/${deleteTarget.application_id}/soft-delete`,
         {
           method: "POST",
           credentials: "include",

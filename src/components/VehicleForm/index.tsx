@@ -335,7 +335,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
       setSearchError(null);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
+        `/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
         { credentials: "include", signal: ctrl.signal }
       );
 

@@ -114,7 +114,7 @@ export default function StickerOrdersTable() {
       });
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/stickers/workshop/${id}?${usp.toString()}`,
+        `/api/stickers/workshop/${id}?${usp.toString()}`,
         { credentials: "include" }
       );
 
@@ -192,7 +192,7 @@ export default function StickerOrdersTable() {
       setErrorMsg(null);
       setRows((r) => r.map((it) => (it.id === row.id ? { ...it, status: nextApi } : it)));
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/${row.id}/status`, {
+      const res = await fetch(`/api/stickers/${row.id}/status`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

@@ -19,7 +19,7 @@ export async function fetchAvailableStickers({
   if (currentCarId) params.set("current_car_id", String(currentCarId));
   if (currentLicensePlate) params.set("current_license_plate", currentLicensePlate);
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/available?${params}`, {
+  const res = await fetch(`/api/stickers/available?${params}`, {
     credentials: "include",
     cache: "no-store",
   });
@@ -31,7 +31,7 @@ export async function fetchAvailableStickers({
 }
 
 export async function fetchAdminPendingWorkshops() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workshops/pending`, {
+  const res = await fetch(`/api/workshops/pending`, {
     cache: "no-store",
     credentials: "include",
   });
@@ -42,7 +42,7 @@ export async function fetchAdminPendingWorkshops() {
 
 
 export async function fetchAdminWorkshopDetail(workshopId: number | string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workshops/${workshopId}`, {
+  const res = await fetch(`/api/workshops/${workshopId}`, {
     cache: "no-store",
     credentials: "include",
   });
@@ -52,7 +52,7 @@ export async function fetchAdminWorkshopDetail(workshopId: number | string) {
 
 
 export async function fetchAdminWorkshopMembers(workshopId: number | string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/workshops/${workshopId}/members`, {
+  const res = await fetch(`/api/admin/workshops/${workshopId}/members`, {
     cache: "no-store",
     credentials: "include",
   });
@@ -62,7 +62,7 @@ export async function fetchAdminWorkshopMembers(workshopId: number | string) {
 
 
 export async function assignStickerToCar(license_plate: string, sticker_id: number, workshop_id?: number) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/assign-to-car`, {
+  const res = await fetch(`/api/stickers/assign-to-car`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -73,7 +73,7 @@ export async function assignStickerToCar(license_plate: string, sticker_id: numb
 }
 
 export async function unassignStickerFromCar(license_plate: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/unassign-from-car`, {
+  const res = await fetch(`/api/stickers/unassign-from-car`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -89,7 +89,7 @@ export async function fetchAdminPendingUserData({
   offset = 0,
 }: { limit?: number; offset?: number } = {}) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/users/get_users/pending?limit=${limit}&offset=${offset}`,
+    `/api/users/get_users/pending?limit=${limit}&offset=${offset}`,
     {
       method: "GET",
       credentials: "include",
@@ -109,7 +109,7 @@ export async function fetchAdminPendingUserData({
 
 
 export async function fetchUserData({ workshopId }: { workshopId: number }) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/get_users/workshop/${workshopId}`, {
+  const res = await fetch(`/api/users/get_users/workshop/${workshopId}`, {
     method: "GET",
     credentials: "include",
     headers: {
@@ -132,7 +132,7 @@ export async function fetchAdminUserData({
   offset = 0,
 }: { limit?: number; offset?: number } = {}) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/users/get_users/all?limit=${limit}&offset=${offset}`,
+    `/api/users/get_users/all?limit=${limit}&offset=${offset}`,
     {
       method: "GET",
       credentials: "include",
@@ -290,7 +290,7 @@ export function genPassword(){
 export async function markStickerAsUsed(stickerId: number) {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/stickers/${stickerId}/mark-used`,
+      `/api/stickers/${stickerId}/mark-used`,
       {
         method: "POST",
         credentials: "include",
@@ -308,7 +308,7 @@ export async function markStickerAsUsed(stickerId: number) {
 }
 
 export async function fetchStickerOrders(workshopId: number) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/orders?workshop_id=${workshopId}`, {
+  const res = await fetch(`/api/stickers/orders?workshop_id=${workshopId}`, {
     credentials: "include",
     cache: "no-store",
   });
@@ -329,7 +329,7 @@ export async function fetchStickersByWorkshop(workshopId: number, page: number =
     per_page: String(perPage)
   });
   
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stickers/workshop/${workshopId}?${params}`, {
+  const res = await fetch(`/api/stickers/workshop/${workshopId}?${params}`, {
     credentials: "include",
     cache: "no-store",
   });
@@ -400,7 +400,7 @@ export async function fetchDailyStatistics(workshopId: number, date?: string): P
   const cookieHeader = (await cookies()).toString();
   
   // Build URL with optional date parameter
-  const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${workshopId}/daily-statistics`;
+  const baseUrl = `/api/applications/workshop/${workshopId}/daily-statistics`;
   const url = date ? `${baseUrl}?date=${date}` : baseUrl;
   
   console.log(url);
@@ -457,7 +457,7 @@ export async function fetchLatestApplications(workshopId: number, perPage: numbe
     });
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${workshopId}/full?${params.toString()}`,
+      `/api/applications/workshop/${workshopId}/full?${params.toString()}`,
       {
         method: "GET",
         headers: {
@@ -495,7 +495,7 @@ export async function fetchQueueApplications(workshopId: number, perPage: number
     });
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/applications/workshop/${workshopId}/full?${params.toString()}`,
+      `/api/applications/workshop/${workshopId}/full?${params.toString()}`,
       {
         method: "GET",
         headers: {

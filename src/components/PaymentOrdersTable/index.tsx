@@ -53,7 +53,7 @@ export default function PaymentOrdersTable() {
       setLoading(true);
       setErrorMsg(null);
       const usp = new URLSearchParams({ workshop_id: String(id) });
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/orders?${usp.toString()}`, {
+      const res = await fetch(`/api/payments/orders?${usp.toString()}`, {
         credentials: "include",
       });
       if (!res.ok) {

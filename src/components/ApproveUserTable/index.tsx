@@ -47,7 +47,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
 
   async function approveUser(userId: string | number) {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/users/approve/${userId}`,
+      `/api/users/approve/${userId}`,
       { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" } }
     );
     if (!res.ok) {
@@ -88,7 +88,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
     setLoadingDetail(true);
     try {
       // detalle del taller
-      const dRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workshops/${ws.id}`, {
+      const dRes = await fetch(`/api/workshops/${ws.id}`, {
         credentials: "include",
       });
       if (!dRes.ok) throw new Error(await dRes.text() || "No se pudo cargar el taller");
@@ -99,7 +99,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
       });
 
       // miembros
-      const mRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workshops/admin/${ws.id}/members`, {
+      const mRes = await fetch(`/api/workshops/admin/${ws.id}/members`, {
         credentials: "include",
       });
       if (!mRes.ok) throw new Error(await mRes.text() || "No se pudo cargar el personal");
@@ -130,7 +130,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
     setErrorMsg(null);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/workshops/admin/${selectedWs.id}/members/${user_id}`,
+        `/api/workshops/admin/${selectedWs.id}/members/${user_id}`,
         { method: "DELETE", credentials: "include" }
       );
       if (!res.ok) throw new Error(await res.text() || "No se pudo desasignar");
@@ -177,7 +177,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
 
       // 2) si todo ok con usuarios, aprobar el taller
       const wRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/workshops/${selectedWs.id}/approve`,
+        `/api/workshops/${selectedWs.id}/approve`,
         { method: "POST", credentials: "include" }
       );
       if (!wRes.ok) {

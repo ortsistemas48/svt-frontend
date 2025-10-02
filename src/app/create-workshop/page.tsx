@@ -49,7 +49,7 @@ type PendingMember = {
   engineer_kind?: EngineerKind; 
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+const API_BASE = "/api";
 const STOP_ON_MEMBER_ERROR = false;
 
 export default function CreateWorkshopPage() {

@@ -30,10 +30,8 @@ type ApiList = {
   total: number;
 };
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
-
 function buildURL(path: string, query?: Record<string, any>) {
-  const url = new URL(`${API_BASE}${path}`);
+  const url = new URL(`/api${path}`, 'http://localhost:3000'); // Base URL for URL constructor
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v === undefined || v === null || v === "") continue;

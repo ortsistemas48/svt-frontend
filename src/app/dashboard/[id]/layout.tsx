@@ -75,7 +75,7 @@ export default function DashboardClientLayout({
     }
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/workshops/${workshopId}/membership`,
+        `/api/workshops/${workshopId}/membership`,
         { method: "GET", credentials: "include" }
       );
       if (res.status === 401 || res.status === 404) {
@@ -102,7 +102,7 @@ export default function DashboardClientLayout({
       try {
         setPermissionLoading(true);
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/user-type-in-workshop?userId=${user.id}&workshopId=${workshopId}`,
+          `/api/users/user-type-in-workshop?userId=${user.id}&workshopId=${workshopId}`,
           { credentials: "include" }
         );
         if (res.ok) {

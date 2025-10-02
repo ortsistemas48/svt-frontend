@@ -37,7 +37,7 @@ type StepRow = {
 
 type Observation = { id: number; description: string };
 
-const API = process.env.NEXT_PUBLIC_API_URL || "";
+const API = "/api";
 
 export default function WorkshopSettingsPage() {
   const { id } = useParams<{ id: string }>();

@@ -9,7 +9,7 @@ type WorkshopLite = {
   available_inspections?: number | null;
 };
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
+const API_BASE = "/api";
 
 export default function SelectApplicationType() {
   const router = useRouter();

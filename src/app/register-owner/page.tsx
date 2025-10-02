@@ -28,7 +28,7 @@ export default function RegisterOwnerForm() {
     setLoading(true); 
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/owner/register`, {
+      const res = await fetch(`/api/auth/owner/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -47,7 +47,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [car, setCar] = useState<any>({ ...(initialData?.car || {}) });
 
   const deleteDocument = useCallback(async (docId: number) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/applications/${applicationId}/documents/${docId}`, {
+    const res = await fetch(`/api/docs/applications/${applicationId}/documents/${docId}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -73,7 +73,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     files.forEach(f => form.append("files", f, f.name));
     form.append("role", role);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/applications/${applicationId}/documents`, {
+    const res = await fetch(`/api/docs/applications/${applicationId}/documents`, {
       method: "POST",
       credentials: "include",
       body: form,
@@ -105,7 +105,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     const fetchData = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/data`,
+          `/api/applications/${applicationId}/data`,
           { credentials: "include" }
         );
         if (!res.ok) throw new Error("Error al obtener los datos");
@@ -167,7 +167,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
   const sendToQueue = useCallback(async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/queue`, {
+      const res = await fetch(`/api/applications/${applicationId}/queue`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -204,7 +204,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     }
 
     // Guardar vehículo
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/car`, {
+    const res = await fetch(`/api/applications/${applicationId}/car`, {
       method: "PUT",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -256,7 +256,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         }
 
         // Guardar titular
-        res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/owner`, {
+        res = await fetch(`/api/applications/${applicationId}/owner`, {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -276,14 +276,14 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
         // Guardar conductor
         if (driver?.is_owner === true) {
-          res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/driver`, {
+          res = await fetch(`/api/applications/${applicationId}/driver`, {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ is_same_person: true }),
           });
         } else {
-          res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/driver`, {
+          res = await fetch(`/api/applications/${applicationId}/driver`, {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -352,7 +352,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       // Paso 3: Confirmar trámite
       if (step === 3) {
-        const resConfirm = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/${applicationId}/confirm`, {
+        const resConfirm = await fetch(`/api/applications/${applicationId}/confirm`, {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },

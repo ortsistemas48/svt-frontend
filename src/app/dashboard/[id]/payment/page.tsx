@@ -7,7 +7,7 @@ import clsx from "clsx";
 import PaymentDropzone from "@/components/PaymentDropzone";
 import PaymentOrdersTable from "@/components/PaymentOrdersTable";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+const API = "/api";
 
 type Workshop = {
   id: number;

@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { CheckCircle, AlertCircle, Clock, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_BASE = "/api";
 
 export default function EmailVerified() {
   const sp = useSearchParams();

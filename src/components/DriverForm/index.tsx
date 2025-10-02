@@ -211,7 +211,7 @@ export default function DriverForm({
         sanitize: (s) => clamp(onlyDigits(s), 9),
         validate: (q) => (q && /^\d{1,9}$/.test(q) ? null : "Ingresá un DNI válido."),
         buildUrl: (dni) =>
-          `${process.env.NEXT_PUBLIC_API_URL}/persons/get-persons-by-dni/${encodeURIComponent(dni)}`,
+          `/api/persons/get-persons-by-dni/${encodeURIComponent(dni)}`,
         mapFound: (payload, dni) => {
           const p = Array.isArray(payload) ? payload[0] : payload;
           return {

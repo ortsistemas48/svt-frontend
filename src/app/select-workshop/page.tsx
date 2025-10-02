@@ -14,7 +14,7 @@ export default function SelectWorkshopPage() {
 
   const logOutFunction = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+      const res = await fetch(`/api/auth/logout`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -29,7 +29,7 @@ export default function SelectWorkshopPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+      const res = await fetch(`/api/auth/me`, {
         method: "GET",
         credentials: "include",
       });
