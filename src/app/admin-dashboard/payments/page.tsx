@@ -68,20 +68,20 @@ async function fetchAdminOrders(params: {
 export default async function AdminPaymentsPage({
   searchParams,
 }: {
-  searchParams?: {
-    q?: string;
-    status?: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED";
-    page?: string;
-    page_size?: string;
-  };
+  searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  // filtros iniciales desde la url, opcional
-  const q = searchParams?.q || undefined;
-  const status = searchParams?.status || undefined;
+  const q = searchParams?.q as string | undefined;
+  const status = searchParams?.status as
+    | "PENDING"
+    | "IN_REVIEW"
+    | "APPROVED"
+    | "REJECTED"
+    | undefined;
   const page = searchParams?.page ? Number(searchParams.page) : 1;
   const page_size = searchParams?.page_size ? Number(searchParams.page_size) : 50;
 
   const data = await fetchAdminOrders({ q, status, page, page_size });
+
 
   return (
     <div className="min-w-full">
