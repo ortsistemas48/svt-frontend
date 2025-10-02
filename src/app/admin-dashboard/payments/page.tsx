@@ -49,7 +49,8 @@ async function fetchAdminOrders(params: {
   page?: number;
   page_size?: number;
 }): Promise<ApiList> {
-  const cookie = headers().get("cookie") || "";
+  const h = await headers(); // 👈 esperar headers()
+  const cookie = h.get("cookie") || "";
   const url = buildURL("/payments_admin/orders", params);
   const res = await fetch(url, {
     method: "GET",
