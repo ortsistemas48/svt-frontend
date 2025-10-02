@@ -5,24 +5,43 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle, AlertCircle, Clock, Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
+
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 const API_BASE = "/api";
 
-export default function EmailVerified() {
+// Page “shell”, solo envuelve en Suspense
+export default function EmailVerifiedPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-[100dvh] grid place-items-center bg-white px-4">
+          <div className="w-full max-w-md bg-white rounded-[10px] border border-[#DEDEDE] px-4 py-10 text-center">
+            <Loader2 className="mx-auto animate-spin" />
+            <p className="mt-3 text-sm text-gray-600">Cargando</p>
+          </div>
+        </main>
+      }
+    >
+      <EmailVerifiedInner />
+    </Suspense>
+  );
+}
+
+// El componente que sí usa useSearchParams
+function EmailVerifiedInner() {
   const sp = useSearchParams();
   const status = sp.get("status");
   const token = sp.get("token");
   const emailParam = sp.get("email") || "";
 
-  // 1) Fuente de verdad del email para reenvío
   const [email, setEmail] = useState(emailParam);
-
   const [resending, setResending] = useState(false);
   const [resendMsg, setResendMsg] = useState<string | null>(null);
-  const RESEND_PATH = "/auth/resend-verification"; // ajustá si no usás prefijo
+  const RESEND_PATH = "/auth/resend-verification";
 
-  // 2) Si viene token, consultá al backend en modo JSON y redirigí con status y email
   useEffect(() => {
     if (!token) return;
     (async () => {
@@ -63,7 +82,6 @@ export default function EmailVerified() {
     }
   }, [status, token]);
 
-  // 3) Reenvío usando el email del estado
   async function handleResend() {
     setResendMsg(null);
     if (!email) {
@@ -114,7 +132,6 @@ export default function EmailVerified() {
 
               {(status === "invalid" || status === "expired") && (
                 <div className="flex flex-col gap-2">
-                  {/* Campo editable si no vino email en la URL */}
                   {!email && (
                     <input
                       type="email"
