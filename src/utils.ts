@@ -1,5 +1,35 @@
 import { Application, DailyStatistics } from "./app/types";
 
+/* =========================
+   Helpers para Server Components
+   ========================= */
+async function getBaseURL() {
+  const { headers } = await import("next/headers");
+  const h = await headers();
+  const host = h.get("x-forwarded-host") || h.get("host");
+  if (!host) throw new Error("No host header");
+  const proto = h.get("x-forwarded-proto") || (process.env.NODE_ENV === "production" ? "https" : "http");
+  return `${proto}://${host}`;
+}
+
+async function serverFetch(path: string, init: RequestInit = {}) {
+  const { cookies } = await import("next/headers");
+  const cookieHeader = (await cookies()).toString();
+  const base = await getBaseURL();
+  return fetch(`${base}${path}`, {
+    cache: "no-store",
+    ...init,
+    headers: {
+      ...(init.headers || {}),
+      ...(cookieHeader ? { cookie: cookieHeader } : {}),
+    },
+  });
+}
+
+/* =========================
+   Client-side utilities
+   ========================= */
+
 type StickerOrderData = {
   id: number;
   name: string | null;
@@ -16,8 +46,8 @@ export async function fetchAvailableStickers({
   currentLicensePlate?: string;
 }) {
   const params = new URLSearchParams({ workshop_id: String(workshopId) });
-  if (currentCarId) params.set("current_car_id", String(currentCarId));
-  if (currentLicensePlate) params.set("current_license_plate", currentLicensePlate);
+  if (currentCarId != null) params.set("current_car_id", String(currentCarId));
+  if (currentLicensePlate) params.set("current_license_plate", currentLicensePlate.trim());
 
   const res = await fetch(`/api/stickers/available?${params}`, {
     credentials: "include",
@@ -40,16 +70,14 @@ export async function fetchAdminPendingWorkshops() {
   return { workshops };
 }
 
-
 export async function fetchAdminWorkshopDetail(workshopId: number | string) {
   const res = await fetch(`/api/workshops/${workshopId}`, {
     cache: "no-store",
     credentials: "include",
   });
   if (!res.ok) throw new Error("No se pudo obtener el taller");
-  return await res.json();
+  return res.json();
 }
-
 
 export async function fetchAdminWorkshopMembers(workshopId: number | string) {
   const res = await fetch(`/api/admin/workshops/${workshopId}/members`, {
@@ -57,9 +85,8 @@ export async function fetchAdminWorkshopMembers(workshopId: number | string) {
     credentials: "include",
   });
   if (!res.ok) throw new Error("No se pudo obtener el personal del taller");
-  return await res.json(); // array de miembros
+  return res.json(); // array de miembros
 }
-
 
 export async function assignStickerToCar(license_plate: string, sticker_id: number, workshop_id?: number) {
   const res = await fetch(`/api/stickers/assign-to-car`, {
@@ -83,20 +110,16 @@ export async function unassignStickerFromCar(license_plate: string) {
   return res.json();
 }
 
-
 export async function fetchAdminPendingUserData({
   limit = 100,
   offset = 0,
 }: { limit?: number; offset?: number } = {}) {
-  const res = await fetch(
-    `/api/users/get_users/pending?limit=${limit}&offset=${offset}`,
-    {
-      method: "GET",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-    }
-  );
+  const res = await fetch(`/api/users/get_users/pending?limit=${limit}&offset=${offset}`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
 
   if (!res.ok) {
     const text = await res.text();
@@ -107,14 +130,11 @@ export async function fetchAdminPendingUserData({
   return res.json();
 }
 
-
 export async function fetchUserData({ workshopId }: { workshopId: number }) {
   const res = await fetch(`/api/users/get_users/workshop/${workshopId}`, {
     method: "GET",
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     cache: "no-store",
   });
 
@@ -123,25 +143,19 @@ export async function fetchUserData({ workshopId }: { workshopId: number }) {
     console.error("Error al traer la aplicación:", text);
     return;
   }
-  const data = await res.json();
-  return data;
+  return res.json();
 }
 
 export async function fetchAdminUserData({
   limit = 100,
   offset = 0,
 }: { limit?: number; offset?: number } = {}) {
-  const res = await fetch(
-    `/api/users/get_users/all?limit=${limit}&offset=${offset}`,
-    {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    }
-  );
+  const res = await fetch(`/api/users/get_users/all?limit=${limit}&offset=${offset}`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
 
   if (!res.ok) {
     const text = await res.text();
@@ -149,20 +163,11 @@ export async function fetchAdminUserData({
     return;
   }
 
-  const data = await res.json();
-  return data;
+  return res.json();
 }
 
-
 export function getMissingPersonFields(person: any): string[] {
-  const requiredFields = [
-    "dni",
-    "first_name",
-    "last_name",
-    "street",
-    "province",
-    "city",
-  ];
+  const requiredFields = ["dni", "first_name", "last_name", "street", "province", "city"];
 
   const fieldTranslations: Record<string, string> = {
     dni: "DNI",
@@ -174,7 +179,7 @@ export function getMissingPersonFields(person: any): string[] {
   };
 
   return requiredFields
-    .filter((field: string) => {
+    .filter((field) => {
       const value = person[field];
       return typeof value !== "string" || value.trim() === "";
     })
@@ -182,7 +187,6 @@ export function getMissingPersonFields(person: any): string[] {
 }
 
 export function getMissingCarFields(car: any): string[] {
-
   const requiredFields = [
     "license_plate",
     "brand",
@@ -237,17 +241,16 @@ export function isDataEmpty(obj: any): boolean {
     .filter(([key]) => key !== "is_owner")
     .filter(([key]) => key !== "owner_id")
     .filter(([key]) => key !== "driver_id")
-
     .every(([, value]) => {
       if (typeof value === "string") return value.trim() === "";
-      if (typeof value === "number") return false; // DNI, años, etc. cuentan como datos
+      if (typeof value === "number") return false;
       if (value === null || value === undefined) return true;
-      if (typeof value === "object") return isDataEmpty(value); // Evalúa objetos anidados
+      if (typeof value === "object") return isDataEmpty(value);
       return false;
     });
 }
 
-export function filterApplications({ applications, searchText }: { applications: Application[], searchText: string }) {
+export function filterApplications({ applications, searchText }: { applications: Application[]; searchText: string }) {
   return applications.filter((item) => {
     if (!searchText.trim()) return true;
 
@@ -272,31 +275,26 @@ export function filterApplications({ applications, searchText }: { applications:
   });
 }
 
-export function genPassword(){
-    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-    const lower = "abcdefghijkmnopqrstuvwxyz";
-    const nums  = "23456789";
-    const syms  = "!@#$%^&*()-_=+";
-    const all = upper + lower + nums + syms;
-    const pick = (set: string) => set[Math.floor(Math.random() * set.length)];
-    let p = pick(upper) + pick(lower) + pick(nums) + pick(syms);
-    for (let i = 4; i < 12; i++) p += pick(all);
-    p = p.split("").sort(() => Math.random() - 0.5).join("");
-    
-    return p;
-  };
+export function genPassword() {
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const lower = "abcdefghijkmnopqrstuvwxyz";
+  const nums = "23456789";
+  const syms = "!@#$%^&*()-_=+";
+  const all = upper + lower + nums + syms;
+  const pick = (set: string) => set[Math.floor(Math.random() * set.length)];
+  let p = pick(upper) + pick(lower) + pick(nums) + pick(syms);
+  for (let i = 4; i < 12; i++) p += pick(all);
+  p = p.split("").sort(() => Math.random() - 0.5).join("");
+  return p;
+}
 
-  
 export async function markStickerAsUsed(stickerId: number) {
   try {
-    const res = await fetch(
-      `/api/stickers/${stickerId}/mark-used`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    const res = await fetch(`/api/stickers/${stickerId}/mark-used`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
       throw new Error(errData.error || "No se pudo marcar la oblea como 'En Uso'");
@@ -312,7 +310,7 @@ export async function fetchStickerOrders(workshopId: number) {
     credentials: "include",
     cache: "no-store",
   });
-  
+
   if (!res.ok) {
     const errorText = await res.text();
     throw new Error(errorText || "No se pudieron cargar las órdenes de obleas");
@@ -320,29 +318,32 @@ export async function fetchStickerOrders(workshopId: number) {
   const data = await res.json();
   console.log(data);
   return data; // [{id, name, status, amount, created_at}]
-
 }
 
-export async function fetchStickersByWorkshop(workshopId: number, page: number = 1, perPage: number = 10) {
+export async function fetchStickersByWorkshop(workshopId: number, page = 1, perPage = 10) {
   const params = new URLSearchParams({
     page: String(page),
-    per_page: String(perPage)
+    per_page: String(perPage),
   });
-  
+
   const res = await fetch(`/api/stickers/workshop/${workshopId}?${params}`, {
     credentials: "include",
     cache: "no-store",
   });
-  
+
   if (!res.ok) {
     const errorText = await res.text();
     throw new Error(errorText || "No se pudieron cargar las obleas");
   }
-  
+
   const data = await res.json();
   console.log(data);
   return data; // {stickers: [...], pagination: {...}}
 }
+
+/* =========================
+   Terceros
+   ========================= */
 
 const BASE = "https://apis.datos.gob.ar/georef/api";
 
@@ -354,17 +355,13 @@ export async function getProvinces(): Promise<Option[]> {
   return (data?.provincias ?? []).map((p: any) => ({ value: p.nombre, label: p.nombre }));
 }
 
-
 export async function getLocalidadesByProvincia(provinceName: string): Promise<Option[]> {
   if (!provinceName) return [];
-  const url = `${BASE}/localidades?provincia=${encodeURIComponent(
-    provinceName
-  )}&campos=id,nombre&orden=nombre&max=5000`;
+  const url = `${BASE}/localidades?provincia=${encodeURIComponent(provinceName)}&campos=id,nombre&orden=nombre&max=5000`;
 
   const res = await fetch(url, { cache: "no-store" });
   const data = await res.json();
 
-  // Deduplicar por id (más confiable)
   const seen = new Set<string>();
   const items = (data?.localidades ?? [])
     .filter((l: any) => {
@@ -374,149 +371,69 @@ export async function getLocalidadesByProvincia(provinceName: string): Promise<O
       return true;
     })
     .map((l: any) => ({
-      // Podés guardar id como value si te sirve para backend;
-      // si no, dejá el nombre como value y agregá key aparte:
       value: l.nombre,
       label: l.nombre,
-      key: String(l.id), // <- único
+      key: String(l.id),
     }));
 
   return items;
 }
 
-export const onlyDigits = (s: string) => s.replace(/\D+/g, "");
-export const NAME_ALLOWED = /[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'-]/g;
-export const sanitizeName = (s: string) => (s.match(NAME_ALLOWED)?.join("") ?? "");
-export const sanitizeEmail = (s: string) => s.trim().toLowerCase().replace(/\s+/g, "");
-export const clamp = (s: string, max: number) => (s.length > max ? s.slice(0, max) : s);
-export const toUpper = (s: string) => s.toUpperCase();
-export const onlyAlnumUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9]/g, "");
-export const alnumSpaceUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9\s]/g, "");
-export const lettersSpaceUpper = (s: string) => toUpper(s).replace(/[^A-ZÁÉÍÓÚÑÜ\s-]/g, "");
-
+/* =========================
+   Server Components utilities
+   ========================= */
 
 export async function fetchDailyStatistics(workshopId: number, date?: string): Promise<DailyStatistics> {
-  const { cookies } = await import('next/headers');
-  const cookieHeader = (await cookies()).toString();
-  
-  // Build URL with optional date parameter
   const baseUrl = `/api/applications/workshop/${workshopId}/daily-statistics`;
-  const url = date ? `${baseUrl}?date=${date}` : baseUrl;
-  
-  console.log(url);
+  const url = date ? `${baseUrl}?date=${encodeURIComponent(date)}` : baseUrl;
+
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-        cookie: cookieHeader,
-      },
-    });
-    console.log('Response status:', response.status);
+    const response = await serverFetch(url, { method: "GET" });
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
+      const errorText = await response.text().catch(() => "");
       throw new Error(`Failed to fetch daily statistics: ${response.status} - ${errorText}`);
     }
-    const data = await response.json();
-    console.log('Success response:', data);
-    return data;
-  } catch (error) {
-    console.error('Error fetching daily statistics:', error);
-    // Return default values if API fails
+    return response.json();
+  } catch {
     return {
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split("T")[0],
       workshop_id: workshopId,
-      applications: {
-        total: 0,
-        in_queue: 0,
-        completed: 0,
-        approved: 0,
-        approval_rate: 0,
-      },
-      sticker_stock: {
-        total: 0,
-        available: 0,
-        used: 0,
-        unavailable: 0,
-      },
+      applications: { total: 0, in_queue: 0, completed: 0, approved: 0, approval_rate: 0 },
+      sticker_stock: { total: 0, available: 0, used: 0, unavailable: 0 },
     };
   }
 }
 
+export async function fetchLatestApplications(workshopId: number, perPage = 5) {
+  const params = new URLSearchParams({ page: "1", per_page: String(perPage) });
 
-export async function fetchLatestApplications(workshopId: number, perPage: number = 5) {
-  const { cookies } = await import('next/headers');
-  const cookieHeader = (await cookies()).toString();
-  
-  try {
-    const params = new URLSearchParams({
-      page: '1',
-      per_page: perPage.toString()
-    });
+  const res = await serverFetch(`/api/applications/workshop/${workshopId}/full?${params.toString()}`, {
+    method: "GET",
+  });
 
-    const res = await fetch(
-      `/api/applications/workshop/${workshopId}/full?${params.toString()}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          cookie: cookieHeader,
-        },
-        cache: "no-store",
-        credentials: "include",
-      }
-    );
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Error fetching latest applications:", errorText);
-      throw new Error(`Failed to fetch latest applications: ${res.status} - ${errorText}`);
-    }
-
-    const data = await res.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching latest applications:", error);
-    throw error;
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "");
+    throw new Error(`Failed to fetch latest applications: ${res.status} - ${errorText}`);
   }
+
+  return res.json();
 }
 
-export async function fetchQueueApplications(workshopId: number, perPage: number = 10) {
-  const { cookies } = await import('next/headers');
-  const cookieHeader = (await cookies()).toString();
-  
-  try {
-    const params = new URLSearchParams({
-      page: '1',
-      per_page: perPage.toString(),
-      status_in: 'En Cola,En curso'
-    });
+export async function fetchQueueApplications(workshopId: number, perPage = 10) {
+  const params = new URLSearchParams({
+    page: "1",
+    per_page: String(perPage),
+    status_in: "En Cola,En curso",
+  });
 
-    const res = await fetch(
-      `/api/applications/workshop/${workshopId}/full?${params.toString()}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          cookie: cookieHeader,
-        },
-        cache: "no-store",
-        credentials: "include",
-      }
-    );
+  const res = await serverFetch(`/api/applications/workshop/${workshopId}/full?${params.toString()}`, {
+    method: "GET",
+  });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Error fetching queue applications:", errorText);
-      throw new Error(`Failed to fetch queue applications: ${res.status} - ${errorText}`);
-    }
-
-    const data = await res.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching queue applications:", error);
-    throw error;
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "");
+    throw new Error(`Failed to fetch queue applications: ${res.status} - ${errorText}`);
   }
+
+  return res.json();
 }
