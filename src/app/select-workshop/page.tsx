@@ -7,7 +7,6 @@ import { useUser } from "@/context/UserContext";
 
 export default function SelectWorkshopPage() {
   const [workshops, setWorkshops] = useState<any[]>([]);
-  const [isGarageOwner, setIsGarageOwner] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { user } = useUser();
@@ -48,10 +47,6 @@ export default function SelectWorkshopPage() {
 
       const list = data.workshops || [];
       setWorkshops(list);
-
-      const hasGarageOwner = list.some((w: any) => w.user_type_id === 2);
-      setIsGarageOwner(hasGarageOwner);
-
       setLoading(false);
     };
 
@@ -100,15 +95,19 @@ export default function SelectWorkshopPage() {
                 <article
                   key={w.workshop_id}
                   className={`relative group flex justify-between items-center border rounded-md p-4 transition-all duration-200 ${
-                    w.is_approved 
-                      ? "cursor-pointer hover:bg-gray-50 hover:border-[#0040B8] hover:shadow-sm border-gray-200" 
+                    w.is_approved
+                      ? "cursor-pointer hover:bg-gray-50 hover:border-[#0040B8] hover:shadow-sm border-gray-200"
                       : "bg-gray-50 border-gray-200 cursor-not-allowed"
                   }`}
                   onClick={() => {
                     if (w.is_approved) handleSelect(w.workshop_id);
                   }}
                   aria-disabled={!w.is_approved}
-                  title={w.is_approved ? `Ingresa al taller: ${w.workshop_name}` : "Pendiente de aprobación"}
+                  title={
+                    w.is_approved
+                      ? `Ingresa al taller: ${w.workshop_name}`
+                      : "Pendiente de aprobación"
+                  }
                 >
                   {/* Tooltip solo si está pendiente */}
                   {!w.is_approved && (
@@ -153,20 +152,18 @@ export default function SelectWorkshopPage() {
           </section>
         </div>
 
-        {/* Footer Section - Fixed */}
-        {isGarageOwner && (
-          <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-lg">
-            <button
-              className="w-full flex justify-center items-center bg-[#0040B8] hover:bg-[#0035A0] text-white rounded-md p-4 cursor-pointer transition-colors duration-200 font-medium text-sm sm:text-base"
-              onClick={() => router.push("/create-workshop")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") router.push("/create-workshop");
-              }}
-            >
-              <span>Inscribir mi taller</span>
-            </button>
-          </div>
-        )}
+        {/* Footer Section - Fixed, siempre visible */}
+        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-lg">
+          <button
+            className="w-full flex justify-center items-center bg-[#0040B8] hover:bg-[#0035A0] text-white rounded-md p-4 cursor-pointer transition-colors duration-200 font-medium text-sm sm:text-base"
+            onClick={() => router.push("/create-workshop")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") router.push("/create-workshop");
+            }}
+          >
+            <span>Inscribir mi taller</span>
+          </button>
+        </div>
       </section>
     </main>
   );
