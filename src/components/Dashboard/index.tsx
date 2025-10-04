@@ -3,9 +3,6 @@ import {
   CircleFadingPlus,
   RefreshCw,
   ClipboardList,
-  FileBadge2,
-  ScrollText,
-  Users,
   ChevronRight,
   AlertTriangle,
 } from 'lucide-react';

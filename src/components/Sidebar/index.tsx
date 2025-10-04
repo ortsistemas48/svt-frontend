@@ -10,6 +10,10 @@ import {
   X,
   LogOut,
   PanelLeftClose,
+  User,
+  Shield,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -27,11 +31,18 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
   const { workshops, user } = useUser();
   const { id } = useParams();
   const router = useRouter();
+  console.log(user);
 
   const [userType, setUserType] = useState<UserTypeInWorkshop | null>(null);
   const [loading, setLoading] = useState(true);
   const [openWorkshops, setOpenWorkshops] = useState(true);
   const [openProfileModal, setOpenProfileModal] = useState(false);
+  const [activeSection, setActiveSection] = useState<'perfil' | 'seguridad'>('perfil');
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
 
   // hint de scroll
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -316,81 +327,145 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
               </button>
             </div>
 
-            <div className="grid grid-cols-[220px_1fr]">
-              <div className="bg-gray-50/60 border-r p-4">
-                <ul className="space-y-2">
+            <div className="grid grid-cols-[220px_1fr] min-h-[500px]">
+              <div className="bg-gray-50/60 border-r p-4 flex flex-col">
+                <ul className="space-y-2 flex-1">
                   <li>
-                    <button className="w-full text-left px-3 py-2 rounded-md bg-white shadow-sm text-sm font-medium">
-                      General
-                    </button>
-                  </li>
-                  <li>
-                    <button className="w-full text-left px-3 py-2 rounded-md hover:bg-white text-sm">
+                    <button 
+                      onClick={() => setActiveSection('perfil')}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                        activeSection === 'perfil' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'hover:bg-white text-gray-700'
+                      }`}
+                    >
+                      <User size={16} className={activeSection === 'perfil' ? 'text-blue-700' : 'text-gray-500'} />
                       Perfil
                     </button>
                   </li>
                   <li>
-                    <button className="w-full text-left px-3 py-2 rounded-md hover:bg-white text-sm">
-                      Notificaciones
-                    </button>
-                  </li>
-                  <li>
-                    <button className="w-full text-left px-3 py-2 rounded-md hover:bg-white text-sm">
-                      Suscripción
+                    <button 
+                      onClick={() => setActiveSection('seguridad')}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                        activeSection === 'seguridad' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'hover:bg-white text-gray-700'
+                      }`}
+                    >
+                      <Shield size={16} className={activeSection === 'seguridad' ? 'text-blue-700' : 'text-gray-500'} />
+                      Seguridad 
                     </button>
                   </li>
                 </ul>
-
-                <div className="mt-6">
+                <div className="mt-auto">
                   <button
                     onClick={logOutFunction}
-                    className="w-full text-left px-3 py-2 rounded-md text-red-600 hover:bg-red-50 text-sm"
+                    className="w-full text-left px-3 py-2 rounded-md text-red-600 hover:bg-red-50 text-sm flex items-center gap-2"
                   >
+                    <LogOut size={16} />
                     Cerrar sesión
                   </button>
                 </div>
               </div>
 
               <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">General</h2>
-                <div className="space-y-6 max-w-xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Username</span>
-                    <span className="text-sm text-gray-900">{fullName}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Email</span>
-                    <span className="text-sm text-gray-900">{user?.email}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Ejemplo</span>
-                    <label className="inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0040B8] transition" />
-                    </label>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Ejemplo</span>
-                    <label className="inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0040B8] transition" />
-                    </label>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Ejemplo</span>
-                    <label className="inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" />
-                      <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-[#0040B8] transition" />
-                    </label>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Ejemplo</span>
-                    <select className="text-sm border rounded-md px-2 py-1">
-                      <option>Ejemplo</option>
-                      <option>Opción 2</option>
-                    </select>
-                  </div>
-                </div>
+                {activeSection === 'perfil' ? (
+                  <>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Perfil</h2>
+                    <div className="space-y-6 max-w-xl">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Nombre</span>
+                        <span className="text-sm text-gray-900">{user?.first_name}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Apellido</span>
+                        <span className="text-sm text-gray-900">{user?.last_name}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Mail</span>
+                        <span className="text-sm text-gray-900">{user?.email}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Teléfono</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-900">{(user as any)?.phone_number || 'Sin teléfono'}</span>
+                          <button className="p-1 hover:bg-gray-100 rounded">
+                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">DNI</span>
+                        <span className="text-sm text-gray-900">{(user as any)?.dni || '49971253'}</span>
+                      </div>
+                      
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Seguridad</h2>
+                    <div className="space-y-6 max-w-xl">
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">Contraseña actual</label>
+                        <div className="relative">
+                          <input
+                            type={showPasswords.current ? "text" : "password"}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Ingresa tu contraseña actual"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          >
+                            {showPasswords.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">Contraseña nueva</label>
+                        <div className="relative">
+                          <input
+                            type={showPasswords.new ? "text" : "password"}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Ingresa tu nueva contraseña"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          >
+                            {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">Repetir nueva contraseña</label>
+                        <div className="relative">
+                          <input
+                            type={showPasswords.confirm ? "text" : "password"}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Repite tu nueva contraseña"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          >
+                            {showPasswords.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex justify-end">
+                        <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                          Guardar
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
