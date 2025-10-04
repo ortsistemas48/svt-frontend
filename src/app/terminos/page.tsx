@@ -8,8 +8,8 @@ export default function TermsAndConditionsPage() {
         {/* Header */}
         <div className="space-y-5">
           <Image
-            src="/images/logo.png"
-            alt="Logo AutoCheck"
+            src="/images/logo.svg"
+            alt="Logo CheckRTO"
             width={170}
             height={170}
             className="mx-auto"

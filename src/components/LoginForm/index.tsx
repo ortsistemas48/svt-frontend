@@ -95,7 +95,7 @@ export default function LoginForm() {
                       max-h-[calc(100dvh-2rem)] overflow-auto"> {/*  scroll interno, no en body */}
         <div className="space-y-8">
           <Image
-            src="/images/logo.png"
+            src="/images/logo.svg"
             alt="Logo Track Detail"
             width={170}
             height={170}

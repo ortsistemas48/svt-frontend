@@ -10,8 +10,8 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "Inspección Vehicular - RTO",
-  description: "Sistema RTO",
+  title: "CheckRTO - Sistema de Inspección Vehicular",
+  description: "CheckRTO es el sistema de inspección vehicular #1 en la Argentina.",
 };
 
 
