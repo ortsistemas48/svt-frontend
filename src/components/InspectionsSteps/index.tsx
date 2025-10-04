@@ -267,20 +267,19 @@ export default function InspectionStepsClient({
     }
   };
 
-  // Sube pendientes del dropzone y luego guarda todo lo demás
-  const saveAll = async () => {
+  const saveAll = async (): Promise<boolean> => {
     if (!apiBase) {
       setError("Falta configurar NEXT_PUBLIC_API_URL");
-      return;
+      return false;
     }
-    if (isCompleted) return;
+    if (isCompleted) return false;
 
     setSaving(true);
     setMsg(null);
     setError(null);
 
     try {
-      // 1) si hay archivos pendientes, primero subirlos
+      // 1) subir archivos pendientes
       if (pendingInspFiles.length > 0) {
         const form = new FormData();
         pendingInspFiles.forEach((f) => form.append("files", f));
@@ -298,7 +297,7 @@ export default function InspectionStepsClient({
         await fetchInspectionDocuments();
       }
 
-      // 2) guardar estados de pasos en bulk y observaciones globales
+      // 2) guardar estados de pasos y observaciones generales
       const items = steps
         .map((s) => {
           const st = statusByStep[s.step_id];
@@ -333,11 +332,14 @@ export default function InspectionStepsClient({
 
       setMsg("Inspección guardada");
       setPendingInspFiles([]);
-      setDzResetToken(t => t + 1);
+      setDzResetToken((t) => t + 1);
       await fetchInspectionDocuments();
       setTimeout(() => setMsg(null), 1500);
+
+      return true;
     } catch (e: any) {
       setError(e.message || "Error al guardar");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -345,32 +347,76 @@ export default function InspectionStepsClient({
 
   const generateCertificate = async (status: Status) => {
     if (!apiBase) { setError("Falta configurar NEXT_PUBLIC_API_URL"); return; }
+    if (isCompleted) { setError("La inspección ya está completada"); return; }
 
-    const newTab = window.open("about:blank", "_blank");
-    if (!newTab) { setError("El navegador bloqueó la ventana emergente"); return; }
+    setCertLoading(true);
+    setError(null);
+    setMsg(null);
 
+    // Abrimos la pestaña primero para evitar bloqueos
+    const newTab = window.open("", "_blank");
+    if (!newTab) {
+      setCertLoading(false);
+      setError("El navegador bloqueó la ventana emergente");
+      return;
+    }
     try {
       try { newTab.opener = null; } catch {}
+
+      // HTML con CSS correcto, usando punto y coma
       newTab.document.write(`
         <html>
           <head>
             <title>Generando certificado...</title>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
             <style>
-              body { margin:0, height:100vh, display:flex, justify-content:center, align-items:center, font-family: system-ui, sans-serif, background:#fff, color:#0040B8 }
-              .container { text-align:center }
-              .spinner { width:60px, height:60px, border:6px solid rgba(0,0,0,.1), border-top-color:#0040B8, border-radius:50%, animation:spin 1s linear infinite, margin:0 auto 20px }
-              @keyframes spin { to { transform: rotate(360deg) } }
+              html, body { height: 100%; }
+              body {
+                margin: 0;
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+                background: #fff;
+                color: #0040B8;
+              }
+              .container { text-align: center; padding: 24px; }
+              .spinner {
+                width: 60px;
+                height: 60px;
+                border: 6px solid rgba(0,0,0,.1);
+                border-top-color: #0040B8;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 16px;
+              }
+              @keyframes spin { to { transform: rotate(360deg); } }
+              h2 { margin: 8px 0 4px; font-weight: 600; }
+              p { margin: 0; color: #2b3d6b; font-size: 14px; }
             </style>
           </head>
-          <body><div class="container"><div class="spinner"></div><h2>Generando certificado</h2><p>Por favor espera un momento...</p></div></body>
+          <body>
+            <div class="container">
+              <div class="spinner"></div>
+              <h2>Generando certificado</h2>
+              <p>Por favor espera un momento...</p>
+            </div>
+          </body>
         </html>
       `);
       newTab.document.close();
 
-      setCertLoading(true);
-      setError(null);
-      setMsg(null);
+      // Guardar todo antes de generar
+      const saved = await saveAll();
+      if (!saved) {
+        try { if (!newTab.closed) newTab.close(); } catch {}
+        setCertLoading(false);
+        return;
+      }
 
+      // Generar certificado
       const res = await fetch(`${apiBase}/certificates/certificates/application/${appId}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -394,6 +440,7 @@ export default function InspectionStepsClient({
       setCertLoading(false);
     }
   };
+
 
   return (
     <div className="w-full px-4 pb-10">
