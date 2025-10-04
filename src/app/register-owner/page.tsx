@@ -70,7 +70,7 @@ export default function RegisterOwnerForm() {
             src="/images/logo.svg"
             alt="Logo Track Detail"
             width={170}
-            height={170}
+            height={180}
             className="mx-auto"
           />
 

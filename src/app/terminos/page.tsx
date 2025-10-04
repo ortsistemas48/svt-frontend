@@ -11,7 +11,7 @@ export default function TermsAndConditionsPage() {
             src="/images/logo.svg"
             alt="Logo CheckRTO"
             width={170}
-            height={170}
+            height={180}
             className="mx-auto"
           />
           <h1 className="text-center text-xl sm:text-2xl text-black font-semibold">
