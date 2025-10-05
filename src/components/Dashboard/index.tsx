@@ -5,6 +5,7 @@ import {
   ClipboardList,
   ChevronRight,
   AlertTriangle,
+  ScrollText
 } from 'lucide-react';
 import clsx from 'clsx';
 import { fetchDailyStatistics, fetchLatestApplications, fetchQueueApplications } from '@/utils';
