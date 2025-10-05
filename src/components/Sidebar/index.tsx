@@ -474,3 +474,4 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
     </aside>
   );
 }
+
