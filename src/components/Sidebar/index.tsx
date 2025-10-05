@@ -31,7 +31,17 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
   const { workshops, user } = useUser();
   const { id } = useParams();
   const router = useRouter();
-  console.log(user);
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [savingPw, setSavingPw] = useState(false);
+  const [pwMsg, setPwMsg] = useState<string | null>(null);
+
+  // Estados para teléfono
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneValue, setPhoneValue] = useState<string>((user as any)?.phone_number || "");
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [phoneMsg, setPhoneMsg] = useState<string | null>(null);
 
   const [userType, setUserType] = useState<UserTypeInWorkshop | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +52,84 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
     current: false,
     new: false,
     confirm: false,
-  });
+    });
+
+  useEffect(() => {
+    setPhoneValue((user as any)?.phone_number || "");
+  }, [user?.id, (user as any)?.phone_number]);
+
+  async function handleSavePassword() {
+    setPwMsg(null);
+    if (!pwCurrent || !pwNew || !pwConfirm) {
+      setPwMsg("Completá todos los campos");
+      return;
+    }
+    if (pwNew !== pwConfirm) {
+      setPwMsg("Las contraseñas nuevas no coinciden");
+      return;
+    }
+    if (pwNew.length < 8) {
+      setPwMsg("La contraseña debe tener al menos 8 caracteres");
+      return;
+    }
+    try {
+      setSavingPw(true);
+      const res = await fetch(`/api/auth/change-password`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          current_password: pwCurrent,
+          new_password: pwNew,
+          confirm_new_password: pwConfirm,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setPwMsg(json?.error || "No se pudo actualizar la contraseña");
+        return;
+      }
+      setPwMsg("Contraseña actualizada correctamente");
+      setPwCurrent("");
+      setPwNew("");
+      setPwConfirm("");
+    } catch (e) {
+      setPwMsg("Error de red, intentá de nuevo");
+    } finally {
+      setSavingPw(false);
+    }
+  }
+
+  async function handleSavePhone() {
+    setPhoneMsg(null);
+    if (!phoneValue?.trim()) {
+      setPhoneMsg("Ingresá un teléfono válido");
+      return;
+    }
+    try {
+      setSavingPhone(true);
+      const res = await fetch(`/api/auth/me/phone`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone_number: phoneValue.trim() }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        setPhoneMsg(json?.error || "No se pudo actualizar el teléfono");
+        return;
+      }
+      setPhoneMsg("Teléfono actualizado");
+      setEditingPhone(false);
+
+      router.refresh?.();
+    } catch (e) {
+      setPhoneMsg("Error de red, intentá de nuevo");
+    } finally {
+      setSavingPhone(false);
+    }
+  }
 
   // hint de scroll
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -385,16 +472,60 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                         <span className="text-sm text-gray-600">Mail</span>
                         <span className="text-sm text-gray-900">{user?.email}</span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-start justify-between">
                         <span className="text-sm text-gray-600">Teléfono</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-900">{(user as any)?.phone_number || 'Sin teléfono'}</span>
-                          <button className="p-1 hover:bg-gray-100 rounded">
-                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                        </div>
+
+                        {!editingPhone ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-900">
+                              {phoneValue || "Sin teléfono"}
+                            </span>
+                            <button
+                              type="button"
+                              className="p-1 hover:bg-gray-100 rounded"
+                              onClick={() => setEditingPhone(true)}
+                              title="Editar teléfono"
+                              aria-label="Editar teléfono"
+                            >
+                              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-end gap-2 w-64">
+                            <input
+                              type="tel"
+                              value={phoneValue}
+                              onChange={e => setPhoneValue(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Ej, 3511234567"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => { setEditingPhone(false); setPhoneMsg(null); setPhoneValue((user as any)?.phone_number || ""); }}
+                                className="px-3 py-1.5 rounded-md border"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleSavePhone}
+                                disabled={savingPhone}
+                                className="px-4 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                              >
+                                {savingPhone ? "Guardando..." : "Guardar"}
+                              </button>
+                            </div>
+                            {phoneMsg && (
+                              <p className={`text-xs ${phoneMsg.includes("actualizado") ? "text-green-600" : "text-red-600"}`}>
+                                {phoneMsg}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">DNI</span>
@@ -407,63 +538,82 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                   <>
                     <h2 className="text-lg font-semibold text-gray-900 mb-6">Seguridad</h2>
                     <div className="space-y-6 max-w-xl">
-                      <div>
-                        <label className="block text-sm text-gray-600 mb-2">Contraseña actual</label>
-                        <div className="relative">
-                          <input
-                            type={showPasswords.current ? "text" : "password"}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Ingresa tu contraseña actual"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                          >
-                            {showPasswords.current ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm text-gray-600 mb-2">Contraseña nueva</label>
-                        <div className="relative">
-                          <input
-                            type={showPasswords.new ? "text" : "password"}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Ingresa tu nueva contraseña"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                          >
-                            {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm text-gray-600 mb-2">Repetir nueva contraseña</label>
-                        <div className="relative">
-                          <input
-                            type={showPasswords.confirm ? "text" : "password"}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Repite tu nueva contraseña"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                          >
-                            {showPasswords.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex justify-end">
-                        <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                          Guardar
-                        </button>
-                      </div>
+                    <div>
+                    <label className="block text-sm text-gray-600 mb-2">Contraseña actual</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.current ? "text" : "password"}
+                        value={pwCurrent}
+                        onChange={e => setPwCurrent(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ingresa tu contraseña actual"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPasswords.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-2">Contraseña nueva</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.new ? "text" : "password"}
+                        value={pwNew}
+                        onChange={e => setPwNew(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ingresa tu nueva contraseña"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-2">Repetir nueva contraseña</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.confirm ? "text" : "password"}
+                        value={pwConfirm}
+                        onChange={e => setPwConfirm(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Repite tu nueva contraseña"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPasswords.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    {pwMsg && (
+                      <p className={`text-sm ${pwMsg.includes("actualizada") ? "text-green-600" : "text-red-600"}`}>
+                        {pwMsg}
+                      </p>
+                    )}
+                    <button
+                      onClick={handleSavePassword}
+                      disabled={savingPw}
+                      className="ml-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60"
+                    >
+                      {savingPw ? "Guardando..." : "Guardar"}
+                    </button>
+                  </div>
+                  </div>
+
                   </>
                 )}
               </div>
