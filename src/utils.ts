@@ -27,6 +27,27 @@ async function serverFetch(path: string, init: RequestInit = {}) {
 }
 
 /* =========================
+   Universal fetch para APIs internas
+   Usa serverFetch en server y window.fetch en client
+   ========================= */
+function isServer() {
+  return typeof window === "undefined";
+}
+
+async function apiFetch(path: string, init: RequestInit = {}) {
+  if (isServer()) {
+    // Server side, reusa cookies y host mediante serverFetch
+    return serverFetch(path, init);
+  }
+  // Client side
+  return fetch(path, {
+    credentials: "include",
+    cache: "no-store",
+    ...init,
+  });
+}
+
+/* =========================
    Client-side utilities
    ========================= */
 
@@ -49,10 +70,7 @@ export async function fetchAvailableStickers({
   if (currentCarId != null) params.set("current_car_id", String(currentCarId));
   if (currentLicensePlate) params.set("current_license_plate", currentLicensePlate.trim());
 
-  const res = await fetch(`/api/stickers/available?${params}`, {
-    credentials: "include",
-    cache: "no-store",
-  });
+  const res = await apiFetch(`/api/stickers/available?${params}`);
   if (!res.ok) {
     const t = await res.text();
     throw new Error(t || "No se pudieron cargar las obleas");
@@ -61,37 +79,27 @@ export async function fetchAvailableStickers({
 }
 
 export async function fetchAdminPendingWorkshops() {
-  const res = await fetch(`/api/workshops/pending`, {
-    cache: "no-store",
-    credentials: "include",
-  });
+  const res = await apiFetch(`/api/workshops/pending`);
   if (!res.ok) throw new Error("No se pudieron obtener los talleres pendientes");
   const workshops = await res.json();
   return { workshops };
 }
 
 export async function fetchAdminWorkshopDetail(workshopId: number | string) {
-  const res = await fetch(`/api/workshops/${workshopId}`, {
-    cache: "no-store",
-    credentials: "include",
-  });
+  const res = await apiFetch(`/api/workshops/${workshopId}`);
   if (!res.ok) throw new Error("No se pudo obtener el taller");
   return res.json();
 }
 
 export async function fetchAdminWorkshopMembers(workshopId: number | string) {
-  const res = await fetch(`/api/admin/workshops/${workshopId}/members`, {
-    cache: "no-store",
-    credentials: "include",
-  });
+  const res = await apiFetch(`/api/admin/workshops/${workshopId}/members`);
   if (!res.ok) throw new Error("No se pudo obtener el personal del taller");
   return res.json(); // array de miembros
 }
 
 export async function assignStickerToCar(license_plate: string, sticker_id: number, workshop_id?: number) {
-  const res = await fetch(`/api/stickers/assign-to-car`, {
+  const res = await apiFetch(`/api/stickers/assign-to-car`, {
     method: "POST",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ license_plate, sticker_id, workshop_id, mark_used: true }),
   });
@@ -100,9 +108,8 @@ export async function assignStickerToCar(license_plate: string, sticker_id: numb
 }
 
 export async function unassignStickerFromCar(license_plate: string) {
-  const res = await fetch(`/api/stickers/unassign-from-car`, {
+  const res = await apiFetch(`/api/stickers/unassign-from-car`, {
     method: "POST",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ license_plate, set_available: true }),
   });
@@ -114,11 +121,9 @@ export async function fetchAdminPendingUserData({
   limit = 100,
   offset = 0,
 }: { limit?: number; offset?: number } = {}) {
-  const res = await fetch(`/api/users/get_users/pending?limit=${limit}&offset=${offset}`, {
+  const res = await apiFetch(`/api/users/get_users/pending?limit=${limit}&offset=${offset}`, {
     method: "GET",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -131,11 +136,9 @@ export async function fetchAdminPendingUserData({
 }
 
 export async function fetchUserData({ workshopId }: { workshopId: number }) {
-  const res = await fetch(`/api/users/get_users/workshop/${workshopId}`, {
+  const res = await apiFetch(`/api/users/get_users/workshop/${workshopId}`, {
     method: "GET",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -150,11 +153,9 @@ export async function fetchAdminUserData({
   limit = 100,
   offset = 0,
 }: { limit?: number; offset?: number } = {}) {
-  const res = await fetch(`/api/users/get_users/all?limit=${limit}&offset=${offset}`, {
+  const res = await apiFetch(`/api/users/get_users/all?limit=${limit}&offset=${offset}`, {
     method: "GET",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -290,9 +291,8 @@ export function genPassword() {
 
 export async function markStickerAsUsed(stickerId: number) {
   try {
-    const res = await fetch(`/api/stickers/${stickerId}/mark-used`, {
+    const res = await apiFetch(`/api/stickers/${stickerId}/mark-used`, {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
     });
     if (!res.ok) {
@@ -306,11 +306,7 @@ export async function markStickerAsUsed(stickerId: number) {
 }
 
 export async function fetchStickerOrders(workshopId: number) {
-  const res = await fetch(`/api/stickers/orders?workshop_id=${workshopId}`, {
-    credentials: "include",
-    cache: "no-store",
-  });
-
+  const res = await apiFetch(`/api/stickers/orders?workshop_id=${workshopId}`);
   if (!res.ok) {
     const errorText = await res.text();
     throw new Error(errorText || "No se pudieron cargar las órdenes de obleas");
@@ -326,11 +322,7 @@ export async function fetchStickersByWorkshop(workshopId: number, page = 1, perP
     per_page: String(perPage),
   });
 
-  const res = await fetch(`/api/stickers/workshop/${workshopId}?${params}`, {
-    credentials: "include",
-    cache: "no-store",
-  });
-
+  const res = await apiFetch(`/api/stickers/workshop/${workshopId}?${params}`);
   if (!res.ok) {
     const errorText = await res.text();
     throw new Error(errorText || "No se pudieron cargar las obleas");
@@ -343,6 +335,7 @@ export async function fetchStickersByWorkshop(workshopId: number, page = 1, perP
 
 /* =========================
    Terceros
+   Nota, estas llamadas son externas, no van por serverFetch
    ========================= */
 
 const BASE = "https://apis.datos.gob.ar/georef/api";
@@ -388,7 +381,7 @@ export async function fetchDailyStatistics(workshopId: number, date?: string): P
   const url = date ? `${baseUrl}?date=${encodeURIComponent(date)}` : baseUrl;
 
   try {
-    const response = await serverFetch(url, { method: "GET" });
+    const response = await apiFetch(url, { method: "GET" });
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
       throw new Error(`Failed to fetch daily statistics: ${response.status} - ${errorText}`);
@@ -407,7 +400,7 @@ export async function fetchDailyStatistics(workshopId: number, date?: string): P
 export async function fetchLatestApplications(workshopId: number, perPage = 5) {
   const params = new URLSearchParams({ page: "1", per_page: String(perPage) });
 
-  const res = await serverFetch(`/api/applications/workshop/${workshopId}/full?${params.toString()}`, {
+  const res = await apiFetch(`/api/applications/workshop/${workshopId}/full?${params.toString()}`, {
     method: "GET",
   });
 
@@ -426,7 +419,7 @@ export async function fetchQueueApplications(workshopId: number, perPage = 10) {
     status_in: "En Cola,En curso",
   });
 
-  const res = await serverFetch(`/api/applications/workshop/${workshopId}/full?${params.toString()}`, {
+  const res = await apiFetch(`/api/applications/workshop/${workshopId}/full?${params.toString()}`, {
     method: "GET",
   });
 
@@ -437,6 +430,10 @@ export async function fetchQueueApplications(workshopId: number, perPage = 10) {
 
   return res.json();
 }
+
+/* =========================
+   Utils
+   ========================= */
 export const onlyDigits = (s: string) => s.replace(/\D+/g, "");
 export const NAME_ALLOWED = /[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'-]/g;
 export const sanitizeName = (s: string) => (s.match(NAME_ALLOWED)?.join("") ?? "");
