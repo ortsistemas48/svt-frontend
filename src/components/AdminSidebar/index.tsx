@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import {
-  Settings,
-  HelpCircle,
-  ChevronDown,
+  Eye,
+  EyeOff,
+  Shield,
   ChevronDown as ChevronIcon,
-  ChevronRight,
+  User,
   X,
   LogOut,
+  ChevronRight,
   PanelLeftClose,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -27,16 +28,105 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
   const { user } = useUser();
   const { id } = useParams();
   const router = useRouter();
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [savingPw, setSavingPw] = useState(false);
+  const [pwMsg, setPwMsg] = useState<string | null>(null);
+
+  // Estados para teléfono
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneValue, setPhoneValue] = useState<string>((user as any)?.phone_number || "");
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [phoneMsg, setPhoneMsg] = useState<string | null>(null);
 
   const [userType, setUserType] = useState<UserTypeInWorkshop | null>(null);
   const [loading, setLoading] = useState(false);
   const [openWorkshops, setOpenWorkshops] = useState(true);
   const [openProfileModal, setOpenProfileModal] = useState(false);
+  const [activeSection, setActiveSection] = useState<'perfil' | 'seguridad'>('perfil');
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+    });
 
   // hint de scroll
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
 
+  async function handleSavePhone() {
+    setPhoneMsg(null);
+    if (!phoneValue?.trim()) {
+      setPhoneMsg("Ingresá un teléfono válido");
+      return;
+    }
+    try {
+      setSavingPhone(true);
+      const res = await fetch(`/api/auth/me/phone`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone_number: phoneValue.trim() }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        setPhoneMsg(json?.error || "No se pudo actualizar el teléfono");
+        return;
+      }
+      setPhoneMsg("Teléfono actualizado");
+      setEditingPhone(false);
+
+      router.refresh?.();
+    } catch (e) {
+      setPhoneMsg("Error de red, intentá de nuevo");
+    } finally {
+      setSavingPhone(false);
+    }
+  }
+
+  async function handleSavePassword() {
+    setPwMsg(null);
+    if (!pwCurrent || !pwNew || !pwConfirm) {
+      setPwMsg("Completá todos los campos");
+      return;
+    }
+    if (pwNew !== pwConfirm) {
+      setPwMsg("Las contraseñas nuevas no coinciden");
+      return;
+    }
+    if (pwNew.length < 8) {
+      setPwMsg("La contraseña debe tener al menos 8 caracteres");
+      return;
+    }
+    try {
+      setSavingPw(true);
+      const res = await fetch(`/api/auth/change-password`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          current_password: pwCurrent,
+          new_password: pwNew,
+          confirm_new_password: pwConfirm,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setPwMsg(json?.error || "No se pudo actualizar la contraseña");
+        return;
+      }
+      setPwMsg("Contraseña actualizada correctamente");
+      setPwCurrent("");
+      setPwNew("");
+      setPwConfirm("");
+    } catch (e) {
+      setPwMsg("Error de red, intentá de nuevo");
+    } finally {
+      setSavingPw(false);
+    }
+  }
 
   const logOutFunction = async () => {
     try {
@@ -95,6 +185,13 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
         <div
           role="button"
           tabIndex={0}
+          onClick={() => setOpenProfileModal(true)}
+          onKeyDown={e => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setOpenProfileModal(true);
+            }
+          }}
           className="w-full flex items-center justify-between rounded-[8px] p-3 "
           aria-label="Abrir perfil"
           title="Abrir perfil"
@@ -111,6 +208,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
               </p>
             </div>
           </div>
+          <ChevronRight size={18} className="text-gray-400 ml-6 shrink-0" />
         </div>
 
         <div className="my-4 h-px bg-gray-200" />
@@ -264,6 +362,243 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                     </select>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {openProfileModal && (
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          onKeyDown={e => e.key === "Escape" && setOpenProfileModal(false)}
+        >
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpenProfileModal(false)} />
+          <div className="relative w-[900px] max-w-[95vw] bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <UserProfile />
+                  <span className="absolute -right-0 -bottom-0 h-3 w-3 rounded-full bg-green-500 ring-2 ring-white" />
+                </div>
+                <div>
+                  <p className="text-base font-semibold text-gray-900">{fullName}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+              </div>
+              <button
+                className="p-2 rounded-md hover:bg-gray-100"
+                onClick={() => setOpenProfileModal(false)}
+                aria-label="Cerrar"
+                title="Cerrar"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-[220px_1fr] min-h-[500px]">
+              <div className="bg-gray-50/60 border-r p-4 flex flex-col">
+                <ul className="space-y-2 flex-1">
+                  <li>
+                    <button 
+                      onClick={() => setActiveSection('perfil')}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                        activeSection === 'perfil' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'hover:bg-white text-gray-700'
+                      }`}
+                    >
+                      <User size={16} className={activeSection === 'perfil' ? 'text-blue-700' : 'text-gray-500'} />
+                      Perfil
+                    </button>
+                  </li>
+                  <li>
+                    <button 
+                      onClick={() => setActiveSection('seguridad')}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                        activeSection === 'seguridad' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'hover:bg-white text-gray-700'
+                      }`}
+                    >
+                      <Shield size={16} className={activeSection === 'seguridad' ? 'text-blue-700' : 'text-gray-500'} />
+                      Seguridad 
+                    </button>
+                  </li>
+                </ul>
+                <div className="mt-auto">
+                  <button
+                    onClick={logOutFunction}
+                    className="w-full text-left px-3 py-2 rounded-md text-red-600 hover:bg-red-50 text-sm flex items-center gap-2"
+                  >
+                    <LogOut size={16} />
+                    Cerrar sesión
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {activeSection === 'perfil' ? (
+                  <>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Perfil</h2>
+                    <div className="space-y-6 max-w-xl">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Nombre</span>
+                        <span className="text-sm text-gray-900">{user?.first_name}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Apellido</span>
+                        <span className="text-sm text-gray-900">{user?.last_name}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Mail</span>
+                        <span className="text-sm text-gray-900">{user?.email}</span>
+                      </div>
+                      <div className="flex items-start justify-between">
+                        <span className="text-sm text-gray-600">Teléfono</span>
+
+                        {!editingPhone ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-900">
+                              {phoneValue || "Sin teléfono"}
+                            </span>
+                            <button
+                              type="button"
+                              className="p-1 hover:bg-gray-100 rounded"
+                              onClick={() => setEditingPhone(true)}
+                              title="Editar teléfono"
+                              aria-label="Editar teléfono"
+                            >
+                              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-end gap-2 w-64">
+                            <input
+                              type="tel"
+                              value={phoneValue}
+                              onChange={e => setPhoneValue(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Ej, 3511234567"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => { setEditingPhone(false); setPhoneMsg(null); setPhoneValue((user as any)?.phone_number || ""); }}
+                                className="px-3 py-1.5 rounded-md border"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleSavePhone}
+                                disabled={savingPhone}
+                                className="px-4 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                              >
+                                {savingPhone ? "Guardando..." : "Guardar"}
+                              </button>
+                            </div>
+                            {phoneMsg && (
+                              <p className={`text-xs ${phoneMsg.includes("actualizado") ? "text-green-600" : "text-red-600"}`}>
+                                {phoneMsg}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">DNI</span>
+                        <span className="text-sm text-gray-900">{(user as any)?.dni || '49971253'}</span>
+                      </div>
+                      
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Seguridad</h2>
+                    <div className="space-y-6 max-w-xl">
+                    <div>
+                    <label className="block text-sm text-gray-600 mb-2">Contraseña actual</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.current ? "text" : "password"}
+                        value={pwCurrent}
+                        onChange={e => setPwCurrent(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ingresa tu contraseña actual"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPasswords.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-2">Contraseña nueva</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.new ? "text" : "password"}
+                        value={pwNew}
+                        onChange={e => setPwNew(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ingresa tu nueva contraseña"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-2">Repetir nueva contraseña</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.confirm ? "text" : "password"}
+                        value={pwConfirm}
+                        onChange={e => setPwConfirm(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Repite tu nueva contraseña"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPasswords.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    {pwMsg && (
+                      <p className={`text-sm ${pwMsg.includes("actualizada") ? "text-green-600" : "text-red-600"}`}>
+                        {pwMsg}
+                      </p>
+                    )}
+                    <button
+                      onClick={handleSavePassword}
+                      disabled={savingPw}
+                      className="ml-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60"
+                    >
+                      {savingPw ? "Guardando..." : "Guardar"}
+                    </button>
+                  </div>
+                  </div>
+
+                  </>
+                )}
               </div>
             </div>
           </div>
