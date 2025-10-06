@@ -2,6 +2,7 @@
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { RefreshCw, CircleFadingPlus } from "lucide-react";
+import Link from "next/link";
 
 type WorkshopLite = {
   id: number;
@@ -20,7 +21,6 @@ export default function SelectApplicationType() {
   const [wsError, setWsError] = useState<string | null>(null);
   const [workshop, setWorkshop] = useState<WorkshopLite | null>(null);
 
-  // Traer el taller para conocer available_inspections
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -28,7 +28,6 @@ export default function SelectApplicationType() {
         setWsLoading(true);
         setWsError(null);
 
-        // ajustá el endpoint si en tu backend es otro (p. ej. /workshops/{id})
         const res = await fetch(`${API_BASE}/workshops/${id}`, {
           credentials: "include",
           cache: "no-store",
@@ -41,7 +40,6 @@ export default function SelectApplicationType() {
 
         const data = await res.json();
         if (!cancelled) {
-          // aceptar tanto { workshop: {...} } como el objeto plano
           const w = (data?.workshop ?? data) as WorkshopLite;
           setWorkshop(w);
         }
@@ -136,11 +134,30 @@ export default function SelectApplicationType() {
             {wsError}
           </p>
         )}
-        {!wsLoading && available !== null && (
-          <p className="mt-3 text-sm text-gray-600">
+
+      {!wsLoading && available !== null && (
+        <div className="mt-3 text-sm">
+          <p className="text-gray-600">
             Inspecciones disponibles: <strong>{available}</strong>
           </p>
-        )}
+
+          {available <= 0 ? (
+            <p className="mt-1 text-red-700">
+              No hay inspecciones disponibles,{" "}
+              <Link href={`/dashboard/${id}/payment`} className="font-medium underline">
+                comprá más aquí
+              </Link>.
+            </p>
+          ) : available < 75 ? (
+            <p className="mt-1 text-amber-700">
+              Quedan pocas inspecciones,{" "}
+              <Link href={`/dashboard/${id}/payment`} className="font-medium underline">
+                comprá más aquí
+              </Link>.
+            </p>
+          ) : null}
+        </div>
+      )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mx-auto sm:mx-0">

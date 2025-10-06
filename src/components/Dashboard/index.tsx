@@ -173,10 +173,10 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
 
                 {statistics.sticker_stock.available <= 250 && (
                   <Link
-                    href={`/dashboard/${workshopId}/payment`}
+                    href={`/dashboard/${workshopId}/stickers`}
                     className="mt-5 block rounded-[4px] border bg-rose-100 border-rose-300 px-4 py-3 text-sm text-rose-500"
                   >
-                    Stock bajo de obleas, hacé tu compra haciendo click aquí.
+                    Stock bajo de obleas, asigná las tuyas haciendo click aquí.
                   </Link>
                 )}
               </div>

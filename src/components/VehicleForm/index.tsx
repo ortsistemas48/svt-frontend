@@ -103,8 +103,8 @@ const formData1: FormFieldData[] = [
 const formData2: FormFieldData[] = [
   { label: "Marca de motor", placeholder: "Ej: Toyota", name: "engine_brand" },
   { label: "Número de motor", placeholder: "Ej: B91099432213123", name: "engine_number" },
-  { label: "Número de chasis", placeholder: "Ej: 1231415251251451", name: "chassis_number" },
   { label: "Marca de chasis", placeholder: "Ej: MARCA", name: "chassis_brand" },
+  { label: "Número de chasis", placeholder: "Ej: 1231415251251451", name: "chassis_number" },
   { label: "Nº de cédula verde", placeholder: "Ej: ABF45658", name: "green_card_number" },
   { label: "Exp. de la cédula", type: "date", placeholder: "dd/mm/aa", name: "green_card_expiration" },
   { label: "Nº de licencia", placeholder: "Ej: A123456789", name: "license_number" },
