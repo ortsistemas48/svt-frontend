@@ -77,6 +77,15 @@ export default function InspectionStepsClient({
 
   const totalChecked = useMemo(() => summary.reduce((acc, it) => acc + it.checked.length, 0), [summary]);
   const hasNonApto = useMemo(() => Object.values(statusByStep).some((s) => s && s !== "Apto"), [statusByStep]);
+  const allStepsMarked = useMemo(
+    () => steps.every((s) => Boolean(statusByStep[s.step_id])),
+    [steps, statusByStep]
+  );
+
+  const remainingSteps = useMemo(
+    () => steps.filter((s) => !statusByStep[s.step_id]).length,
+    [steps, statusByStep]
+  );
 
   // Estado de la aplicación
   useEffect(() => {
@@ -348,6 +357,11 @@ export default function InspectionStepsClient({
   const generateCertificate = async (status: Status) => {
     if (!apiBase) { setError("Falta configurar NEXT_PUBLIC_API_URL"); return; }
     if (isCompleted) { setError("La inspección ya está completada"); return; }
+    const allMarkedNow = steps.every((s) => Boolean(statusByStep[s.step_id]));
+    if (!allMarkedNow) {
+      setError("Marcá un estado en todos los pasos antes de generar el certificado");
+      return;
+    }
 
     setCertLoading(true);
     setError(null);
@@ -762,17 +776,39 @@ export default function InspectionStepsClient({
               </button>
               <button
                 type="button"
-                disabled={certLoading}
-                className="px-4 py-2 rounded-[4px] bg-[#0040B8] text-white text-sm hover:opacity-95 disabled:opacity-60"
-                onClick={() => generateCertificate(certStatus)}
+                disabled={certLoading || isCompleted || !allStepsMarked}
+                onClick={() => {
+                  if (!allStepsMarked) {
+                    setError("Marcá un estado en todos los pasos para generar el certificado");
+                    return;
+                  }
+                  setCertStatus(hasNonApto ? "Condicional" : "Apto");
+                  setCertModalOpen(true);
+                }}
+                className={clsx(
+                  "px-5 py-2.5 rounded-[4px] border text-[#0040B8]",
+                  certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50",
+                  (isCompleted || !allStepsMarked) && "opacity-50 cursor-not-allowed"
+                )}
+                title={
+                  isCompleted
+                    ? "No se puede generar certificado, inspección completada"
+                    : !allStepsMarked
+                      ? "Falta marcar todos los pasos"
+                      : "Generar y abrir certificado"
+                }
               >
-                {certLoading ? "Generando..." : "Confirmar"}
+                {certLoading ? "Generando..." : "Certificado"}
               </button>
             </div>
           </div>
         </div>
       )}
-
+      {!allStepsMarked && (
+        <div className="mt-4 text-sm text-amber-700 text-center">
+          Te faltan {remainingSteps} paso{remainingSteps === 1 ? "" : "s"} por marcar.
+        </div>
+      )}
       {msg && <div className="mt-4 text-sm text-[#41c227] border border-[#41c227] p-3 rounded-[6px] text-center">{msg}</div>}
       {error && <div className="mt-4 text-sm text-[#d11b2d] border border-[#d11b2d] p-3 rounded-[6px] text-center">{error}</div>}
     </div>

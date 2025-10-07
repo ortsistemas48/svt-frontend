@@ -177,7 +177,6 @@ export default function CreateWorkshopPage() {
         const suplentes  = engineers.filter(e => e.engineer_kind === "Suplente").length;
 
         if (titulares !== 1) { setError("Debe haber exactamente 1 Ingeniero Titular"); return; }
-        if (suplentes < 1) { setError("Debe haber al menos 1 Ingeniero Suplente"); return; }
         if (!swornChecked) {
           setError("Debés aceptar la declaración jurada para continuar");
           return;

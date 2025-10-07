@@ -56,6 +56,37 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
       throw new Error(err?.error || "No se pudo borrar el documento");
     }
   }, [applicationId]);
+    
+  const consumeSlot = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/applications/${applicationId}/consume-slot`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}), // opcional
+      });
+
+      if (res.status === 409) {
+        const j = await res.json().catch(() => ({}));
+        alert(j?.error || "No hay inspecciones disponibles para este taller");
+        return false;
+      }
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        console.error("consume-slot error", j);
+        // no detengo el flujo por errores no 409, pero podés decidir distinto
+        return true;
+      }
+
+      // 200 OK, incluye already_consumed para info, no hace falta usarlo
+      return true;
+    } catch (e) {
+      console.error("Error consumiendo cupo:", e);
+      // no detengo el flujo
+      return true;
+    }
+  }, [applicationId]);
 
   const onDeleteOwnerDoc = useCallback(async (docId: number) => {
     await deleteDocument(docId);
@@ -332,6 +363,11 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         }
 
         if (!res.ok) throw new Error("Error al guardar el conductor");
+        const okConsume = await consumeSlot();
+        if (!okConsume) {
+          return;
+        }
+
       }
 
       // 🔸 Paso 2: en lugar de guardar directo, pedimos confirmación
@@ -368,8 +404,8 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [step, isSamePerson, owner, driver, applicationId, pendingOwnerDocs, pendingDriverDocs, uploadPendingDocuments, car, router, id]);
-
+  }, [step, isSamePerson, owner, driver, applicationId, pendingOwnerDocs, pendingDriverDocs, uploadPendingDocuments, car, router, id, consumeSlot]);
+  
   const handlePrev = useCallback(() => {
     setIsIdle(false)
     if (step > 1) setStep(step - 1);
