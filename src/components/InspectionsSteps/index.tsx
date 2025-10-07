@@ -774,32 +774,14 @@ export default function InspectionStepsClient({
               >
                 Cancelar
               </button>
-              <button
-                type="button"
-                disabled={certLoading || isCompleted || !allStepsMarked}
-                onClick={() => {
-                  if (!allStepsMarked) {
-                    setError("Marcá un estado en todos los pasos para generar el certificado");
-                    return;
-                  }
-                  setCertStatus(hasNonApto ? "Condicional" : "Apto");
-                  setCertModalOpen(true);
-                }}
-                className={clsx(
-                  "px-5 py-2.5 rounded-[4px] border text-[#0040B8]",
-                  certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50",
-                  (isCompleted || !allStepsMarked) && "opacity-50 cursor-not-allowed"
-                )}
-                title={
-                  isCompleted
-                    ? "No se puede generar certificado, inspección completada"
-                    : !allStepsMarked
-                      ? "Falta marcar todos los pasos"
-                      : "Generar y abrir certificado"
-                }
-              >
-                {certLoading ? "Generando..." : "Certificado"}
-              </button>
+              <button 
+                type="button" 
+                disabled={certLoading} 
+                className="px-4 py-2 rounded-[4px] bg-[#0040B8] text-white text-sm hover:opacity-95 disabled:opacity-60" 
+                onClick={() => generateCertificate(certStatus)} 
+              > 
+                {certLoading ? "Generando..." : "Confirmar"} 
+              </button>            
             </div>
           </div>
         </div>
