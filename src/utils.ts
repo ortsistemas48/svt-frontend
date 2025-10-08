@@ -340,12 +340,38 @@ export async function fetchStickersByWorkshop(workshopId: number, page = 1, perP
 
 const BASE = "https://apis.datos.gob.ar/georef/api";
 
-export type Option = { value: string; label: string; key?: string };
+// Lista fija de provincias de Argentina, incluye CABA
+export type Option = { value: string; label: string };
+
+export const AR_PROVINCES: Option[] = [
+  { value: "CABA", label: "CABA" },
+  { value: "Buenos Aires", label: "Buenos Aires" },
+  { value: "Catamarca", label: "Catamarca" },
+  { value: "Chaco", label: "Chaco" },
+  { value: "Chubut", label: "Chubut" },
+  { value: "Córdoba", label: "Córdoba" },
+  { value: "Corrientes", label: "Corrientes" },
+  { value: "Entre Ríos", label: "Entre Ríos" },
+  { value: "Formosa", label: "Formosa" },
+  { value: "Jujuy", label: "Jujuy" },
+  { value: "La Pampa", label: "La Pampa" },
+  { value: "La Rioja", label: "La Rioja" },
+  { value: "Mendoza", label: "Mendoza" },
+  { value: "Misiones", label: "Misiones" },
+  { value: "Neuquén", label: "Neuquén" },
+  { value: "Río Negro", label: "Río Negro" },
+  { value: "Salta", label: "Salta" },
+  { value: "San Juan", label: "San Juan" },
+  { value: "San Luis", label: "San Luis" },
+  { value: "Santa Cruz", label: "Santa Cruz" },
+  { value: "Santa Fe", label: "Santa Fe" },
+  { value: "Santiago del Estero", label: "Santiago del Estero" },
+  { value: "Tierra del Fuego", label: "Tierra del Fuego" },
+  { value: "Tucumán", label: "Tucumán" },
+];
 
 export async function getProvinces(): Promise<Option[]> {
-  const res = await fetch(`${BASE}/provincias?orden=nombre&campos=nombre&max=1000`, { cache: "no-store" });
-  const data = await res.json();
-  return (data?.provincias ?? []).map((p: any) => ({ value: p.nombre, label: p.nombre }));
+  return AR_PROVINCES;
 }
 
 export async function getLocalidadesByProvincia(provinceName: string): Promise<Option[]> {
