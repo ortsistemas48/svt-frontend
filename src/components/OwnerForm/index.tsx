@@ -60,8 +60,8 @@ export default function OwnerForm({
   const { errors, setErrors } = useApplication() as any;
 
   const [provinceOptions, setProvinceOptions] = useState<{ value: string; label: string }[]>([]);
-  const [cityOptions, setCityOptions] = useState<{ value: string; label: string }[]>([]);
-  const [loadingCities, setLoadingCities] = useState(false);
+  // const [cityOptions, setCityOptions] = useState<{ value: string; label: string }[]>([]);
+  // const [loadingCities, setLoadingCities] = useState(false);
 
   // helpers de error (prefijo owner_)
   const setOwnerError = (name: string, msg: string) =>
@@ -93,31 +93,31 @@ export default function OwnerForm({
   }, []);
 
   // Localidades
-  useEffect(() => {
-    let cancelled = false;
+  // useEffect(() => {
+  //   let cancelled = false;
 
-    const province = data?.province ?? "";
-    if (!province) {
-      setCityOptions([]);
-      return;
-    }
+  //   const province = data?.province ?? "";
+  //   if (!province) {
+  //     setCityOptions([]);
+  //     return;
+  //   }
 
-    setLoadingCities(true);
-    setCityOptions([]);
+  //   setLoadingCities(true);
+  //   setCityOptions([]);
 
-    (async () => {
-      try {
-        const locs = await getLocalidadesByProvincia(province);
-        if (!cancelled) setCityOptions(uniqueByValue(locs));
-      } catch (e) {
-        console.error("Error cargando localidades:", e);
-      } finally {
-        if (!cancelled) setLoadingCities(false);
-      }
-    })();
+  //   (async () => {
+  //     try {
+  //       const locs = await getLocalidadesByProvincia(province);
+  //       if (!cancelled) setCityOptions(uniqueByValue(locs));
+  //     } catch (e) {
+  //       console.error("Error cargando localidades:", e);
+  //     } finally {
+  //       if (!cancelled) setLoadingCities(false);
+  //     }
+  //   })();
 
-    return () => { cancelled = true; };
-  }, [data?.province]);
+  //   return () => { cancelled = true; };
+  // }, [data?.province]);
 
   // Schema base
   const baseFormData = useMemo(
@@ -129,9 +129,10 @@ export default function OwnerForm({
       { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number", type: "text" },
       { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street" },
       { label: "Provincia", options: provinceOptions, name: "province" },
-      { label: "Localidad", options: cityOptions, name: "city", disabled: loadingCities || !data?.province },
-    ],
-    [provinceOptions, cityOptions, loadingCities, data?.province]
+      // { label: "Localidad", options: cityOptions, name: "city", disabled: loadingCities || !data?.province },
+      { label: "Localidad", placeholder: "Ej: Córdoba Capital", name: "city", type: "text" },
+    ],[provinceOptions]
+    // [provinceOptions, cityOptions, loadingCities, data?.province]
   );
 
   // Sanitizado + validaciones

@@ -69,8 +69,8 @@ export default function CreateWorkshopPage() {
 
   /** Province and city options */
   const [provinceOptions, setProvinceOptions] = useState<{ value: string; label: string }[]>([]);
-  const [cityOptions, setCityOptions] = useState<{ value: string; label: string }[]>([]);
-  const [loadingCities, setLoadingCities] = useState(false);
+  // const [cityOptions, setCityOptions] = useState<{ value: string; label: string }[]>([]);
+  // const [loadingCities, setLoadingCities] = useState(false);
 
   /** Paso 2, lista de pendientes */
   const [pending, setPending] = useState<PendingMember[]>([]);
@@ -95,34 +95,38 @@ export default function CreateWorkshopPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // Load cities when province changes
+  // // Load cities when province changes
+  // useEffect(() => {
+  //   let cancelled = false;
+
+  //   if (!province) {
+  //     setCityOptions([]);
+  //     setCity("");
+  //     return;
+  //   }
+
+  //   setLoadingCities(true);
+  //   setCityOptions([]);
+  //   setCity(""); // Clear city when province changes
+
+  //   (async () => {
+  //     try {
+  //       const locs = await getLocalidadesByProvincia(province);
+  //       if (!cancelled) {
+  //         setCityOptions(locs);
+  //       }
+  //     } catch (e) {
+  //       console.error("Error cargando localidades:", e);
+  //     } finally {
+  //       if (!cancelled) setLoadingCities(false);
+  //     }
+  //   })();
+
+  //   return () => { cancelled = true; };
+  // }, [province]);
+
   useEffect(() => {
-    let cancelled = false;
-
-    if (!province) {
-      setCityOptions([]);
-      setCity("");
-      return;
-    }
-
-    setLoadingCities(true);
-    setCityOptions([]);
-    setCity(""); // Clear city when province changes
-
-    (async () => {
-      try {
-        const locs = await getLocalidadesByProvincia(province);
-        if (!cancelled) {
-          setCityOptions(locs);
-        }
-      } catch (e) {
-        console.error("Error cargando localidades:", e);
-      } finally {
-        if (!cancelled) setLoadingCities(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
+    setCity("");
   }, [province]);
 
   /** UI general */
@@ -401,13 +405,23 @@ export default function CreateWorkshopPage() {
                 <Field id="phone" label="Teléfono" value={phone} onChange={setPhone} inputMode="tel" required placeholder="Ej, 3511234567" />
                 <Field id="razon" label="Razón social" value={razonSocial} onChange={setRazonSocial} required placeholder="Ej, Talleres Central S.A." />
                 <Field id="cuit" label="CUIT" value={cuit} onChange={setCuit} inputMode="numeric" required placeholder="Ej, 20-12345678-3" />
-                <SelectField id="province" label="Provincia" value={province} onChange={setProvince} options={[...new Set(provinceOptions.map(p => p.value))]} required />
-                <div className="flex flex-col">
-                  <SelectField id="city" label="Localidad" value={city} onChange={setCity} options={[...new Set(cityOptions.map(c => c.value))]} required disabled={loadingCities || !province} />
-                  {loadingCities && province && (
-                    <p className="text-xs text-[#64748B] mt-1">Cargando localidades...</p>
-                  )}
-                </div>
+                <SelectField
+                   id="province"
+                   label="Provincia"
+                   value={province}
+                   onChange={setProvince}
+                   options={[...new Set(provinceOptions.map(p => p.value))]}
+                   required
+                 />
+                 <Field
+                   id="city"
+                   label="Localidad"
+                   value={city}
+                   onChange={setCity}
+                   required
+                   placeholder="Ej, Córdoba Capital"
+                 />
+
                 <Field id="address" label="Domicilio" value={address} onChange={setAddress} required placeholder="Calle y número, piso, referencia" />
                 <Field id="plant" label="Número de planta" value={plantNumber} onChange={setPlantNumber} inputMode="numeric" type="number" required placeholder="Ej, 3" />
                 <Field
