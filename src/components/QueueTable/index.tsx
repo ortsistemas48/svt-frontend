@@ -58,7 +58,6 @@ export default function QueueTable() {
       );
       if (!res.ok) throw new Error("Error al traer aplicaciones");
       const data = await res.json();
-      console.log(data);
       setItems(data.items ?? []);
       setTotal(data.total ?? 0);
     } catch (err) {

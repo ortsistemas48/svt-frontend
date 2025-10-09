@@ -27,7 +27,7 @@ interface DashboardProps {
 
 export default async function Dashboard({ workshopId, date }: DashboardProps) {
   const statistics = await fetchDailyStatistics(workshopId, date);
-  const approvalPct = Math.round(statistics.applications.approval_rate);
+  // const approvalPct = Math.round(statistics.applications.approval_rate);
 
   const latestApps = await fetchLatestApplications(workshopId);
   const queueApps = await fetchQueueApplications(workshopId);
@@ -68,12 +68,15 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
           </Card>
 
           <Card>
-            <div className="p-5">
-              <p className="text-sm text-gray-500">Tasa de aprobación</p>
-              <p className="mt-2 text-3xl font-semibold text-gray-900">{approvalPct}%</p>
-              <div className="mt-3 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
-                <div className="h-full bg-emerald-500" style={{ width: `${approvalPct}%` }} />
-              </div>
+          <div className="p-5">
+              <p className="text-sm text-gray-500">Revisiones disponibles</p>
+              <p
+                className={
+                  'mt-2 text-3xl font-semibold text-gray-900'}
+              >
+                {statistics.workshop.available_inspections}
+              </p>
+              
             </div>
           </Card>
 

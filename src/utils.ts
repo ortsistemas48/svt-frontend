@@ -304,7 +304,6 @@ export async function markStickerAsUsed(stickerId: number) {
       const errData = await res.json().catch(() => ({}));
       throw new Error(errData.error || "No se pudo marcar la oblea como 'En Uso'");
     }
-    console.log("Oblea marcada como 'En Uso'");
   } catch (e) {
     console.error("Error al marcar la oblea:", e);
   }
@@ -317,7 +316,6 @@ export async function fetchStickerOrders(workshopId: number) {
     throw new Error(errorText || "No se pudieron cargar las órdenes de obleas");
   }
   const data = await res.json();
-  console.log(data);
   return data; // [{id, name, status, amount, created_at}]
 }
 
@@ -334,7 +332,6 @@ export async function fetchStickersByWorkshop(workshopId: number, page = 1, perP
   }
 
   const data = await res.json();
-  console.log(data);
   return data; // {stickers: [...], pagination: {...}}
 }
 
@@ -381,7 +378,6 @@ export async function getProvinces(): Promise<Option[]> {
 
 export async function getLocalidadesByProvincia(provinceName: string): Promise<Option[]> {
   if (!provinceName) return [];
-  console.log("provinceName", provinceName);
   const url = `https://apis.datos.gob.ar/georef/api/localidades?provincia=${encodeURIComponent(provinceName)}`;
   const res = await apiFetch(url);
   const data = await res.json();
@@ -424,6 +420,7 @@ export async function fetchDailyStatistics(workshopId: number, date?: string): P
       workshop_id: workshopId,
       applications: { total: 0, in_queue: 0, completed: 0, approved: 0, approval_rate: 0 },
       sticker_stock: { total: 0, available: 0, used: 0, unavailable: 0 },
+      workshop: { available_inspections: 0 },
     };
   }
 }
