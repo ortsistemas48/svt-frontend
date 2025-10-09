@@ -1,4 +1,5 @@
 import { Application, DailyStatistics } from "./app/types";
+import type { TopModels } from "@/components/Statistics"; 
 
 /* =========================
    Helpers para Server Components
@@ -56,6 +57,126 @@ type StickerOrderData = {
   name: string | null;
   available_count: number | null;
 };
+
+export type StatsOverview = {
+  date_from: string
+  date_to: string
+  workshop_id: number
+  totals: {
+    created: number
+    completed: number
+    in_queue: number
+    approved: number
+    approval_rate: number
+  }
+}
+
+export type StatsDaily = {
+  items: { date: string; created: number; completed: number; approved: number }[]
+  total_days: number
+}
+
+export type StatsStatusBreakdown = {
+  items: { status: string; count: number }[]
+  total: number
+}
+
+export type StatsResultsBreakdown = {
+  items: { result: string; count: number }[]
+  total: number
+}
+
+export type StatsTopModels = {
+  items: { brand: string | null; model: string | null; count: number }[]
+  total_models: number
+}
+
+function q(params: Record<string, string | number | undefined>) {
+  const usp = new URLSearchParams()
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) usp.set(k, String(v))
+  })
+  const s = usp.toString()
+  return s ? `?${s}` : ""
+}
+
+export async function fetchStatisticsOverview(workshopId: number, from: string, to: string): Promise<StatsOverview> {
+  const url = `/api/statistics/workshop/${workshopId}/overview${q({ from, to })}`
+  try {
+    const res = await apiFetch(url, { method: "GET" })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return res.json()
+  } catch {
+    return {
+      date_from: from,
+      date_to: to,
+      workshop_id: workshopId,
+      totals: { created: 0, completed: 0, in_queue: 0, approved: 0, approval_rate: 0 },
+    }
+  }
+}
+
+export async function fetchStatisticsDaily(workshopId: number, from: string, to: string): Promise<StatsDaily> {
+  const url = `/api/statistics/workshop/${workshopId}/daily${q({ from, to })}`
+  try {
+    const res = await apiFetch(url, { method: "GET" })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return res.json()
+  } catch {
+    return { items: [], total_days: 0 }
+  }
+}
+
+export async function fetchStatusBreakdown(workshopId: number, from: string, to: string): Promise<StatsStatusBreakdown> {
+  const url = `/api/statistics/workshop/${workshopId}/status-breakdown${q({ from, to })}`
+  try {
+    const res = await apiFetch(url, { method: "GET" })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return res.json()
+  } catch {
+    return { items: [], total: 0 }
+  }
+}
+
+export async function fetchResultsBreakdown(workshopId: number, from: string, to: string): Promise<StatsResultsBreakdown> {
+  const url = `/api/statistics/workshop/${workshopId}/results-breakdown${q({ from, to })}`
+  try {
+    const res = await apiFetch(url, { method: "GET" })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return res.json()
+  } catch {
+    return { items: [], total: 0 }
+  }
+}
+
+export async function fetchTopModels(
+  workshopId: number,
+  from: string,
+  to: string,
+  limit = 8
+): Promise<TopModels> {
+  const url = `/api/statistics/workshop/${workshopId}/top-models${q({ from, to, limit })}`;
+  try {
+    const res = await apiFetch(url, { method: "GET" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const raw = await res.json() as {
+      items: { brand: string | null; model: string | null; count: number }[];
+      total_models: number;
+    };
+
+    // Normalizar a model: string
+    return {
+      total_models: raw.total_models,
+      items: raw.items.map(i => ({
+        model: i.model ?? "N/D",
+        brand: i.brand ?? null,
+        count: i.count,
+      })),
+    };
+  } catch {
+    return { items: [], total_models: 0 };
+  }
+}
 
 export async function fetchAvailableStickers({
   workshopId,
