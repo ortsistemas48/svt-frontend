@@ -151,7 +151,7 @@ export default function LoginForm() {
           ¿No Tienes Cuenta? Regístrate
         </Link>
 
-        <Link href="#" className="text-sm mt-3 text-[#0040B8] hover:underline">
+        <Link href="/forgot-password" className="text-sm mt-3 text-[#0040B8] hover:underline">
           ¿Olvidaste tu contraseña?
         </Link>
       </div>
