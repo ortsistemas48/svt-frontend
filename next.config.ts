@@ -17,10 +17,10 @@ const nextConfig: NextConfig = {
   async headers() {
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",      // permite los inlines que Next inyecta
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",      // permite los inlines y eval que Next necesita
       "style-src 'self' 'unsafe-inline'",       // estilos inline usados por Next y Tailwind
       "img-src 'self' data: https:",
-      "connect-src 'self' wss: https://apis.datos.gob.ar", // fetch y HMR
+      "connect-src 'self' ws: wss: https://apis.datos.gob.ar", // fetch y HMR
       "font-src 'self' https: data:",
       "frame-ancestors 'self'",
       "base-uri 'self'",

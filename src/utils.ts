@@ -207,6 +207,7 @@ export function getMissingCarFields(car: any): string[] {
     "license_number",
     "license_expiration",
     "manufacture_year",
+    "insurance"
   ];
   const fieldTranslations = {
     license_plate: "Dominio",
@@ -225,6 +226,10 @@ export function getMissingCarFields(car: any): string[] {
     green_card_expiration: "Exp. de la cédula",
     license_number: "N° de licencia",
     license_expiration: "Exp. de licencia",
+    total_weight: "Peso total",
+    front_weight: "Peso delantero",
+    back_weight: "Peso trasero",
+    insurance: "Poliza de seguro",
   };
   return requiredFields
     .filter((field: string) => {
@@ -376,9 +381,9 @@ export async function getProvinces(): Promise<Option[]> {
 
 export async function getLocalidadesByProvincia(provinceName: string): Promise<Option[]> {
   if (!provinceName) return [];
-  const url = `${BASE}/localidades?provincia=${encodeURIComponent(provinceName)}&campos=id,nombre&orden=nombre&max=5000`;
-
-  const res = await fetch(url, { cache: "no-store" });
+  console.log("provinceName", provinceName);
+  const url = `https://apis.datos.gob.ar/georef/api/localidades?provincia=${encodeURIComponent(provinceName)}`;
+  const res = await apiFetch(url);
   const data = await res.json();
 
   const seen = new Set<string>();
