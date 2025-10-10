@@ -49,7 +49,6 @@ export default async function CreateApplicationPage({
     }
 
     const data = await res.json();
-
     if (workshopId !== Number(data.workshop_id)) {
       redirect(`/dashboard/${workshopId}/applications`);
     }

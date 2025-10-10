@@ -282,9 +282,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
 
   // Ensure sticker data is properly loaded when car data changes
   useEffect(() => {
-    console.log("Car sticker_id:", car?.sticker_id, "Mode:", mode, "Sticker options length:", stickerOptions.length);
     if (car?.sticker_id && mode !== "idle" && stickerOptions.length === 0) {
-      console.log("Loading stickers because car has sticker_id but no options loaded");
       loadStickers();
     }
   }, [car?.sticker_id, mode, stickerOptions.length]);
@@ -297,7 +295,6 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
 
   const handleChange = (key: string, value: string) => {
     if (key === "sticker_id") {
-      console.log("Changing sticker from", car?.sticker_id, "to", value);
       setCar((prev: any) => ({ ...prev, sticker_id: Number(value) }));
       return;
     }

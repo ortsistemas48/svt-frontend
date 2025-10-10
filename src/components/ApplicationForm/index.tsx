@@ -143,6 +143,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
         const json = await res.json();
         // Normalizamos objetos (pueden venir vacíos en apps nuevas)
+        console.log(json);
         const ownerData = json.owner ?? {};
         const driverData = json.driver ?? {};
         const carData = json.car ?? {};

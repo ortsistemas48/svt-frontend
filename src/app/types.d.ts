@@ -116,4 +116,7 @@ export type DailyStatistics = {
     used: number;
     unavailable: number;
   };
+  workshop: {
+    available_inspections: number;
+  };
 };
