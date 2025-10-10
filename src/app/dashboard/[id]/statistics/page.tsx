@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import Statistics, {
-  type TopModels, // <- usá el tipo del componente
+  type TopModels,
   type Overview,
   type Daily,
   type StatusBreakdown,
@@ -23,26 +23,21 @@ function fmt(d: Date) {
 
 function monthRange(date = new Date()) {
   const y = date.getFullYear();
-  const m = date.getMonth(); // 0..11
+  const m = date.getMonth();
   const from = new Date(y, m, 1);
-  const to = new Date(y, m + 1, 0); // último día del mes
+  const to = new Date(y, m + 1, 0);
   return { from: fmt(from), to: fmt(to) };
 }
 
-/**
- * Prioridades:
- * 1) Si vienen from y to en la URL, usalos tal cual.
- * 2) Si viene month=YYYY-MM, arma el rango de ese mes.
- * 3) Si no viene nada, usa el mes actual.
- */
-function makeRange(searchParams: { [k: string]: string | string[] | undefined }) {
-  const sp = new URLSearchParams(Object.entries(searchParams).map(([k, v]) => [k, String(v)]));
+function makeRange(searchParams: any) {
+  const entries = Object.entries(searchParams ?? {}).map(([k, v]) => [k, String(v)]);
+  const sp = new URLSearchParams(entries as [string, string][]);
 
   const fromQP = sp.get("from");
   const toQP = sp.get("to");
   if (fromQP && toQP) return { from: fromQP, to: toQP };
 
-  const monthQP = sp.get("month"); // ej: 2025-10
+  const monthQP = sp.get("month");
   if (monthQP) {
     const [yy, mm] = monthQP.split("-").map(Number);
     if (yy && mm && mm >= 1 && mm <= 12) {
@@ -51,39 +46,34 @@ function makeRange(searchParams: { [k: string]: string | string[] | undefined })
       return { from, to };
     }
   }
-
-  // default: mes actual
   return monthRange();
 }
 
-export default async function Page({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { [k: string]: string | string[] | undefined };
-}) {
-  const workshopId = Number(params.id);
+export default async function Page(props: any) {
+  const { id } = (await props.params) ?? props.params ?? {};
+  const sp = (await props.searchParams) ?? props.searchParams ?? {};
+
+  const workshopId = Number(id);
   if (!Number.isFinite(workshopId)) {
     return <div className="p-6 text-sm text-rose-600">Parámetro de taller inválido</div>;
   }
 
-  const { from, to } = makeRange(searchParams);
+  const { from, to } = makeRange(sp);
 
   const [overview, daily, status, results, topModelsRaw] = await Promise.all([
     fetchStatisticsOverview(workshopId, from, to) as Promise<Overview>,
     fetchStatisticsDaily(workshopId, from, to) as Promise<Daily>,
     fetchStatusBreakdown(workshopId, from, to) as Promise<StatusBreakdown>,
     fetchResultsBreakdown(workshopId, from, to) as Promise<ResultBreakdown>,
-    fetchTopModels(workshopId, from, to, 8), 
+    fetchTopModels(workshopId, from, to, 8) as Promise<any>,
   ]);
 
   const topModels: TopModels = {
-    total_models: topModelsRaw.total_models,
-    items: topModelsRaw.items.map(i => ({
-      model: i.model ?? "N/D",
-      brand: i.brand ?? null,
-      count: i.count,
+    total_models: (topModelsRaw as any).total_models ?? 0,
+    items: ((topModelsRaw as any).items ?? []).map((i: any) => ({
+      model: i?.model ?? "N/D",
+      brand: i?.brand ?? null,
+      count: i?.count ?? 0,
     })),
   };
 
@@ -92,10 +82,10 @@ export default async function Page({
       workshopId={workshopId}
       from={from}
       to={to}
-      overview={overview}
-      daily={daily}
-      status={status}
-      results={results}
+      overview={overview as any}
+      daily={daily as any}
+      status={status as any}
+      results={results as any}
       topModels={topModels}
     />
   );
