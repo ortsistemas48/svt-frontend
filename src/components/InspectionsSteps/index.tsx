@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { ChevronRight, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Dropzone, { type ExistingDoc as InspDoc } from "@/components/Dropzone";
+import { useParams } from "next/navigation";
 
 type Step = { step_id: number; name: string; description: string; order: number };
 type Status = "Apto" | "Condicional" | "Rechazado";
@@ -34,6 +35,7 @@ export default function InspectionStepsClient({
   initialObsByStep?: Record<number, ObservationRow[]>;
   initialGlobalObs?: string;
 }) {
+  const { id } = useParams();
   const [isCompleted, setIsCompleted] = useState(false);
   const [statusByStep, setStatusByStep] = useState<Record<number, Status | undefined>>(initialStatuses || {});
   const [saving, setSaving] = useState(false);
@@ -47,22 +49,31 @@ export default function InspectionStepsClient({
   const [globalObs, setGlobalObs] = useState(initialGlobalObs || "");
   const [obsByStepList, setObsByStepList] = useState<Record<number, ObservationRow[]>>(initialObsByStep || {});
   const [dzResetToken, setDzResetToken] = useState(0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // Documentos globales de la inspección
+  // Documentos globales de la revisión
   const [inspDocs, setInspDocs] = useState<InspDoc[]>([]);
   const [pendingInspFiles, setPendingInspFiles] = useState<File[]>([]);
   const [inspDocsLoading, setInspDocsLoading] = useState(false);
   const [inspDocsDeletingId, setInspDocsDeletingId] = useState<number | null>(null);
 
   // modal certificado
-  const [certModalOpen, setCertModalOpen] = useState(false);
-  const [certStatus, setCertStatus] = useState<Status>("Apto");
+  // const [certModalOpen, setCertModalOpen] = useState(false);
+  // const [certStatus, setCertStatus] = useState<Status>("Apto");
 
   const stepNameById = useMemo(() => {
     const map: Record<number, string> = {};
     steps.forEach((s) => { map[s.step_id] = s.name; });
     return map;
   }, [steps]);
+
+  const overallStatus: Status | null = useMemo(() => {
+    const values = steps.map(s => statusByStep[s.step_id]);
+    if (values.some(v => v === "Rechazado")) return "Rechazado";
+    if (values.some(v => v === "Condicional")) return "Condicional";
+    if (values.some(v => !v)) return null;
+    return "Apto";
+  }, [steps, statusByStep]);
 
   const summary = useMemo(() => {
     return Object.entries(obsByStepList)
@@ -300,7 +311,7 @@ export default function InspectionStepsClient({
         });
         const upData = await uploadRes.json().catch(() => ({}));
         if (!uploadRes.ok) {
-          throw new Error(upData?.error || "No se pudieron subir los archivos de la inspección");
+          throw new Error(upData?.error || "No se pudieron subir los archivos de la revisión");
         }
         setPendingInspFiles([]);
         await fetchInspectionDocuments();
@@ -339,7 +350,7 @@ export default function InspectionStepsClient({
         throw new Error(j?.error || "No se pudieron guardar las observaciones generales");
       }
 
-      setMsg("Inspección guardada");
+      setMsg("Revisión guardada");
       setPendingInspFiles([]);
       setDzResetToken((t) => t + 1);
       await fetchInspectionDocuments();
@@ -356,7 +367,7 @@ export default function InspectionStepsClient({
 
   const generateCertificate = async (status: Status) => {
     if (!apiBase) { setError("Falta configurar NEXT_PUBLIC_API_URL"); return; }
-    if (isCompleted) { setError("La inspección ya está completada"); return; }
+    if (isCompleted) { setError("La revisión ya está completada"); return; }
     const allMarkedNow = steps.every((s) => Boolean(statusByStep[s.step_id]));
     if (!allMarkedNow) {
       setError("Marcá un estado en todos los pasos antes de generar el certificado");
@@ -446,7 +457,9 @@ export default function InspectionStepsClient({
 
       newTab.location.href = url;
       setMsg("Certificado generado");
-      setCertModalOpen(false);
+      setConfirmOpen(false);
+      router.push(`/dashboard/${id}/inspections-queue`);
+      // setCertModalOpen(false);
     } catch (e: any) {
       try { if (!newTab.closed) newTab.close(); } catch {}
       setError(e.message || "Error generando certificado");
@@ -467,9 +480,9 @@ export default function InspectionStepsClient({
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">Inspección Completada</h3>
+              <h3 className="text-sm font-medium text-yellow-800">Revisión Completada</h3>
               <div className="mt-2 text-sm text-yellow-700">
-                <p>Esta inspección ya fue completada, no se pueden realizar modificaciones.</p>
+                <p>Esta revisión ya fue completada, no se pueden realizar modificaciones.</p>
               </div>
             </div>
           </div>
@@ -608,11 +621,11 @@ export default function InspectionStepsClient({
       {/* Adjuntos globales, sin botones, se suben al guardar */}
       <section className="rounded-[10px] border border-zinc-200 bg-white p-4 w-full mt-6">
         <div className="flex items-center justify-between mb-1">
-          <h4 className="text-sm font-medium text-zinc-900">Adjuntos de la inspección</h4>
+          <h4 className="text-sm font-medium text-zinc-900">Adjuntos de la revisión</h4>
           {inspDocsLoading && <span className="text-xs text-zinc-500">Actualizando...</span>}
         </div>
         <p className="text-xs text-zinc-500 mb-3">
-          Los archivos que agregues quedan pendientes y se suben cuando guardás la inspección.
+          Los archivos que agregues quedan pendientes y se suben cuando guardás la revisión.
         </p>
 
         <div className={clsx(isCompleted && "opacity-50")}>
@@ -704,18 +717,22 @@ export default function InspectionStepsClient({
           type="button"
           disabled={certLoading || isCompleted}
           onClick={() => {
-            setCertStatus(hasNonApto ? "Condicional" : "Apto");
-            setCertModalOpen(true);
+            if (!overallStatus) {
+              setError("Marcá un estado en todos los pasos antes de generar el certificado");
+              return;
+            }
+            setConfirmOpen(true);
           }}
           className={clsx(
             "px-5 py-2.5 rounded-[4px] border text-[#0040B8]",
             certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50",
             isCompleted && "opacity-50 cursor-not-allowed"
           )}
-          title={isCompleted ? "No se puede generar certificado, inspección completada" : "Generar y abrir certificado"}
+          title={isCompleted ? "No se puede generar certificado, revisión completada" : "Generar y abrir certificado"}
         >
           {certLoading ? "Generando..." : "Certificado"}
         </button>
+
 
         <button
           type="button"
@@ -732,7 +749,7 @@ export default function InspectionStepsClient({
       </div>
 
       {/* Modal certificado */}
-      {certModalOpen && (
+      {/* {certModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" aria-modal="true" role="dialog">
           <div className="absolute inset-0 bg-black/30" onClick={() => !certLoading && setCertModalOpen(false)} />
           <div className="relative z-10 w-[min(92vw,520px)] rounded-[10px] border border-zinc-200 bg-white p-5 shadow-xl">
@@ -785,7 +802,52 @@ export default function InspectionStepsClient({
             </div>
           </div>
         </div>
+      )} */}
+      {confirmOpen && overallStatus && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" aria-modal="true" role="dialog">
+          <div className="absolute inset-0 bg-black/30" onClick={() => !certLoading && setConfirmOpen(false)} />
+          <div className="relative z-10 w-[min(92vw,520px)] rounded-[10px] border border-zinc-200 bg-white p-5 shadow-xl">
+            <div className="flex items-start justify-between">
+              <h3 className="text-base font-semibold text-zinc-900">Confirmar certificado</h3>
+              <button className="p-1 rounded hover:bg-zinc-100" onClick={() => !certLoading && setConfirmOpen(false)} aria-label="Cerrar">
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="mt-2 text-sm text-zinc-600">
+              Se generará el certificado con condición
+              <span className={clsx(
+                "ml-1 px-2 py-0.5 rounded border text-sm",
+                overallStatus === "Apto" ? "border-[#0040B8] text-[#0040B8]" :
+                overallStatus === "Condicional" ? "border-amber-600 text-amber-700" :
+                "border-black text-black"
+              )}>
+                {overallStatus}
+              </span>
+            </p>
+
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <button
+                type="button"
+                disabled={certLoading}
+                className="px-4 py-2 rounded-[4px] border border-zinc-300 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+                onClick={() => setConfirmOpen(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={certLoading}
+                className="px-4 py-2 rounded-[4px] bg-[#0040B8] text-white text-sm hover:opacity-95 disabled:opacity-60"
+                onClick={() => generateCertificate(overallStatus)}
+              >
+                {certLoading ? "Generando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
+
       {!allStepsMarked && (
         <div className="mt-4 text-sm text-amber-700 text-center">
           Te faltan {remainingSteps} paso{remainingSteps === 1 ? "" : "s"} por marcar.

@@ -64,12 +64,16 @@ export default function PaymentPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
 
-  const [qty, setQty] = useState(250);
-  const minQty = 250;
+  const [qty, setQty] = useState(300);
+  const [qtyInput, setQtyInput] = useState(String(qty));
+  const minQty = 300;
   const maxQty = 20000;
-  const step = 250;
   const progress = useMemo(() => {
-    return Math.round(((qty - minQty) / (maxQty - minQty)) * 100);
+    const pct = ((qty - minQty) / (maxQty - minQty)) * 100;
+    return Math.max(0, Math.min(100, Math.round(pct)));
+  }, [qty]);
+  useEffect(() => {
+    setQtyInput(String(qty));
   }, [qty]);
 
   const [showModal, setShowModal] = useState(false);
@@ -245,10 +249,10 @@ export default function PaymentPage() {
                 <div className="mx-auto grid w-full grid-cols-[auto_1fr_auto] items-center gap-4">
                   <button
                     className="h-10 rounded-[4px] border px-3 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={() => setQty((q) => Math.max(minQty, q - step))}
+                    onClick={() => setQty((q) => Math.max(minQty, q - 1))}
                     aria-label="Restar"
                   >
-                    −{step}
+                    −1
                   </button>
 
                   <input
@@ -256,21 +260,21 @@ export default function PaymentPage() {
                     type="range"
                     min={minQty}
                     max={maxQty}
-                    step={step}
+                    /* sin step => por default es 1 */
                     value={qty}
-                    onChange={(e) => setQty(parseInt(e.target.value))}
+                    onChange={(e) => setQty(parseInt(e.target.value || "0", 10))}
                     className="range-modern w-full"
                     style={{
-                        background: `linear-gradient(90deg, #0040B8 ${progress}%, #e5e7eb ${progress}%)`,
+                      background: `linear-gradient(90deg, #0040B8 ${progress}%, #e5e7eb ${progress}%)`,
                     }}
                   />
 
                   <button
                     className="h-10 rounded-[4px] border px-3 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={() => setQty((q) => Math.min(maxQty, q + step))}
+                    onClick={() => setQty((q) => Math.min(maxQty, q + 1))}
                     aria-label="Sumar"
                   >
-                    +{step}
+                    +1
                   </button>
                 </div>
 
@@ -288,16 +292,41 @@ export default function PaymentPage() {
                     type="number"
                     min={minQty}
                     max={maxQty}
-                    step={step}
-                    value={qty}
+                    value={qtyInput}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     onChange={(e) => {
-                      const v = parseInt(e.target.value || "0", 10);
-                      const snapped = Math.max(minQty, Math.min(maxQty, Math.round(v / step) * step));
-                      setQty(Number.isFinite(snapped) ? snapped : minQty);
+                      const v = e.target.value;
+                      // Permití vacío para que el usuario pueda borrar y tipear
+                      if (v === "") {
+                        setQtyInput("");
+                        return;
+                      }
+                      // Solo dígitos
+                      if (/^\d+$/.test(v)) {
+                        setQtyInput(v);
+                      }
+                      // si no son dígitos, ignoramos
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        (e.currentTarget as HTMLInputElement).blur();
+                      }
+                    }}
+                    onBlur={() => {
+                      // Al salir, normalizamos y aplicamos límites
+                      const n = parseInt(qtyInput || "0", 10);
+                      if (!Number.isFinite(n)) {
+                        setQty(minQty);
+                        return;
+                      }
+                      const clamped = Math.max(minQty, Math.min(maxQty, n));
+                      setQty(clamped);       // actualiza el número real
+                      setQtyInput(String(clamped)); // refleja en el input
                     }}
                     className="w-40 rounded-[4px] border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[#0040B8]"
                   />
-                  <span className="text-xs text-gray-500">Mínimo 250, sube de a 250</span>
+                  <span className="text-xs text-gray-500">Mínimo 300</span>
                 </div>
               </div>
 

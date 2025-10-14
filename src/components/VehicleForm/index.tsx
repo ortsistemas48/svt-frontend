@@ -181,7 +181,7 @@ const FIELD_LABEL: Record<string, string> = {
   sticker_id: "Oblea",
 };
 
-// ✅ Formatos de patente válidos: ABC123 o AB123CD
+// ✅ Formatos de dominio válidos: ABC123 o AB123CD
 const PLATE_REGEX = /^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$/;
 
 export default function VehicleForm({ car, setCar }: VehicleFormProps) {
@@ -311,12 +311,12 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   }, [mode, setIsIdle]);
 
   // Removed automatic error clearing - errors will only clear when user fixes validation issues
-  // --- Buscar por patente ---
+  // --- Buscar por dominio ---
   const fetchVehicleByPlate = async () => {
     const plate = plateQuery.trim().toUpperCase().replace(/[-\s]/g, "");
-    if (!plate) { setSearchError("Ingresá una patente válida."); return; }
+    if (!plate) { setSearchError("Ingresá un dominio válida."); return; }
     if (!PLATE_REGEX.test(plate)) {
-      const msg = "Formato de patente inválido. Usá ABC123 o AB123CD.";
+      const msg = "Formato de dominio inválido. Usá ABC123 o AB123CD.";
       setCarError("license_plate", msg); setSearchError(msg); return;
     }
 
@@ -369,7 +369,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     }
   };
 
-  // ✅ Validación en vivo de la patente mientras se escribe
+  // ✅ Validación en vivo de la dominio mientras se escribe
   const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = e.target.value.toUpperCase().replace(/[-\s]/g, "");
     setPlateQuery(sanitized);
@@ -382,7 +382,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     }
 
     if (!PLATE_REGEX.test(sanitized)) {
-      setCarError("license_plate", "Formato de patente inválido. Usá ABC123 o AB123CD.");
+      setCarError("license_plate", "Formato de dominio inválido. Usá ABC123 o AB123CD.");
     } else {
       setCarError("license_plate", "");
     }
@@ -410,13 +410,13 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
           <div>
             <h2 className="text-xl font-regular text-[#000000] mb-1">Datos del vehículo</h2>
             <p className="text-md font-regular text-[#00000080]">
-              Ingresá la patente para traer los datos del vehículo
+              Ingresá el dominio para traer los datos del vehículo
             </p>
           </div>
 
           <div className="w-full">
             <label htmlFor="plate" className="block text-sm text-gray-700 mb-1">
-              Patente
+              Dominio
             </label>
             <div className="flex gap-3">
               <input
@@ -487,7 +487,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
             setStickerOptions([]);
           }}
         >
-          Buscar otra patente
+          Buscar otro dominio
         </button>
       </div>
 
