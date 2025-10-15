@@ -250,14 +250,14 @@ export default function InspectionTable() {
                             <Pencil size={16} />
                           </button>
                         )}
-                        <button
+                        {/* <button
                           type="button"
                           className="cursor-pointer rounded p-1 text-red-500 transition-colors hover:bg-red-50 hover:opacity-80"
                           title="Eliminar revisión"
                           onClick={() => setDeleteTarget(item)}
                         >
                           <Trash2 size={16} />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>

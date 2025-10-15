@@ -814,10 +814,10 @@ export default function InspectionStepsClient({
               </button>
             </div>
 
-            <p className="mt-2 text-sm text-zinc-600">
+            <p className="mt-6 mb-2 text-md text-zinc-600">
               Se generará el certificado con condición
               <span className={clsx(
-                "ml-1 px-2 py-0.5 rounded border text-sm",
+                "ml-2 px-2 py-0.5 rounded border text-sm",
                 overallStatus === "Apto" ? "border-[#0040B8] text-[#0040B8]" :
                 overallStatus === "Condicional" ? "border-amber-600 text-amber-700" :
                 "border-black text-black"
@@ -826,7 +826,7 @@ export default function InspectionStepsClient({
               </span>
             </p>
 
-            <div className="mt-6 flex items-center justify-center gap-4">
+            <div className="mt-10 flex items-center justify-center gap-4">
               <button
                 type="button"
                 disabled={certLoading}

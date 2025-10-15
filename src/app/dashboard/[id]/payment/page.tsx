@@ -14,6 +14,7 @@ type Workshop = {
   name: string;
   province: string;
   city: string;
+  available_inspections: number; 
 };
 
 const ZONE_BY_PROVINCE: Record<string, "SUR" | "CENTRO" | "NORTE"> = {
@@ -93,7 +94,13 @@ export default function PaymentPage() {
         const res = await fetch(`${API}/workshops/${workshopId}`, { credentials: "include" });
         if (!res.ok) throw new Error("No se pudieron cargar datos del taller");
         const data = await res.json();
-        setWs({ id: data.id, name: data.name, province: data.province, city: data.city });
+        setWs({
+          id: data.id,
+          name: data.name,
+          province: data.province,
+          city: data.city,
+          available_inspections: Number(data.available_inspections ?? 0),
+        });
       } catch (e: any) {
         setErrorMsg(e?.message || "Error cargando el taller");
       }
@@ -122,6 +129,14 @@ export default function PaymentPage() {
 
   const unit = UNIT_PRICE[zone];
   const total = qty * unit;
+  const stock = ws?.available_inspections ?? 0;
+  const stockState = stock < 100 ? "zero" : stock < minQty ? "low" : "ok";
+  const stockClasses =
+    stockState === "ok"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : stockState === "low"
+      ? "border-amber-200 bg-amber-50 text-amber-700"
+      : "border-rose-200 bg-rose-50 text-rose-700";
 
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);
@@ -233,11 +248,31 @@ export default function PaymentPage() {
                 <span className="font-medium">Zona</span>
                 <span className="rounded-full bg-[#F3F6FF] px-2 py-0.5 text-[#0040B8]">{zone}</span>
               </span>
+              
+              <span
+                className={clsx(
+                  "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
+                  stockClasses
+                )}
+                title="Revisiones disponibles en este taller"
+              >
+                <span className="font-medium">Stock disponible</span>
+                <span className={clsx(
+                  "rounded-full px-2 py-0.5",
+                  stockState === "ok" ? "bg-emerald-100/70 text-emerald-800" :
+                  stockState === "low" ? "bg-amber-100/70 text-amber-800" :
+                  "bg-rose-100/70 text-rose-800"
+                )}>
+                  {stock.toLocaleString("es-AR")} {stock === 1 ? "revisión" : "revisiones"}
+                </span>
+              </span>
+
               <span className="text-xs text-gray-500">
                 Precio unitario: <span className="font-semibold text-gray-900">{formatARS(UNIT_PRICE[zone])}</span> por revisión
               </span>
-            </div>
 
+              {/* NUEVO, stock disponible */}
+            </div>
             {/* Contenido centrado, slider grueso y resumen alineado */}
             <div className="p-6">
               {/* Slider centrado */}
