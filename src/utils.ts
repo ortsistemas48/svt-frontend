@@ -324,7 +324,6 @@ export function getMissingCarFields(car: any): string[] {
     "back_weight",
     "fuel_type",
     "green_card_number",
-    "green_card_expiration",
     "license_number",
     "license_expiration",
     "manufacture_year",

@@ -2,10 +2,9 @@
 
 import FormField from "@/components/PersonFormField";
 import { useApplication } from "@/context/ApplicationContext";
-import React, { useEffect, useMemo, useState } from "react";
-import { alnumSpaceUpper, clamp, fetchAvailableStickers, lettersSpaceUpper, onlyAlnumUpper, onlyDigits, toUpper } from "../../utils";
+import React, { useEffect, useMemo, useState, useRef } from "react";
+import { alnumSpaceUpper, clamp, lettersSpaceUpper, onlyAlnumUpper, onlyDigits, toUpper } from "../../utils";
 import { useParams } from "next/navigation";
-import { useRef } from "react";
 
 interface FormFieldData {
   label: string;
@@ -25,20 +24,19 @@ const formData1: FormFieldData[] = [
   { label: "Dominio", placeholder: "Ej: AB123AB", name: "license_plate" },
   { label: "Marca", placeholder: "Ej: Fiat", name: "brand" },
   { label: "Modelo", placeholder: "Ej: Cronos", name: "model" },
-  { label: "Año", placeholder: "Ej: 2025", name: "manufacture_year", type: "text" },
   {
     label: "Peso del auto (KG)",
-    placeholder: "Ej: 20000 KG",
+    placeholder: "Ej: 2000 KG",
     name: "total_weight",
   },
   {
     label: "Peso eje delantero (KG)",
-    placeholder: "Ej: 10000 KG",
+    placeholder: "Ej: 1000 KG",
     name: "front_weight",
   },
   {
     label: "Peso eje trasero (KG)",
-    placeholder: "Ej: 10000 KG",
+    placeholder: "Ej: 1000 KG",
     name: "back_weight",
   },
   {
@@ -97,7 +95,6 @@ const formData1: FormFieldData[] = [
     ],
     name: "usage_type",
   },
-  
 ];
 
 const formData2: FormFieldData[] = [
@@ -108,13 +105,29 @@ const formData2: FormFieldData[] = [
   { label: "Nº de cédula verde", placeholder: "Ej: ABF45658", name: "green_card_number" },
   { label: "Exp. de la cédula", type: "date", placeholder: "dd/mm/aa", name: "green_card_expiration" },
   { label: "Nº de licencia", placeholder: "Ej: A123456789", name: "license_number" },
+  {
+    label: "Clase de licencia",
+    name: "license_class",
+    type: "select",
+    options: [
+      { value: "A", label: "A - Motocicletas" },
+      { value: "A1", label: "A1 - Motocicletas pequeñas" },
+      { value: "A2", label: "A2 - Motocicletas medianas" },
+      { value: "B1", label: "B1 - Automóviles particulares" },
+      { value: "B2", label: "B2 - Automóviles con remolque" },
+      { value: "C", label: "C - Camiones sin acoplado" },
+      { value: "D1", label: "D1 - Transporte de pasajeros hasta 8" },
+      { value: "D2", label: "D2 - Transporte de pasajeros más de 8" },
+      { value: "E1", label: "E1 - Camiones con acoplado" },
+      { value: "E2", label: "E2 - Maquinaria especial no agrícola" },
+      { value: "F", label: "F - Vehículos para personas con discapacidad" },
+    ],
+  },
   { label: "Exp. de la licencia", type: "date", placeholder: "dd/mm/aa", name: "license_expiration" },
   { label: "Póliza del seguro", type: "text", placeholder: "Ej: 1234567890", name: "insurance" },
 ];
 
 type Mode = "idle" | "view" | "edit";
-
-// ---------- Sanitizado / Validación helpers ----------
 
 // Mensajes por campo
 const MSG = {
@@ -130,15 +143,16 @@ const MSG = {
   insurance: "Solo números (hasta 10).",
 };
 
-// Patrones por campo (si el campo está vacío, no se marca error)
+// Patrones por campo
 const PATTERN: Record<string, RegExp> = {
   brand: /^[A-Z0-9 ]{1,15}$/,
   model: /^.+$/,
   manufacture_year: /^\d{4}$/,
+  registration_year: /^\d{4}$/,
   engine_brand: /^[A-Z0-9 ]{1,15}$/,
   engine_number: /^[A-Z0-9]{1,17}$/,
   chassis_number: /^[A-Z0-9]{1,17}$/,
-  chassis_brand: /^[A-ZÁÉÍÓÚÑÜ -]{1,15}$/,
+  chassis_brand: /^[A-ZÁÉÍÓÚÑÜ ]{1,15}$/,
   green_card_number: /^.+$/,
   green_card_expiration: /^\d{4}-\d{2}-\d{2}$/,
   license_number: /^[A-Z0-9]{1,15}$/,
@@ -152,6 +166,7 @@ const SANITIZE: Record<string, (s: string) => string> = {
   brand: (s) => clamp(alnumSpaceUpper(s), 15),
   model: (s) => s,
   manufacture_year: (s) => clamp(onlyDigits(s), 4),
+  registration_year: (s) => clamp(onlyDigits(s), 4),
   engine_brand: (s) => clamp(alnumSpaceUpper(s), 15),
   engine_number: (s) => clamp(onlyAlnumUpper(s), 17),
   chassis_number: (s) => clamp(onlyAlnumUpper(s), 17),
@@ -166,7 +181,8 @@ const FIELD_LABEL: Record<string, string> = {
   license_plate: "Dominio",
   brand: "Marca",
   model: "Modelo",
-  manufacture_year: "Año",
+  manufacture_year: "Año de fabricación",
+  registration_year: "Año de patentamiento",
   weight: "Peso del auto",
   fuel_type: "Tipo de combustible",
   vehicle_type: "Tipo de vehículo",
@@ -178,12 +194,12 @@ const FIELD_LABEL: Record<string, string> = {
   green_card_number: "Nº de cédula verde",
   green_card_expiration: "Exp. de la cédula",
   license_number: "Nº de licencia",
+  license_class: "Clase de licencia",
   license_expiration: "Exp. de la licencia",
   insurance: "Póliza del seguro",
-  sticker_id: "Oblea",
 };
 
-// ✅ Formatos de dominio válidos: ABC123 o AB123CD
+// Formatos de dominio válidos
 const PLATE_REGEX = /^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$/;
 
 export default function VehicleForm({ car, setCar }: VehicleFormProps) {
@@ -194,15 +210,11 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("idle");
 
+  // params por si los necesitás luego
   const params = useParams<{ id: string; appId?: string }>();
-  const workshopId = Number(params?.id);
+  // const workshopId = Number(params?.id);
 
-  // Obleas disponibles (solo para modo "edit")
-  const [stickerOptions, setStickerOptions] = useState<{ value: string; label: string }[]>([]);
-  const [loadingStickers, setLoadingStickers] = useState(false);
-  const [stickersError, setStickersError] = useState<string | null>(null);
   const [greenCardNoExpiration, setGreenCardNoExpiration] = useState(() => {
-    // Initialize based on car data - if green_card_expiration is null/empty, checkbox should be true
     return !car?.green_card_expiration || car?.green_card_expiration === "" || car?.green_card_no_expiration === true;
   });
 
@@ -214,50 +226,42 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
 
   const dateForInput = (v?: string) => {
     if (!v) return "";
-    // Si ya viene como YYYY-MM-DD, devuélvelo tal cual
     if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-    // Si viene ISO (con Z), cortamos al día sin reinterpretar huso
     const m = v.match(/^(\d{4}-\d{2}-\d{2})/);
     return m ? m[1] : "";
   };
+
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
 
   const getCarError = (name: string) => (errors ? errors[`car_${name}`] : "");
 
   const validateOne = (name: string, raw: string) => {
-    
     const v = String(raw ?? "");
     const p = PATTERN[name];
     if (!p) return setCarError(name, "");
     if (!v) return setCarError(name, "");
-    
-    // Special validation for date fields
+
     if (name === "green_card_expiration" || name === "license_expiration") {
-      // Skip validation for green_card_expiration if checkbox is checked
       if (name === "green_card_expiration" && greenCardNoExpiration) {
         setCarError(name, "");
         return;
       }
-      
       const date = new Date(v);
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
-      
+      today.setHours(0, 0, 0, 0);
       if (isNaN(date.getTime())) {
         setCarError(name, "Fecha inválida.");
         return;
       }
-      
       if (date < today) {
         setCarError(name, "La fecha no puede ser anterior a hoy.");
         return;
       }
-      
       setCarError(name, "");
       return;
     }
-    
+
     setCarError(name, p.test(v) ? "" : MSG[name as keyof typeof MSG]);
   };
 
@@ -265,73 +269,16 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     const san = SANITIZE[name] ? SANITIZE[name](raw) : raw;
     setCar((prev: any) => ({
       ...prev,
-      [name]: name === "sticker_id" ? Number(san) : san,
+      [name]: san,
     }));
     validateOne(name, san);
   };
-
-  // ---- Obleas ----
-  const loadStickers = async (plateOverride?: string) => {
-    try {
-      setLoadingStickers(true);
-      setStickersError(null);
-      const data = await fetchAvailableStickers({
-        workshopId,
-        currentCarId: car?.id,
-        currentLicensePlate: plateOverride ?? (effectivePlate || undefined),
-      });
-
-      let options = data.map((s: any) => ({
-        value: String(s.id),
-        label: s.sticker_number ?? `Oblea ${s.id}`,
-      }));
-
-      // Always ensure current sticker is in options, even if not available
-      if (car?.sticker_id) {
-        const idStr = String(car.sticker_id);
-        const exists = options.some((o: any) => o.value === idStr);
-        if (!exists) {
-          const label = car?.sticker?.sticker_number
-            ? car.sticker.sticker_number
-            : `Oblea ${idStr}`;
-          options = [{ value: idStr, label }, ...options];
-        }
-      }
-
-      setStickerOptions(options);
-    } catch (e: any) {
-      console.error(e);
-      setStickerOptions([]);
-      setStickersError("No se pudieron cargar las obleas disponibles.");
-    } finally {
-      setLoadingStickers(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!workshopId) return;
-    if (mode !== "idle") loadStickers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workshopId, car?.id, car?.license_plate, mode]);
-
-  // Ensure sticker data is properly loaded when car data changes
-  useEffect(() => {
-    if (car?.sticker_id && mode !== "idle" && stickerOptions.length === 0) {
-      loadStickers();
-    }
-  }, [car?.sticker_id, mode, stickerOptions.length]);
-
 
   useEffect(() => {
     if (car?.license_plate && mode === "idle") setMode("edit");
   }, [car?.license_plate, mode]);
 
-
   const handleChange = (key: string, value: string) => {
-    if (key === "sticker_id") {
-      setCar((prev: any) => ({ ...prev, sticker_id: Number(value) }));
-      return;
-    }
     sanitizeAndMaybeError(key, value);
   };
 
@@ -343,7 +290,6 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   const handleGreenCardNoExpirationChange = (checked: boolean) => {
     setGreenCardNoExpiration(checked);
     if (checked) {
-      // Clear the expiration date when checkbox is checked
       setCar((prev: any) => ({ ...prev, green_card_expiration: "", green_card_no_expiration: true }));
       setCarError("green_card_expiration", "");
     }
@@ -356,7 +302,6 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     setIsIdle(mode === "idle");
   }, [mode, setIsIdle]);
 
-  // Update checkbox state when car data changes
   useEffect(() => {
     if (!car?.green_card_expiration || car?.green_card_expiration === "" || car?.green_card_no_expiration === true) {
       setGreenCardNoExpiration(true);
@@ -365,17 +310,18 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     }
   }, [car?.green_card_expiration, car?.green_card_no_expiration]);
 
-  // Removed automatic error clearing - errors will only clear when user fixes validation issues
-  // --- Buscar por dominio ---
+  // Buscar por dominio
   const fetchVehicleByPlate = async () => {
     const plate = plateQuery.trim().toUpperCase().replace(/[-\s]/g, "");
-    if (!plate) { setSearchError("Ingresá un dominio válida."); return; }
+    if (!plate) {
+      setSearchError("Ingresá un dominio válido.");
+      return;
+    }
     if (!PLATE_REGEX.test(plate)) {
       const msg = "Formato de dominio inválido. Usá ABC123 o AB123CD.";
       setCarError("license_plate", msg); setSearchError(msg); return;
     }
 
-    // cancelar request anterior (si sigue viva)
     if (fetchRef.current.ctrl) fetchRef.current.ctrl.abort();
 
     const id = ++fetchRef.current.id;
@@ -391,14 +337,11 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         { credentials: "include", signal: ctrl.signal }
       );
 
-      // si llegó una respuesta vieja, la ignoramos
       if (id !== fetchRef.current.id) return;
 
       if (res.status === 404) {
-        setCar((prev: any) => ({ ...prev, license_plate: plate, sticker_id: undefined, sticker: undefined }));
+        setCar((prev: any) => ({ ...prev, license_plate: plate }));
         setMode("edit");
-        await loadStickers(plate);
-        // limpiar errores anteriores de edición
         setErrors((prev: any) => {
           if (!prev) return prev;
           const next: any = {};
@@ -408,12 +351,14 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         return;
       }
 
-      if (!res.ok) { setSearchError("Ocurrió un error al buscar el vehículo."); return; }
+      if (!res.ok) {
+        setSearchError("Ocurrió un error al buscar el vehículo.");
+        return;
+      }
 
       const data = await res.json();
       setCar((prev: any) => ({ ...prev, ...data }));
       setMode("edit");
-      await loadStickers(data.license_plate);
     } catch (e: any) {
       if (e.name !== "AbortError") {
         console.error(e);
@@ -424,26 +369,24 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     }
   };
 
-  // ✅ Validación en vivo de la dominio mientras se escribe
+  // Validación en vivo de dominio
   const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = e.target.value.toUpperCase().replace(/[-\s]/g, "");
     setPlateQuery(sanitized);
 
     if (!sanitized) {
-      // vacío: limpiar error
       setCarError("license_plate", "");
       setSearchError(null);
       return;
     }
 
     if (!PLATE_REGEX.test(sanitized)) {
-      setCarError("license_plate", "Formato de dominio inválido. Usá ABC123 o AB123CD.");
+      setCarError("license_plate", "Formato de dominio inválido, usá ABC123 o AB123CD.");
     } else {
       setCarError("license_plate", "");
     }
   };
 
-  // --- Resumen de errores (se muestra arriba del form) ---
   const carErrorsList = useMemo(() => {
     const entries = Object.entries(errors ?? {}).filter(
       ([k, v]) => k.startsWith("car_") && Boolean(v)
@@ -454,7 +397,6 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     });
   }, [errors]);
 
-  // Pantalla de búsqueda previa
   if (mode === "idle") {
     const plateErr = errors?.car_license_plate;
     const disableSearch = isSearching || Boolean(plateErr);
@@ -478,8 +420,9 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 id="plate"
                 type="text"
                 placeholder="Ej: ABC123 o AB123CD"
-                className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 uppercase ${plateErr ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
-                  }`}
+                className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 uppercase ${
+                  plateErr ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
+                }`}
                 value={plateQuery}
                 onChange={handlePlateChange}
                 onKeyDown={(e) => {
@@ -494,19 +437,19 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 type="button"
                 onClick={fetchVehicleByPlate}
                 disabled={disableSearch}
-                className={`px-6 rounded-[6px] text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${disableSearch ? "opacity-70 cursor-not-allowed" : ""
-                  }`}
+                className={`px-6 rounded-[6px] text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${
+                  disableSearch ? "opacity-70 cursor-not-allowed" : ""
+                }`}
               >
                 {isSearching ? "Buscando..." : "Buscar"}
               </button>
             </div>
 
-            {/* Mensaje de error bajo el input (formato inválido o error de búsqueda) */}
             {plateErr && <p className="text-sm text-red-600 mt-3">{plateErr}</p>}
             {!plateErr && searchError && <p className="text-sm text-red-600 mt-3">{searchError}</p>}
 
             <p className="text-xs text-gray-500 mt-2">
-              Si no se encuentra, podrás cargar los datos manualmente.
+              Si no se encuentra, vas a poder cargar los datos manualmente.
             </p>
           </div>
         </div>
@@ -519,9 +462,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-regular text-[#000000] mb-1">Datos del vehículo</h2>
-          <p className="text-sm text-[#00000080]">
-            Completá los datos del vehículo.
-          </p>
+          <p className="text-sm text-[#00000080]">Completá los datos del vehículo.</p>
         </div>
 
         <button
@@ -533,14 +474,12 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
             setIsIdle(true);
             setPlateQuery("");
             setCar({});
-            setStickerOptions([]);
           }}
         >
           Buscar otro dominio
         </button>
       </div>
 
-      {/* Resumen de errores */}
       {carErrorsList.length > 0 && (
         <div className="border border-red-300 bg-red-50 text-red-700 text-sm rounded-md px-4 py-3">
           <p className="font-medium mb-1">Revisá estos campos:</p>
@@ -558,8 +497,64 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
         <div className="grid grid-cols-[1fr_1px_1fr] max-xl:grid-cols-1 gap-10 items-start">
           {/* Columna izquierda */}
           <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8 self-start">
-            {formData1.map((field, index) =>
-              field.options ? (
+            {formData1.map((field, index) => {
+              // Render especial: una fila con 3 campos, Modelo + Fabricación + Patentamiento
+              if (field.name === "model") {
+                return (
+                  <div key={index} className="col-span-2">
+                    <div className="grid grid-cols-4 max-md:grid-cols-1 gap-x-6 gap-y-8">
+                      {/* Modelo: 50% (2 de 4 columnas) */}
+                      <div className="col-span-2 max-md:col-span-1">
+                        <FormField
+                          label={field.label}
+                          placeholder={field.placeholder ?? ""}
+                          type={field.type ?? "text"}
+                          name={field.name}
+                          isOwner={true}
+                          value={car?.[field.name] ?? ""}
+                          onChange={(val) => handleChange(field.name, val)}
+                          onBlur={() => handleBlur(field.name)}
+                          error={getCarError(field.name)}
+                        />
+                      </div>
+
+                      {/* Fabricación: 25% */}
+                      <div className="col-span-1 max-md:col-span-1">
+                        <FormField
+                          label="Fabricación"
+                          placeholder="Ej: 2025"
+                          type="text"
+                          name="manufacture_year"
+                          isOwner={true}
+                          value={car?.manufacture_year ?? ""}
+                          onChange={(val) => handleChange("manufacture_year", val)}
+                          onBlur={() => handleBlur("manufacture_year")}
+                          error={getCarError("manufacture_year")}
+                        />
+                      </div>
+
+                      {/* Patentamiento: 25% */}
+                      <div className="col-span-1 max-md:col-span-1">
+                        <FormField
+                          label="Patentamiento"
+                          placeholder="Ej: 2025"
+                          type="text"
+                          name="registration_year"
+                          isOwner={true}
+                          value={car?.registration_year ?? ""}
+                          onChange={(val) => handleChange("registration_year", val)}
+                          onBlur={() => handleBlur("registration_year")}
+                          error={getCarError("registration_year")}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+
+              // Render normal para el resto
+              return field.options ? (
                 <FormField
                   key={index}
                   label={field.label}
@@ -567,11 +562,12 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                   options={field.options}
                   name={field.name}
                   isOwner={true}
-                  value={field.type === "date" ? dateForInput(car?.[field.name]) : (car?.[field.name] ?? "")}
+                  value={car?.[field.name] ?? ""}
                   onChange={(val) => handleChange(field.name, val)}
                   onBlur={() => handleBlur(field.name)}
                   error={getCarError(field.name)}
                   disabled={false}
+                  className={field.className}
                 />
               ) : (
                 <FormField
@@ -581,19 +577,17 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                   type={field.type ?? "text"}
                   name={field.name}
                   isOwner={true}
-                  value={
-                    field.type === "date" && car?.[field.name]
-                      ? new Date(car[field.name]).toISOString().slice(0, 10)
-                      : car?.[field.name] ?? ""
-                  }
+                  value={car?.[field.name] ?? ""}
                   onChange={(val) => handleChange(field.name, val)}
                   onBlur={() => handleBlur(field.name)}
                   error={getCarError(field.name)}
                   disabled={false}
+                  className={field.className}
                 />
-              )
-            )}
+              );
+            })}
           </div>
+
 
           {/* Separador */}
           <div className="bg-[#dedede] w-px h-full max-xl:hidden" />
@@ -613,6 +607,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 onBlur: () => handleBlur(field.name),
                 error: getCarError(field.name),
                 disabled: field.name === "green_card_expiration" ? greenCardNoExpiration : false,
+                className: field.className,
               } as const;
 
               if (field.name === "green_card_expiration") {
@@ -622,7 +617,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                     {...commonProps}
                     placeholder={field.placeholder ?? ""}
                     type={field.type ?? "text"}
-                    innerCheckboxLabel="Sin Límite"
+                    innerCheckboxLabel="Sin limite"
                     innerCheckboxChecked={greenCardNoExpiration}
                     onInnerCheckboxChange={handleGreenCardNoExpirationChange}
                   />
@@ -631,12 +626,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
 
               if (field.options) {
                 return (
-                  <FormField
-                    key={index}
-                    {...commonProps}
-                    type="select"
-                    options={field.options}
-                  />
+                  <FormField key={index} {...commonProps} type="select" options={field.options} />
                 );
               }
 
@@ -649,36 +639,6 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 />
               );
             })}
-
-            {/* Oblea: siempre editable */}
-            <div className="col-span-1">
-              <FormField
-                label="Vincular oblea"
-                type="select"
-                options={stickerOptions}
-                name="sticker_id"
-                isOwner={true}
-                value={car?.sticker_id ? String(car.sticker_id) : ""}
-                onChange={(val) => handleChange("sticker_id", val)}
-                onBlur={() => { }}
-                error={getCarError("sticker_id")}
-                disabled={false} // Always enabled for oblea field
-              />
-              
-            </div>
-
-            {loadingStickers && <p className="text-xs text-gray-500">Cargando obleas...</p>}
-            {!loadingStickers && !stickersError && stickerOptions.length === 0 && (
-              <div className="text-xs text-gray-500">
-                No hay obleas disponibles para este taller.{" "}
-                <button type="button" className="text-[#0040B8] underline" onClick={() => loadStickers()}>
-                  Reintentar
-                </button>
-              </div>
-            )}
-            {stickersError && <p className="text-xs text-red-600">{stickersError}</p>}
-
-            <div />
           </div>
         </div>
       </fieldset>
