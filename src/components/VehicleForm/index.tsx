@@ -134,6 +134,7 @@ const MSG = {
   brand: "Letras y números (máx. 15).",
   model: "Campo requerido.",
   manufacture_year: "Debe tener 4 dígitos (ej: 2025).",
+  registration_year: "Debe tener 4 dígitos (ej: 2025).",
   engine_brand: "Letras y números (máx. 15).",
   engine_number: "Letras y números (máx. 17).",
   chassis_number: "Letras y números (máx. 17).",

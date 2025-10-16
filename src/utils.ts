@@ -327,13 +327,17 @@ export function getMissingCarFields(car: any): string[] {
     "license_number",
     "license_expiration",
     "manufacture_year",
+    "registration_year",
+    "license_class",
+
   ];
   
   const fieldTranslations = {
     license_plate: "Dominio",
     brand: "Marca",
     model: "Modelo",
-    manufacture_year: "Año",
+    manufacture_year: "Año de Fabricación",
+    registration_year: "Año de Patentamiento",
     weight: "Peso",
     fuel_type: "Tipo de combustible",
     vehicle_type: "Tipo de vehículo",
@@ -349,6 +353,9 @@ export function getMissingCarFields(car: any): string[] {
     total_weight: "Peso total",
     front_weight: "Peso delantero",
     back_weight: "Peso trasero",
+    license_class: "Clase de licencia"
+
+
   };
 
   // Check if green_card_expiration should be required
