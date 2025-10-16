@@ -143,7 +143,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
         const json = await res.json();
         // Normalizamos objetos (pueden venir vacíos en apps nuevas)
-        console.log(json);
         const ownerData = json.owner ?? {};
         const driverData = json.driver ?? {};
         const carData = json.car ?? {};
@@ -234,7 +233,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         console.error("No se pudo marcar la oblea como 'En Uso':", e);
       }
     }
-
     // Guardar vehículo
     const res = await fetch(`/api/applications/${applicationId}/car`, {
       method: "PUT",
@@ -254,6 +252,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         chassis_number: car.chassis_number,
         chassis_brand: car.chassis_brand,
         green_card_number: car.green_card_number,
+        green_card_no_expiration: car.green_card_no_expiration,
         green_card_expiration: car.green_card_expiration,
         license_number: car.license_number,
         license_expiration: car.license_expiration,
@@ -262,6 +261,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         total_weight: car.total_weight,
         front_weight: car.front_weight,
         back_weight: car.back_weight,
+
       }),
     });
     if (!res.ok) throw new Error("Error al guardar el vehículo");

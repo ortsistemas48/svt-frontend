@@ -112,11 +112,11 @@ export default function FormTemplate({
     searchConfig?.onModeChange?.(mode);
   }, [mode, searchConfig]);
 
-  // Si ya viene el dataKey cargado en data, saltamos a "view" (cuando search está activo)
+  // Si ya viene el dataKey cargado en data, saltamos a "edit" (cuando search está activo)
   useEffect(() => {
     if (!searchConfig?.enabled) return;
     const val = data?.[searchConfig.dataKey];
-    if (val && mode === "idle") setMode("view");
+    if (val && mode === "idle") setMode("edit");
   }, [searchConfig, data, mode]);
 
   useEffect(() => {
@@ -189,7 +189,7 @@ export default function FormTemplate({
       const payload = await res.json();
       const mapped = searchConfig.mapFound(payload, sanitized) || {};
       setData((prev: any) => ({ ...prev, ...mapped }));
-      setMode("view");
+      setMode("edit");
     } catch (e: any) {
       if (e.name !== "AbortError") {
         console.error(e);

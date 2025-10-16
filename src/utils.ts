@@ -328,8 +328,8 @@ export function getMissingCarFields(car: any): string[] {
     "license_number",
     "license_expiration",
     "manufacture_year",
-    "insurance"
   ];
+  
   const fieldTranslations = {
     license_plate: "Dominio",
     brand: "Marca",
@@ -350,11 +350,22 @@ export function getMissingCarFields(car: any): string[] {
     total_weight: "Peso total",
     front_weight: "Peso delantero",
     back_weight: "Peso trasero",
-    insurance: "Poliza de seguro",
   };
+
+  // Check if green_card_expiration should be required
+  const shouldRequireGreenCardExpiration = !car.green_card_no_expiration;
+  
   return requiredFields
     .filter((field: string) => {
       const value = car[field];
+      
+      // Special handling for green_card_expiration
+      if (field === "green_card_expiration") {
+        // Only require if checkbox is not checked (green_card_no_expiration is false)
+        if (!shouldRequireGreenCardExpiration) return false;
+        return typeof value !== "string" || value.trim() === "";
+      }
+      
       return typeof value !== "string" || value.trim() === "";
     })
     .map((field) => fieldTranslations[field as keyof typeof fieldTranslations] || field);
