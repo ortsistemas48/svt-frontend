@@ -25,7 +25,7 @@ const formData1: FormFieldData[] = [
   { label: "Marca", placeholder: "Ej: Fiat", name: "brand" },
   { label: "Modelo", placeholder: "Ej: Cronos", name: "model" },
   {
-    label: "Peso del auto (KG)",
+    label: "Peso total (KG)",
     placeholder: "Ej: 2000 KG",
     name: "total_weight",
   },
@@ -142,6 +142,9 @@ const MSG = {
   green_card_number: "Campo requerido.",
   license_number: "Letras y números (máx. 15).",
   insurance: "Solo números (hasta 10).",
+  total_weight: "Solo números (hasta 10).",
+  front_weight: "Solo números (hasta 10).",
+  back_weight: "Solo números (hasta 10).",
 };
 
 // Patrones por campo
@@ -159,6 +162,9 @@ const PATTERN: Record<string, RegExp> = {
   license_number: /^[A-Z0-9]{1,15}$/,
   license_expiration: /^\d{4}-\d{2}-\d{2}$/,
   insurance: /^\d{1,10}$/,
+  total_weight: /^\d{1,10}$/,
+  front_weight: /^\d{1,10}$/,
+  back_weight: /^\d{1,10}$/,
 };
 
 // Sanitizado por campo
@@ -182,8 +188,8 @@ const FIELD_LABEL: Record<string, string> = {
   license_plate: "Dominio",
   brand: "Marca",
   model: "Modelo",
-  manufacture_year: "Año de fabricación",
-  registration_year: "Año de patentamiento",
+  manufacture_year: "Fabricación",
+  registration_year: "Patentamiento",
   weight: "Peso del auto",
   fuel_type: "Tipo de combustible",
   vehicle_type: "Tipo de vehículo",
@@ -211,27 +217,12 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("idle");
 
-  // params por si los necesitás luego
-  const params = useParams<{ id: string; appId?: string }>();
-  // const workshopId = Number(params?.id);
-
   const [greenCardNoExpiration, setGreenCardNoExpiration] = useState(() => {
     return !car?.green_card_expiration || car?.green_card_expiration === "" || car?.green_card_no_expiration === true;
   });
 
   const fetchRef = useRef<{ id: number; ctrl?: AbortController }>({ id: 0 });
-  const effectivePlate = (car?.license_plate || plateQuery || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[-\s]/g, "");
-
-  const dateForInput = (v?: string) => {
-    if (!v) return "";
-    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-    const m = v.match(/^(\d{4}-\d{2}-\d{2})/);
-    return m ? m[1] : "";
-  };
-
+  
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
 
@@ -242,7 +233,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     const p = PATTERN[name];
     if (!p) return setCarError(name, "");
     if (!v) return setCarError(name, "");
-
+    
     if (name === "green_card_expiration" || name === "license_expiration") {
       if (name === "green_card_expiration" && greenCardNoExpiration) {
         setCarError(name, "");
@@ -261,6 +252,28 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
       }
       setCarError(name, "");
       return;
+    }
+
+    // Special validation for weight fields
+    if (name === "total_weight" || name === "front_weight" || name === "back_weight") {
+      const totalWeight = Number(car?.total_weight || 0);
+      const frontWeight = Number(car?.front_weight || 0);
+      const backWeight = Number(car?.back_weight || 0);
+      
+        // Only validate if all three weights have values
+        if (totalWeight > 0 && frontWeight > 0 && backWeight > 0) {
+          const sum = frontWeight + backWeight;
+            if (sum !== totalWeight) {
+              // Set error for all three weight fields using correct field names
+              setCarError("Peso Total", "El peso total debe ser igual a la suma del peso delantero y trasero.");
+              
+              return;
+            }
+          }
+          
+          // Clear weight errors if validation passes
+          setCarError("Peso Total", "");
+          
     }
 
     setCarError(name, p.test(v) ? "" : MSG[name as keyof typeof MSG]);
@@ -519,7 +532,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                         />
                       </div>
 
-                      {/* Fabricación: 25% */}
+                      {/* Año de fabricación: 25% */}
                       <div className="col-span-1 max-md:col-span-1">
                         <FormField
                           label="Fabricación"
@@ -534,7 +547,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                         />
                       </div>
 
-                      {/* Patentamiento: 25% */}
+                      {/* Año de patentamiento: 25% */}
                       <div className="col-span-1 max-md:col-span-1">
                         <FormField
                           label="Patentamiento"
