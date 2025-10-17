@@ -3,7 +3,14 @@
 import FormField from "@/components/PersonFormField";
 import { useApplication } from "@/context/ApplicationContext";
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { alnumSpaceUpper, clamp, lettersSpaceUpper, onlyAlnumUpper, onlyDigits, toUpper } from "../../utils";
+import {
+  alnumSpaceUpper,
+  clamp,
+  lettersSpaceUpper,
+  onlyAlnumUpper,
+  onlyDigits,
+  toUpper,
+} from "../../utils";
 import { useParams } from "next/navigation";
 
 interface FormFieldData {
@@ -53,45 +60,44 @@ const formData1: FormFieldData[] = [
   {
     label: "Tipo de vehículo",
     options: [
-      { value: "L", label: "L - Vehículo automotor con menos de CUATRO (4) ruedas" },
-      { value: "L1", label: "L1 - 2 Ruedas - Menos de 50 CM3 - Menos de 40 KM/H" },
-      { value: "L2", label: "L2 - 3 Ruedas - Menos de 50 CM3 - Menos de 40 KM/H" },
-      { value: "L3", label: "L3 - 2 Ruedas - Más de 50 CM3 - Más de 40 KM/H" },
-      { value: "L4", label: "L4 - 3 Ruedas - Más de 50 CM3 - Más de 40 KM/H" },
-      { value: "L5", label: "L5 - 3 Ruedas - Más de 50 CM3 - Más de 40 KM/H" },
+      { value: "L", label: "L, Vehículo automotor con menos de cuatro ruedas" },
+      { value: "L1", label: "L1, 2 Ruedas, menos de 50 CM3, menos de 40 KM/H" },
+      { value: "L2", label: "L2, 3 Ruedas, menos de 50 CM3, menos de 40 KM/H" },
+      { value: "L3", label: "L3, 2 Ruedas, más de 50 CM3, más de 40 KM/H" },
+      { value: "L4", label: "L4, 3 Ruedas, más de 50 CM3, más de 40 KM/H" },
+      { value: "L5", label: "L5, 3 Ruedas, más de 50 CM3, más de 40 KM/H" },
 
-      { value: "M", label: "M - Vehículo automotor con por lo menos 4 ruedas (o 3 de más de 1.000 KG)" },
-      { value: "M1", label: "M1 - Hasta 8 plazas más conductor y menos de 3.500 KG" },
-      { value: "M2", label: "M2 - Más de 8 plazas excluido conductor y hasta 5.000 KG" },
-      { value: "M3", label: "M3 - Más de 8 plazas excluido conductor y más de 5.000 KG" },
+      { value: "M", label: "M, Vehículo automotor con por lo menos 4 ruedas, o 3 de más de 1.000 KG" },
+      { value: "M1", label: "M1, hasta 8 plazas más conductor y menos de 3.500 KG" },
+      { value: "M2", label: "M2, más de 8 plazas excluido conductor y hasta 5.000 KG" },
+      { value: "M3", label: "M3, más de 8 plazas excluido conductor y más de 5.000 KG" },
 
-      { value: "N", label: "N - Vehículo automotor con por lo menos 4 ruedas (o 3 de más de 1.000 KG)" },
-      { value: "N1", label: "N1 - Hasta 3.500 KG" },
-      { value: "N2", label: "N2 - Desde 3.500 KG hasta 12.000 KG" },
-      { value: "N3", label: "N3 - Más de 12.000 KG" },
+      { value: "N", label: "N, Vehículo automotor con por lo menos 4 ruedas, o 3 de más de 1.000 KG" },
+      { value: "N1", label: "N1, hasta 3.500 KG" },
+      { value: "N2", label: "N2, desde 3.500 KG hasta 12.000 KG" },
+      { value: "N3", label: "N3, más de 12.000 KG" },
 
-      { value: "O", label: "O - Acoplados y semirremolques" },
-      { value: "O1", label: "O1 - Acoplados/semirremolques hasta 750 KG" },
-      { value: "O2", label: "O2 - Acoplados/semirremolques desde 750 KG hasta 3.500 KG" },
-      { value: "O3", label: "O3 - Acoplados/semirremolques de más de 3.500 KG y hasta 10.000 KG" },
-      { value: "O4", label: "O4 - Acoplados/semirremolques de más de 10.000 KG" },
+      { value: "O", label: "O, Acoplados y semirremolques" },
+      { value: "O1", label: "O1, Acoplados o semirremolques hasta 750 KG" },
+      { value: "O2", label: "O2, Acoplados o semirremolques desde 750 KG hasta 3.500 KG" },
+      { value: "O3", label: "O3, Acoplados o semirremolques de más de 3.500 KG y hasta 10.000 KG" },
+      { value: "O4", label: "O4, Acoplados o semirremolques de más de 10.000 KG" },
     ],
     name: "vehicle_type",
   },
   {
     label: "Tipo de uso",
     options: [
-
-      { value: "A", label: "A - Oficial" },
-      { value: "B", label: "B - Diplomático, Consular u Org. Internacional" },
-      { value: "C", label: "C - Particular" },
-      { value: "D", label: "D - De alquiler / alquiler con chofer (Taxi - Remis)" },
-      { value: "E", label: "E - Transporte público de pasajeros" },
-      { value: "E1", label: "E1 - Servicio internacional (regular y turismo); larga distancia y urbanos cat. M1, M2, M3" },
-      { value: "E2", label: "E2 - Interjurisdiccional y jurisdiccional; regulares/turismo cat. M1, M2, M3" },
-      { value: "F", label: "F - Transporte escolar" },
-      { value: "G", label: "G - Cargas (generales/peligrosas), recolección, carretones, servicios industriales y trabajos sobre la vía pública" },
-      { value: "H", label: "H - Emergencia, seguridad, fúnebres, remolque, maquinaria especial o agrícola y trabajos sobre la vía pública" },
+      { value: "A", label: "A, Oficial" },
+      { value: "B", label: "B, Diplomático, Consular u Org. Internacional" },
+      { value: "C", label: "C, Particular" },
+      { value: "D", label: "D, De alquiler o alquiler con chofer, Taxi o Remis" },
+      { value: "E", label: "E, Transporte público de pasajeros" },
+      { value: "E1", label: "E1, Servicio internacional regular y turismo, larga distancia y urbanos cat. M1, M2, M3" },
+      { value: "E2", label: "E2, Interjurisdiccional y jurisdiccional, regulares o turismo cat. M1, M2, M3" },
+      { value: "F", label: "F, Transporte escolar" },
+      { value: "G", label: "G, Cargas generales o peligrosas, recolección, carretones, servicios industriales y trabajos sobre la vía pública" },
+      { value: "H", label: "H, Emergencia, seguridad, fúnebres, remolque, maquinaria especial o agrícola y trabajos sobre la vía pública" },
     ],
     name: "usage_type",
   },
@@ -110,17 +116,17 @@ const formData2: FormFieldData[] = [
     name: "license_class",
     type: "select",
     options: [
-      { value: "A", label: "A - Motocicletas" },
-      { value: "A1", label: "A1 - Motocicletas pequeñas" },
-      { value: "A2", label: "A2 - Motocicletas medianas" },
-      { value: "B1", label: "B1 - Automóviles particulares" },
-      { value: "B2", label: "B2 - Automóviles con remolque" },
-      { value: "C", label: "C - Camiones sin acoplado" },
-      { value: "D1", label: "D1 - Transporte de pasajeros hasta 8" },
-      { value: "D2", label: "D2 - Transporte de pasajeros más de 8" },
-      { value: "E1", label: "E1 - Camiones con acoplado" },
-      { value: "E2", label: "E2 - Maquinaria especial no agrícola" },
-      { value: "F", label: "F - Vehículos para personas con discapacidad" },
+      { value: "A", label: "A, Motocicletas" },
+      { value: "A1", label: "A1, Motocicletas pequeñas" },
+      { value: "A2", label: "A2, Motocicletas medianas" },
+      { value: "B1", label: "B1, Automóviles particulares" },
+      { value: "B2", label: "B2, Automóviles con remolque" },
+      { value: "C", label: "C, Camiones sin acoplado" },
+      { value: "D1", label: "D1, Transporte de pasajeros hasta 8" },
+      { value: "D2", label: "D2, Transporte de pasajeros más de 8" },
+      { value: "E1", label: "E1, Camiones con acoplado" },
+      { value: "E2", label: "E2, Maquinaria especial no agrícola" },
+      { value: "F", label: "F, Vehículos para personas con discapacidad" },
     ],
   },
   { label: "Exp. de la licencia", type: "date", placeholder: "dd/mm/aa", name: "license_expiration" },
@@ -131,20 +137,20 @@ type Mode = "idle" | "view" | "edit";
 
 // Mensajes por campo
 const MSG = {
-  brand: "Letras y números (máx. 15).",
+  brand: "Letras y números, máx. 15.",
   model: "Campo requerido.",
-  manufacture_year: "Debe tener 4 dígitos (ej: 2025).",
-  registration_year: "Debe tener 4 dígitos (ej: 2025).",
-  engine_brand: "Letras y números (máx. 15).",
-  engine_number: "Letras y números (máx. 17).",
-  chassis_number: "Letras y números (máx. 17).",
-  chassis_brand: "Solo letras (máx. 15).",
+  manufacture_year: "Debe tener 4 dígitos, ej: 2025.",
+  registration_year: "Debe tener 4 dígitos, ej: 2025.",
+  engine_brand: "Letras y números, máx. 15.",
+  engine_number: "Letras y números, máx. 17.",
+  chassis_number: "Letras y números, máx. 17.",
+  chassis_brand: "Solo letras, máx. 15.",
   green_card_number: "Campo requerido.",
-  license_number: "Letras y números (máx. 15).",
-  insurance: "Solo números (hasta 10).",
-  total_weight: "Solo números (hasta 10).",
-  front_weight: "Solo números (hasta 10).",
-  back_weight: "Solo números (hasta 10).",
+  license_number: "Letras y números, máx. 15.",
+  insurance: "Solo números, hasta 10.",
+  total_weight: "Solo números, hasta 10.",
+  front_weight: "Solo números, hasta 10.",
+  back_weight: "Solo números, hasta 10.",
 };
 
 // Patrones por campo
@@ -218,11 +224,15 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   const [mode, setMode] = useState<Mode>("idle");
 
   const [greenCardNoExpiration, setGreenCardNoExpiration] = useState(() => {
-    return !car?.green_card_expiration || car?.green_card_expiration === "" || car?.green_card_no_expiration === true;
+    return (
+      !car?.green_card_expiration ||
+      car?.green_card_expiration === "" ||
+      car?.green_card_no_expiration === true
+    );
   });
 
   const fetchRef = useRef<{ id: number; ctrl?: AbortController }>({ id: 0 });
-  
+
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
 
@@ -233,7 +243,8 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     const p = PATTERN[name];
     if (!p) return setCarError(name, "");
     if (!v) return setCarError(name, "");
-    
+
+    // Validación de fechas con opción sin vencimiento para cédula
     if (name === "green_card_expiration" || name === "license_expiration") {
       if (name === "green_card_expiration" && greenCardNoExpiration) {
         setCarError(name, "");
@@ -254,26 +265,29 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
       return;
     }
 
-    // Special validation for weight fields
+    // Validación especial de pesos
     if (name === "total_weight" || name === "front_weight" || name === "back_weight") {
       const totalWeight = Number(car?.total_weight || 0);
       const frontWeight = Number(car?.front_weight || 0);
       const backWeight = Number(car?.back_weight || 0);
-      
-        // Only validate if all three weights have values
-        if (totalWeight > 0 && frontWeight > 0 && backWeight > 0) {
-          const sum = frontWeight + backWeight;
-            if (sum !== totalWeight) {
-              // Set error for all three weight fields using correct field names
-              setCarError("Peso Total", "El peso total debe ser igual a la suma del peso delantero y trasero.");
-              
-              return;
-            }
-          }
-          
-          // Clear weight errors if validation passes
-          setCarError("Peso Total", "");
-          
+
+      if (totalWeight > 0 && frontWeight > 0 && backWeight > 0) {
+        const sum = frontWeight + backWeight;
+        if (sum !== totalWeight) {
+          setCarError(
+            "total_weight",
+            "El peso total debe ser igual a la suma del peso delantero y trasero."
+          );
+          return;
+        } else {
+          setCarError("total_weight", "");
+        }
+      } else {
+        setCarError("total_weight", "");
+      }
+      // Luego de la lógica de pesos, validamos el patrón del campo actual
+      setCarError(name, p.test(v) ? "" : MSG[name as keyof typeof MSG]);
+      return;
     }
 
     setCarError(name, p.test(v) ? "" : MSG[name as keyof typeof MSG]);
@@ -292,19 +306,80 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     if (car?.license_plate && mode === "idle") setMode("edit");
   }, [car?.license_plate, mode]);
 
+  // Flags para autofill de marcas de motor y chasis
+  // Empiezan activos si los campos están vacíos
+  const engineAuto = useRef<boolean>(
+    !car?.engine_brand || String(car?.engine_brand).trim() === ""
+  );
+  const chassisAuto = useRef<boolean>(
+    !car?.chassis_brand || String(car?.chassis_brand).trim() === ""
+  );
+
+  // Importante, no sincronizar los flags con car.engine_brand o car.chassis_brand
+  // para no apagar el autofill cuando copiamos desde brand
+
+  // Copiar automáticamente la marca a motor y chasis mientras los flags estén activos
+  useEffect(() => {
+    if (!car?.brand) return;
+
+    const brandSan = SANITIZE.brand ? SANITIZE.brand(String(car.brand)) : String(car.brand);
+    if (!engineAuto.current && !chassisAuto.current) return;
+
+    setCar((prev: any) => {
+      if (!prev) return prev;
+      const next: any = { ...prev };
+      let changed = false;
+
+      if (engineAuto.current) {
+        next.engine_brand = SANITIZE.engine_brand
+          ? SANITIZE.engine_brand(brandSan)
+          : brandSan;
+        changed = true;
+      }
+      if (chassisAuto.current) {
+        next.chassis_brand = SANITIZE.chassis_brand
+          ? SANITIZE.chassis_brand(brandSan)
+          : brandSan;
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [car?.brand, setCar]);
+
   const handleChange = (key: string, value: string) => {
+    if (key === "brand" || key === "engine_brand" || key === "chassis_brand") {
+      const soft = clamp(toUpper(value), 30);
+
+      // Si el usuario escribe en engine o chassis, desactivamos el autofill
+      // Si borra y queda vacío, se reactiva
+      if (key === "engine_brand") engineAuto.current = soft.trim() === "";
+      if (key === "chassis_brand") chassisAuto.current = soft.trim() === "";
+
+      setCar((prev: any) => ({ ...prev, [key]: soft }));
+      return;
+    }
     sanitizeAndMaybeError(key, value);
   };
 
   const handleBlur = (key: string) => {
-    const val = car?.[key] ?? "";
-    validateOne(key, String(val));
+    const current = String(car?.[key] ?? "");
+    const strict = SANITIZE[key] ? SANITIZE[key](current) : current;
+
+    if (strict !== current) {
+      setCar((prev: any) => ({ ...prev, [key]: strict }));
+    }
+
+    validateOne(key, strict);
   };
 
   const handleGreenCardNoExpirationChange = (checked: boolean) => {
     setGreenCardNoExpiration(checked);
     if (checked) {
-      setCar((prev: any) => ({ ...prev, green_card_expiration: "", green_card_no_expiration: true }));
+      setCar((prev: any) => ({
+        ...prev,
+        green_card_expiration: "",
+        green_card_no_expiration: true,
+      }));
       setCarError("green_card_expiration", "");
     }
     if (!checked) {
@@ -317,7 +392,11 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
   }, [mode, setIsIdle]);
 
   useEffect(() => {
-    if (!car?.green_card_expiration || car?.green_card_expiration === "" || car?.green_card_no_expiration === true) {
+    if (
+      !car?.green_card_expiration ||
+      car?.green_card_expiration === "" ||
+      car?.green_card_no_expiration === true
+    ) {
       setGreenCardNoExpiration(true);
     } else {
       setGreenCardNoExpiration(false);
@@ -332,8 +411,10 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
       return;
     }
     if (!PLATE_REGEX.test(plate)) {
-      const msg = "Formato de dominio inválido. Usá ABC123 o AB123CD.";
-      setCarError("license_plate", msg); setSearchError(msg); return;
+      const msg = "Formato de dominio inválido, usá ABC123 o AB123CD.";
+      setCarError("license_plate", msg);
+      setSearchError(msg);
+      return;
     }
 
     if (fetchRef.current.ctrl) fetchRef.current.ctrl.abort();
@@ -395,7 +476,10 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
     }
 
     if (!PLATE_REGEX.test(sanitized)) {
-      setCarError("license_plate", "Formato de dominio inválido, usá ABC123 o AB123CD.");
+      setCarError(
+        "license_plate",
+        "Formato de dominio inválido, usá ABC123 o AB123CD."
+      );
     } else {
       setCarError("license_plate", "");
     }
@@ -435,7 +519,9 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 type="text"
                 placeholder="Ej: ABC123 o AB123CD"
                 className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 uppercase ${
-                  plateErr ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
+                  plateErr
+                    ? "border-red-400 focus:ring-red-500"
+                    : "border-[#DEDEDE] focus:ring-[#0040B8]"
                 }`}
                 value={plateQuery}
                 onChange={handlePlateChange}
@@ -460,7 +546,9 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
             </div>
 
             {plateErr && <p className="text-sm text-red-600 mt-3">{plateErr}</p>}
-            {!plateErr && searchError && <p className="text-sm text-red-600 mt-3">{searchError}</p>}
+            {!plateErr && searchError && (
+              <p className="text-sm text-red-600 mt-3">{searchError}</p>
+            )}
 
             <p className="text-xs text-gray-500 mt-2">
               Si no se encuentra, vas a poder cargar los datos manualmente.
@@ -512,12 +600,12 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
           {/* Columna izquierda */}
           <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8 self-start">
             {formData1.map((field, index) => {
-              // Render especial: una fila con 3 campos, Modelo + Fabricación + Patentamiento
+              // Fila especial, Modelo + Fabricación + Patentamiento
               if (field.name === "model") {
                 return (
                   <div key={index} className="col-span-2">
                     <div className="grid grid-cols-4 max-md:grid-cols-1 gap-x-6 gap-y-8">
-                      {/* Modelo: 50% (2 de 4 columnas) */}
+                      {/* Modelo, 50 por ciento */}
                       <div className="col-span-2 max-md:col-span-1">
                         <FormField
                           label={field.label}
@@ -532,7 +620,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                         />
                       </div>
 
-                      {/* Año de fabricación: 25% */}
+                      {/* Año de fabricación */}
                       <div className="col-span-1 max-md:col-span-1">
                         <FormField
                           label="Fabricación"
@@ -547,7 +635,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                         />
                       </div>
 
-                      {/* Año de patentamiento: 25% */}
+                      {/* Año de patentamiento */}
                       <div className="col-span-1 max-md:col-span-1">
                         <FormField
                           label="Patentamiento"
@@ -566,8 +654,7 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
                 );
               }
 
-
-              // Render normal para el resto
+              // Render normal
               return field.options ? (
                 <FormField
                   key={index}
@@ -601,7 +688,6 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
               );
             })}
           </div>
-
 
           {/* Separador */}
           <div className="bg-[#dedede] w-px h-full max-xl:hidden" />

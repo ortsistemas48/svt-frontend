@@ -213,7 +213,7 @@ export default function FormTemplate({
     const disableSearch = isSearching;
 
     return (
-      <section className="space-y-6 mb-10 px-8 py-6 mt-12 w-full max-w-2xl bg-white rounded-lg">
+      <section className="space-y-6 mb-10 py-6 mt-6 w-full max-w-2xl bg-white rounded-lg">
         {(searchConfig.titleIdle || searchConfig.descIdle) && (
           <header className="mb-2">
             {searchConfig.titleIdle && (
