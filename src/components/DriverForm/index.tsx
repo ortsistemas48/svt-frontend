@@ -186,7 +186,7 @@ export default function DriverForm({
       description="Ingrese los datos del conductor del auto"
       data={data}
       setData={setData}
-      showDropzone={true}
+      showDropzone={false}
       onPendingDocsChange={onPendingDocsChange}
       existingDocuments={existingDocuments}
       onDeleteExisting={onDeleteExisting}

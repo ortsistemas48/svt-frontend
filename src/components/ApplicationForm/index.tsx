@@ -57,6 +57,13 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     }
   }, [applicationId]);
 
+  const [pendingCarDocs, setPendingCarDocs] = useState<File[]>([]);
+
+  const onDeleteCarDoc = useCallback(async (docId: number) => {
+    await deleteDocument(docId);
+    setExistingDocsByRole(prev => ({ ...prev, car: prev.car.filter(d => d.id !== docId) }));
+  }, [deleteDocument]);
+
   const consumeSlot = useCallback(async () => {
     try {
       const res = await fetch(`/api/applications/${applicationId}/consume-slot`, {
@@ -214,9 +221,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     }
   }, [applicationId, id, router]);
 
-  // 🔸 Extraído: guardar vehículo (paso 2)
   const saveVehicle = useCallback(async () => {
-    // Validación de campos requeridos
     const missing = getMissingCarFields(car);
     if (missing.length > 0) {
       setMissingFields(prev => [...prev, ...missing.map(f => `Vehículo: ${f}`)]);
@@ -224,16 +229,11 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
       return false;
     }
 
-    // Marcar oblea "en uso" si existe
     const stickerId = car?.sticker?.id ?? car?.sticker_id;
     if (stickerId) {
-      try {
-        await markStickerAsUsed(stickerId);
-      } catch (e) {
-        console.error("No se pudo marcar la oblea como 'En Uso':", e);
-      }
+      try { await markStickerAsUsed(stickerId); } catch (e) { console.error(e); }
     }
-    // Guardar vehículo
+
     const res = await fetch(`/api/applications/${applicationId}/car`, {
       method: "PUT",
       credentials: "include",
@@ -263,12 +263,31 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         total_weight: car.total_weight,
         front_weight: car.front_weight,
         back_weight: car.back_weight,
-
       }),
     });
+
     if (!res.ok) throw new Error("Error al guardar el vehículo");
+
+    if (pendingCarDocs.length > 0) {
+      try {
+        const up = await uploadPendingDocuments(pendingCarDocs, "car");
+        setExistingDocsByRole(prev => ({
+          ...prev,
+          car: [...up, ...prev.car],
+        }));
+        setPendingCarDocs([]);
+      } catch (e) {
+        console.error("Error subiendo docs del vehículo:", e);
+      }
+    }
+
     return true;
-  }, [applicationId, car]);
+  }, [
+    applicationId,
+    car,
+    pendingCarDocs,          
+    uploadPendingDocuments,   
+  ]);
 
   const handleNext = useCallback(async () => {
     setLoading(true);
@@ -435,13 +454,34 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           />
         );
       case 2:
-        return <VehicleForm car={car} setCar={setCar} />;
+        return (
+          <VehicleForm
+            car={car}
+            setCar={setCar}
+            onPendingCarDocsChange={setPendingCarDocs}
+            existingCarDocs={existingDocsByRole.car}
+            onDeleteCarDoc={onDeleteCarDoc}
+          />
+        );
       case 3:
         return <ConfirmationForm applicationId={applicationId} />;
       default:
         return null;
     }
-  }, [step, owner, driver, applicationId, isSamePerson, existingDocsByRole.owner, existingDocsByRole.driver, onDeleteOwnerDoc, onDeleteDriverDoc, car]);
+  }, [
+    step,
+    owner,
+    driver,
+    applicationId,
+    isSamePerson,
+    existingDocsByRole.owner,
+    existingDocsByRole.driver,
+    existingDocsByRole.car,     
+    onDeleteOwnerDoc,
+    onDeleteDriverDoc,
+    onDeleteCarDoc,             
+    car,
+  ]);
 
   if (isInitializing) {
     return (

@@ -12,6 +12,7 @@ import {
   toUpper,
 } from "../../utils";
 import { useParams } from "next/navigation";
+import Dropzone, { type ExistingDoc } from "@/components/Dropzone";
 
 interface FormFieldData {
   label: string;
@@ -25,6 +26,10 @@ interface FormFieldData {
 interface VehicleFormProps {
   car: any;
   setCar: (car: any) => void;
+
+  onPendingCarDocsChange?: (files: File[]) => void;
+  existingCarDocs?: ExistingDoc[];
+  onDeleteCarDoc?: (docId: number) => Promise<void> | void;
 }
 
 const formData1: FormFieldData[] = [
@@ -215,7 +220,13 @@ const FIELD_LABEL: Record<string, string> = {
 // Formatos de dominio válidos
 const PLATE_REGEX = /^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$/;
 
-export default function VehicleForm({ car, setCar }: VehicleFormProps) {
+export default function VehicleForm({
+  car,
+  setCar,
+  onPendingCarDocsChange,
+  existingCarDocs = [],
+  onDeleteCarDoc,
+}: VehicleFormProps) {
   const { setIsIdle, errors, setErrors } = useApplication() as any;
 
   const [plateQuery, setPlateQuery] = useState("");
@@ -742,6 +753,17 @@ export default function VehicleForm({ car, setCar }: VehicleFormProps) {
           </div>
         </div>
       </fieldset>
+      <div className="mt-10">
+        <Dropzone
+          title="Documentación del vehículo"
+          maxSizeMB={20}
+          onPendingChange={onPendingCarDocsChange}
+          existing={existingCarDocs}
+          onDeleteExisting={onDeleteCarDoc}
+          resetToken={car?.license_plate}
+        />
+      </div>
+
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { CarType } from "@/app/types";
+import renderDocument from "../DocumentCard";
 
 const tableData = [
   { label: "Dominio", key: "license_plate" },
@@ -29,12 +30,22 @@ const tableData = [
   // { label: "Vencimiento oblea", key: "sticker.expiration_date" },
 ];
 
+type Doc = {
+  id: number;
+  file_name: string;
+  file_url: string;
+  size_bytes?: number;
+  mime_type?: string;
+  role?: "owner" | "driver" | "car" | "generic";
+  created_at?: string;
+};
+
 // Helper para acceder a rutas "a.b.c"
 function getByPath(obj: any, path: string) {
   return path.split(".").reduce((acc, part) => (acc ? acc[part] : undefined), obj);
 }
 
-const renderVehicle = (car: CarType) => {
+const renderVehicle = (car: CarType, carDocs: Doc[] = []) => {
   const formatDate = (value: string) => {
     const d = new Date(value);
     // Si no es fecha válida, devolvés el valor crudo
@@ -82,6 +93,9 @@ const renderVehicle = (car: CarType) => {
       </div>
     );
   };
+  const maxVisible = 3;
+  const visible = carDocs.slice(0, maxVisible);
+  const remaining = carDocs.length - visible.length;
 
   return (
     <div className="space-y-8">
@@ -137,8 +151,52 @@ const renderVehicle = (car: CarType) => {
           {categories.documents.map(renderField)}
         </div>
       </div>
+
+      {/* Archivos del vehículo */}
+      <div className="border-t border-gray-200 pt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-900">Archivos adjuntos del vehículo</h3>
+          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">
+            {carDocs.length}
+          </span>
+        </div>
+
+        {carDocs.length === 0 ? (
+          <div className="text-center py-8">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2 text-sm text-gray-500">Sin documentos</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {visible.map((d) => (
+              <div key={d.id}>{renderDocument(d.file_name, d.file_url)}</div>
+            ))}
+
+            {remaining > 0 && (
+              <details className="group">
+                <summary className="cursor-pointer flex items-center justify-center gap-2 py-3 px-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors duration-200 list-none">
+                  <svg className="w-4 h-4 group-open:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                  Ver {remaining} documento{remaining > 1 ? "s" : ""} más
+                </summary>
+                <div className="mt-3 space-y-3 pl-4 border-l-2 border-gray-200">
+                  {carDocs.slice(maxVisible).map((d) => (
+                    <div key={d.id}>{renderDocument(d.file_name, d.file_url)}</div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+        )}
+      </div>
     </div>
-  );
+    );
 };
 
 export default renderVehicle;

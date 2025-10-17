@@ -123,7 +123,7 @@ export default function Dropzone({
     <div className="mx-auto">
 
       {title ? (
-        <h3 className="text-lg font-medium mb-3">{title}</h3>
+        <h3 className="text-lg mb-3">{title}</h3>
       ) : null}
 
       <div

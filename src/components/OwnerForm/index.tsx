@@ -193,7 +193,7 @@ export default function OwnerForm({
       description="Ingrese los datos del titular del auto"
       data={data}
       setData={setData}
-      showDropzone={true}
+      showDropzone={false}
       onPendingDocsChange={onPendingDocsChange}
       existingDocuments={existingDocuments}
       onDeleteExisting={onDeleteExisting}
