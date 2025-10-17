@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, File as FileIcon, FileImage, FileText, FileArchive, FileAudio, FileVideo, FileCode, FileType } from "lucide-react";
 
 export type ExistingDoc = {
   id: number;
@@ -69,6 +69,46 @@ export default function Dropzone({
     () => ["image/png","image/jpeg","application/pdf","image/webp","text/plain"],
     []
   );
+
+  const getExt = (name?: string, mime?: string) => {
+    const n = (name || "").toLowerCase();
+    const m = (mime || "").toLowerCase();
+    const byName = n.includes(".") ? n.split(".").pop()! : "";
+    if (byName) return byName;
+    if (m.includes("pdf")) return "pdf";
+    if (m.includes("zip")) return "zip";
+    if (m.includes("image")) return "img";
+    if (m.includes("audio")) return "audio";
+    if (m.includes("video")) return "video";
+    if (m.includes("text")) return "txt";
+    if (m.includes("json")) return "json";
+    return "";
+  };
+
+  // 🎨 ícono por MIME (lucide)
+  const iconForMime = (mime?: string) => {
+    const m = (mime || "").toLowerCase();
+    if (m.startsWith("image/")) return <FileImage className="w-7 h-7" />;
+    if (m === "application/pdf") return <FileText className="w-7 h-7" />;
+    if (m.includes("zip") || m.includes("compressed")) return <FileArchive className="w-7 h-7" />;
+    if (m.startsWith("audio/")) return <FileAudio className="w-7 h-7" />;
+    if (m.startsWith("video/")) return <FileVideo className="w-7 h-7" />;
+    if (m.startsWith("text/")) return <FileText className="w-7 h-7" />;
+    if (m.includes("json") || m.includes("javascript") || m.includes("xml")) return <FileCode className="w-7 h-7" />;
+    return <FileIcon className="w-7 h-7" />;
+  };
+
+  // (opcional) color de fondo por tipo
+  const bgForMime = (mime?: string) => {
+    const m = (mime || "").toLowerCase();
+    if (m.startsWith("image/")) return "bg-[#F5F7FF]";
+    if (m === "application/pdf") return "bg-rose-50";
+    if (m.includes("zip") || m.includes("compressed")) return "bg-amber-50";
+    if (m.startsWith("audio/")) return "bg-emerald-50";
+    if (m.startsWith("video/")) return "bg-purple-50";
+    if (m.startsWith("text/")) return "bg-sky-50";
+    return "bg-slate-50";
+  };
 
   // Notificar al padre cuando cambia la cola (post-render)
   const didMount = useRef(false);
@@ -193,12 +233,22 @@ export default function Dropzone({
                   </button>
 
                   <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-lg bg-[#F5F7FF] flex items-center justify-center overflow-hidden">
-                      {url ? (
-                        <img src={url} alt={f.name} className="w/full h/full object-cover" />
-                      ) : (
-                        <span className="text-xl">{iconByMime(f.type)}</span>
-                      )}
+                    <div className={`relative w-14 h-14 rounded-lg ${bgForMime(f.type)} flex items-center justify-center overflow-hidden`}>
+                      {/* {url ? (
+                        <>
+                          <img src={url} alt={f.name} className="w-full h-full object-cover" />
+                          <span className="absolute top-1 left-1 text-[10px] px-1.5 py-[2px] rounded bg-black/70 text-white uppercase">
+                            {getExt(f.name, f.type) || "img"}
+                          </span>
+                        </>
+                      ) : ( */}
+                        <>
+                          {iconForMime(f.type)}
+                          <span className="absolute top-1 left-1 text-[10px] px-1.5 py-[2px] rounded bg-black/70 text-white uppercase">
+                            {getExt(f.name, f.type) || "file"}
+                          </span>
+                        </>
+                      {/* )} */}
                     </div>
 
                     <div className="min-w-0 flex-1">
