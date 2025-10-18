@@ -14,11 +14,10 @@ type FormFieldProps = {
   value: string;
   onChange: (value: string) => void;
 
-  // ⬇️ NUEVOS
   onBlur?: () => void;
   error?: string;
   disabled?: boolean;
-  // 🆕 Checkbox interno opcional
+
   innerCheckboxLabel?: string;
   innerCheckboxChecked?: boolean;
   onInnerCheckboxChange?: (checked: boolean) => void;
@@ -41,31 +40,25 @@ export default function PersonFormField({
   innerCheckboxChecked,
   onInnerCheckboxChange,
 }: FormFieldProps) {
-  const id = isOwner ? `owner-${label}` : `driver-${label}`;
+  const safe = (s: string) => s.toLowerCase().replace(/\s+/g, "-");
+  const id = isOwner ? `owner-${safe(name || label)}` : `driver-${safe(name || label)}`;
+
   const base =
     "w-full px-3 py-3 border rounded-[4px] focus:outline-none focus:ring-2 focus:border-transparent text-sm";
   const cls = error
     ? `${base} border-red-500 focus:ring-red-500`
     : `${base} border-gray-300 focus:ring-blue-500`;
 
+  const showInnerCheckbox = typeof innerCheckboxLabel === "string" && !!onInnerCheckboxChange;
+
+  // Altura reservada para el renglón del checkbox, asegura alineación entre campos
+  const checkboxRowClass = "flex items-center gap-2 text-sm h-1"; // 1.5rem
+
   return (
     <div className={`flex flex-col justify-center w-full ${className}`}>
-      <div className="flex items-center justify-between mb-1">
-        <label htmlFor={id} className="block text-base font-regular text-[#000000]">
-          {label}
-        </label>
-        {typeof innerCheckboxLabel === "string" && onInnerCheckboxChange && (
-          <label className="flex items-center gap-2 text-sm ml-3">
-            <input
-              type="checkbox"
-              checked={Boolean(innerCheckboxChecked)}
-              onChange={(e) => onInnerCheckboxChange(e.target.checked)}
-              className="rounded border-gray-300 text-[#0040B8] focus:ring-[#0040B8]"
-            />
-            <span className="text-gray-700">{innerCheckboxLabel}</span>
-          </label>
-        )}
-      </div>
+      <label htmlFor={id} className="mb-1 block text-base font-regular text-[#000000] leading-tight">
+        {label}
+      </label>
 
       {options ? (
         <select
@@ -97,7 +90,23 @@ export default function PersonFormField({
           className={`${cls} disabled:opacity-60`}
         />
       )}
-      {/* Checkbox moved to the label row to keep field heights aligned */}
+
+      {showInnerCheckbox ? (
+        <label className={checkboxRowClass}>
+          <input
+            type="checkbox"
+            checked={Boolean(innerCheckboxChecked)}
+            onChange={(e) => onInnerCheckboxChange?.(e.target.checked)}
+            className="mt-5 rounded border-gray-300 text-[#0040B8] focus:ring-[#0040B8]"
+          />
+          <span className="mt-5 text-gray-700">{innerCheckboxLabel}</span>
+        </label>
+      ) : (
+        // Spacer para mantener la misma altura aunque no haya checkbox
+        <div className={checkboxRowClass} aria-hidden />
+      )}
+
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>
   );
 }
