@@ -1,0 +1,314 @@
+// components/StickerStep.tsx
+"use client";
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useApplication } from "@/context/ApplicationContext";
+import { useParams } from 'next/navigation'
+
+const PLATE_REGEX = /^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$/;
+
+type Props = {
+  workshopId: number;
+  car: any;
+  setCar: (car: any) => void;
+};
+
+export default function StickerStep({ workshopId, car, setCar }: Props) {
+  const { errors, setErrors, setIsIdle } = useApplication() as any;
+  const params = useParams()
+  const appId = params.applicationId
+
+  const [plateQuery, setPlateQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  const [mode, setMode] = useState<"idle" | "result">("idle");
+  const [obleaValue, setObleaValue] = useState("");
+
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
+  const [availableHint, setAvailableHint] = useState<string | null>(null);
+
+  const fetchRef = useRef<{ id: number; ctrl?: AbortController }>({ id: 0 });
+
+  const setCarError = (name: string, msg: string) =>
+    setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
+
+  useEffect(() => {
+    // control del botón “Continuar” del padre
+    setIsIdle(mode !== "result");
+  }, [mode, setIsIdle]);
+
+  useEffect(() => {
+    // si venía algo de la app, precargamos
+    if (car?.license_plate && !plateQuery) setPlateQuery(car.license_plate);
+    const v = car?.sticker?.sticker_number ?? car?.oblea ?? "";
+    if (v && !obleaValue) setObleaValue(String(v));
+  }, [car, plateQuery, obleaValue]);
+
+  const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = e.target.value.toUpperCase().replace(/[-\s]/g, "");
+    setPlateQuery(sanitized);
+    if (!sanitized) {
+      setCarError("license_plate", "");
+      setSearchError(null);
+      return;
+    }
+    if (!PLATE_REGEX.test(sanitized)) {
+      setCarError("license_plate", "Formato inválido, usá ABC123, o AB123CD.");
+    } else {
+      setCarError("license_plate", "");
+    }
+  };
+
+  const fetchAvailableHint = async () => {
+    try {
+      setAvailableHint(null);
+      const r = await fetch(`/api/stickers/available?workshop_id=${workshopId}`, { credentials: "include" });
+      if (!r.ok) return;
+      const list = await r.json();
+      if (Array.isArray(list) && list.length > 0) {
+        setAvailableHint(list[0]?.sticker_number || null); // última disponible por DESC
+      }
+    } catch {}
+  };
+
+  const fetchVehicleByPlate = async () => {
+    const plate = plateQuery.trim().toUpperCase().replace(/[-\s]/g, "");
+    if (!plate) {
+      setSearchError("Ingresá un dominio válido.");
+      return;
+    }
+    if (!PLATE_REGEX.test(plate)) {
+      const msg = "Formato inválido, usá ABC123, o AB123CD.";
+      setCarError("license_plate", msg);
+      setSearchError(msg);
+      return;
+    }
+
+    if (fetchRef.current.ctrl) fetchRef.current.ctrl.abort();
+    const id = ++fetchRef.current.id;
+    const ctrl = new AbortController();
+    fetchRef.current.ctrl = ctrl;
+
+    try {
+      setIsSearching(true);
+      setSearchError(null);
+
+      const res = await fetch(`/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`, {
+        credentials: "include",
+        signal: ctrl.signal,
+      });
+
+      if (id !== fetchRef.current.id) return;
+
+      if (res.status === 404) {
+        setCar((prev: any) => ({ ...(prev || {}), license_plate: plate }));
+        setMode("result");
+        // limpiamos errores de car_*
+        setErrors((prev: any) => {
+          if (!prev) return prev;
+          const next: any = {};
+          for (const k of Object.keys(prev)) if (!k.startsWith("car_")) next[k] = prev[k];
+          return next;
+        });
+        void fetchAvailableHint();
+        return;
+      }
+
+      if (!res.ok) {
+        setSearchError("Ocurrió un error al buscar el vehículo.");
+        return;
+      }
+
+      const data = await res.json();
+      setCar((prev: any) => ({ ...(prev || {}), ...data }));
+      setObleaValue(String(data?.sticker?.sticker_number ?? data?.oblea ?? ""));
+      setMode("result");
+      void fetchAvailableHint();
+    } catch (e: any) {
+      if (e.name !== "AbortError") {
+        console.error(e);
+        setSearchError("Ocurrió un error de red.");
+      }
+    } finally {
+      if (id === fetchRef.current.id) setIsSearching(false);
+    }
+  };
+
+  const handleAutoAssign = async () => {
+    setAssignError(null);
+    setIsAssigning(true);
+    try {
+      const plate = (car?.license_plate || plateQuery || "").trim().toUpperCase();
+      if (!plate || !PLATE_REGEX.test(plate)) {
+        setAssignError("Dominio inválido, corregilo e intentá otra vez.");
+        return;
+      }
+      const avRes = await fetch(`/api/stickers/available?workshop_id=${workshopId}`, { credentials: "include" });
+      if (!avRes.ok) {
+        setAssignError("No se pudieron consultar las obleas disponibles.");
+        return;
+      }
+      const list = await avRes.json();
+      if (!Array.isArray(list) || list.length === 0) {
+        setAssignError("No hay obleas disponibles en el taller.");
+        return;
+      }
+      const pick = list[0];
+      const asRes = await fetch(`/api/stickers/assign-to-car`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          license_plate: plate,
+          sticker_id: pick.id,
+          workshop_id: workshopId,
+          mark_used: false,
+        }),
+      });
+      if (!asRes.ok) {
+        const j = await asRes.json().catch(() => ({}));
+        setAssignError(j?.error || "No se pudo asignar la oblea.");
+        return;
+      }
+      setCar((prev: any) => ({
+        ...(prev || {}),
+        license_plate: plate,
+        sticker_id: pick.id,
+        sticker: { id: pick.id, sticker_number: pick.sticker_number },
+      }));
+      setObleaValue(String(pick.sticker_number || ""));
+    } catch (e) {
+      console.error(e);
+      setAssignError("Ocurrió un error asignando la oblea.");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleUnassign = async () => {
+    setAssignError(null);
+    setIsAssigning(true);
+    try {
+      const plate = (car?.license_plate || plateQuery || "").trim().toUpperCase();
+      if (!plate) return;
+      const res = await fetch(`/api/stickers/unassign-from-car`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ license_plate: plate, set_available: false }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setAssignError(j?.error || "No se pudo quitar la oblea.");
+        return;
+      }
+      setCar((prev: any) => ({ ...(prev || {}), sticker_id: null, sticker: undefined }));
+      setObleaValue("");
+    } catch (e) {
+      console.error(e);
+      setAssignError("Ocurrió un error quitando la oblea.");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const plateErr = errors?.car_license_plate;
+  const disableSearch = isSearching || Boolean(plateErr);
+
+  return (
+    <div className="min-h-full flex items-center justify-center px-6">
+      <div className="space-y-6 mb-10 px-8 py-6 mt-12 w-full max-w-2xl bg-white rounded-lg">
+        <div>
+          <h2 className="text-xl font-regular text-[#000000] mb-1">Oblea del vehículo</h2>
+          <p className="text-md font-regular text-[#00000080]">
+            Ingresá el dominio, vas a poder ver datos básicos y asignar la oblea.
+          </p>
+        </div>
+
+        <div className="w-full">
+          <label htmlFor="plate" className="block text-sm text-gray-700 mb-1">Dominio</label>
+          <div className="flex gap-3">
+            <input
+              id="plate"
+              type="text"
+              placeholder="Ej: ABC123, o AB123CD"
+              className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 uppercase ${
+                plateErr ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
+              }`}
+              value={plateQuery}
+              onChange={handlePlateChange}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); fetchVehicleByPlate(); } }}
+              disabled={isSearching}
+            />
+            <button
+              type="button"
+              onClick={fetchVehicleByPlate}
+              disabled={disableSearch}
+              className={`px-6 rounded-[4px] text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${
+                disableSearch ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+            >
+              {isSearching ? "Buscando..." : "Buscar"}
+            </button>
+          </div>
+
+          {plateErr && <p className="text-sm text-red-600 mt-3">{plateErr}</p>}
+          {!plateErr && searchError && <p className="text-sm text-red-600 mt-3">{searchError}</p>}
+        </div>
+
+        {mode === "result" && (
+          <div className="mt-6 border rounded-lg p-4 space-y-4">
+            <h3 className="text-md font-semibold">Resultado</h3>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div><span className="text-gray-500">Dominio: </span><span className="font-medium">{car?.license_plate || plateQuery}</span></div>
+              <div><span className="text-gray-500">Marca: </span><span className="font-medium">{car?.brand || "Vacio"}</span></div>
+              <div><span className="text-gray-500">Modelo: </span><span className="font-medium">{car?.model || "Vacio"}</span></div>
+              <div><span className="text-gray-500">CRT/CNI: </span><span className="font-medium">{appId || "Vacio"}</span></div>
+            </div>
+
+            <div className="pt-2">
+              <label htmlFor="oblea" className="block text-sm text-gray-700 mb-1">Oblea actual</label>
+              <div className="flex gap-2">
+                <input
+                  id="oblea"
+                  type="text"
+                  placeholder="Ej: ABC123456"
+                  className="flex-1 border border-[#DEDEDE] rounded-[10px] px-4 py-3 text-base bg-gray-50 text-gray-700 cursor-not-allowed"
+                  value={obleaValue}
+                  onChange={(e) => setObleaValue(e.target.value)}
+                  readOnly
+                  disabled
+                />
+                <button
+                  type="button"
+                  onClick={handleAutoAssign}
+                  disabled={isAssigning}
+                  className="px-3 py-2 rounded-[4px] text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
+                >
+                  {isAssigning ? "Asignando..." : "Autoasignar"}
+                </button>
+                {!!car?.sticker_id && (
+                  <button
+                    type="button"
+                    onClick={handleUnassign}
+                    disabled={isAssigning}
+                    className="px-3 py-2 rounded-[4px] text-[#d91e1e] transition duration-150 border border-[#d91e1e] hover:bg-[#d91e1e] hover:text-white disabled:opacity-60"
+                  >
+                    Quitar
+                  </button>
+                )}
+              </div>
+              {availableHint && !car?.sticker_id && (
+                <p className="text-sm text-gray-500 mt-1">Se asignará la última disponible: {availableHint}</p>
+              )}
+              {assignError && <p className="text-xs text-red-600 mt-1">{assignError}</p>}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

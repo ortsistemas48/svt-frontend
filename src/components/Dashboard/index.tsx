@@ -35,7 +35,7 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
   const quick = [
     { key: 'new', title: 'Nueva revisión', desc: 'Iniciar un trámite nuevo', href: `/dashboard/${workshopId}/applications`, icon: CircleFadingPlus },
     { key: 'queue', title: 'Cola de revisiones', desc: 'Ver pendientes y en proceso', href: `/dashboard/${workshopId}/inspections-queue`, icon: RefreshCw },
-    { key: 'list', title: 'Revisiones', desc: 'Listado y búsqueda', href: `/dashboard/${workshopId}/applications/list`, icon: ClipboardList },
+    { key: 'list', title: 'Revisiones', desc: 'Listado y búsqueda', href: `/dashboard/${workshopId}/applications`, icon: ClipboardList },
   ];
 
   return (

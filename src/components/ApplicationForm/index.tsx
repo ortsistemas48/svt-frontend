@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 const PersonForm = dynamic(() => import("@/components/PersonForm"));
 const VehicleForm = dynamic(() => import("@/components/VehicleForm"));
 const ConfirmationForm = dynamic(() => import("@/components/ConfirmationForm"));
+const StickerStep = dynamic(() => import("@/components/StickerStep"));
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useParams } from 'next/navigation'
 import { getMissingCarFields, getMissingPersonFields, markStickerAsUsed } from "@/utils";
@@ -392,24 +393,21 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       }
 
-      // 🔸 Paso 2: en lugar de guardar directo, pedimos confirmación
-      if (step === 2) {
+      if (step === 3) {
         const missing = getMissingCarFields(car);
         if (missing.length > 0) {
-          setMissingFields(prev => [...prev, ...missing.map(f => `Vehículo: ${f}`)]);
+          setMissingFields(prev => [...prev, ...missing.map(f => `Vehículo, ${f}`)]);
           setShowMissingDataModal(true);
           setLoading(false);
           return;
         }
-        // Mostrar modal de confirmación de vehículo
         setConfirmAction("confirm_car");
         setShowConfirmModal(true);
         setLoading(false);
-        return; // no seguimos ahora; esperamos confirmación del modal
+        return;
       }
 
-      // Paso 3: Confirmar trámite
-      if (step === 3) {
+      if (step === 4) {
         const resConfirm = await fetch(`/api/applications/${applicationId}/confirm`, {
           method: "PUT",
           credentials: "include",
@@ -419,10 +417,10 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         if (!resConfirm.ok) throw new Error("Error al confirmar el trámite");
       }
 
-      if (step < 3) setStep(step + 1);
+      if (step < 4) setStep(step + 1);
     } catch (error: any) {
       console.error(error);
-      alert("Hubo un error al guardar los datos. Revisá los campos o intentá más tarde.");
+      alert("Hubo un error al guardar, revisá los campos o intentá más tarde.");
     } finally {
       setLoading(false);
     }
@@ -453,7 +451,15 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             onDeleteDriverDoc={onDeleteDriverDoc}
           />
         );
-      case 2:
+      case 2: // ⬅️ nuevo paso oblea
+        return (
+          <StickerStep
+            workshopId={Number(id)}
+            car={car}
+            setCar={setCar}
+          />
+        );
+      case 3:
         return (
           <VehicleForm
             car={car}
@@ -463,7 +469,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             onDeleteCarDoc={onDeleteCarDoc}
           />
         );
-      case 3:
+      case 4:
         return <ConfirmationForm applicationId={applicationId} />;
       default:
         return null;
@@ -472,16 +478,18 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     step,
     owner,
     driver,
+    car,
     applicationId,
     isSamePerson,
     existingDocsByRole.owner,
     existingDocsByRole.driver,
-    existingDocsByRole.car,     
+    existingDocsByRole.car,
     onDeleteOwnerDoc,
     onDeleteDriverDoc,
-    onDeleteCarDoc,             
-    car,
+    onDeleteCarDoc,
+    id,
   ]);
+
 
   if (isInitializing) {
     return (
@@ -501,7 +509,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           <ChevronRight size={20} />
           <span className="font-bold">{applicationId}</span>
         </div>
-        <span className="text-md mr-4  text-black">Paso {step}/3</span>
+        <span className="text-md mr-4  text-black">Paso {step}/4</span>
       </article>
 
       <div>{renderStepContent}</div>
@@ -517,7 +525,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             Volver
           </button>
         )}
-        {step !== 3 && !isIdle && (
+        {step !== 4 && !isIdle && (
           <button
             onClick={handleNext}
             disabled={loading || hasBlockingErrors}
@@ -526,7 +534,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             {loading ? "Guardando..." : "Continuar"}
           </button>
         )}
-        {step === 3 && (
+        {step === 4 && (
           <>
             <button
               disabled={loading}
@@ -609,7 +617,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
                     try {
                       setLoading(true);
                       const ok = await saveVehicle();
-                      if (ok) setStep(3);
+                      if (ok) setStep(4);
                     } catch (e) {
                       console.error(e);
                       alert("Hubo un error al guardar los datos del vehículo.");

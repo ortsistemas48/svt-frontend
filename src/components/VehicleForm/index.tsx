@@ -11,9 +11,7 @@ import {
   onlyDigits,
   toUpper,
 } from "../../utils";
-import { useParams } from "next/navigation";
 import Dropzone, { type ExistingDoc } from "@/components/Dropzone";
-import internal from "node:stream";
 
 interface FormFieldData {
   label: string;
@@ -31,6 +29,7 @@ interface VehicleFormProps {
   existingCarDocs?: ExistingDoc[];
   onDeleteCarDoc?: (docId: number) => Promise<void> | void;
 }
+
 
 const formData1: FormFieldData[] = [
   { label: "Dominio", placeholder: "Ej: AB123AB", name: "license_plate" },
@@ -138,7 +137,6 @@ const formData2: FormFieldData[] = [
   { label: "Póliza del seguro", type: "text", placeholder: "Ej: 1234567890", name: "insurance" },
 ];
 
-type Mode = "idle" | "view" | "edit";
 
 // Mensajes por campo
 const MSG = {
@@ -217,8 +215,6 @@ const FIELD_LABEL: Record<string, string> = {
   insurance: "Póliza del seguro",
 };
 
-// Formatos de dominio válidos
-const PLATE_REGEX = /^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$/;
 
 export default function VehicleForm({
   car,
@@ -229,11 +225,6 @@ export default function VehicleForm({
 }: VehicleFormProps) {
   const { setIsIdle, errors, setErrors } = useApplication() as any;
 
-  const [plateQuery, setPlateQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>("idle");
-
   const [greenCardNoExpiration, setGreenCardNoExpiration] = useState(() => {
     return (
       !car?.green_card_expiration ||
@@ -242,7 +233,6 @@ export default function VehicleForm({
     );
   });
 
-  const fetchRef = useRef<{ id: number; ctrl?: AbortController }>({ id: 0 });
 
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
@@ -313,12 +303,6 @@ export default function VehicleForm({
     validateOne(name, san);
   };
 
-  useEffect(() => {
-    if (car?.license_plate && mode === "idle") setMode("edit");
-  }, [car?.license_plate, mode]);
-
-  // Flags para autofill de marcas de motor y chasis
-  // Empiezan activos si los campos están vacíos
   const engineAuto = useRef<boolean>(
     !car?.engine_brand || String(car?.engine_brand).trim() === ""
   );
@@ -326,10 +310,6 @@ export default function VehicleForm({
     !car?.chassis_brand || String(car?.chassis_brand).trim() === ""
   );
 
-  // Importante, no sincronizar los flags con car.engine_brand o car.chassis_brand
-  // para no apagar el autofill cuando copiamos desde brand
-
-  // Copiar automáticamente la marca a motor y chasis mientras los flags estén activos
   useEffect(() => {
     if (!car?.brand) return;
 
@@ -399,8 +379,8 @@ export default function VehicleForm({
   };
 
   useEffect(() => {
-    setIsIdle(mode === "idle");
-  }, [mode, setIsIdle]);
+    setIsIdle(false);
+  }, [setIsIdle]);
 
   useEffect(() => {
     if (
@@ -414,88 +394,6 @@ export default function VehicleForm({
     }
   }, [car?.green_card_expiration, car?.green_card_no_expiration]);
 
-  // Buscar por dominio
-  const fetchVehicleByPlate = async () => {
-    const plate = plateQuery.trim().toUpperCase().replace(/[-\s]/g, "");
-    if (!plate) {
-      setSearchError("Ingresá un dominio válido.");
-      return;
-    }
-    if (!PLATE_REGEX.test(plate)) {
-      const msg = "Formato de dominio inválido, usá ABC123 o AB123CD.";
-      setCarError("license_plate", msg);
-      setSearchError(msg);
-      return;
-    }
-
-    if (fetchRef.current.ctrl) fetchRef.current.ctrl.abort();
-
-    const id = ++fetchRef.current.id;
-    const ctrl = new AbortController();
-    fetchRef.current.ctrl = ctrl;
-
-    try {
-      setIsSearching(true);
-      setSearchError(null);
-
-      const res = await fetch(
-        `/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
-        { credentials: "include", signal: ctrl.signal }
-      );
-
-      if (id !== fetchRef.current.id) return;
-
-      if (res.status === 404) {
-        setCar((prev: any) => ({ ...prev, license_plate: plate }));
-        setMode("edit");
-        setErrors((prev: any) => {
-          if (!prev) return prev;
-          const next: any = {};
-          for (const k of Object.keys(prev)) if (!k.startsWith("car_")) next[k] = prev[k];
-          return next;
-        });
-        return;
-      }
-
-      if (!res.ok) {
-        setSearchError("Ocurrió un error al buscar el vehículo.");
-        return;
-      }
-
-      const data = await res.json();
-      setCar((prev: any) => ({ ...prev, ...data }));
-      setMode("edit");
-    } catch (e: any) {
-      if (e.name !== "AbortError") {
-        console.error(e);
-        setSearchError("Ocurrió un error de red.");
-      }
-    } finally {
-      if (id === fetchRef.current.id) setIsSearching(false);
-    }
-  };
-
-  // Validación en vivo de dominio
-  const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitized = e.target.value.toUpperCase().replace(/[-\s]/g, "");
-    setPlateQuery(sanitized);
-
-    if (!sanitized) {
-      setCarError("license_plate", "");
-      setSearchError(null);
-      return;
-    }
-
-    if (!PLATE_REGEX.test(sanitized)) {
-      setCarError(
-        "license_plate",
-        "Formato de dominio inválido, usá ABC123 o AB123CD."
-      );
-    } else {
-      setCarError("license_plate", "");
-    }
-  };
-
   const carErrorsList = useMemo(() => {
     const entries = Object.entries(errors ?? {}).filter(
       ([k, v]) => k.startsWith("car_") && Boolean(v)
@@ -506,70 +404,6 @@ export default function VehicleForm({
     });
   }, [errors]);
 
-  if (mode === "idle") {
-    const plateErr = errors?.car_license_plate;
-    const disableSearch = isSearching || Boolean(plateErr);
-
-    return (
-      <div className="min-h-full flex items-center justify-center px-6">
-        <div className="space-y-6 mb-10 px-8 py-6 mt-12 w-full max-w-2xl bg-white rounded-lg">
-          <div>
-            <h2 className="text-xl font-regular text-[#000000] mb-1">Datos del vehículo</h2>
-            <p className="text-md font-regular text-[#00000080]">
-              Ingresá el dominio para traer los datos del vehículo
-            </p>
-          </div>
-
-          <div className="w-full">
-            <label htmlFor="plate" className="block text-sm text-gray-700 mb-1">
-              Dominio
-            </label>
-            <div className="flex gap-3">
-              <input
-                id="plate"
-                type="text"
-                placeholder="Ej: ABC123 o AB123CD"
-                className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 uppercase ${
-                  plateErr
-                    ? "border-red-400 focus:ring-red-500"
-                    : "border-[#DEDEDE] focus:ring-[#0040B8]"
-                }`}
-                value={plateQuery}
-                onChange={handlePlateChange}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    fetchVehicleByPlate();
-                  }
-                }}
-                disabled={isSearching}
-              />
-              <button
-                type="button"
-                onClick={fetchVehicleByPlate}
-                disabled={disableSearch}
-                className={`px-6 rounded-[6px] text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${
-                  disableSearch ? "opacity-70 cursor-not-allowed" : ""
-                }`}
-              >
-                {isSearching ? "Buscando..." : "Buscar"}
-              </button>
-            </div>
-
-            {plateErr && <p className="text-sm text-red-600 mt-3">{plateErr}</p>}
-            {!plateErr && searchError && (
-              <p className="text-sm text-red-600 mt-3">{searchError}</p>
-            )}
-
-            <p className="text-xs text-gray-500 mt-2">
-              Si no se encuentra, vas a poder cargar los datos manualmente.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6 mb-10 px-4 mt-12">
       <div className="flex items-start justify-between gap-4">
@@ -577,20 +411,6 @@ export default function VehicleForm({
           <h2 className="text-xl font-regular text-[#000000] mb-1">Datos del vehículo</h2>
           <p className="text-sm text-[#00000080]">Completá los datos del vehículo.</p>
         </div>
-
-        <button
-          type="button"
-          className="text-[#0040B8] border border-[#0040B8] rounded-[4px] px-3 py-2 text-sm hover:bg-[#0040B8] hover:text-white transition shrink-0"
-          onClick={() => {
-            setSearchError(null);
-            setMode("idle");
-            setIsIdle(true);
-            setPlateQuery("");
-            setCar({});
-          }}
-        >
-          Buscar otro dominio
-        </button>
       </div>
 
       {carErrorsList.length > 0 && (
