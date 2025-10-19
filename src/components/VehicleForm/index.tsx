@@ -233,6 +233,7 @@ export default function VehicleForm({
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("idle");
+  const [obleaValue, setObleaValue] = useState("");
 
   const [greenCardNoExpiration, setGreenCardNoExpiration] = useState(() => {
     return (
@@ -313,9 +314,15 @@ export default function VehicleForm({
     validateOne(name, san);
   };
 
+  // Pre-fill plateQuery and obleaValue when car exists
   useEffect(() => {
-    if (car?.license_plate && mode === "idle") setMode("edit");
-  }, [car?.license_plate, mode]);
+    if (car?.license_plate && !plateQuery) {
+      setPlateQuery(car.license_plate);
+    }
+    if (car?.oblea && !obleaValue) {
+      setObleaValue(car.oblea);
+    }
+  }, [car?.license_plate, car?.oblea, plateQuery, obleaValue]);
 
   // Flags para autofill de marcas de motor y chasis
   // Empiezan activos si los campos están vacíos
@@ -446,7 +453,7 @@ export default function VehicleForm({
       if (id !== fetchRef.current.id) return;
 
       if (res.status === 404) {
-        setCar((prev: any) => ({ ...prev, license_plate: plate }));
+        setCar((prev: any) => ({ ...prev, license_plate: plate, oblea: obleaValue }));
         setMode("edit");
         setErrors((prev: any) => {
           if (!prev) return prev;
@@ -463,7 +470,7 @@ export default function VehicleForm({
       }
 
       const data = await res.json();
-      setCar((prev: any) => ({ ...prev, ...data }));
+      setCar((prev: any) => ({ ...prev, ...data, oblea: obleaValue }));
       setMode("edit");
     } catch (e: any) {
       if (e.name !== "AbortError") {
@@ -474,7 +481,14 @@ export default function VehicleForm({
       if (id === fetchRef.current.id) setIsSearching(false);
     }
   };
-
+  const enableStickerField = () => {
+    
+  }
+  
+  // Handle oblea field change
+  const handleObleaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setObleaValue(e.target.value);
+  };
   // Validación en vivo de dominio
   const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = e.target.value.toUpperCase().replace(/[-\s]/g, "");
@@ -556,6 +570,23 @@ export default function VehicleForm({
               </button>
             </div>
 
+            <div className="mt-4">
+              <label htmlFor="oblea" className="block text-sm text-gray-700 mb-1">
+                Vincular Oblea (Opcional)
+              </label>
+              <input
+                id="oblea"
+                type="text"
+                placeholder="Ej: ABC123456"
+                className="w-full border border-[#DEDEDE] rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+                value={obleaValue}
+                onChange={handleObleaChange}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Campo opcional para vincular una oblea al vehículo.
+              </p>
+            </div>
+
             {plateErr && <p className="text-sm text-red-600 mt-3">{plateErr}</p>}
             {!plateErr && searchError && (
               <p className="text-sm text-red-600 mt-3">{searchError}</p>
@@ -586,6 +617,7 @@ export default function VehicleForm({
             setMode("idle");
             setIsIdle(true);
             setPlateQuery("");
+            setObleaValue("");
             setCar({});
           }}
         >
