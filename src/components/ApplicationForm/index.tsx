@@ -498,6 +498,8 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           <span>Inicio</span>
           <ChevronRight size={20} />
           <span className="text-[#0040B8]">Revisiones</span>
+          <ChevronRight size={20} />
+          <span className="font-bold">{applicationId}</span>
         </div>
         <span className="text-md mr-4  text-black">Paso {step}/3</span>
       </article>

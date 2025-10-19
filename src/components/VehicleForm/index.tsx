@@ -13,6 +13,7 @@ import {
 } from "../../utils";
 import { useParams } from "next/navigation";
 import Dropzone, { type ExistingDoc } from "@/components/Dropzone";
+import internal from "node:stream";
 
 interface FormFieldData {
   label: string;
@@ -26,7 +27,6 @@ interface FormFieldData {
 interface VehicleFormProps {
   car: any;
   setCar: (car: any) => void;
-
   onPendingCarDocsChange?: (files: File[]) => void;
   existingCarDocs?: ExistingDoc[];
   onDeleteCarDoc?: (docId: number) => Promise<void> | void;

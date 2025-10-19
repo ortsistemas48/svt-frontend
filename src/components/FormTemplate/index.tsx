@@ -120,7 +120,7 @@ export default function FormTemplate({
   }, [searchConfig, data, mode]);
 
   useEffect(() => {
-      setIsIdle(mode === "idle");
+      if (title === "Datos del Titular") setIsIdle(mode === "idle");
     }, [mode, setIsIdle]);
   // ----- Handlers de campos -----
   const handleChange = (name: string, value: string) => {
