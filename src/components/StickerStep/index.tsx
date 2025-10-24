@@ -28,6 +28,10 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
   const [isAssigning, setIsAssigning] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [availableHint, setAvailableHint] = useState<string | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualValue, setManualValue] = useState("");
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [isAssigningManual, setIsAssigningManual] = useState(false);
 
   const fetchRef = useRef<{ id: number; ctrl?: AbortController }>({ id: 0 });
 
@@ -68,10 +72,29 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
       if (!r.ok) return;
       const list = await r.json();
       if (Array.isArray(list) && list.length > 0) {
-        setAvailableHint(list[0]?.sticker_number || null); // última disponible por DESC
+        setAvailableHint(list[0]?.sticker_number || null); 
       }
     } catch {}
   };
+
+  const sanitizeSticker = (s: string) =>
+    s.toUpperCase().replace(/[\s-_/\\.]/g, "");
+
+  const splitStickerParts = (raw: string) => {
+    const v = sanitizeSticker(raw);
+    const m = v.match(/^([A-Z]*)(\d+)([A-Z]*)$/);
+    if (!m) return null;
+    const [, prefix, code, suffix] = m;
+    return { prefix, code, suffix, normalized: v };
+  };
+
+  const validateManualSticker = (raw: string) => {
+    const parts = splitStickerParts(raw);
+    if (!parts) return "Formato inválido, escribí prefijo opcional, código numérico, sufijo opcional. Ejemplos: ABC12345, 001234, ZX000123Q";
+    if (parts.code.length < 1) return "El código numérico debe tener al menos 1 dígito.";
+    return null;
+  };
+
 
   const fetchVehicleByPlate = async () => {
     const plate = plateQuery.trim().toUpperCase().replace(/[-\s]/g, "");
@@ -214,6 +237,55 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     }
   };
 
+    const handleManualAssign = async () => {
+      setManualError(null);
+      setAssignError(null);
+      setIsAssigningManual(true);
+      try {
+        const plate = (car?.license_plate || plateQuery || "").trim().toUpperCase();
+        if (!plate || !PLATE_REGEX.test(plate)) {
+          setManualError("Dominio inválido, corregilo e intentá otra vez.");
+          return;
+        }
+        const err = validateManualSticker(manualValue);
+        if (err) {
+          setManualError(err);
+          return;
+        }
+        const res = await fetch(`/api/stickers/assign-by-number`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            license_plate: plate,
+            workshop_id: workshopId,
+            sticker_number: sanitizeSticker(manualValue),
+            mark_used: false,
+          }),
+        });
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          setManualError(j?.error || "No se pudo asignar la oblea ingresada.");
+          return;
+        }
+        const j = await res.json();
+        setCar((prev: any) => ({
+          ...(prev || {}),
+          license_plate: plate,
+          sticker_id: j?.sticker_id,
+          sticker: { id: j?.sticker_id, sticker_number: j?.sticker_number },
+        }));
+        setObleaValue(String(j?.sticker_number || ""));
+        setManualOpen(false);
+        setManualValue("");
+      } catch (e) {
+        console.error(e);
+        setManualError("Ocurrió un error asignando la oblea.");
+      } finally {
+        setIsAssigningManual(false);
+      }
+    };
+
   const plateErr = errors?.car_license_plate;
   const disableSearch = isSearching || Boolean(plateErr);
 
@@ -223,7 +295,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
         <div>
           <h2 className="text-xl font-regular text-[#000000] mb-1">Oblea del vehículo</h2>
           <p className="text-md font-regular text-[#00000080]">
-            Ingresá el dominio, vas a poder ver datos básicos y asignar la oblea.
+            Ingresá el dominio, luego elegí autoasignar la primera disponible del taller, o asignar una oblea manualmente escribiendo su número.
           </p>
         </div>
 
@@ -302,9 +374,61 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                 )}
               </div>
               {availableHint && !car?.sticker_id && (
-                <p className="text-sm text-gray-500 mt-1">Se asignará la última disponible: {availableHint}</p>
+                <p className="text-sm text-gray-500 mt-1">Se asignará la primera oblea disponible: {availableHint}</p>
               )}
               {assignError && <p className="text-xs text-red-600 mt-1">{assignError}</p>}
+              <div className="mt-5 border-t pt-4">
+                <button
+                  type="button"
+                  onClick={() => setManualOpen((v) => !v)}
+                  className="text-sm text-[#0040B8] hover:underline"
+                >
+                  {manualOpen ? "Ocultar asignación manual" : "Asignar manualmente"}
+                </button>
+                {manualOpen && (
+                  <div className="mt-3 space-y-2">
+                    <label className="block text-sm text-gray-700">Número de oblea</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Ej: ZX000123Q"
+                        value={manualValue}
+                        onChange={(e) => setManualValue(e.target.value)}
+                        className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 ${
+                          manualError ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleManualAssign}
+                        disabled={isAssigningManual}
+                        className="px-3 py-2 rounded-[4px] text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
+                      >
+                        {isAssigningManual ? "Asignando..." : (!!car?.sticker_id ? "Reemplazar" : "Asignar")}
+                      </button>
+                    </div>
+                    {!!manualValue && (
+                      (() => {
+                        const p = splitStickerParts(manualValue);
+                        return (
+                          <p className="text-xs text-gray-500">
+                            {p
+                              ? `Prefijo: ${p.prefix || "vacío"}, código: ${p.code}, sufijo: ${p.suffix || "vacío"}`
+                              : "Formato inválido"}
+                          </p>
+                        );
+                      })()
+                    )}
+                    {manualError && <p className="text-xs text-red-600">{manualError}</p>}
+                    {!manualError && (
+                      <p className="text-xs text-gray-500">
+                        Acepta prefijo opcional, código numérico, sufijo opcional, se ignoran espacios y guiones.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
         )}

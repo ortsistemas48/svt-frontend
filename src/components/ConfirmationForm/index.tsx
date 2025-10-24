@@ -24,7 +24,6 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
   const [owner, setOwner] = useState<PersonType | null>(null);
   const [driver, setDriver] = useState<PersonType | null>(null);
 
-  // 🆕 solo documentos del vehículo
   const [carDocs, setCarDocs] = useState<Doc[]>([]);
 
   useEffect(() => {
@@ -46,18 +45,15 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
       setCar(data.car || null);
       setOwner(data.owner || null);
 
-      // si owner y driver son la misma persona, ocultamos driver
       if (data.owner?.id && data.driver?.id && data.owner.id === data.driver.id) {
         setDriver(null);
       } else {
         setDriver(data.driver || null);
       }
 
-      // documentos por rol
       const byRole = data.documents_by_role || {};
       const allDocs: Doc[] = data.documents || [];
 
-      // 🆕 solo guardamos los de vehículo
       setCarDocs(byRole.car ?? allDocs.filter((d: Doc) => d.role === "car"));
     }
 
@@ -93,7 +89,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
             </div>
             <div className="p-6">
               {owner ? (
-                renderPerson(owner) // ✅ sin documentos
+                renderPerson(owner) 
               ) : (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -120,7 +116,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
                 </div>
               </div>
               <div className="p-6">
-                {renderPerson(driver!)} {/* ✅ sin documentos */}
+                {renderPerson(driver!)} 
               </div>
             </div>
           )}
@@ -140,7 +136,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
             </div>
             <div className="p-6">
               {car ? (
-                renderVehicle(car, carDocs) // ✅ ahora acá van los documentos del auto
+                renderVehicle(car, carDocs)
               ) : (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>

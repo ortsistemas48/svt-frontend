@@ -539,22 +539,22 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             <button
               disabled={loading}
               onClick={() => {
-                setConfirmAction("inspect");
+                setConfirmAction("queue");
                 setShowConfirmModal(true);
               }}
               className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5"
             >
-              {loading ? "Guardando..." : "Inspeccionar"}
+              Enviar a cola
             </button>
             <button
               disabled={loading}
               onClick={() => {
-                setConfirmAction("queue");
+                setConfirmAction("inspect");
                 setShowConfirmModal(true);
               }}
               className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5"
             >
-              Enviar a cola <ChevronRight size={18} />
+              {loading ? "Guardando..." : "Inspeccionar"}
             </button>
           </>
         )}
