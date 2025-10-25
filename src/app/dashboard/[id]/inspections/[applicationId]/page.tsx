@@ -4,8 +4,12 @@ import InspectionStepsClient from "@/components/InspectionsSteps";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-type Step = { step_id: number; name: string; description: string; order: number };
-type ObservationRow = { id: number; description: string; checked: boolean };
+type Step = {
+  step_id: number;
+  name: string;
+  description: string;
+  order: number;
+};
 
 type DetailRow = {
   order: number;
@@ -17,13 +21,14 @@ type DetailRow = {
     status: "Apto" | "Condicional" | "Rechazado";
     observations: string | null;
   };
-  observations: ObservationRow[];
 };
 
-// Helpers recomendados
 async function getBaseURL() {
   const h = await headers();
-  const host = h.get("x-forwarded-host") || h.get("host") || process.env.VERCEL_URL;
+  const host =
+    h.get("x-forwarded-host") ||
+    h.get("host") ||
+    process.env.VERCEL_URL;
   if (!host) throw new Error("No host header");
 
   const proto =
@@ -36,22 +41,31 @@ async function getBaseURL() {
 async function getCookieHeader() {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
-  return cookieHeader ? { cookie: cookieHeader } as Record<string, string> : {};
+  return cookieHeader
+    ? ({ cookie: cookieHeader } as Record<string, string>)
+    : {};
 }
 
-// API
 async function fetchApplicationStatus(appId: number) {
   const base = await getBaseURL();
   const headersObj = await getCookieHeader();
 
-  const res = await fetch(`${base}/api/applications/get-applications/${appId}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json", ...headersObj },
-    cache: "no-store",
-  });
+  const res = await fetch(
+    `${base}/api/applications/get-applications/${appId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...headersObj,
+      },
+      cache: "no-store",
+    }
+  );
 
   if (!res.ok) {
-    throw new Error("No se pudo obtener la información de la aplicación");
+    throw new Error(
+      "No se pudo obtener la información de la aplicación"
+    );
   }
 
   const data = await res.json();
@@ -64,14 +78,19 @@ async function ensureInspection(appId: number) {
 
   const res = await fetch(`${base}/api/inspections/inspections`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...headersObj },
+    headers: {
+      "Content-Type": "application/json",
+      ...headersObj,
+    },
     body: JSON.stringify({ application_id: appId }),
     cache: "no-store",
   });
 
   if (!res.ok) {
     const j = await res.json().catch(() => ({}));
-    throw new Error(j?.error || "No se pudo crear o recuperar la revisión");
+    throw new Error(
+      j?.error || "No se pudo crear o recuperar la revisión"
+    );
   }
 
   const data = await res.json();
@@ -82,54 +101,55 @@ async function fetchSteps(appId: number) {
   const base = await getBaseURL();
   const headersObj = await getCookieHeader();
 
-  const res = await fetch(`${base}/api/inspections/applications/${appId}/steps`, {
-    headers: { ...headersObj },
-    cache: "no-store",
-  });
+  const res = await fetch(
+    `${base}/api/inspections/applications/${appId}/steps`,
+    {
+      headers: {
+        ...headersObj,
+      },
+      cache: "no-store",
+    }
+  );
 
-  if (!res.ok) throw new Error("No se pudieron obtener los pasos");
+  if (!res.ok) {
+    throw new Error("No se pudieron obtener los pasos");
+  }
 
   const steps: Step[] = await res.json();
   return steps;
-}
-
-// Utils
-function parseObsField(obs: unknown): ObservationRow[] {
-  if (Array.isArray(obs)) return obs as ObservationRow[];
-  if (typeof obs === "string") {
-    try {
-      const parsed = JSON.parse(obs);
-      return Array.isArray(parsed) ? (parsed as ObservationRow[]) : [];
-    } catch {
-      return [];
-    }
-  }
-  return [];
-}
-
-function normalizeRows(rows: DetailRow[]): DetailRow[] {
-  return rows.map((it) => ({
-    ...it,
-    observations: parseObsField(it.observations),
-  }));
 }
 
 async function fetchDetails(inspectionId: number) {
   const base = await getBaseURL();
   const headersObj = await getCookieHeader();
 
-  const res = await fetch(`${base}/api/inspections/inspections/${inspectionId}/details`, {
-    headers: { ...headersObj },
-    cache: "no-store",
-  });
+  const res = await fetch(
+    `${base}/api/inspections/inspections/${inspectionId}/details`,
+    {
+      headers: {
+        ...headersObj,
+      },
+      cache: "no-store",
+    }
+  );
 
-  if (!res.ok) throw new Error("No se pudieron obtener los detalles");
+  if (!res.ok) {
+    throw new Error("No se pudieron obtener los detalles");
+  }
 
   const payload = await res.json();
 
+  // backend puede responder de 2 formas:
+  // a) { items: [...], global_observations, license_plate }
+  // b) legacy: [ ... ]
   if (Array.isArray(payload)) {
-    const rows = normalizeRows(payload as DetailRow[]);
-    return { rows, globalObs: "", licensePlate: undefined as string | undefined };
+    // legacy: no viene patente ni global_observations separados
+    const rows = payload as DetailRow[];
+    return {
+      detailsRows: rows,
+      globalObs: "",
+      licensePlate: undefined as string | undefined,
+    };
   }
 
   const {
@@ -142,9 +162,8 @@ async function fetchDetails(inspectionId: number) {
     license_plate?: string | null;
   };
 
-  const rows = normalizeRows(items || []);
   return {
-    rows,
+    detailsRows: items || [],
     globalObs: global_observations ?? "",
     licensePlate: license_plate ?? undefined,
   };
@@ -153,7 +172,7 @@ async function fetchDetails(inspectionId: number) {
 export default async function InspectionPage({
   params,
 }: {
-  params: any
+  params: { id: string; applicationId: string };
 }) {
   const { id, applicationId } = params;
   const appId = Number(applicationId);
@@ -171,21 +190,29 @@ export default async function InspectionPage({
     fetchDetails(inspectionId),
   ]);
 
-  const { rows: details, globalObs, licensePlate } = detailsResp;
+  const {
+    detailsRows,
+    globalObs,
+    licensePlate,
+  } = detailsResp;
 
-  const initialStatuses: Record<number, "Apto" | "Condicional" | "Rechazado" | undefined> = {};
-  const initialObsByStep: Record<number, ObservationRow[]> = {};
-  const plateLabel = (licensePlate?.trim() || "Sin dominio").toUpperCase();
+  const initialStatuses: Record<
+    number,
+    "Apto" | "Condicional" | "Rechazado" | undefined
+  > = {};
 
-  details.forEach((r) => {
-    if (r.detail?.status) initialStatuses[r.step_id] = r.detail.status;
-    if (Array.isArray(r.observations)) initialObsByStep[r.step_id] = r.observations;
+  detailsRows.forEach((row) => {
+    if (row.detail?.status) {
+      initialStatuses[row.step_id] = row.detail.status;
+    }
   });
 
+  const plateLabel = (licensePlate?.trim() || "Sin dominio").toUpperCase();
+  console.log(globalObs)
   return (
     <div className="min-w-full">
       <article className="flex items-center justify-between text-lg mb-6 px-4">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
           <span>Inicio</span>
           <ChevronRight size={20} />
           <span className="text-[#0040B8]">Revisión técnica</span>
@@ -200,9 +227,9 @@ export default async function InspectionPage({
         steps={[...steps].sort((a, b) => a.order - b.order)}
         initialStatuses={initialStatuses}
         apiBase="/api"
-        initialObsByStep={initialObsByStep}
         initialGlobalObs={globalObs}
       />
+    
     </div>
   );
 }

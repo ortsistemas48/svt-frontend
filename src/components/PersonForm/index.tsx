@@ -134,7 +134,7 @@ export default function PersonForm({
 
       {/* Resumen de errores */}
       {showAnyErrors && (
-        <div className="mx-4 mb-6 border border-red-300 bg-red-50 text-red-700 text-sm rounded-md px-4 py-3">
+        <div className="mx-4 mb-6 border border-red-300 bg-red-50 text-red-700 text-sm rounded-[4px] px-4 py-3">
           <p className="font-medium mb-1 text-lg">Revisá estos campos:</p>
 
           {ownerErrorsList.length > 0 && (

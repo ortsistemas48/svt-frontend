@@ -236,7 +236,7 @@ export default function FormTemplate({
               id="search-input"
               type={searchConfig.inputType ?? "text"}
               placeholder={searchConfig.placeholder ?? ""}
-              className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]`}
+              className={`flex-1 border rounded-[4px] px-4 py-3 text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]`}
               value={query}
               onChange={(e) => {
                 const raw = e.target.value;
@@ -312,7 +312,7 @@ export default function FormTemplate({
               <div key={f.name} className={f.className ?? ""}>
                 <label className="block text-sm text-gray-700 mb-1">{f.label}</label>
                 <select
-                  className={`w-full border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 ${
+                  className={`w-full border rounded-[4px] px-4 py-3 text-base focus:outline-none focus:ring-2 ${
                     error ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
                   } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   name={f.name}
@@ -342,7 +342,7 @@ export default function FormTemplate({
               <input
                 type={f.type ?? "text"}
                 placeholder={f.placeholder ?? ""}
-                className={`w-full border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 ${
+                className={`w-full border rounded-[4px] px-4 py-3 text-base focus:outline-none focus:ring-2 ${
                   error ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
                 } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 name={f.name}

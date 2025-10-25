@@ -1,9 +1,9 @@
 // components/StickerStep.tsx
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useApplication } from "@/context/ApplicationContext";
-import { useParams } from 'next/navigation'
+import { useParams } from "next/navigation";
 
 const PLATE_REGEX = /^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$/;
 
@@ -15,8 +15,8 @@ type Props = {
 
 export default function StickerStep({ workshopId, car, setCar }: Props) {
   const { errors, setErrors, setIsIdle } = useApplication() as any;
-  const params = useParams()
-  const appId = params.applicationId
+  const params = useParams();
+  const appId = params.applicationId;
 
   const [plateQuery, setPlateQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -28,8 +28,11 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
   const [isAssigning, setIsAssigning] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [availableHint, setAvailableHint] = useState<string | null>(null);
+
   const [manualOpen, setManualOpen] = useState(false);
-  const [manualValue, setManualValue] = useState("");
+  const [manualPrefix, setManualPrefix] = useState("");
+  const [manualCode, setManualCode] = useState("");
+  const [manualSuffix, setManualSuffix] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
   const [isAssigningManual, setIsAssigningManual] = useState(false);
 
@@ -39,12 +42,10 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
 
   useEffect(() => {
-    // control del botón “Continuar” del padre
     setIsIdle(mode !== "result");
   }, [mode, setIsIdle]);
 
   useEffect(() => {
-    // si venía algo de la app, precargamos
     if (car?.license_plate && !plateQuery) setPlateQuery(car.license_plate);
     const v = car?.sticker?.sticker_number ?? car?.oblea ?? "";
     if (v && !obleaValue) setObleaValue(String(v));
@@ -68,33 +69,20 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
   const fetchAvailableHint = async () => {
     try {
       setAvailableHint(null);
-      const r = await fetch(`/api/stickers/available?workshop_id=${workshopId}`, { credentials: "include" });
+      const r = await fetch(
+        `/api/stickers/available?workshop_id=${workshopId}`,
+        { credentials: "include" }
+      );
       if (!r.ok) return;
       const list = await r.json();
       if (Array.isArray(list) && list.length > 0) {
-        setAvailableHint(list[0]?.sticker_number || null); 
+        setAvailableHint(list[0]?.sticker_number || null);
       }
     } catch {}
   };
 
-  const sanitizeSticker = (s: string) =>
+  const sanitizeStickerPart = (s: string) =>
     s.toUpperCase().replace(/[\s-_/\\.]/g, "");
-
-  const splitStickerParts = (raw: string) => {
-    const v = sanitizeSticker(raw);
-    const m = v.match(/^([A-Z]*)(\d+)([A-Z]*)$/);
-    if (!m) return null;
-    const [, prefix, code, suffix] = m;
-    return { prefix, code, suffix, normalized: v };
-  };
-
-  const validateManualSticker = (raw: string) => {
-    const parts = splitStickerParts(raw);
-    if (!parts) return "Formato inválido, escribí prefijo opcional, código numérico, sufijo opcional. Ejemplos: ABC12345, 001234, ZX000123Q";
-    if (parts.code.length < 1) return "El código numérico debe tener al menos 1 dígito.";
-    return null;
-  };
-
 
   const fetchVehicleByPlate = async () => {
     const plate = plateQuery.trim().toUpperCase().replace(/[-\s]/g, "");
@@ -118,21 +106,24 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
       setIsSearching(true);
       setSearchError(null);
 
-      const res = await fetch(`/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`, {
-        credentials: "include",
-        signal: ctrl.signal,
-      });
+      const res = await fetch(
+        `/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
+        {
+          credentials: "include",
+          signal: ctrl.signal,
+        }
+      );
 
       if (id !== fetchRef.current.id) return;
 
       if (res.status === 404) {
         setCar((prev: any) => ({ ...(prev || {}), license_plate: plate }));
         setMode("result");
-        // limpiamos errores de car_*
         setErrors((prev: any) => {
           if (!prev) return prev;
           const next: any = {};
-          for (const k of Object.keys(prev)) if (!k.startsWith("car_")) next[k] = prev[k];
+          for (const k of Object.keys(prev))
+            if (!k.startsWith("car_")) next[k] = prev[k];
           return next;
         });
         void fetchAvailableHint();
@@ -146,7 +137,9 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
 
       const data = await res.json();
       setCar((prev: any) => ({ ...(prev || {}), ...data }));
-      setObleaValue(String(data?.sticker?.sticker_number ?? data?.oblea ?? ""));
+      setObleaValue(
+        String(data?.sticker?.sticker_number ?? data?.oblea ?? "")
+      );
       setMode("result");
       void fetchAvailableHint();
     } catch (e: any) {
@@ -163,12 +156,22 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     setAssignError(null);
     setIsAssigning(true);
     try {
-      const plate = (car?.license_plate || plateQuery || "").trim().toUpperCase();
+      const plate = (
+        car?.license_plate ||
+        plateQuery ||
+        ""
+      )
+        .trim()
+        .toUpperCase();
       if (!plate || !PLATE_REGEX.test(plate)) {
         setAssignError("Dominio inválido, corregilo e intentá otra vez.");
         return;
       }
-      const avRes = await fetch(`/api/stickers/available?workshop_id=${workshopId}`, { credentials: "include" });
+
+      const avRes = await fetch(
+        `/api/stickers/available?workshop_id=${workshopId}`,
+        { credentials: "include" }
+      );
       if (!avRes.ok) {
         setAssignError("No se pudieron consultar las obleas disponibles.");
         return;
@@ -178,6 +181,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
         setAssignError("No hay obleas disponibles en el taller.");
         return;
       }
+
       const pick = list[0];
       const asRes = await fetch(`/api/stickers/assign-to-car`, {
         method: "POST",
@@ -187,7 +191,6 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
           license_plate: plate,
           sticker_id: pick.id,
           workshop_id: workshopId,
-          mark_used: false,
         }),
       });
       if (!asRes.ok) {
@@ -195,6 +198,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
         setAssignError(j?.error || "No se pudo asignar la oblea.");
         return;
       }
+
       setCar((prev: any) => ({
         ...(prev || {}),
         license_plate: plate,
@@ -214,8 +218,15 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     setAssignError(null);
     setIsAssigning(true);
     try {
-      const plate = (car?.license_plate || plateQuery || "").trim().toUpperCase();
+      const plate = (
+        car?.license_plate ||
+        plateQuery ||
+        ""
+      )
+        .trim()
+        .toUpperCase();
       if (!plate) return;
+
       const res = await fetch(`/api/stickers/unassign-from-car`, {
         method: "POST",
         credentials: "include",
@@ -227,7 +238,12 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
         setAssignError(j?.error || "No se pudo quitar la oblea.");
         return;
       }
-      setCar((prev: any) => ({ ...(prev || {}), sticker_id: null, sticker: undefined }));
+
+      setCar((prev: any) => ({
+        ...(prev || {}),
+        sticker_id: null,
+        sticker: undefined,
+      }));
       setObleaValue("");
     } catch (e) {
       console.error(e);
@@ -237,54 +253,81 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     }
   };
 
-    const handleManualAssign = async () => {
-      setManualError(null);
-      setAssignError(null);
-      setIsAssigningManual(true);
-      try {
-        const plate = (car?.license_plate || plateQuery || "").trim().toUpperCase();
-        if (!plate || !PLATE_REGEX.test(plate)) {
-          setManualError("Dominio inválido, corregilo e intentá otra vez.");
-          return;
-        }
-        const err = validateManualSticker(manualValue);
-        if (err) {
-          setManualError(err);
-          return;
-        }
-        const res = await fetch(`/api/stickers/assign-by-number`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            license_plate: plate,
-            workshop_id: workshopId,
-            sticker_number: sanitizeSticker(manualValue),
-            mark_used: false,
-          }),
-        });
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          setManualError(j?.error || "No se pudo asignar la oblea ingresada.");
-          return;
-        }
-        const j = await res.json();
-        setCar((prev: any) => ({
-          ...(prev || {}),
-          license_plate: plate,
-          sticker_id: j?.sticker_id,
-          sticker: { id: j?.sticker_id, sticker_number: j?.sticker_number },
-        }));
-        setObleaValue(String(j?.sticker_number || ""));
-        setManualOpen(false);
-        setManualValue("");
-      } catch (e) {
-        console.error(e);
-        setManualError("Ocurrió un error asignando la oblea.");
-      } finally {
-        setIsAssigningManual(false);
+  function buildStickerFromParts(prefixRaw: string, codeRaw: string, suffixRaw: string) {
+    const prefix = sanitizeStickerPart(prefixRaw);
+    const code = codeRaw.replace(/\D/g, ""); // sólo dígitos
+    const suffix = sanitizeStickerPart(suffixRaw);
+    return prefix + code + suffix;
+  }
+
+  const handleManualAssign = async () => {
+    setManualError(null);
+    setAssignError(null);
+    setIsAssigningManual(true);
+
+    try {
+      const plate = (
+        car?.license_plate ||
+        plateQuery ||
+        ""
+      )
+        .trim()
+        .toUpperCase();
+
+      if (!plate || !PLATE_REGEX.test(plate)) {
+        setManualError("Dominio inválido, corregilo e intentá otra vez.");
+        return;
       }
-    };
+
+      const cleanedCode = manualCode.replace(/\D/g, "");
+      if (!cleanedCode) {
+        setManualError("Ingresá el código numérico de la oblea.");
+        return;
+      }
+
+      const finalSticker = buildStickerFromParts(
+        manualPrefix,
+        manualCode,
+        manualSuffix
+      );
+
+      const res = await fetch(`/api/stickers/assign-by-number`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          license_plate: plate,
+          workshop_id: workshopId,
+          sticker_number: finalSticker,
+        }),
+      });
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setManualError(j?.error || "No se pudo asignar la oblea ingresada.");
+        return;
+      }
+
+      const j = await res.json();
+      setCar((prev: any) => ({
+        ...(prev || {}),
+        license_plate: plate,
+        sticker_id: j?.sticker_id,
+        sticker: { id: j?.sticker_id, sticker_number: j?.sticker_number },
+      }));
+      setObleaValue(String(j?.sticker_number || ""));
+
+      setManualOpen(false);
+      setManualPrefix("");
+      setManualCode("");
+      setManualSuffix("");
+    } catch (e) {
+      console.error(e);
+      setManualError("Ocurrió un error asignando la oblea.");
+    } finally {
+      setIsAssigningManual(false);
+    }
+  };
 
   const plateErr = errors?.car_license_plate;
   const disableSearch = isSearching || Boolean(plateErr);
@@ -293,25 +336,40 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     <div className="min-h-full flex items-center justify-center px-6">
       <div className="space-y-6 mb-10 px-8 py-6 mt-12 w-full max-w-2xl bg-white rounded-lg">
         <div>
-          <h2 className="text-xl font-regular text-[#000000] mb-1">Oblea del vehículo</h2>
+          <h2 className="text-xl font-regular text-[#000000] mb-1">
+            Oblea del vehículo
+          </h2>
           <p className="text-md font-regular text-[#00000080]">
-            Ingresá el dominio, luego elegí autoasignar la primera disponible del taller, o asignar una oblea manualmente escribiendo su número.
+            Ingresá el dominio, luego elegí autoasignar la primera disponible
+            del taller, o asignar una oblea manualmente escribiendo su número.
           </p>
         </div>
 
         <div className="w-full">
-          <label htmlFor="plate" className="block text-sm text-gray-700 mb-1">Dominio</label>
+          <label
+            htmlFor="plate"
+            className="block text-sm text-gray-700 mb-1"
+          >
+            Dominio
+          </label>
           <div className="flex gap-3">
             <input
               id="plate"
               type="text"
               placeholder="Ej: ABC123, o AB123CD"
-              className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 uppercase ${
-                plateErr ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
+              className={`flex-1 border rounded-[4px] px-4 py-3 text-base focus:outline-none focus:ring-2 uppercase ${
+                plateErr
+                  ? "border-red-400 focus:ring-red-500"
+                  : "border-[#DEDEDE] focus:ring-[#0040B8]"
               }`}
               value={plateQuery}
               onChange={handlePlateChange}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); fetchVehicleByPlate(); } }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  fetchVehicleByPlate();
+                }
+              }}
               disabled={isSearching}
             />
             <button
@@ -326,8 +384,12 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
             </button>
           </div>
 
-          {plateErr && <p className="text-sm text-red-600 mt-3">{plateErr}</p>}
-          {!plateErr && searchError && <p className="text-sm text-red-600 mt-3">{searchError}</p>}
+          {plateErr && (
+            <p className="text-sm text-red-600 mt-3">{plateErr}</p>
+          )}
+          {!plateErr && searchError && (
+            <p className="text-sm text-red-600 mt-3">{searchError}</p>
+          )}
         </div>
 
         {mode === "result" && (
@@ -335,33 +397,62 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
             <h3 className="text-md font-semibold">Resultado</h3>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><span className="text-gray-500">Dominio: </span><span className="font-medium">{car?.license_plate || plateQuery}</span></div>
-              <div><span className="text-gray-500">Marca: </span><span className="font-medium">{car?.brand || "Vacio"}</span></div>
-              <div><span className="text-gray-500">Modelo: </span><span className="font-medium">{car?.model || "Vacio"}</span></div>
-              <div><span className="text-gray-500">CRT/CNI: </span><span className="font-medium">{appId || "Vacio"}</span></div>
+              <div>
+                <span className="text-gray-500">Dominio: </span>
+                <span className="font-medium">
+                  {car?.license_plate || plateQuery}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Marca: </span>
+                <span className="font-medium">
+                  {car?.brand || "Vacio"}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Modelo: </span>
+                <span className="font-medium">
+                  {car?.model || "Vacio"}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">CRT/CNI: </span>
+                <span className="font-medium">
+                  {appId || "Vacio"}
+                </span>
+              </div>
             </div>
 
             <div className="pt-2">
-              <label htmlFor="oblea" className="block text-sm text-gray-700 mb-1">Oblea actual</label>
-              <div className="flex gap-2">
+              <label
+                htmlFor="oblea"
+                className="block text-sm text-gray-700 mb-1"
+              >
+                Oblea actual
+              </label>
+              <div className="flex flex-wrap gap-2">
                 <input
                   id="oblea"
                   type="text"
                   placeholder="Ej: ABC123456"
-                  className="flex-1 border border-[#DEDEDE] rounded-[10px] px-4 py-3 text-base bg-gray-50 text-gray-700 cursor-not-allowed"
+                  className="flex-1 min-w-[180px] border border-[#DEDEDE] rounded-[4px] px-4 py-3 text-base bg-gray-50 text-gray-700 cursor-not-allowed"
                   value={obleaValue}
                   onChange={(e) => setObleaValue(e.target.value)}
                   readOnly
                   disabled
                 />
-                <button
-                  type="button"
-                  onClick={handleAutoAssign}
-                  disabled={isAssigning}
-                  className="px-3 py-2 rounded-[4px] text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
-                >
-                  {isAssigning ? "Asignando..." : "Autoasignar"}
-                </button>
+
+                {!car?.sticker_id && (
+                  <button
+                    type="button"
+                    onClick={handleAutoAssign}
+                    disabled={isAssigning}
+                    className="px-3 py-2 rounded-[4px] text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
+                  >
+                    {isAssigning ? "Asignando..." : "Autoasignar"}
+                  </button>
+                )}
+
                 {!!car?.sticker_id && (
                   <button
                     type="button"
@@ -373,62 +464,126 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                   </button>
                 )}
               </div>
+
               {availableHint && !car?.sticker_id && (
-                <p className="text-sm text-gray-500 mt-1">Se asignará la primera oblea disponible: {availableHint}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Se asignará la primera oblea disponible: {availableHint}
+                </p>
               )}
-              {assignError && <p className="text-xs text-red-600 mt-1">{assignError}</p>}
-              <div className="mt-5 border-t pt-4">
+
+              {assignError && (
+                <p className="text-xs text-red-600 mt-1">{assignError}</p>
+              )}
+
+              <div className="mt-5 border-t pt-4 w-full">
                 <button
                   type="button"
                   onClick={() => setManualOpen((v) => !v)}
                   className="text-sm text-[#0040B8] hover:underline"
                 >
-                  {manualOpen ? "Ocultar asignación manual" : "Asignar manualmente"}
+                  {manualOpen
+                    ? "Ocultar asignación manual"
+                    : "Asignar manualmente"}
                 </button>
+
                 {manualOpen && (
-                  <div className="mt-3 space-y-2">
-                    <label className="block text-sm text-gray-700">Número de oblea</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Ej: ZX000123Q"
-                        value={manualValue}
-                        onChange={(e) => setManualValue(e.target.value)}
-                        className={`flex-1 border rounded-[10px] px-4 py-3 text-base focus:outline-none focus:ring-2 ${
-                          manualError ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
-                        }`}
-                      />
+                  <div className="mt-3 space-y-3 w-full">
+                    <label className="block text-sm text-gray-700">
+                      Número de oblea
+                    </label>
+
+                    <div className="text-xs text-gray-500 leading-snug">
+                      Vista previa:{" "}
+                      <span className="font-mono text-gray-800">
+                        {sanitizeStickerPart(manualPrefix) +
+                          manualCode.replace(/\D/g, "") +
+                          sanitizeStickerPart(manualSuffix) || "—"}
+                      </span>
+                    </div>
+
+
+                    <div className="grid grid-cols-3 gap-3 ">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500 mb-1">
+                          Prefijo (opcional)
+                        </span>
+                        <input
+                          type="text"
+                          value={manualPrefix}
+                          onChange={(e) =>
+                            setManualPrefix(e.target.value.toUpperCase())
+                          }
+                          className="border rounded-[4px] px-3 py-2 text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]"
+                          placeholder="ABC"
+                        />
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500 mb-1">
+                          Código
+                        </span>
+                        <input
+                          type="text"
+                          value={manualCode}
+                          onChange={(e) =>
+                            setManualCode(e.target.value.replace(/\D/g, ""))
+                          }
+                          className={`border rounded-[4px] px-3 py-2 text-base focus:outline-none focus:ring-2 ${
+                            manualError
+                              ? "border-red-400 focus:ring-red-500"
+                              : "border-[#DEDEDE] focus:ring-[#0040B8]"
+                          }`}
+                          placeholder="001234"
+                        />
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500 mb-1">
+                          Sufijo (opcional)
+                        </span>
+                        <input
+                          type="text"
+                          value={manualSuffix}
+                          onChange={(e) =>
+                            setManualSuffix(e.target.value.toUpperCase())
+                          }
+                          className="border rounded-[4px] px-3 py-2 text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]"
+                          placeholder="Q"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 justify-center">
                       <button
                         type="button"
                         onClick={handleManualAssign}
                         disabled={isAssigningManual}
-                        className="px-3 py-2 rounded-[4px] text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
+                        className="px-3 py-2.5 rounded-[4px] my-4 text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
                       >
-                        {isAssigningManual ? "Asignando..." : (!!car?.sticker_id ? "Reemplazar" : "Asignar")}
+                        {isAssigningManual
+                          ? "Asignando oblea..."
+                          : !!car?.sticker_id
+                          ? "Reemplazar oblea"
+                          : "Asignar oblea"}
                       </button>
+
                     </div>
-                    {!!manualValue && (
-                      (() => {
-                        const p = splitStickerParts(manualValue);
-                        return (
-                          <p className="text-xs text-gray-500">
-                            {p
-                              ? `Prefijo: ${p.prefix || "vacío"}, código: ${p.code}, sufijo: ${p.suffix || "vacío"}`
-                              : "Formato inválido"}
-                          </p>
-                        );
-                      })()
+
+                    {manualError && (
+                      <p className="text-xs text-red-600">
+                        {manualError}
+                      </p>
                     )}
-                    {manualError && <p className="text-xs text-red-600">{manualError}</p>}
+
                     {!manualError && (
-                      <p className="text-xs text-gray-500">
-                        Acepta prefijo opcional, código numérico, sufijo opcional, se ignoran espacios y guiones.
+                      <p className="text-[14px] text-gray-500">
+                        Prefijo y sufijo pueden ir vacíos. El código tiene que
+                        tener al menos un número.
                       </p>
                     )}
                   </div>
                 )}
               </div>
-
             </div>
           </div>
         )}
