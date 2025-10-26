@@ -172,9 +172,9 @@ async function fetchDetails(inspectionId: number) {
 export default async function InspectionPage({
   params,
 }: {
-  params: { id: string; applicationId: string };
+  params: Promise<{ id: string; applicationId: string }>;
 }) {
-  const { id, applicationId } = params;
+  const { id, applicationId } = await params;
   const appId = Number(applicationId);
   const workshopId = id;
 

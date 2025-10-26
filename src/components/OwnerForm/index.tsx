@@ -122,15 +122,15 @@ export default function OwnerForm({
   // Schema base
   const baseFormData = useMemo(
     () => [
-      { label: "DNI", placeholder: "Ej: 39959950", name: "dni", type: "text" },
+      { label: "DNI", placeholder: "Ej: 39959950", name: "dni", type: "text", isRequired: true },
       { label: "Email", placeholder: "Ej: ejemplo@gmail.com", name: "email", type: "email" },
-      { label: "Nombre", placeholder: "Ej: Ángel Isaías", name: "first_name" },
-      { label: "Apellido", placeholder: "Ej: Vaquero", name: "last_name" },
+      { label: "Nombre", placeholder: "Ej: Ángel Isaías", name: "first_name", isRequired: true },
+      { label: "Apellido", placeholder: "Ej: Vaquero", name: "last_name", isRequired: true },
       { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number", type: "text" },
-      { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street" },
-      { label: "Provincia", options: provinceOptions, name: "province" },
+      { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street", isRequired: true },
+      { label: "Provincia", options: provinceOptions, name: "province", isRequired: true },
       // { label: "Localidad", options: cityOptions, name: "city", disabled: loadingCities || !data?.province },
-      { label: "Localidad", placeholder: "Ej: Córdoba Capital", name: "city", type: "text" },
+      { label: "Localidad", placeholder: "Ej: Córdoba Capital", name: "city", type: "text", isRequired: true },
     ],[provinceOptions]
     // [provinceOptions, cityOptions, loadingCities, data?.province]
   );

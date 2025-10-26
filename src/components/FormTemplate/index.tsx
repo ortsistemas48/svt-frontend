@@ -17,6 +17,7 @@ type Field = {
   options?: Option[];         // si existe => renderiza <select>
   disabled?: boolean;         // deshabilitado por campo
   className?: string;
+  isRequired?: boolean;       // si el campo es requerido
 };
 
 type SearchConfig = {
@@ -310,7 +311,20 @@ export default function FormTemplate({
           if (f.options && Array.isArray(f.options)) {
             return (
               <div key={f.name} className={f.className ?? ""}>
-                <label className="block text-sm text-gray-700 mb-1">{f.label}</label>
+                <label className="block text-sm text-gray-700 mb-1">
+                  {f.label}
+                  {f.isRequired && (
+                    <span className="ml-1">
+                      <span>
+                        (
+                      </span>
+                      <span className="text-red-500">*</span>
+                      <span>
+                        )
+                      </span>
+                    </span>
+                    )}
+                </label>
                 <select
                   className={`w-full border rounded-[4px] px-4 py-3 text-base focus:outline-none focus:ring-2 ${
                     error ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
@@ -338,7 +352,20 @@ export default function FormTemplate({
           // INPUT
           return (
             <div key={f.name} className={f.className ?? ""}>
-              <label className="block text-sm text-gray-700 mb-1">{f.label}</label>
+              <label className="block text-sm text-gray-700 mb-1">
+                {f.label}
+                {f.isRequired && (
+                    <span className="ml-1">
+                      <span>
+                        (
+                      </span>
+                      <span className="text-red-500">*</span>
+                      <span>
+                        )
+                      </span>
+                    </span>
+                    )}
+              </label>
               <input
                 type={f.type ?? "text"}
                 placeholder={f.placeholder ?? ""}

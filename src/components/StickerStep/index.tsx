@@ -23,6 +23,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
   const [searchError, setSearchError] = useState<string | null>(null);
 
   const [mode, setMode] = useState<"idle" | "result">("idle");
+  const [vehicleFound, setVehicleFound] = useState<boolean | null>(null);
   const [obleaValue, setObleaValue] = useState("");
 
   const [isAssigning, setIsAssigning] = useState(false);
@@ -105,6 +106,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     try {
       setIsSearching(true);
       setSearchError(null);
+      setVehicleFound(null);
 
       const res = await fetch(
         `/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
@@ -118,6 +120,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
 
       if (res.status === 404) {
         setCar((prev: any) => ({ ...(prev || {}), license_plate: plate }));
+        setVehicleFound(false);
         setMode("result");
         setErrors((prev: any) => {
           if (!prev) return prev;

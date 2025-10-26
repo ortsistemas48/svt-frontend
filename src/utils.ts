@@ -326,7 +326,6 @@ export function getMissingCarFields(car: any): string[] {
     "green_card_number",
     "license_number",
     "license_expiration",
-    "manufacture_year",
     "registration_year",
     "license_class",
 
@@ -336,7 +335,6 @@ export function getMissingCarFields(car: any): string[] {
     license_plate: "Dominio",
     brand: "Marca",
     model: "Modelo",
-    manufacture_year: "Año de Fabricación",
     registration_year: "Año de Patentamiento",
     weight: "Peso",
     fuel_type: "Tipo de combustible",
