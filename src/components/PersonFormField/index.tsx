@@ -17,6 +17,7 @@ type FormFieldProps = {
   onBlur?: () => void;
   error?: string;
   disabled?: boolean;
+  isRequired?: boolean;
 
   innerCheckboxLabel?: string;
   innerCheckboxChecked?: boolean;
@@ -36,9 +37,11 @@ export default function PersonFormField({
   onBlur,
   error,
   disabled = false,
+  isRequired = false,
   innerCheckboxLabel,
   innerCheckboxChecked,
   onInnerCheckboxChange,
+  
 }: FormFieldProps) {
   const safe = (s: string) => s.toLowerCase().replace(/\s+/g, "-");
   const id = isOwner ? `owner-${safe(name || label)}` : `driver-${safe(name || label)}`;
@@ -57,6 +60,13 @@ export default function PersonFormField({
     <div className={`flex flex-col justify-center w-full ${className}`}>
       <label htmlFor={id} className="mb-1 block text-base font-regular text-[#000000] leading-tight">
         {label}
+        {isRequired && (
+                    <span className="ml-1">
+                      
+                      <span className="text-red-500">*</span>
+                      
+                    </span>
+                    )}
       </label>
 
       {options ? (

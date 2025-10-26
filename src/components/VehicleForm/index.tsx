@@ -20,6 +20,7 @@ interface FormFieldData {
   type?: string;
   options?: { value: string; label: string }[];
   className?: string;
+  isRequired?: boolean;
 }
 
 interface VehicleFormProps {
@@ -32,23 +33,26 @@ interface VehicleFormProps {
 
 
 const formData1: FormFieldData[] = [
-  { label: "Dominio", placeholder: "Ej: AB123AB", name: "license_plate" },
-  { label: "Marca", placeholder: "Ej: Fiat", name: "brand" },
-  { label: "Modelo", placeholder: "Ej: Cronos", name: "model" },
+  { label: "Dominio", placeholder: "Ej: AB123AB", name: "license_plate", isRequired: true },
+  { label: "Marca", placeholder: "Ej: Fiat", name: "brand", isRequired: true },
+  { label: "Modelo", placeholder: "Ej: Cronos", name: "model", isRequired: true },
   {
     label: "Peso total (KG)",
     placeholder: "Ej: 2000 KG",
     name: "total_weight",
+    isRequired: true,
   },
   {
     label: "Peso eje delantero (KG)",
     placeholder: "Ej: 1000 KG",
     name: "front_weight",
+    isRequired: true,
   },
   {
     label: "Peso eje trasero (KG)",
     placeholder: "Ej: 1000 KG",
     name: "back_weight",
+    isRequired: true,
   },
   {
     label: "Tipo de combustible",
@@ -60,6 +64,7 @@ const formData1: FormFieldData[] = [
       { value: "hibrido", label: "Híbrido" },
     ],
     name: "fuel_type",
+    isRequired: true,
   },
   {
     label: "Tipo de vehículo",
@@ -88,6 +93,7 @@ const formData1: FormFieldData[] = [
       { value: "O4", label: "O4 - Acoplados/semirremolques de más de 10.000 KG" },
     ],
     name: "vehicle_type",
+    isRequired: true,
   },
   {
     label: "Tipo de uso",
@@ -104,21 +110,23 @@ const formData1: FormFieldData[] = [
       { value: "H", label: "H - Emergencia, seguridad, fúnebres, remolque, maquinaria especial o agrícola y trabajos sobre la vía pública" },
     ],
     name: "usage_type",
+    isRequired: true,
   },
 ];
 
 const formData2: FormFieldData[] = [
-  { label: "Marca de motor", placeholder: "Ej: Toyota", name: "engine_brand" },
-  { label: "Número de motor", placeholder: "Ej: B91099432213123", name: "engine_number" },
-  { label: "Marca de chasis", placeholder: "Ej: MARCA", name: "chassis_brand" },
-  { label: "Número de chasis", placeholder: "Ej: 1231415251251451", name: "chassis_number" },
-  { label: "Nº de cédula verde", placeholder: "Ej: ABF45658", name: "green_card_number" },
-  { label: "Exp. de la cédula", type: "date", placeholder: "dd/mm/aa", name: "green_card_expiration" },
-  { label: "Nº de licencia", placeholder: "Ej: A123456789", name: "license_number" },
+  { label: "Marca de motor", placeholder: "Ej: Toyota", name: "engine_brand", isRequired: true },
+  { label: "Número de motor", placeholder: "Ej: B91099432213123", name: "engine_number", isRequired: true },
+  { label: "Marca de chasis", placeholder: "Ej: MARCA", name: "chassis_brand", isRequired: true },
+  { label: "Número de chasis", placeholder: "Ej: 1231415251251451", name: "chassis_number", isRequired: true },
+  { label: "Nº de cédula verde", placeholder: "Ej: ABF45658", name: "green_card_number", isRequired: true },
+  { label: "Exp. de la cédula", type: "date", placeholder: "dd/mm/aa", name: "green_card_expiration", isRequired: true },
+  { label: "Nº de licencia", placeholder: "Ej: A123456789", name: "license_number", isRequired: true },
   {
     label: "Clase de licencia",
     name: "license_class",
     type: "select",
+    isRequired: true,
     options: [
       { value: "A", label: "A - Motocicletas" },
       { value: "A1", label: "A1 - Motocicletas pequeñas" },
@@ -133,7 +141,7 @@ const formData2: FormFieldData[] = [
       { value: "F", label: "F - Vehículos para personas con discapacidad" },
     ],
   },
-  { label: "Exp. de la licencia", type: "date", placeholder: "dd/mm/aa", name: "license_expiration" },
+  { label: "Exp. de la licencia", type: "date", placeholder: "dd/mm/aa", name: "license_expiration", isRequired: true },
   { label: "Póliza del seguro", type: "text", placeholder: "Ej: 1234567890", name: "insurance" },
 ];
 
@@ -232,7 +240,6 @@ export default function VehicleForm({
       car?.green_card_no_expiration === true
     );
   });
-  console.log(car)
 
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
@@ -448,7 +455,9 @@ export default function VehicleForm({
                           onChange={(val) => handleChange(field.name, val)}
                           onBlur={() => handleBlur(field.name)}
                           error={getCarError(field.name)}
+                          isRequired={field.isRequired}
                         />
+                        
                       </div>
 
                       {/* Año de fabricación */}
@@ -478,6 +487,7 @@ export default function VehicleForm({
                           onChange={(val) => handleChange("registration_year", val)}
                           onBlur={() => handleBlur("registration_year")}
                           error={getCarError("registration_year")}
+                          isRequired={true}
                         />
                       </div>
                     </div>
@@ -500,6 +510,7 @@ export default function VehicleForm({
                   error={getCarError(field.name)}
                   disabled={false}
                   className={field.className}
+                  isRequired={field.isRequired}
                 />
               ) : (
                 <FormField
@@ -515,6 +526,7 @@ export default function VehicleForm({
                   error={getCarError(field.name)}
                   disabled={false}
                   className={field.className}
+                  isRequired={field.isRequired}
                 />
               );
             })}
@@ -539,6 +551,7 @@ export default function VehicleForm({
                 error: getCarError(field.name),
                 disabled: field.name === "green_card_expiration" ? greenCardNoExpiration : false,
                 className: field.className,
+                isRequired: field.isRequired,
               } as const;
 
               if (field.name === "green_card_expiration") {

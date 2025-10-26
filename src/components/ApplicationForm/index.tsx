@@ -451,7 +451,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             onDeleteDriverDoc={onDeleteDriverDoc}
           />
         );
-      case 2: // ⬅️ nuevo paso oblea
+      case 2:
         return (
           <StickerStep
             workshopId={Number(id)}
