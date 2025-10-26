@@ -53,12 +53,12 @@ export default function PersonFormField({
     : `${base} border-gray-300 focus:ring-blue-500`;
 
   const showInnerCheckbox = typeof innerCheckboxLabel === "string" && !!onInnerCheckboxChange;
-
+  console.log(label, value)
   // Altura reservada para el renglón del checkbox, asegura alineación entre campos
   const checkboxRowClass = "flex items-center gap-2 text-sm h-1"; // 1.5rem
   return (
     <div className={`flex flex-col justify-center w-full ${className}`}>
-      <label htmlFor={id} className="mb-1 block text-base font-regular text-[#000000] leading-tight">
+      <label htmlFor={id} className="mb-1 block text-sm font-regular text-[#000000] leading-tight">
         {label}
         {isRequired && (
                     <span className="ml-1">

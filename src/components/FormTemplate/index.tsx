@@ -22,32 +22,21 @@ type Field = {
 
 type SearchConfig = {
   enabled: boolean;
-  /** campo clave en 'data' (p.ej. "dni") para detectar si ya hay dato cargado */
   dataKey: string;
-  /** etiqueta e input del buscador */
-  fieldLabel: string;         // "DNI"
-  placeholder?: string;       // "Ej: 39959950"
-  inputType?: string;         // "text"
-  /** sanitiza el input antes de validar/buscar */
+  fieldLabel: string;         
+  placeholder?: string;       
+  inputType?: string;         
   sanitize?: (raw: string) => string;
-  /** devuelve string de error o null si es válido */
   validate?: (q: string) => string | null;
-  /** construye la URL GET a consultar */
   buildUrl: (q: string) => string;
-  /** parsea el payload -> data del formulario cuando EXISTE */
   mapFound: (payload: any, query: string) => Record<string, any>;
-  /** data inicial cuando NO existe (p.ej. setear el DNI) */
   mapNotFound: (query: string) => Record<string, any>;
-  /** HTTP status que indica "no encontrado" (default 404) */
   notFoundStatus?: number;
-  /** textos */
-  titleIdle?: string;         // Título en la vista de búsqueda
-  descIdle?: string;          // Descripción en la vista de búsqueda
-  searchButtonLabel?: string; // "Buscar"
-  resetButtonLabel?: string;  // "Buscar otro DNI"
-  /** Al resetear búsqueda (volver a idle), el FormTemplate llama esto */
+  titleIdle?: string;        
+  descIdle?: string;          
+  searchButtonLabel?: string; 
+  resetButtonLabel?: string;  
   onReset?: () => void;
-  /** Al cambiar de modo (view/edit), por si querés enterarte desde afuera */
   onModeChange?: (mode: Mode) => void;
 };
 
@@ -66,10 +55,8 @@ type Props = {
   onBlurField?: (name: string) => void;
   fieldErrors?: Record<string, string | undefined>;
 
-  /** 🆕: configuración para habilitar la vista de búsqueda reutilizable */
   searchConfig?: SearchConfig;
 
-  /** 🆕: modo inicial (si no hay búsqueda): por defecto 'edit' */
   defaultMode?: Mode;
 };
 
@@ -315,13 +302,7 @@ export default function FormTemplate({
                   {f.label}
                   {f.isRequired && (
                     <span className="ml-1">
-                      <span>
-                        (
-                      </span>
                       <span className="text-red-500">*</span>
-                      <span>
-                        )
-                      </span>
                     </span>
                     )}
                 </label>
@@ -356,13 +337,7 @@ export default function FormTemplate({
                 {f.label}
                 {f.isRequired && (
                     <span className="ml-1">
-                      <span>
-                        (
-                      </span>
                       <span className="text-red-500">*</span>
-                      <span>
-                        )
-                      </span>
                     </span>
                     )}
               </label>
@@ -383,7 +358,6 @@ export default function FormTemplate({
           );
         })}
       </div>
-      {/* Dropzone simple (opcional) */}
       {showDropzone && (
         <div className="pt-4">
           <Dropzone

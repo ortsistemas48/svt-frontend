@@ -84,7 +84,7 @@ export default function InspectionStepsClient({
   const [inspDocsDeletingId, setInspDocsDeletingId] = useState<number | null>(null);
   const [dzResetToken, setDzResetToken] = useState(0);
 
-  const MAX_CHARS = 1200;
+  const MAX_CHARS = 750;
   const obsCharCount = globalText.length;
 
   const stepNameById = useMemo(() => {
@@ -317,7 +317,7 @@ export default function InspectionStepsClient({
       const mergedText = mergePartsIntoGlobalText(globalText, draftParts);
 
       if (mergedText.length > MAX_CHARS) {
-        setError("No se puede agregar: superarías el límite de 1200 caracteres.");
+        setError("No se puede agregar: superarías el límite de 750 caracteres.");
         return prev;
       }
 

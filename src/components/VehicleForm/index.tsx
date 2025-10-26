@@ -2,7 +2,7 @@
 
 import FormField from "@/components/PersonFormField";
 import { useApplication } from "@/context/ApplicationContext";
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import {
   alnumSpaceUpper,
   clamp,
@@ -31,29 +31,26 @@ interface VehicleFormProps {
   onDeleteCarDoc?: (docId: number) => Promise<void> | void;
 }
 
+/* --------- Helpers --------- */
+const toDateInputValue = (v: any): string => {
+  if (!v) return "";
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
+/* --------- Config UI --------- */
 const formData1: FormFieldData[] = [
   { label: "Dominio", placeholder: "Ej: AB123AB", name: "license_plate", isRequired: true },
   { label: "Marca", placeholder: "Ej: Fiat", name: "brand", isRequired: true },
   { label: "Modelo", placeholder: "Ej: Cronos", name: "model", isRequired: true },
-  {
-    label: "Peso total (KG)",
-    placeholder: "Ej: 2000 KG",
-    name: "total_weight",
-    isRequired: true,
-  },
-  {
-    label: "Peso eje delantero (KG)",
-    placeholder: "Ej: 1000 KG",
-    name: "front_weight",
-    isRequired: true,
-  },
-  {
-    label: "Peso eje trasero (KG)",
-    placeholder: "Ej: 1000 KG",
-    name: "back_weight",
-    isRequired: true,
-  },
+  { label: "Peso total (KG)", placeholder: "Ej: 2000", name: "total_weight", isRequired: true },
+  { label: "Peso eje delantero (KG)", placeholder: "Ej: 1000", name: "front_weight", isRequired: true },
+  { label: "Peso eje trasero (KG)", placeholder: "Ej: 1000", name: "back_weight", isRequired: true },
   {
     label: "Tipo de combustible",
     options: [
@@ -145,8 +142,7 @@ const formData2: FormFieldData[] = [
   { label: "Póliza del seguro", type: "text", placeholder: "Ej: 1234567890", name: "insurance" },
 ];
 
-
-// Mensajes por campo
+/* --------- Reglas de validación --------- */
 const MSG = {
   brand: "Letras y números, máx. 15.",
   model: "Campo requerido.",
@@ -164,7 +160,6 @@ const MSG = {
   back_weight: "Solo números, hasta 10.",
 };
 
-// Patrones por campo
 const PATTERN: Record<string, RegExp> = {
   brand: /^[A-Z0-9 ]{1,15}$/,
   model: /^.+$/,
@@ -184,7 +179,6 @@ const PATTERN: Record<string, RegExp> = {
   back_weight: /^\d{1,10}$/,
 };
 
-// Sanitizado por campo
 const SANITIZE: Record<string, (s: string) => string> = {
   license_plate: (s) => clamp(toUpper(s).replace(/[-\s]/g, ""), 10),
   brand: (s) => clamp(alnumSpaceUpper(s), 15),
@@ -197,10 +191,10 @@ const SANITIZE: Record<string, (s: string) => string> = {
   chassis_brand: (s) => clamp(lettersSpaceUpper(s), 15),
   green_card_number: (s) => s,
   license_number: (s) => clamp(onlyAlnumUpper(s), 15),
+  license_class: (s) => clamp(onlyAlnumUpper(s).trim(), 3), 
   insurance: (s) => clamp(onlyDigits(s), 10),
 };
 
-// Etiquetas para el resumen de errores
 const FIELD_LABEL: Record<string, string> = {
   license_plate: "Dominio",
   brand: "Marca",
@@ -223,7 +217,7 @@ const FIELD_LABEL: Record<string, string> = {
   insurance: "Póliza del seguro",
 };
 
-
+/* --------- Componente --------- */
 export default function VehicleForm({
   car,
   setCar,
@@ -233,18 +227,67 @@ export default function VehicleForm({
 }: VehicleFormProps) {
   const { setIsIdle, errors, setErrors } = useApplication() as any;
 
-  const [greenCardNoExpiration, setGreenCardNoExpiration] = useState(() => {
-    return (
-      !car?.green_card_expiration ||
-      car?.green_card_expiration === "" ||
-      car?.green_card_no_expiration === true
-    );
-  });
+  // Derivar el flag de sin vencimiento desde car
+  const greenCardNoExpiration =
+    !car?.green_card_expiration ||
+    car?.green_card_expiration === "" ||
+    car?.green_card_no_expiration === true;
 
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
 
   const getCarError = (name: string) => (errors ? errors[`car_${name}`] : "");
+
+  // Evitar que el autofill pise datos existentes
+  const engineAuto = useRef<boolean>(!car?.engine_brand || String(car?.engine_brand).trim() === "");
+  const chassisAuto = useRef<boolean>(!car?.chassis_brand || String(car?.chassis_brand).trim() === "");
+  const didAutofill = useRef(false);
+  console.log("imporntate", car.license_class)
+  useEffect(() => {
+    if (didAutofill.current) return;
+    const b = String(car?.brand ?? "").trim();
+    const eb = String(car?.engine_brand ?? "").trim();
+    const cb = String(car?.chassis_brand ?? "").trim();
+    if (!b) return;
+    if (eb || cb) {
+      engineAuto.current = false;
+      chassisAuto.current = false;
+      didAutofill.current = true;
+      return;
+    }
+    setCar((prev: any) => {
+      const brandSan = SANITIZE.brand ? SANITIZE.brand(b) : b;
+      return {
+        ...prev,
+        engine_brand: SANITIZE.engine_brand ? SANITIZE.engine_brand(brandSan) : brandSan,
+        chassis_brand: SANITIZE.chassis_brand ? SANITIZE.chassis_brand(brandSan) : brandSan,
+      };
+    });
+    didAutofill.current = true;
+  }, [car?.brand, car?.engine_brand, car?.chassis_brand, setCar]);
+
+  const LICENSE_CLASS_VALUES = new Set(["A","A1","A2","B1","B2","C","D1","D2","E1","E2","F"]);
+
+  useEffect(() => {
+    const raw = car?.license_class ?? "";
+    const norm = SANITIZE.license_class ? SANITIZE.license_class(String(raw)) : String(raw).trim().toUpperCase();
+    if (!norm) return;
+
+    if (LICENSE_CLASS_VALUES.has(norm)) {
+      if (norm !== raw) {
+        setCar((prev: any) => ({ ...prev, license_class: norm }));
+      }
+      return;
+    }
+
+    const m = norm.match(/^[A-Z]\d?/);
+    const guess = m ? m[0] : "";
+    const finalVal = LICENSE_CLASS_VALUES.has(guess) ? guess : "";
+
+    if (finalVal !== raw) {
+      setCar((prev: any) => ({ ...prev, license_class: finalVal }));
+    }
+  }, [car?.license_class, setCar]);
 
   const validateOne = (name: string, raw: string) => {
     const v = String(raw ?? "");
@@ -252,48 +295,31 @@ export default function VehicleForm({
     if (!p) return setCarError(name, "");
     if (!v) return setCarError(name, "");
 
-    // Validación de fechas con opción sin vencimiento para cédula
+    // Fechas, permitir pasado si tu flujo lo requiere, aquí solo formato válido
     if (name === "green_card_expiration" || name === "license_expiration") {
       if (name === "green_card_expiration" && greenCardNoExpiration) {
         setCarError(name, "");
         return;
       }
-      const date = new Date(v);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (isNaN(date.getTime())) {
-        setCarError(name, "Fecha inválida.");
-        return;
-      }
-      if (date < today) {
-        setCarError(name, "La fecha no puede ser anterior a hoy.");
-        return;
-      }
-      setCarError(name, "");
+      const formatted = /^\d{4}-\d{2}-\d{2}$/.test(v);
+      setCarError(name, formatted ? "" : "Fecha inválida, usa AAAA-MM-DD.");
       return;
     }
 
-    // Validación especial de pesos
+    // Validación de pesos con suma cuando están los tres
     if (name === "total_weight" || name === "front_weight" || name === "back_weight") {
-      const totalWeight = Number(car?.total_weight || 0);
-      const frontWeight = Number(car?.front_weight || 0);
-      const backWeight = Number(car?.back_weight || 0);
+      const total = Number(car?.total_weight);
+      const front = Number(car?.front_weight);
+      const back = Number(car?.back_weight);
 
-      if (totalWeight > 0 && frontWeight > 0 && backWeight > 0) {
-        const sum = frontWeight + backWeight;
-        if (sum !== totalWeight) {
-          setCarError(
-            "total_weight",
-            "El peso total debe ser igual a la suma del peso delantero y trasero."
-          );
-          return;
-        } else {
-          setCarError("total_weight", "");
-        }
+      if ([total, front, back].every((n) => Number.isFinite(n) && n > 0)) {
+        setCarError(
+          "total_weight",
+          front + back === total ? "" : "El peso total debe ser igual a la suma del peso delantero y trasero."
+        );
       } else {
         setCarError("total_weight", "");
       }
-      // Luego de la lógica de pesos, validamos el patrón del campo actual
       setCarError(name, p.test(v) ? "" : MSG[name as keyof typeof MSG]);
       return;
     }
@@ -310,50 +336,25 @@ export default function VehicleForm({
     validateOne(name, san);
   };
 
-  const engineAuto = useRef<boolean>(
-    !car?.engine_brand || String(car?.engine_brand).trim() === ""
-  );
-  const chassisAuto = useRef<boolean>(
-    !car?.chassis_brand || String(car?.chassis_brand).trim() === ""
-  );
-
-  useEffect(() => {
-    if (!car?.brand) return;
-
-    const brandSan = SANITIZE.brand ? SANITIZE.brand(String(car.brand)) : String(car.brand);
-    if (!engineAuto.current && !chassisAuto.current) return;
-
-    setCar((prev: any) => {
-      if (!prev) return prev;
-      const next: any = { ...prev };
-      let changed = false;
-
-      if (engineAuto.current) {
-        next.engine_brand = SANITIZE.engine_brand
-          ? SANITIZE.engine_brand(brandSan)
-          : brandSan;
-        changed = true;
-      }
-      if (chassisAuto.current) {
-        next.chassis_brand = SANITIZE.chassis_brand
-          ? SANITIZE.chassis_brand(brandSan)
-          : brandSan;
-        changed = true;
-      }
-      return changed ? next : prev;
-    });
-  }, [car?.brand, setCar]);
-
   const handleChange = (key: string, value: string) => {
+    if (key === "license_class") {
+      const v = SANITIZE.license_class ? SANITIZE.license_class(value) : String(value || "").trim().toUpperCase();
+      setCar((prev: any) => ({ ...prev, license_class: v }));
+      validateOne("license_class", v);
+      return;
+    }
     if (key === "brand" || key === "engine_brand" || key === "chassis_brand") {
       const soft = clamp(toUpper(value), 30);
-
-      // Si el usuario escribe en engine o chassis, desactivamos el autofill
-      // Si borra y queda vacío, se reactiva
       if (key === "engine_brand") engineAuto.current = soft.trim() === "";
       if (key === "chassis_brand") chassisAuto.current = soft.trim() === "";
-
       setCar((prev: any) => ({ ...prev, [key]: soft }));
+      return;
+    }
+    if (key === "green_card_expiration" || key === "license_expiration") {
+      // Para inputs date llega AAAA-MM-DD
+      const v = value ?? "";
+      setCar((prev: any) => ({ ...prev, [key]: v }));
+      validateOne(key, v);
       return;
     }
     sanitizeAndMaybeError(key, value);
@@ -362,44 +363,24 @@ export default function VehicleForm({
   const handleBlur = (key: string) => {
     const current = String(car?.[key] ?? "");
     const strict = SANITIZE[key] ? SANITIZE[key](current) : current;
-
     if (strict !== current) {
       setCar((prev: any) => ({ ...prev, [key]: strict }));
     }
-
     validateOne(key, strict);
   };
 
   const handleGreenCardNoExpirationChange = (checked: boolean) => {
-    setGreenCardNoExpiration(checked);
-    if (checked) {
-      setCar((prev: any) => ({
-        ...prev,
-        green_card_expiration: "",
-        green_card_no_expiration: true,
-      }));
-      setCarError("green_card_expiration", "");
-    }
-    if (!checked) {
-      setCar((prev: any) => ({ ...prev, green_card_no_expiration: false }));
-    }
+    setCar((prev: any) => ({
+      ...prev,
+      green_card_no_expiration: checked,
+      green_card_expiration: checked ? "" : prev?.green_card_expiration ?? "",
+    }));
+    setCarError("green_card_expiration", "");
   };
 
   useEffect(() => {
     setIsIdle(false);
   }, [setIsIdle]);
-
-  useEffect(() => {
-    if (
-      !car?.green_card_expiration ||
-      car?.green_card_expiration === "" ||
-      car?.green_card_no_expiration === true
-    ) {
-      setGreenCardNoExpiration(true);
-    } else {
-      setGreenCardNoExpiration(false);
-    }
-  }, [car?.green_card_expiration, car?.green_card_no_expiration]);
 
   const carErrorsList = useMemo(() => {
     const entries = Object.entries(errors ?? {}).filter(
@@ -438,12 +419,10 @@ export default function VehicleForm({
           {/* Columna izquierda */}
           <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8 self-start">
             {formData1.map((field, index) => {
-              // Fila especial, Modelo + Fabricación + Patentamiento
               if (field.name === "model") {
                 return (
                   <div key={index} className="col-span-2">
                     <div className="grid grid-cols-4 max-md:grid-cols-1 gap-x-6 gap-y-8">
-                      {/* Modelo, 50 por ciento */}
                       <div className="col-span-2 max-md:col-span-1">
                         <FormField
                           label={field.label}
@@ -457,10 +436,7 @@ export default function VehicleForm({
                           error={getCarError(field.name)}
                           isRequired={field.isRequired}
                         />
-                        
                       </div>
-
-                      {/* Año de fabricación */}
                       <div className="col-span-1 max-md:col-span-1">
                         <FormField
                           label="Fabricación"
@@ -474,8 +450,6 @@ export default function VehicleForm({
                           error={getCarError("manufacture_year")}
                         />
                       </div>
-
-                      {/* Año de patentamiento */}
                       <div className="col-span-1 max-md:col-span-1">
                         <FormField
                           label="Patentamiento"
@@ -495,7 +469,6 @@ export default function VehicleForm({
                 );
               }
 
-              // Render normal
               return field.options ? (
                 <FormField
                   key={index}
@@ -543,8 +516,8 @@ export default function VehicleForm({
                 name: field.name,
                 isOwner: true,
                 value:
-                  field.type === "date" && car?.[field.name]
-                    ? new Date(car[field.name]).toISOString().slice(0, 10)
+                  field.type === "date"
+                    ? toDateInputValue(car?.[field.name])
                     : car?.[field.name] ?? "",
                 onChange: (val: string) => handleChange(field.name, val),
                 onBlur: () => handleBlur(field.name),
@@ -569,9 +542,7 @@ export default function VehicleForm({
               }
 
               if (field.options) {
-                return (
-                  <FormField key={index} {...commonProps} type="select" options={field.options} />
-                );
+                return <FormField key={index} {...commonProps} type="select" options={field.options} />;
               }
 
               return (
@@ -586,6 +557,7 @@ export default function VehicleForm({
           </div>
         </div>
       </fieldset>
+
       <div className="mt-10">
         <Dropzone
           title="Documentación del vehículo"
@@ -596,7 +568,6 @@ export default function VehicleForm({
           resetToken={car?.license_plate}
         />
       </div>
-
     </div>
   );
 }
