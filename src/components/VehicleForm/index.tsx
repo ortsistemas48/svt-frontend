@@ -232,7 +232,7 @@ export default function VehicleForm({
       car?.green_card_no_expiration === true
     );
   });
-
+  console.log(car)
 
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));

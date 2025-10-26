@@ -115,7 +115,6 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
           signal: ctrl.signal,
         }
       );
-
       if (id !== fetchRef.current.id) return;
 
       if (res.status === 404) {
@@ -139,6 +138,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
       }
 
       const data = await res.json();
+      console.log(data)
       setCar((prev: any) => ({ ...(prev || {}), ...data }));
       setObleaValue(
         String(data?.sticker?.sticker_number ?? data?.oblea ?? "")

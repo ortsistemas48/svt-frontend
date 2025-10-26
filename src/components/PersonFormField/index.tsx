@@ -53,7 +53,6 @@ export default function PersonFormField({
 
   // Altura reservada para el renglón del checkbox, asegura alineación entre campos
   const checkboxRowClass = "flex items-center gap-2 text-sm h-1"; // 1.5rem
-
   return (
     <div className={`flex flex-col justify-center w-full ${className}`}>
       <label htmlFor={id} className="mb-1 block text-base font-regular text-[#000000] leading-tight">
