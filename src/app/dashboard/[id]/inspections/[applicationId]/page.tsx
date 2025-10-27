@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import InspectionStepsClient from "@/components/InspectionsSteps";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import fetchUserTypeInWorkshop from "@/auth";
 
 type Step = {
   step_id: number;
@@ -208,7 +209,7 @@ export default async function InspectionPage({
   });
 
   const plateLabel = (licensePlate?.trim() || "Sin dominio").toUpperCase();
-  console.log(globalObs)
+  const { name: userType} = await fetchUserTypeInWorkshop({ workshopId });
   return (
     <div className="min-w-full">
       <article className="flex items-center justify-between text-lg mb-6 px-4">
@@ -228,6 +229,7 @@ export default async function InspectionPage({
         initialStatuses={initialStatuses}
         apiBase="/api"
         initialGlobalObs={globalObs}
+        userType={userType}
       />
     
     </div>

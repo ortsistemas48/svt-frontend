@@ -13,10 +13,10 @@ const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> 
   Completado: { text: "text-green-700", bg: "bg-green-50" },
   "En curso": { text: "text-blue-700", bg: "bg-blue-50" },
   Pendiente: { text: "text-red-700", bg: "bg-red-50" },
-  "En Cola": { text: "text-amber-700", bg: "bg-amber-50" },
+  "A Inspeccionar": { text: "text-amber-700", bg: "bg-amber-50" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
-const TABLE_FILTERS = ["Todos", "Pendiente", "En curso", "Completado", "En Cola"];
+const TABLE_FILTERS = ["Todos", "Pendiente", "En curso", "Completado", "A Inspeccionar"];
 export default function InspectionTable() {
   const { id } = useParams();
   const [items, setItems] = useState<Application[]>([]);
@@ -250,14 +250,6 @@ export default function InspectionTable() {
                             <Pencil size={16} />
                           </button>
                         )}
-                        {/* <button
-                          type="button"
-                          className="cursor-pointer rounded p-1 text-red-500 transition-colors hover:bg-red-50 hover:opacity-80"
-                          title="Eliminar revisión"
-                          onClick={() => setDeleteTarget(item)}
-                        >
-                          <Trash2 size={16} />
-                        </button> */}
                       </div>
                     </td>
                   </tr>

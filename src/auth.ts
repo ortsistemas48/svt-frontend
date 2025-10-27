@@ -1,5 +1,6 @@
 // auth.ts
 import { cookies, headers } from "next/headers";
+import { apiFetch } from "./utils";
 
 type SessionOut = { user: any | null; workshops: any[] };
 
@@ -37,4 +38,22 @@ export async function getUserFromCookies(): Promise<SessionOut> {
   } catch {
     return { user: null, workshops: [] };
   }
+}
+
+interface Props {
+  workshopId: string
+}
+export default async function fetchUserTypeInWorkshop({ workshopId }: Props) {
+  const user = await getUserFromCookies()
+  const res = await apiFetch(`/api/users/user-type-in-workshop?userId=${user.user.id}&workshopId=${workshopId}`,
+    { credentials: "include"}
+  )
+  if (res.ok) {
+    const data = await res.json()
+    return data
+  }
+  else {
+    return {error: "No se puedo hacer la llamada a la api"}
+  }
+  
 }

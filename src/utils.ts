@@ -1,5 +1,7 @@
 import { Application, DailyStatistics } from "./app/types";
 import type { TopModels } from "@/components/Statistics"; 
+import { getUserFromCookies } from "./auth";
+import { isErrored } from "node:stream";
 
 /* =========================
    Helpers para Server Components
@@ -35,7 +37,7 @@ function isServer() {
   return typeof window === "undefined";
 }
 
-async function apiFetch(path: string, init: RequestInit = {}) {
+export async function apiFetch(path: string, init: RequestInit = {}) {
   if (isServer()) {
     // Server side, reusa cookies y host mediante serverFetch
     return serverFetch(path, init);

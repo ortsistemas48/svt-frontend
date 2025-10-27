@@ -44,6 +44,7 @@ export default function InspectionStepsClient({
   initialStatuses,
   apiBase,
   initialGlobalObs,
+  userType
 }: {
   inspectionId: number;
   appId: number;
@@ -51,6 +52,7 @@ export default function InspectionStepsClient({
   initialStatuses: Record<number, Status | undefined>;
   apiBase: string | undefined;
   initialGlobalObs?: string;
+  userType: string
 }) {
   const { id } = useParams();
   const router = useRouter();
@@ -122,7 +124,7 @@ export default function InspectionStepsClient({
           const data = await res.json();
           if (data.status === "Completado") setIsCompleted(true);
         }
-      } catch {}
+      } catch { }
     })();
   }, [apiBase, appId]);
 
@@ -436,7 +438,7 @@ export default function InspectionStepsClient({
     try {
       try {
         newTab.opener = null;
-      } catch {}
+      } catch { }
 
       newTab.document.write(`
         <html>
@@ -485,7 +487,7 @@ export default function InspectionStepsClient({
       if (!saved) {
         try {
           if (!newTab.closed) newTab.close();
-        } catch {}
+        } catch { }
         setCertLoading(false);
         return;
       }
@@ -513,7 +515,7 @@ export default function InspectionStepsClient({
     } catch (e: any) {
       try {
         if (!newTab.closed) newTab.close();
-      } catch {}
+      } catch { }
       setError(e.message || "Error generando certificado");
     } finally {
       setCertLoading(false);
@@ -665,25 +667,30 @@ export default function InspectionStepsClient({
           Cancelar
         </button>
 
-        <button
-          type="button"
-          disabled={certLoading || isCompleted}
-          onClick={() => {
-            if (!overallStatus) {
-              setError("Marcá un estado en todos los pasos antes de generar el certificado");
-              return;
-            }
-            setConfirmOpen(true);
-          }}
-          className={clsx(
-            "px-5 py-2.5 rounded-[4px] border text-[#0040B8]",
-            certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50",
-            isCompleted && "opacity-50 cursor-not-allowed"
-          )}
-          title={isCompleted ? "No se puede generar certificado, revisión completada" : "Generar y abrir certificado"}
-        >
-          {certLoading ? "Generando..." : "Certificado"}
-        </button>
+        {
+          (userType === "Administrativo" || userType === "Ingeniero") && (
+            <button
+              type="button"
+              disabled={certLoading || isCompleted}
+              onClick={() => {
+                if (!overallStatus) {
+                  setError("Marcá un estado en todos los pasos antes de generar el certificado");
+                  return;
+                }
+                setConfirmOpen(true);
+              }}
+              className={clsx(
+                "px-5 py-2.5 rounded-[4px] border text-[#0040B8]",
+                certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50",
+                isCompleted && "opacity-50 cursor-not-allowed"
+              )}
+              title={isCompleted ? "No se puede generar certificado, revisión completada" : "Generar y abrir certificado"}
+            >
+              {certLoading ? "Generando..." : "Certificado"}
+            </button>
+          )
+        }
+
 
         <button
           type="button"
@@ -722,8 +729,8 @@ export default function InspectionStepsClient({
                   overallStatus === "Apto"
                     ? "border-[#0040B8] text-[#0040B8]"
                     : overallStatus === "Condicional"
-                    ? "border-amber-600 text-amber-700"
-                    : "border-black text-black"
+                      ? "border-amber-600 text-amber-700"
+                      : "border-black text-black"
                 )}
               >
                 {overallStatus}
