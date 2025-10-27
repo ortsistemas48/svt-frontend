@@ -11,7 +11,7 @@ import {
   onlyDigits,
   toUpper,
 } from "../../utils";
-import Dropzone, { type ExistingDoc } from "@/components/Dropzone";
+import VehicleDocsDropzone, { type ExistingDoc as CarExistingDoc, type PendingCarDoc } from "@/components/VehicleDocsDropzone";
 
 interface FormFieldData {
   label: string;
@@ -26,8 +26,8 @@ interface FormFieldData {
 interface VehicleFormProps {
   car: any;
   setCar: (car: any) => void;
-  onPendingCarDocsChange?: (files: File[]) => void;
-  existingCarDocs?: ExistingDoc[];
+  onPendingCarDocsChange?: (files: PendingCarDoc[]) => void;
+  existingCarDocs?: CarExistingDoc[];
   onDeleteCarDoc?: (docId: number) => Promise<void> | void;
 }
 
@@ -242,7 +242,7 @@ export default function VehicleForm({
   const engineAuto = useRef<boolean>(!car?.engine_brand || String(car?.engine_brand).trim() === "");
   const chassisAuto = useRef<boolean>(!car?.chassis_brand || String(car?.chassis_brand).trim() === "");
   const didAutofill = useRef(false);
-  console.log("imporntate", car.license_class)
+  
   useEffect(() => {
     if (didAutofill.current) return;
     const b = String(car?.brand ?? "").trim();
@@ -415,7 +415,7 @@ export default function VehicleForm({
       )}
 
       <fieldset>
-        <div className="grid grid-cols-[1fr_1px_1fr] max-xl:grid-cols-1 gap-10 items-start">
+        <div className="grid grid-cols-[1fr_1px_1fr] max-[1320px]:grid-cols-1 gap-10 items-start">
           {/* Columna izquierda */}
           <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8 self-start">
             {formData1.map((field, index) => {
@@ -559,14 +559,12 @@ export default function VehicleForm({
       </fieldset>
 
       <div className="mt-10">
-        <Dropzone
-          title="Documentación del vehículo"
-          maxSizeMB={20}
-          onPendingChange={onPendingCarDocsChange}
-          existing={existingCarDocs}
-          onDeleteExisting={onDeleteCarDoc}
-          resetToken={car?.license_plate}
-        />
+          <VehicleDocsDropzone
+            existing={existingCarDocs as CarExistingDoc[]}
+            onDeleteExisting={onDeleteCarDoc}
+            onPendingChange={(items: PendingCarDoc[]) => onPendingCarDocsChange?.(items as any)}
+            resetToken={car?.license_plate}
+          />
       </div>
     </div>
   );

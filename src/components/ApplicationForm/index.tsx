@@ -12,6 +12,7 @@ import { getMissingCarFields, getMissingPersonFields, markStickerAsUsed } from "
 import MissingDataModal from "../MissingDataModal";
 import { useApplication } from "@/context/ApplicationContext";
 import { ApplicationSkeleton } from "../ApplicationSkeleton";
+import type { PendingCarDoc } from "@/components/VehicleDocsDropzone";
 
 type Props = {
   applicationId: string;
@@ -22,7 +23,7 @@ type Props = {
   };
 };
 
-type Doc = { id: number; file_name: string; file_url: string; size_bytes?: number; mime_type?: string; role: 'owner' | 'driver' | 'car' | 'generic'; created_at?: string };
+type Doc = { id: number; file_name: string; file_url: string; size_bytes?: number; mime_type?: string; role: 'owner' | 'driver' | 'car' | 'generic'; created_at?: string; type? : string;};
 
 export default function ApplicationForm({ applicationId, initialData }: Props) {
   const { isIdle, setIsIdle, errors, setErrors } = useApplication();
@@ -58,7 +59,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     }
   }, [applicationId]);
 
-  const [pendingCarDocs, setPendingCarDocs] = useState<File[]>([]);
+  const [pendingCarDocs, setPendingCarDocs] = useState<PendingCarDoc[]>([]);
 
   const onDeleteCarDoc = useCallback(async (docId: number) => {
     await deleteDocument(docId);
@@ -120,6 +121,27 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err?.error || "Error subiendo documentos");
+    }
+    return res.json();
+  }, [applicationId]);
+
+  const uploadPendingVehicleDocuments = useCallback(async (items: PendingCarDoc[]) => {
+    if (!items || items.length === 0) return [] as any[];
+    const form = new FormData();
+    for (const it of items) {
+      form.append("files", it.file, it.file.name);
+      form.append("types", it.type); // arreglo paralelo al de files
+    }
+    form.append("role", "car");
+
+    const res = await fetch(`/api/docs/applications/${applicationId}/documents`, {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error || "Error subiendo documentos del vehículo");
     }
     return res.json();
   }, [applicationId]);
@@ -189,6 +211,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           car: byRole.car || [],
           generic: byRole.generic || [],
         });
+        console.log(existingDocsByRole.car)
       } catch (err) {
         console.error("Error al cargar los datos:", err);
       } finally {
@@ -269,18 +292,18 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
     if (!res.ok) throw new Error("Error al guardar el vehículo");
 
-    if (pendingCarDocs.length > 0) {
-      try {
-        const up = await uploadPendingDocuments(pendingCarDocs, "car");
-        setExistingDocsByRole(prev => ({
-          ...prev,
-          car: [...up, ...prev.car],
-        }));
-        setPendingCarDocs([]);
-      } catch (e) {
-        console.error("Error subiendo docs del vehículo:", e);
-      }
-    }
+     if (pendingCarDocs.length > 0) {
+       try {
+         const up = await uploadPendingVehicleDocuments(pendingCarDocs);
+         setExistingDocsByRole(prev => ({
+           ...prev,
+           car: [...up, ...prev.car],
+         }));
+         setPendingCarDocs([]);
+       } catch (e) {
+         console.error("Error subiendo docs del vehículo:", e);
+       }
+     }
 
     return true;
   }, [
@@ -465,7 +488,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             car={car}
             setCar={setCar}
             onPendingCarDocsChange={setPendingCarDocs}
-            existingCarDocs={existingDocsByRole.car}
+            existingCarDocs={existingDocsByRole.car as any}
             onDeleteCarDoc={onDeleteCarDoc}
           />
         );

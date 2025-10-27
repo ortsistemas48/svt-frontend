@@ -43,6 +43,27 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
 
   useEffect(() => {
+    return () => {
+      if (fetchRef.current.ctrl) fetchRef.current.ctrl.abort();
+      fetchRef.current.id++;
+    };
+  }, []);
+
+  function safeMergeCar(prev: any, data: any) {
+    const filtered = Object.fromEntries(
+      Object.entries(data || {}).filter(([, v]) => v !== null && v !== undefined)
+    );
+
+    if (filtered.sticker && typeof filtered.sticker === "object") {
+      filtered.sticker = Object.fromEntries(
+        Object.entries(filtered.sticker).filter(([, v]) => v !== null && v !== undefined)
+      );
+    }
+
+    return { ...(prev || {}), ...filtered };
+  }
+
+  useEffect(() => {
     setIsIdle(mode !== "result");
   }, [mode, setIsIdle]);
 
@@ -138,11 +159,8 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
       }
 
       const data = await res.json();
-      console.log(data)
-      setCar((prev: any) => ({ ...(prev || {}), ...data }));
-      setObleaValue(
-        String(data?.sticker?.sticker_number ?? data?.oblea ?? "")
-      );
+      setCar((prev: any) => safeMergeCar(prev, data));
+      setObleaValue(String(data?.sticker?.sticker_number ?? data?.oblea ?? ""));
       setMode("result");
       void fetchAvailableHint();
     } catch (e: any) {
