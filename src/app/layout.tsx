@@ -1,13 +1,7 @@
 import "./globals.css";
-import { Poppins } from "next/font/google";
+import { poppins } from "@/fonts";
 import ClientLayout from "@/layouts/ClientLayout";
 import { getUserFromCookies } from "@/auth";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  variable: "--font-poppins",
-});
 
 export const metadata = {
   title: "CheckRTO - Sistema de Inspección Vehicular",

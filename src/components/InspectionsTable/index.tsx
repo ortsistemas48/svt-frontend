@@ -13,10 +13,11 @@ const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> 
   Completado: { text: "text-green-700", bg: "bg-green-50" },
   "En curso": { text: "text-blue-700", bg: "bg-blue-50" },
   Pendiente: { text: "text-red-700", bg: "bg-red-50" },
-  "En Cola": { text: "text-amber-700", bg: "bg-amber-50" },
+  "A Inspeccionar": { text: "text-amber-700", bg: "bg-amber-50" },
+  "Emitir CRT": { text: "text-violet-700", bg: "bg-violet-100" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
-const TABLE_FILTERS = ["Todos", "Pendiente", "En curso", "Completado", "En Cola"];
+const TABLE_FILTERS = ["Todos", "Pendiente", "En curso", "Completado", "A Inspeccionar", "Emitir CRT"];
 export default function InspectionTable() {
   const { id } = useParams();
   const [items, setItems] = useState<Application[]>([]);
@@ -53,7 +54,7 @@ export default function InspectionTable() {
       const usp = new URLSearchParams({
         page: String(page),
         per_page: String(perPage),
-      });
+        });
       if (searchQuery.trim()) usp.set("q", searchQuery.trim());
       if (statusFilter === "Todos") usp.delete("status");
       else if (statusFilter) usp.set("status", statusFilter);
@@ -145,7 +146,7 @@ export default function InspectionTable() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
-            placeholder="Busca revisiones por su: Dominio, Propietario u Oblea"
+            placeholder="Busca revisiones por su: CRT, DNI del propietario o Dominio"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 setSearchQuery(q);
@@ -250,14 +251,6 @@ export default function InspectionTable() {
                             <Pencil size={16} />
                           </button>
                         )}
-                        {/* <button
-                          type="button"
-                          className="cursor-pointer rounded p-1 text-red-500 transition-colors hover:bg-red-50 hover:opacity-80"
-                          title="Eliminar revisión"
-                          onClick={() => setDeleteTarget(item)}
-                        >
-                          <Trash2 size={16} />
-                        </button> */}
                       </div>
                     </td>
                   </tr>

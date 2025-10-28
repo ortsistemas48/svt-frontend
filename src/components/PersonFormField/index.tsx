@@ -53,7 +53,6 @@ export default function PersonFormField({
     : `${base} border-gray-300 focus:ring-blue-500`;
 
   const showInnerCheckbox = typeof innerCheckboxLabel === "string" && !!onInnerCheckboxChange;
-  console.log(label, value)
   // Altura reservada para el renglón del checkbox, asegura alineación entre campos
   const checkboxRowClass = "flex items-center gap-2 text-sm h-1"; // 1.5rem
   return (

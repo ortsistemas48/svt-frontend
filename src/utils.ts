@@ -1,5 +1,7 @@
 import { Application, DailyStatistics } from "./app/types";
 import type { TopModels } from "@/components/Statistics"; 
+import { getUserFromCookies } from "./auth";
+import { isErrored } from "node:stream";
 
 /* =========================
    Helpers para Server Components
@@ -35,7 +37,7 @@ function isServer() {
   return typeof window === "undefined";
 }
 
-async function apiFetch(path: string, init: RequestInit = {}) {
+export async function apiFetch(path: string, init: RequestInit = {}) {
   if (isServer()) {
     // Server side, reusa cookies y host mediante serverFetch
     return serverFetch(path, init);
@@ -580,7 +582,7 @@ export async function fetchQueueApplications(workshopId: number, perPage = 10) {
   const params = new URLSearchParams({
     page: "1",
     per_page: String(perPage),
-    status_in: "En Cola,En curso",
+    status_in: "A Inspeccionar,En curso",
   });
 
   const res = await apiFetch(`/api/applications/workshop/${workshopId}/full?${params.toString()}`, {
