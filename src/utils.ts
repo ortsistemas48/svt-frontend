@@ -609,3 +609,12 @@ export const toUpper = (s: string) => s.toUpperCase();
 export const onlyAlnumUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9]/g, "");
 export const alnumSpaceUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9\s]/g, "");
 export const lettersSpaceUpper = (s: string) => toUpper(s).replace(/[^A-ZÁÉÍÓÚÑÜ\s-]/g, "");
+
+export async function fetchQrData(stickerNumber: string) {
+  const res = await apiFetch(`/api/qr/get-qr-data/${stickerNumber}`);
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || "No se pudo cargar el dato del QR"); 
+  }
+  return res.json(); // {sticker_number: string, status: string, workshop_id: number, created_at: string, updated_at: string}
+}
