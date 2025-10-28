@@ -266,3 +266,4 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
     </div>
   );
 }
+
