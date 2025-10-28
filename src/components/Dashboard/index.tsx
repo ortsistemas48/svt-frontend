@@ -11,13 +11,15 @@ import clsx from 'clsx';
 import { fetchDailyStatistics, fetchLatestApplications, fetchQueueApplications } from '@/utils';
 import Card from '../Card';
 
-type Status = 'Pendiente' | 'En Cola' | 'En curso' | 'Completado';
+type Status = 'Pendiente' | 'En Cola' | 'En curso' | 'Completado' | 'A Inspeccionar' | 'Emitir CRT';
 
 const BADGE: Record<Status, string> = {
-  Pendiente: 'bg-amber-100 text-amber-800 ring-amber-300',
-  'En Cola': 'bg-gray-100 text-gray-800 ring-gray-300',
-  'En curso': 'bg-blue-100 text-blue-800 ring-blue-300',
-  Completado: 'bg-emerald-100 text-emerald-800 ring-emerald-300',
+  Pendiente: 'bg-amber-100 text-amber-700 ring-amber-300',
+  'En Cola': 'bg-gray-100 text-gray-700 ring-gray-300',
+  'En curso': 'bg-blue-100 text-blue-700 ring-blue-300',
+  Completado: 'bg-emerald-100 text-emerald-700 ring-emerald-300',
+  'A Inspeccionar': 'bg-amber-50 text-amber-700 ring-amber-300',
+  'Emitir CRT': 'bg-violet-100 text-violet-700 ring-violet-300'
 };
 
 interface DashboardProps {
