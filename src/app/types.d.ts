@@ -91,7 +91,7 @@ export type Application = {
     dni: string;
   } | null;
   date: string;
-  status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar";
+  status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT";
   result?: "Apto" | "Condicional" | "Rechazado"
 };
 

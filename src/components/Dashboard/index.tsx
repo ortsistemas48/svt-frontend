@@ -6,34 +6,32 @@ import {
   ChevronRight,
   AlertTriangle,
   ScrollText,
-  CheckCircle,
-  AlertCircle,
-  Info,
   Check,
+  CircleQuestionMark,
   X,
   Printer,
   Clock,
-  Triangle,
-  Clock2
+  Clock2,
+  CarFront
 } from 'lucide-react';
 import clsx from 'clsx';
 import { fetchDailyStatistics, fetchLatestApplications, fetchQueueApplications } from '@/utils';
 import Card from '../Card';
 import CheckRTOIcon from '../CheckRTOIcon';
 
-type Status = 'Pendiente' | 'En Cola' | 'En curso' | 'Completado' | 'Cancelado';
+type Status = 'Pendiente' | 'A Inspeccionar' | 'En curso' | 'Completado' | 'Cancelado';
 
 const BADGE: Record<Status, string> = {
-  Pendiente: 'bg-amber-100 text-amber-800 ring-amber-300',
-  'En Cola': 'bg-gray-100 text-gray-800 ring-gray-300',
+  Pendiente: 'bg-red-100 text-red-800 ring-red-300',
+  'A Inspeccionar': 'bg-amber-100 text-amber-800 ring-amber-300',
   'En curso': 'bg-blue-100 text-blue-800 ring-blue-300',
-  Completado: 'bg-emerald-100 text-emerald-800 ring-emerald-300',
+  Completado: 'bg-green-100 text-green-800 ring-green-300',
   Cancelado: 'bg-red-100 text-red-800 ring-red-300',
 };
 
 const STATUS_ICONS: Record<Status, any> = {
-  Pendiente: Clock,
-  'En Cola': Clock,
+  Pendiente: CircleQuestionMark,
+  'A Inspeccionar': CarFront,
   'En curso': Clock,
   Completado: Check,
   Cancelado: X,
@@ -124,11 +122,13 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
                   Stock bajo
                 </div>
               )}
-              <div className="absolute top-5 right-5">
-                <div className="bg-red-100 p-1 rounded-xl">
-                  <AlertTriangle className="h-5 w-5 text-red-600" />
+              {statistics.sticker_stock.available > 250 && (
+                <div className="absolute top-5 right-5">
+                  <div className="bg-red-100 p-1 rounded-xl">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </Card>
         </div>
@@ -188,37 +188,37 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
                         <tr key={r.application_id} className="border-t border-gray-100">
                           <td className="py-4 px-2 sm:px-4 font-medium text-gray-900 hidden md:table-cell">{r.application_id}</td>
                           <td className="py-4 px-2 sm:px-4">
-                            <div className="flex flex-col">
+                            <div className="flex flex-col min-w-0">
                               {
-                                r.car?.license_plate ? (<p className="text-base font-medium text-gray-900">{r.car?.license_plate}</p>) : <span className='font-bold'>No Asignado</span>
+                                r.car?.license_plate ? (<p className="text-base font-medium text-gray-900 truncate">{r.car?.license_plate}</p>) : <span className='font-bold'>No Asignado</span>
                               }
-                              <span className="text-gray-500 text-xs">{r.car?.model}</span>
+                              <span className="text-gray-500 text-xs truncate">{r.car?.model}</span>
                             </div>
                           </td>
                           <td className="py-4 px-2 sm:px-4 text-gray-700 hidden lg:table-cell">
-                            <div className="flex flex-col">
-                              <span className="text-base">
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-base truncate">
                                 {r.owner ? `${r.owner.first_name || ''} ${r.owner.last_name || ''}`.trim() || 'N/A' : 'N/A'}
                               </span>
                               {r.owner?.dni && (
-                                <span className="text-gray-500 text-xs">
+                                <span className="text-gray-500 text-xs truncate">
                                   {r.owner.dni}
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="py-4 px-2 sm:px-4 text-gray-700 text-xs sm:text-sm hidden sm:table-cell">
+                          <td className="py-4 px-2 sm:px-4 text-gray-700 text-xs sm:text-sm hidden sm:table-cell whitespace-nowrap">
                             {new Date(r.date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '/')} {new Date(r.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                           </td>
                           <td className="py-4 px-2 sm:px-4">
                             <span
                               className={clsx(
-                                'inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium',
+                                'inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap',
                                 BADGE[r.status as Status]
                               )}
                             >
-                              <StatusIcon className="h-3.5 w-3.5" />
-                              <span className="hidden sm:inline">{r.status}</span>
+                              <StatusIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="hidden sm:inline whitespace-nowrap">{r.status}</span>
                             </span>
                           </td>
                         </tr>
@@ -230,7 +230,7 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
                 {statistics.sticker_stock.available <= 250 && (
                   <Link
                     href={`/dashboard/${workshopId}/stickers`}
-                    className="mt-5 block rounded-[4px] border bg-rose-100 border-rose-300 px-4 py-3 text-sm text-rose-500"
+                    className="mt-5 block rounded-[4px] border bg-rose-100 border-rose-300 px-4 py-3 text-sm text-rose-500 hover:bg-rose-200 transition-colors break-words"
                   >
                     Stock bajo de obleas, asigná las tuyas haciendo click aquí.
                   </Link>
@@ -288,7 +288,7 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
                         </div>
                         <span
                           className={clsx(
-                            'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset',
+                            'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset whitespace-nowrap',
                             BADGE[q.status as Status]
                           )}
                         >

@@ -582,7 +582,7 @@ export async function fetchQueueApplications(workshopId: number, perPage = 10) {
   const params = new URLSearchParams({
     page: "1",
     per_page: String(perPage),
-    status_in: "En Cola,En curso",
+    status_in: "A Inspeccionar,En curso",
   });
 
   const res = await apiFetch(`/api/applications/workshop/${workshopId}/full?${params.toString()}`, {

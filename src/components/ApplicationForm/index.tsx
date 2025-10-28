@@ -211,7 +211,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           car: byRole.car || [],
           generic: byRole.generic || [],
         });
-        console.log(existingDocsByRole.car)
       } catch (err) {
         console.error("Error al cargar los datos:", err);
       } finally {
