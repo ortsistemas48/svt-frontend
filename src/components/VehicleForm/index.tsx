@@ -242,7 +242,66 @@ export default function VehicleForm({
   const engineAuto = useRef<boolean>(!car?.engine_brand || String(car?.engine_brand).trim() === "");
   const chassisAuto = useRef<boolean>(!car?.chassis_brand || String(car?.chassis_brand).trim() === "");
   const didAutofill = useRef(false);
-  
+  const fetchedByPlateRef = useRef<string | null>(null);
+
+  const mergePreferExisting = (prev: any, incoming: any) => {
+    const out: any = { ...(prev || {}) };
+    const src = incoming || {};
+
+    for (const [k, v] of Object.entries(src)) {
+      if (v === null || v === undefined) continue;
+
+      const hasPrev =
+        out[k] !== undefined &&
+        out[k] !== null &&
+        String(out[k]).trim() !== "";
+
+      if (!hasPrev) out[k] = v;
+    }
+
+    if (src.sticker && typeof src.sticker === "object") {
+      out.sticker = {
+        ...(out.sticker || {}),
+        ...Object.fromEntries(
+          Object.entries(src.sticker).filter(([, val]) => val !== null && val !== undefined)
+        ),
+      };
+    }
+
+    if (!out.sticker_id && out?.sticker?.id) {
+      out.sticker_id = out.sticker.id;
+    }
+
+    return out;
+  };
+
+  useEffect(() => {
+    const plate = String(car?.license_plate || "").trim().toUpperCase();
+    if (!plate) return;
+    if (fetchedByPlateRef.current === plate) return; 
+
+    const ctrl = new AbortController();
+    const run = async () => {
+      try {
+        const res = await fetch(`/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`, {
+          credentials: "include",
+          signal: ctrl.signal,
+        });
+        if (!res.ok) return; 
+        const data = await res.json();
+        setCar((prev: any) => mergePreferExisting(prev, data));
+        fetchedByPlateRef.current = plate;
+      } catch (e: any) {
+        if (e?.name !== "AbortError") {
+          console.error("VehicleForm rehydrate by plate error", e);
+        }
+      }
+    };
+    run();
+    return () => ctrl.abort();
+  }, [car?.license_plate, setCar]);
+
+
   useEffect(() => {
     if (didAutofill.current) return;
     const b = String(car?.brand ?? "").trim();

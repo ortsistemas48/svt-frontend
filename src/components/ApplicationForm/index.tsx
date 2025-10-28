@@ -227,6 +227,34 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     setErrors({});
   }, [step, setErrors]);
 
+  const saveStickerStep = useCallback(async () => {
+    // Guarda la mínima info para no perderla al pasar a Step 3
+    if (!car?.license_plate) return true; // nada que guardar, seguimos
+
+    const payload = {
+      license_plate: car.license_plate,
+      // si ya hay oblea seleccionada, guardamos su id
+      sticker_id: car?.sticker?.id ?? car?.sticker_id ?? null,
+    };
+
+    try {
+      const res = await fetch(`/api/applications/${applicationId}/car`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        console.error("saveStickerStep error", j);
+        // no frenamos el flujo por un 4xx/5xx ocasional, pero lo logueamos
+      }
+    } catch (e) {
+      console.error("saveStickerStep network error", e);
+    }
+    return true;
+  }, [applicationId, car]);
+
   const sendToQueue = useCallback(async () => {
     try {
       const res = await fetch(`/api/applications/${applicationId}/queue`, {
@@ -414,6 +442,13 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           return;
         }
 
+      }
+      if (step === 2) {
+        await saveStickerStep();
+
+        setStep(3);
+        setLoading(false);
+        return;
       }
 
       if (step === 3) {
