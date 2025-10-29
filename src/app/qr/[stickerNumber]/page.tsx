@@ -5,7 +5,6 @@ import CheckRTOIcon from "@/components/CheckRTOIcon";
 export default async function QrPage({ params }: { params: Promise<{ stickerNumber: string }> }) {
   const { stickerNumber } = await params;
   const qrData = await fetchQrData(stickerNumber);
-  console.log(qrData);
   
   if (!qrData) {
     return <div>No se pudo cargar el dato del QR</div>;

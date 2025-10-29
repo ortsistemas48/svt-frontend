@@ -26,13 +26,13 @@ type Props = {
 // Etiquetas legibles para el resumen de errores
 const FIELD_LABEL: Record<string, string> = {
   dni: "DNI",
-  email: "Email",
   first_name: "Nombre",
   last_name: "Apellido",
-  phone_number: "Teléfono",
   street: "Domicilio",
   province: "Provincia",
   city: "Localidad",
+  phone_number: "Teléfono",
+  email: "Email",
 };
 
 export default function PersonForm({

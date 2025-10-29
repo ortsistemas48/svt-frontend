@@ -5,7 +5,8 @@ const tableData = [
   { label: "Dominio", key: "license_plate" },
   { label: "Marca", key: "brand" },
   { label: "Modelo", key: "model" },
-  { label: "Fabricación", key: "manufacture_year" },
+  { label: "Año de fabricación", key: "manufacture_year" },
+  { label: "Año de patentamiento", key: "registration_year" },
   { label: "Peso del auto (KG)", key: "total_weight" },
   { label: "Peso eje trasero (KG)", key: "back_weight" },
   { label: "Peso eje delantero (KG)", key: "front_weight" },
@@ -22,7 +23,6 @@ const tableData = [
   { label: "Clase de licencia", key: "license_class" },
   { label: "Exp. de la licencia", key: "license_expiration" },
   { label: "Póliza del seguro", key: "insurance" },
-  { label: "Patentamiento", key: "registration_year" },
   // 👇 campos del sticker (anidados)
 
   // (opcional) mostrarlos si querés
@@ -64,8 +64,8 @@ const renderVehicle = (car: CarType, carDocs: Doc[] = []) => {
 
   // Group fields by category for better organization
   const categories = {
-    basic: tableData.slice(0, 4), // Dominio, Marca, Modelo, Año
-    technical: tableData.slice(4, 10), // Peso, combustible, tipo vehículo, etc.
+    basic: tableData.slice(0, 5), // Dominio, Marca, Modelo, Año
+    technical: tableData.slice(5, 10), // Peso, combustible, tipo vehículo, etc.
     engine: tableData.slice(10, 14), // Motor y chasis
     documents: tableData.slice(14, 23), // Cédula, licencia, seguro
   };

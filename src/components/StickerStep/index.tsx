@@ -38,6 +38,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
   const [isAssigningManual, setIsAssigningManual] = useState(false);
 
   const fetchRef = useRef<{ id: number; ctrl?: AbortController }>({ id: 0 });
+  const prevLicensePlateRef = useRef<string | undefined>(undefined);
 
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
@@ -60,22 +61,71 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
       );
     }
 
-    return { ...(prev || {}), ...filtered };
+    const merged = { ...(prev || {}), ...filtered };
+    
+    // Explicitly clear sticker data if the new data doesn't have it
+    // This prevents old sticker data from persisting when switching vehicles
+    if (!filtered.sticker && !filtered.sticker_id && !filtered.oblea) {
+      merged.sticker_id = undefined;
+      merged.sticker = undefined;
+    }
+
+    return merged;
   }
 
   useEffect(() => {
-    setIsIdle(mode !== "result");
-  }, [mode, setIsIdle]);
+    const hasSticker = !!(car?.sticker_id || car?.sticker?.id);
+    const shouldBeIdle = mode !== "result" || !hasSticker;
+    setIsIdle(shouldBeIdle);
+    
+    // Set error if in result mode but no sticker is selected
+    if (mode === "result" && !hasSticker) {
+      setCarError("sticker_id", "Debés seleccionar una oblea para continuar");
+    } else {
+      setCarError("sticker_id", "");
+    }
+  }, [mode, setIsIdle, car?.sticker_id, car?.sticker?.id, setErrors]);
 
+  // Initialize plateQuery from car only on mount or when car.license_plate changes from external source
   useEffect(() => {
-    if (car?.license_plate && !plateQuery) setPlateQuery(car.license_plate);
+    const currentPlate = car?.license_plate;
+    // Only sync if license_plate changed externally (not from user editing plateQuery)
+    // We sync when: the plate value actually changed AND plateQuery is empty
+    if (currentPlate && currentPlate !== prevLicensePlateRef.current && !plateQuery) {
+      setPlateQuery(currentPlate);
+    }
+    // Only update ref when license_plate actually changes (to track external changes)
+    if (currentPlate !== prevLicensePlateRef.current) {
+      prevLicensePlateRef.current = currentPlate;
+    }
+    
     const v = car?.sticker?.sticker_number ?? car?.oblea ?? "";
-    if (v && !obleaValue) setObleaValue(String(v));
-  }, [car, plateQuery, obleaValue]);
+    const expectedValue = v ? String(v) : "";
+    // Sync obleaValue to match the current car's sticker status
+    // Only update if the value is different to avoid unnecessary re-renders
+    if (expectedValue !== obleaValue) {
+      setObleaValue(expectedValue);
+    }
+  }, [car?.license_plate, plateQuery, car?.sticker, car?.sticker_id, car?.oblea, obleaValue]);
 
   const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = e.target.value.toUpperCase().replace(/[-\s]/g, "");
     setPlateQuery(sanitized);
+    
+    // If user is editing after a search, reset the result state to allow new search
+    if (mode === "result") {
+      setMode("idle");
+      setVehicleFound(null);
+      setCar((prev: any) => ({
+        ...(prev || {}),
+        sticker_id: undefined,
+        sticker: undefined,
+      }));
+      setObleaValue("");
+      setAssignError(null);
+      setAvailableHint(null);
+    }
+    
     if (!sanitized) {
       setCarError("license_plate", "");
       setSearchError(null);
@@ -128,6 +178,17 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
       setIsSearching(true);
       setSearchError(null);
       setVehicleFound(null);
+      // Clear sticker data when starting a new search
+      setObleaValue("");
+      setCar((prev: any) => {
+        const updated = { ...(prev || {}) };
+        if (updated.license_plate !== plate) {
+          // Only clear sticker if it's a different plate
+          updated.sticker_id = undefined;
+          updated.sticker = undefined;
+        }
+        return updated;
+      });
 
       const res = await fetch(
         `/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
@@ -136,10 +197,16 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
           signal: ctrl.signal,
         }
       );
+
       if (id !== fetchRef.current.id) return;
 
       if (res.status === 404) {
-        setCar((prev: any) => ({ ...(prev || {}), license_plate: plate }));
+        setCar((prev: any) => ({ 
+          ...(prev || {}), 
+          license_plate: plate,
+          sticker_id: undefined,
+          sticker: undefined,
+        }));
         setVehicleFound(false);
         setMode("result");
         setErrors((prev: any) => {
@@ -494,6 +561,12 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
 
               {assignError && (
                 <p className="text-xs text-red-600 mt-1">{assignError}</p>
+              )}
+
+              {errors?.car_sticker_id && (
+                <p className="text-sm text-red-600 mt-1 font-medium">
+                  {errors.car_sticker_id}
+                </p>
               )}
 
               <div className="mt-5 border-t pt-4 w-full">

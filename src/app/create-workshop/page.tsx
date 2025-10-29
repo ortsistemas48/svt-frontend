@@ -69,8 +69,9 @@ export default function CreateWorkshopPage() {
 
   /** Province and city options */
   const [provinceOptions, setProvinceOptions] = useState<{ value: string; label: string }[]>([]);
-  // const [cityOptions, setCityOptions] = useState<{ value: string; label: string }[]>([]);
-  // const [loadingCities, setLoadingCities] = useState(false);
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
+  const [cityApiFailed, setCityApiFailed] = useState(false);
 
   /** Paso 2, lista de pendientes */
   const [pending, setPending] = useState<PendingMember[]>([]);
@@ -95,38 +96,40 @@ export default function CreateWorkshopPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // // Load cities when province changes
-  // useEffect(() => {
-  //   let cancelled = false;
-
-  //   if (!province) {
-  //     setCityOptions([]);
-  //     setCity("");
-  //     return;
-  //   }
-
-  //   setLoadingCities(true);
-  //   setCityOptions([]);
-  //   setCity(""); // Clear city when province changes
-
-  //   (async () => {
-  //     try {
-  //       const locs = await getLocalidadesByProvincia(province);
-  //       if (!cancelled) {
-  //         setCityOptions(locs);
-  //       }
-  //     } catch (e) {
-  //       console.error("Error cargando localidades:", e);
-  //     } finally {
-  //       if (!cancelled) setLoadingCities(false);
-  //     }
-  //   })();
-
-  //   return () => { cancelled = true; };
-  // }, [province]);
-
+  // Load cities when province changes
   useEffect(() => {
-    setCity("");
+    let cancelled = false;
+
+    if (!province) {
+      setCityOptions([]);
+      setCity("");
+      setCityApiFailed(false);
+      return;
+    }
+
+    setLoadingCities(true);
+    setCityOptions([]);
+    setCity(""); // Clear city when province changes
+    setCityApiFailed(false);
+
+    (async () => {
+      try {
+        const locs = await getLocalidadesByProvincia(province);
+        if (!cancelled) {
+          setCityOptions(locs.map(loc => loc.value));
+          setCityApiFailed(false);
+        }
+      } catch (e) {
+        console.error("Error cargando localidades:", e);
+        if (!cancelled) {
+          setCityApiFailed(true);
+        }
+      } finally {
+        if (!cancelled) setLoadingCities(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [province]);
 
   /** UI general */
@@ -413,14 +416,27 @@ export default function CreateWorkshopPage() {
                    options={[...new Set(provinceOptions.map(p => p.value))]}
                    required
                  />
-                 <Field
-                   id="city"
-                   label="Localidad"
-                   value={city}
-                   onChange={setCity}
-                   required
-                   placeholder="Ej, Córdoba Capital"
-                 />
+                 {cityApiFailed || (cityOptions.length === 0 && !loadingCities && province) ? (
+                   <Field
+                     id="city"
+                     label="Localidad"
+                     value={city}
+                     onChange={setCity}
+                     required
+                     placeholder="Ej, Córdoba Capital"
+                     disabled={!province}
+                   />
+                 ) : (
+                   <SelectField
+                     id="city"
+                     label="Localidad"
+                     value={city}
+                     onChange={setCity}
+                     options={cityOptions}
+                     required
+                     disabled={loadingCities || !province || cityOptions.length === 0}
+                   />
+                 )}
 
                 <Field id="address" label="Domicilio" value={address} onChange={setAddress} required placeholder="Calle y número, piso, referencia" />
                 <Field id="plant" label="Número de planta" value={plantNumber} onChange={setPlantNumber} inputMode="numeric" type="number" required placeholder="Ej, 3" />

@@ -329,8 +329,7 @@ export function getMissingCarFields(car: any): string[] {
     "license_number",
     "license_expiration",
     "registration_year",
-    "license_class",
-
+    "registration_month",
   ];
   
   const fieldTranslations = {
@@ -338,6 +337,7 @@ export function getMissingCarFields(car: any): string[] {
     brand: "Marca",
     model: "Modelo",
     registration_year: "Año de Patentamiento",
+    registration_month: "Mes de Patentamiento",
     weight: "Peso",
     fuel_type: "Tipo de combustible",
     vehicle_type: "Tipo de vehículo",
@@ -353,7 +353,6 @@ export function getMissingCarFields(car: any): string[] {
     total_weight: "Peso total",
     front_weight: "Peso delantero",
     back_weight: "Peso trasero",
-    license_class: "Clase de licencia"
 
 
   };
@@ -516,25 +515,87 @@ export async function getProvinces(): Promise<Option[]> {
 
 export async function getLocalidadesByProvincia(provinceName: string): Promise<Option[]> {
   if (!provinceName) return [];
-  const url = `https://apis.datos.gob.ar/georef/api/localidades?provincia=${encodeURIComponent(provinceName)}`;
-  const res = await apiFetch(url);
-  const data = await res.json();
+  
+  try {
+    // API has a maximum of 5000 per request, so we'll paginate if needed
+    const baseUrl = `https://apis.datos.gob.ar/georef/api/localidades`;
+    const maxPerPage = 5000; // Maximum allowed by the API
+    const allLocalidades: any[] = [];
+    let inicio = 0;
+    let total = 0;
+    let hasMore = true;
+    
+    // Fetch all pages
+    while (hasMore) {
+      const params = new URLSearchParams({
+        provincia: provinceName,
+        max: String(maxPerPage),
+        inicio: String(inicio),
+      });
+      
+      const res = await fetch(`${baseUrl}?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+        },
+      });
+      
+      if (!res.ok) {
+        // If this is the first request, throw the error
+        if (inicio === 0) {
+          throw new Error(`API returned status ${res.status}`);
+        }
+        // If pagination fails mid-way, return what we have so far
+        console.warn(`Pagination failed at inicio=${inicio}, returning partial results`);
+        break;
+      }
+      
+      const data = await res.json();
+      
+      // Update total on first request
+      if (inicio === 0) {
+        total = data?.total ?? 0;
+      }
+      
+      const localidades = data?.localidades ?? [];
+      const cantidad = data?.cantidad ?? localidades.length;
+      
+      if (localidades.length === 0) {
+        hasMore = false;
+        break;
+      }
+      
+      allLocalidades.push(...localidades);
+      inicio += cantidad;
+      
+      // Check if we've fetched all results
+      if (inicio >= total || cantidad < maxPerPage) {
+        hasMore = false;
+      }
+    }
+    
+    // Process all collected localidades
+    const seen = new Set<string>();
+    const items = allLocalidades
+      .filter((l: any) => {
+        const k = String(l.id);
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .map((l: any) => ({
+        value: l.nombre,
+        label: l.nombre,
+        key: String(l.id),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' })); // Sort alphabetically in Spanish
 
-  const seen = new Set<string>();
-  const items = (data?.localidades ?? [])
-    .filter((l: any) => {
-      const k = String(l.id);
-      if (seen.has(k)) return false;
-      seen.add(k);
-      return true;
-    })
-    .map((l: any) => ({
-      value: l.nombre,
-      label: l.nombre,
-      key: String(l.id),
-    }));
-
-  return items;
+    return items;
+  } catch (error) {
+    // Log error but don't throw - return empty array so UI can fall back to manual input
+    console.error("Error fetching localidades from API:", error);
+    throw error; // Re-throw so the calling code can handle it (set cityApiFailed)
+  }
 }
 
 /* =========================

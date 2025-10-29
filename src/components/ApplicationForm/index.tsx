@@ -176,7 +176,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         const ownerData = json.owner ?? {};
         const driverData = json.driver ?? {};
         const carData = json.car ?? {};
-
         const hasOwner = Object.keys(ownerData).length > 0;
         const hasDriver = Object.keys(driverData).length > 0;
 
@@ -314,6 +313,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         total_weight: car.total_weight,
         front_weight: car.front_weight,
         back_weight: car.back_weight,
+        registration_month: car.registration_month,
       }),
     });
 

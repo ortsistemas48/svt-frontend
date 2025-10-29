@@ -60,8 +60,9 @@ export default function OwnerForm({
   const { errors, setErrors } = useApplication() as any;
 
   const [provinceOptions, setProvinceOptions] = useState<{ value: string; label: string }[]>([]);
-  // const [cityOptions, setCityOptions] = useState<{ value: string; label: string }[]>([]);
-  // const [loadingCities, setLoadingCities] = useState(false);
+  const [cityOptions, setCityOptions] = useState<{ value: string; label: string }[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
+  const [cityApiFailed, setCityApiFailed] = useState(false);
 
   // helpers de error (prefijo owner_)
   const setOwnerError = (name: string, msg: string) =>
@@ -93,46 +94,55 @@ export default function OwnerForm({
   }, []);
 
   // Localidades
-  // useEffect(() => {
-  //   let cancelled = false;
+  useEffect(() => {
+    let cancelled = false;
 
-  //   const province = data?.province ?? "";
-  //   if (!province) {
-  //     setCityOptions([]);
-  //     return;
-  //   }
+    const province = data?.province ?? "";
+    if (!province) {
+      setCityOptions([]);
+      setCityApiFailed(false);
+      return;
+    }
 
-  //   setLoadingCities(true);
-  //   setCityOptions([]);
+    setLoadingCities(true);
+    setCityOptions([]);
+    setCityApiFailed(false);
 
-  //   (async () => {
-  //     try {
-  //       const locs = await getLocalidadesByProvincia(province);
-  //       if (!cancelled) setCityOptions(uniqueByValue(locs));
-  //     } catch (e) {
-  //       console.error("Error cargando localidades:", e);
-  //     } finally {
-  //       if (!cancelled) setLoadingCities(false);
-  //     }
-  //   })();
+    (async () => {
+      try {
+        const locs = await getLocalidadesByProvincia(province);
+        if (!cancelled) {
+          setCityOptions(uniqueByValue(locs));
+          setCityApiFailed(false);
+        }
+      } catch (e) {
+        console.error("Error cargando localidades:", e);
+        if (!cancelled) {
+          setCityApiFailed(true);
+        }
+      } finally {
+        if (!cancelled) setLoadingCities(false);
+      }
+    })();
 
-  //   return () => { cancelled = true; };
-  // }, [data?.province]);
+    return () => { cancelled = true; };
+  }, [data?.province]);
 
   // Schema base
   const baseFormData = useMemo(
     () => [
       { label: "DNI", placeholder: "Ej: 39959950", name: "dni", type: "text", isRequired: true },
-      { label: "Email", placeholder: "Ej: ejemplo@gmail.com", name: "email", type: "email" },
       { label: "Nombre", placeholder: "Ej: Ángel Isaías", name: "first_name", isRequired: true },
       { label: "Apellido", placeholder: "Ej: Vaquero", name: "last_name", isRequired: true },
-      { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number", type: "text" },
       { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street", isRequired: true },
       { label: "Provincia", options: provinceOptions, name: "province", isRequired: true },
-      // { label: "Localidad", options: cityOptions, name: "city", disabled: loadingCities || !data?.province },
-      { label: "Localidad", placeholder: "Ej: Córdoba Capital", name: "city", type: "text", isRequired: true },
-    ],[provinceOptions]
-    // [provinceOptions, cityOptions, loadingCities, data?.province]
+      cityApiFailed || (cityOptions.length === 0 && !loadingCities && data?.province)
+      ? { label: "Localidad", placeholder: "Ej: Córdoba Capital", name: "city", type: "text", isRequired: true, disabled: !data?.province }
+      : { label: "Localidad", options: cityOptions, name: "city", isRequired: true, disabled: loadingCities || !data?.province || cityOptions.length === 0 },
+      { label: "Email", placeholder: "Ej: ejemplo@gmail.com", name: "email", type: "email" },
+      { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number", type: "text" },
+      
+    ],[provinceOptions, cityOptions, loadingCities, cityApiFailed, data?.province]
   );
 
   // Sanitizado + validaciones
