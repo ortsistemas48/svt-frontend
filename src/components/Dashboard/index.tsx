@@ -126,7 +126,7 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
         </div>
 
         {/* dos columnas, últimos y cola */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
           {/* Últimas revisiones */}
           <Card className="xl:col-span-2">
             <div className="p-5 border-b border-gray-100 flex items-center justify-between">
@@ -207,62 +207,6 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
             )}
           </Card>
 
-          {/* Cola de revisiones */}
-          <Card className="xl:col-span-1">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Cola de revisiones</h3>
-                <p className="mt-1 text-sm text-gray-500">Lo que espera o está en proceso</p>
-              </div>
-              <Link href={`/dashboard/${workshopId}/inspections-queue`} className="text-sm text-[#0040B8] hover:underline">
-                Ver cola
-              </Link>
-            </div>
-
-            {queueApps.items?.length ? (
-              <div className="p-5">
-                <ul className="space-y-3">
-                  {queueApps.items.map((q: any) => (
-                    <li key={q.application_id} className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{q.car?.license_plate || 'N/A'}</p>
-                        <p className="text-xs text-gray-500">
-                          {q.owner ? `${q.owner.first_name || ''} ${q.owner.last_name || ''}`.trim() || 'N/A' : 'N/A'}
-                        </p>
-                      </div>
-                      <span
-                        className={clsx(
-                          'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset',
-                          BADGE[q.status as Status]
-                        )}
-                      >
-                        {q.status}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <div className="p-10">
-                <div className="flex flex-col items-center justify-center text-center p-6">
-                  <div className="h-10 w-10 rounded-full bg-white border border-gray-200 flex items-center justify-center">
-                    <RefreshCw className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <h4 className="mt-3 text-sm font-semibold text-gray-900">No hay vehículos en cola</h4>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Cuando agregues nuevas revisiones, van a aparecer acá.
-                  </p>
-                  <Link
-                    href={`/dashboard/${workshopId}/applications`}
-                    className="mt-4 inline-flex items-center gap-2 rounded-[4px] border border-[#0040B8]/30 bg-[#0040B8]/5 px-3 py-2 text-sm text-[#0040B8]"
-                  >
-                    <CircleFadingPlus className="h-4 w-4" />
-                    Iniciar revisión
-                  </Link>
-                </div>
-              </div>
-            )}
-          </Card>
         </div>
       </div>
     </div>
