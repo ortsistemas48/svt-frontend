@@ -11,7 +11,8 @@ import {
   UserCheck,
   FilePlus2,
   type LucideIcon,
-  Banknote, 
+  Banknote,
+  Building2, 
 } from "lucide-react";
 import NavItem from "@/components/NavItem";
 import { UserTypeInWorkshop } from "@/app/types";
@@ -33,6 +34,8 @@ export default function SideBarMenu({ userType, loading }: Props) {
 
   const links: LinkItem[] = [
     { href: `/admin-dashboard`, icon: Users, label: "Usuarios" },
+    { href: `/admin-dashboard/workshops`, icon: Building2, label: "Talleres" },
+
     { href: `/admin-dashboard/payments`, icon: Banknote, label: "Aprobar Pagos" },
     { href: `/admin-dashboard/approve-workshops`, icon: UserCheck, label: "Aprobar Talleres" },
     { href: `/admin-dashboard/support`, icon: ShieldUser, label: "Soporte" },

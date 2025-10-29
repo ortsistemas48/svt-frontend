@@ -679,3 +679,12 @@ export async function fetchQrData(stickerNumber: string) {
   }
   return res.json(); // {sticker_number: string, status: string, workshop_id: number, created_at: string, updated_at: string}
 }
+export async function fetchAdminWorkshops() {
+  const res = await apiFetch(`/api/workshops/get-all-workshops`);
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "");
+    throw new Error(`Failed to fetch workshops: ${res.status} - ${errorText}`);
+  }
+  const data = await res.json();
+  return data; // {workshops: [...]}
+}
