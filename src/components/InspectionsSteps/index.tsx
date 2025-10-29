@@ -614,6 +614,37 @@ export default function InspectionStepsClient({
         })}
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4 mt-8 w-full">
+        {/* Título y descripción, una debajo de la otra */}
+        <div className="md:col-span-2">
+          <h4 className="text-sm font-medium text-zinc-900">Observaciones generales</h4>
+          <p className="text-xs text-zinc-500 mt-1">
+            Escribí las observaciones del vehículo, se guardan cuando confirmás la revisión. Máximo {MAX_CHARS} caracteres.
+          </p>
+        </div>
+
+        {/* Área de texto */}
+        <div className="rounded-[10px] text-sm border border-zinc-200 bg-white p-4 w-full self-start md:col-span-2">
+          <textarea
+            value={globalText}
+            onChange={(e) => {
+              const txt = e.target.value;
+              if (txt.length <= MAX_CHARS) setGlobalText(txt);
+            }}
+            disabled={isCompleted}
+            placeholder="Ingresá tus observaciones."
+            className={clsx(
+              "w-full h-40 outline-none resize-none",
+              isCompleted && "opacity-50 cursor-not-allowed"
+            )}
+            maxLength={MAX_CHARS}
+          />
+          <div className="mt-2 text-right text-xs text-zinc-400">
+            {obsCharCount}/{MAX_CHARS}
+          </div>
+        </div>
+      </div>
+      
       <section className="rounded-[10px] border border-zinc-200 bg-white p-4 w-full mt-6">
         <div className="flex items-center justify-between mb-1">
           <h4 className="text-sm font-medium text-zinc-900">Subir informes técnicos y fotos del vehiculo.</h4>
@@ -635,28 +666,7 @@ export default function InspectionStepsClient({
         </div>
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4 mt-8 w-full">
-        <div className="rounded-[10px] text-sm border border-zinc-200 bg-white p-4 w-full self-start md:col-span-2">
-          <textarea
-            value={globalText}
-            onChange={(e) => {
-              const txt = e.target.value;
-              if (txt.length <= MAX_CHARS) {
-                setGlobalText(txt);
-              }
-            }}
-            disabled={isCompleted}
-            className={clsx(
-              "w-full h-40 outline-none resize-none",
-              isCompleted && "opacity-50 cursor-not-allowed"
-            )}
-            maxLength={MAX_CHARS}
-          />
-          <div className="mt-2 text-right text-xs text-zinc-400">
-            {obsCharCount}/{MAX_CHARS}
-          </div>
-        </div>
-      </div>
+
 
       <div className="flex items-center justify-center gap-5 mt-10 w-full">
         <button

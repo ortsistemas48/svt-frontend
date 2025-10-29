@@ -5,7 +5,8 @@ import {
   ClipboardList,
   ChevronRight,
   AlertTriangle,
-  ScrollText
+  ScrollText,
+  ArrowUp
 } from 'lucide-react';
 import clsx from 'clsx';
 import { fetchDailyStatistics, fetchLatestApplications, fetchQueueApplications } from '@/utils';
@@ -35,9 +36,9 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
   const queueApps = await fetchQueueApplications(workshopId);
 
   const quick = [
-    { key: 'new', title: 'Nueva revisión', desc: 'Iniciar un trámite nuevo', href: `/dashboard/${workshopId}/applications`, icon: CircleFadingPlus },
-    { key: 'queue', title: 'Cola de revisiones', desc: 'Ver pendientes y en proceso', href: `/dashboard/${workshopId}/inspections-queue`, icon: RefreshCw },
-    { key: 'list', title: 'Revisiones', desc: 'Listado y búsqueda', href: `/dashboard/${workshopId}/applications`, icon: ClipboardList },
+    { key: 'new', title: 'Nueva revisión', href: `/dashboard/${workshopId}/applications`, icon: CircleFadingPlus },
+    { key: 'continue', title: 'Continuar revisión', href: `/dashboard/${workshopId}/applications`, icon: ClipboardList },
+    { key: 'queue', title: 'Cola de revisiones', href: `/dashboard/${workshopId}/inspections-queue`, icon: RefreshCw },
   ];
 
   return (
@@ -51,44 +52,52 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
         </article>
 
         {/* KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card>
-            <div className="p-5">
-              <p className="text-sm text-gray-500">Revisiones hoy</p>
-              <p className="mt-2 text-3xl font-semibold text-gray-900">{statistics.applications.total}</p>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="p-5">
-              <p className="text-sm text-gray-500">En cola</p>
-              <p className="mt-2 text-3xl font-semibold text-gray-900">{statistics.applications.in_queue}</p>
-              <div className="mt-3 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
-                <div className="h-full bg-[#0040B8]" style={{ width: `${Math.min(100, statistics.applications.in_queue * 12)}%` }} />
+        <div className="grid grid-cols-1 md:grid-cols-3 min-[1400px]:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          {/* Solo visible desde 1400px */}
+          <Card className="max-[1399px]:hidden">
+            <div className="p-5 h-30 flex flex-col items-center justify-center text-center">
+              <p className="text-md text-[#4C4C4C]">Revisiones del día</p>
+              <div className="mt-3 flex items-center justify-center gap-1">
+                {statistics.applications.total > 1 && (
+                  <ArrowUp className="h-6 w-6 text-[#00BE16]" />
+                )}
+                <p
+                  className={clsx(
+                    "text-3xl font-semibold",
+                    statistics.applications.total > 1 ? "text-[#00BE16]" : "text-gray-900"
+                  )}
+                >
+                  {statistics.applications.total}
+                </p>
               </div>
             </div>
           </Card>
 
           <Card>
-          <div className="p-5">
-              <p className="text-sm text-gray-500">Revisiones disponibles</p>
-              <p
-                className={
-                  'mt-2 text-3xl font-semibold text-gray-900'}
-              >
-                {statistics.workshop.available_inspections}
+            <div className="p-5 h-30 flex flex-col items-center justify-center text-center">
+              <p className="text-md text-[#4C4C4C]">Revisiones en cola</p>
+              <p className="mt-3 text-3xl font-semibold text-[#FF8000]">
+                {statistics.applications.in_queue}
               </p>
-              
             </div>
           </Card>
 
           <Card>
-            <div className="p-5">
-              <p className="text-sm text-gray-500">Obleas disponibles</p>
+            <div className="p-5 h-30 flex flex-col items-center justify-center text-center">
+              <p className="text-md text-[#4C4C4C]">Revisiones disponibles</p>
+              <p className="mt-3 text-3xl font-semibold text-[#0040B8]">
+                {statistics.workshop.available_inspections}
+              </p>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="p-5 h-30 flex flex-col items-center justify-center text-center">
+              <p className="text-md text-[#4C4C4C]">Obleas disponibles</p>
               <p
                 className={clsx(
-                  'mt-2 text-3xl font-semibold',
-                  statistics.sticker_stock.available <= 250 ? 'text-rose-600' : 'text-gray-900'
+                  "mt-3 text-3xl font-semibold",
+                  statistics.sticker_stock.available <= 250 ? "text-rose-600" : "text-gray-900"
                 )}
               >
                 {statistics.sticker_stock.available}
@@ -103,22 +112,23 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
           </Card>
         </div>
 
+
+
         {/* accesos rápidos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          {quick.map(({ key, title, desc, href, icon: Icon }) => (
+          {quick.map(({ key, title, href, icon: Icon }) => (
             <Link key={key} href={href} className="group">
               <Card className="h-full">
-                <div className="p-5 flex items-start justify-between">
+                <div className="px-4 py-3.5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 rounded-[4px] border border-[#0040B8]/20 bg-[#0040B8]/5 text-[#0040B8] flex items-center justify-center">
+                    <div className="h-9 w-9 rounded-[50px] bg-[#E6ECF8] text-[#0040B8] flex items-center justify-center">
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
-                      <p className="text-xs text-gray-500">{desc}</p>
+                      <h4 className="text-md ml-2">{title}</h4>
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-[#0040B8] transition-colors" />
+                  <ChevronRight className="h-5 w-5 group-hover:text-[#0040B8] transition-colors" />
                 </div>
               </Card>
             </Link>
