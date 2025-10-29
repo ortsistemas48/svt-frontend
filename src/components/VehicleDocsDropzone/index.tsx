@@ -7,8 +7,8 @@ import { Upload, Check, X, Trash2, Image as ImageIcon } from "lucide-react";
 export type CarDocType =
   | "green_card_front"
   | "green_card_back"
-  | "dni_front"
-  | "dni_back"
+  | "license_front"
+  | "license_back"
   | "insurance_front"
   | "insurance_back";
 
@@ -33,20 +33,20 @@ type Props = {
 
 const accept = ["image/png", "image/jpeg", "image/webp"];
 
-const GROUPS = ["Cédula", "DNI", "Seguro"] as const;
+const GROUPS = ["Cédula", "Licencia", "Seguro"] as const;
 type Group = typeof GROUPS[number];
 
 const groupToTypes: Record<Group, { front: CarDocType; back: CarDocType }> = {
   "Cédula": { front: "green_card_front", back: "green_card_back" },
-  "DNI": { front: "dni_front", back: "dni_back" },
+  "Licencia": { front: "license_front", back: "license_back" },
   "Seguro": { front: "insurance_front", back: "insurance_back" },
 };
 
 const ALL_TYPES: CarDocType[] = [
   "green_card_front",
   "green_card_back",
-  "dni_front",
-  "dni_back",
+  "license_front",
+  "license_back",
   "insurance_front",
   "insurance_back",
 ];
@@ -92,17 +92,17 @@ export default function VehicleDocsSimpleDrop({
 
   // selección actual
   const [group, setGroup] = useState<Group>("Cédula");
-  const [face, setFace] = useState<"Anverso" | "Reverso">("Anverso");
+  const [face, setFace] = useState<"Frente" | "Dorso">("Frente");
   const activeType: CarDocType =
-    face === "Anverso" ? groupToTypes[group].front : groupToTypes[group].back;
+    face === "Frente" ? groupToTypes[group].front : groupToTypes[group].back;
 
   const has = (t: CarDocType) => Boolean(queue[t] || existingByType[t]);
 
-  const getNextMissing = (): { group: Group; face: "Anverso" | "Reverso" } | null => {
+  const getNextMissing = (): { group: Group; face: "Frente" | "Dorso" } | null => {
     for (const g of GROUPS) {
       const set = groupToTypes[g];
-      if (!has(set.front)) return { group: g, face: "Anverso" };
-      if (!has(set.back)) return { group: g, face: "Reverso" };
+      if (!has(set.front)) return { group: g, face: "Frente" };
+      if (!has(set.back)) return { group: g, face: "Dorso" };
     }
     return null;
   };
@@ -113,7 +113,7 @@ export default function VehicleDocsSimpleDrop({
     setQueue(makeEmptyQueue());
     setPreviews(makeEmptyPreviews());
     setGroup("Cédula");
-    setFace("Anverso");
+    setFace("Frente");
   }, [resetToken]);
 
   // avisar al padre lo que está en cola
@@ -146,8 +146,8 @@ export default function VehicleDocsSimpleDrop({
   const inputRefs = useRef<Record<CarDocType, HTMLInputElement | null>>({
     green_card_front: null,
     green_card_back: null,
-    dni_front: null,
-    dni_back: null,
+    license_front: null,
+    license_back: null,
     insurance_front: null,
     insurance_back: null,
   });
@@ -168,7 +168,7 @@ export default function VehicleDocsSimpleDrop({
     // mover foco sugerido, igual que en pickForActive
     const isFront = Object.values(groupToTypes[group])[0] === type || type.endsWith("_front");
     if (isFront && (type === groupToTypes[group].front)) {
-      setFace("Reverso");
+      setFace("Dorso");
     } else {
       const nextMissing = getNextMissing();
       if (nextMissing) {
@@ -230,14 +230,10 @@ export default function VehicleDocsSimpleDrop({
         </p>
       </div>
 
-      {/* NO TOCAR: bloques comentados del banner y dropzone global */}
-      {/* ...tus comentarios permanecen intactos... */}
-
-      {/* estado compacto, mini dropzone por tarjeta */}
       <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {GROUPS.map((g) =>
-          (["Anverso", "Reverso"] as const).map((f) => {
-            const t = f === "Anverso" ? groupToTypes[g].front : groupToTypes[g].back;
+          (["Frente", "Dorso"] as const).map((f) => {
+            const t = f === "Frente" ? groupToTypes[g].front : groupToTypes[g].back;
             const q = queue[t];
             const p = previews[t];
             const ex = existingByType[t];

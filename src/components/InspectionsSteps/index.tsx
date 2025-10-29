@@ -668,7 +668,7 @@ export default function InspectionStepsClient({
         </button>
 
         {
-          (userType === "Administrativo" || userType === "Ingeniero") && (
+          (userType === "Administrativo" || userType === "Ingeniero" || userType === "Titular") && (
             <button
               type="button"
               disabled={certLoading || isCompleted}
