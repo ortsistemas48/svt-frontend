@@ -13,7 +13,7 @@ type FormFieldProps = {
   isOwner?: boolean;
   value: string;
   onChange: (value: string) => void;
-
+  onFocus?: () => void;
   onBlur?: () => void;
   error?: string;
   disabled?: boolean;
@@ -34,6 +34,7 @@ export default function PersonFormField({
   isOwner,
   value,
   onChange,
+  onFocus,
   onBlur,
   error,
   disabled = false,
@@ -74,6 +75,7 @@ export default function PersonFormField({
           name={name}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={onFocus}
           onBlur={onBlur}
           disabled={disabled}
           className={`${cls} disabled:opacity-60`}
@@ -93,6 +95,7 @@ export default function PersonFormField({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={onFocus}
           onBlur={onBlur}
           disabled={disabled}
           className={`${cls} disabled:opacity-60`}

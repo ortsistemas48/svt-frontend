@@ -2,7 +2,7 @@
 
 import FormField from "@/components/PersonFormField";
 import { useApplication } from "@/context/ApplicationContext";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   alnumSpaceUpper,
   clamp,
@@ -259,87 +259,43 @@ export default function VehicleForm({
   const chassisAuto = useRef<boolean>(!car?.chassis_brand || String(car?.chassis_brand).trim() === "");
   const didAutofill = useRef(false);
   const fetchedByPlateRef = useRef<string | null>(null);
+  
+  // Estado para rastrear si el usuario está escribiendo en el campo brand
+  const [isTypingInBrand, setIsTypingInBrand] = useState(false);
+  
+  // Estados para rastrear si los campos han sido editados manualmente
+  const [engineBrandManuallyEdited, setEngineBrandManuallyEdited] = useState(false);
+  const [chassisBrandManuallyEdited, setChassisBrandManuallyEdited] = useState(false);
 
-  const mergePreferExisting = (prev: any, incoming: any) => {
-    const out: any = { ...(prev || {}) };
-    const src = incoming || {};
-
-    for (const [k, v] of Object.entries(src)) {
-      if (v === null || v === undefined) continue;
-
-      const hasPrev =
-        out[k] !== undefined &&
-        out[k] !== null &&
-        String(out[k]).trim() !== "";
-
-      if (!hasPrev) out[k] = v;
-    }
-
-    if (src.sticker && typeof src.sticker === "object") {
-      out.sticker = {
-        ...(out.sticker || {}),
-        ...Object.fromEntries(
-          Object.entries(src.sticker).filter(([, val]) => val !== null && val !== undefined)
-        ),
-      };
-    }
-
-    if (!out.sticker_id && out?.sticker?.id) {
-      out.sticker_id = out.sticker.id;
-    }
-
-    return out;
-  };
-
-  useEffect(() => {
-    const plate = String(car?.license_plate || "").trim().toUpperCase();
-    if (!plate) return;
-    if (fetchedByPlateRef.current === plate) return; 
-
-    const ctrl = new AbortController();
-    const run = async () => {
-      try {
-        const res = await fetch(`/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`, {
-          credentials: "include",
-          signal: ctrl.signal,
-        });
-        if (!res.ok) return; 
-        const data = await res.json();
-        setCar((prev: any) => mergePreferExisting(prev, data));
-        fetchedByPlateRef.current = plate;
-      } catch (e: any) {
-        if (e?.name !== "AbortError") {
-          console.error("VehicleForm rehydrate by plate error", e);
-        }
-      }
-    };
-    run();
-    return () => ctrl.abort();
-  }, [car?.license_plate, setCar]);
-
-
+  // Marcar que la carga inicial ha terminado después del primer render
   useEffect(() => {
     if (didAutofill.current) return;
-    const b = String(car?.brand ?? "").trim();
-    const eb = String(car?.engine_brand ?? "").trim();
-    const cb = String(car?.chassis_brand ?? "").trim();
+    const bRaw = String(car?.brand ?? "");
+    const b = bRaw.trim();
     if (!b) return;
-    if (eb || cb) {
-      engineAuto.current = false;
-      chassisAuto.current = false;
-      didAutofill.current = true;
-      return;
-    }
+
     setCar((prev: any) => {
-      const brandSan = SANITIZE.brand ? SANITIZE.brand(b) : b;
-      return {
-        ...prev,
-        engine_brand: SANITIZE.engine_brand ? SANITIZE.engine_brand(brandSan) : brandSan,
-        chassis_brand: SANITIZE.chassis_brand ? SANITIZE.chassis_brand(brandSan) : brandSan,
-      };
+      let changed = false;
+      const next: any = { ...prev };
+
+      if (!engineBrandManuallyEdited) {
+        const v = SANITIZE.engine_brand ? SANITIZE.engine_brand(b) : b;
+        if (prev.engine_brand !== v) {
+          next.engine_brand = v;
+          changed = true;
+        }
+      }
+      if (!chassisBrandManuallyEdited) {
+        const v = SANITIZE.chassis_brand ? SANITIZE.chassis_brand(b) : b;
+        if (prev.chassis_brand !== v) {
+          next.chassis_brand = v;
+          changed = true;
+        }
+      }
+
+      return changed ? next : prev;
     });
-    didAutofill.current = true;
-  }, [car?.brand, car?.engine_brand, car?.chassis_brand, setCar]);
+  }, [car?.brand, engineBrandManuallyEdited, chassisBrandManuallyEdited, setCar]);
 
   const LICENSE_CLASS_VALUES = new Set(["A","A1","A2","B1","B2","C","D1","D2","E1","E2","F"]);
 
@@ -420,8 +376,34 @@ export default function VehicleForm({
     }
     if (key === "brand" || key === "engine_brand" || key === "chassis_brand") {
       const soft = clamp(toUpper(value), 30);
-      if (key === "engine_brand") engineAuto.current = soft.trim() === "";
-      if (key === "chassis_brand") chassisAuto.current = soft.trim() === "";
+      if (key === "engine_brand") {
+        engineAuto.current = soft.trim() === "";
+        setEngineBrandManuallyEdited(true);
+      }
+      if (key === "chassis_brand") {
+        chassisAuto.current = soft.trim() === "";
+        setChassisBrandManuallyEdited(true);
+      }
+      
+      // Si está escribiendo en brand, autocompletar engine_brand y chassis_brand
+      if (key === "brand") {
+        setIsTypingInBrand(true);
+        setCar((prev: any) => {
+          const newCar = { ...prev, [key]: soft };
+
+          // Copiar desde Marca solo si el campo sigue en modo auto
+          if (engineAuto.current) {
+            newCar.engine_brand = SANITIZE.engine_brand ? SANITIZE.engine_brand(soft) : soft;
+          }
+          if (chassisAuto.current) {
+            newCar.chassis_brand = SANITIZE.chassis_brand ? SANITIZE.chassis_brand(soft) : soft;
+          }
+
+          return newCar;
+        });
+        return;
+      }
+      
       setCar((prev: any) => ({ ...prev, [key]: soft }));
       return;
     }
@@ -435,6 +417,13 @@ export default function VehicleForm({
     sanitizeAndMaybeError(key, value);
   };
 
+  const handleFocus = (key: string) => {
+    // Si entra al campo brand, marcar que está escribiendo
+    if (key === "brand") {
+      setIsTypingInBrand(true);
+    }
+  };
+
   const handleBlur = (key: string) => {
     const current = String(car?.[key] ?? "");
     const strict = SANITIZE[key] ? SANITIZE[key](current) : current;
@@ -442,6 +431,11 @@ export default function VehicleForm({
       setCar((prev: any) => ({ ...prev, [key]: strict }));
     }
     validateOne(key, strict);
+    
+    // Si sale del campo brand, marcar que ya no está escribiendo
+    if (key === "brand") {
+      setIsTypingInBrand(false);
+    }
   };
 
   const handleGreenCardNoExpirationChange = (checked: boolean) => {
@@ -507,6 +501,7 @@ export default function VehicleForm({
                           isOwner={true}
                           value={car?.[field.name] ?? ""}
                           onChange={(val) => handleChange(field.name, val)}
+                          onFocus={() => handleFocus(field.name)}
                           onBlur={() => handleBlur(field.name)}
                           error={getCarError(field.name)}
                           isRequired={field.isRequired}
@@ -521,6 +516,7 @@ export default function VehicleForm({
                           isOwner={true}
                           value={car?.manufacture_year ?? ""}
                           onChange={(val) => handleChange("manufacture_year", val)}
+                          onFocus={() => handleFocus("manufacture_year")}
                           onBlur={() => handleBlur("manufacture_year")}
                           error={getCarError("manufacture_year")}
                         />
@@ -534,6 +530,7 @@ export default function VehicleForm({
                           isOwner={true}
                           value={car?.registration_year ?? ""}
                           onChange={(val) => handleChange("registration_year", val)}
+                          onFocus={() => handleFocus("registration_year")}
                           onBlur={() => handleBlur("registration_year")}
                           error={getCarError("registration_year")}
                           isRequired={true}
@@ -570,6 +567,7 @@ export default function VehicleForm({
                   isOwner={true}
                   value={car?.[field.name] ?? ""}
                   onChange={(val) => handleChange(field.name, val)}
+                  onFocus={() => handleFocus(field.name)}
                   onBlur={() => handleBlur(field.name)}
                   error={getCarError(field.name)}
                   disabled={false}
@@ -595,6 +593,7 @@ export default function VehicleForm({
                     ? toDateInputValue(car?.[field.name])
                     : car?.[field.name] ?? "",
                 onChange: (val: string) => handleChange(field.name, val),
+                onFocus: () => handleFocus(field.name),
                 onBlur: () => handleBlur(field.name),
                 error: getCarError(field.name),
                 disabled: field.name === "green_card_expiration" ? greenCardNoExpiration : false,

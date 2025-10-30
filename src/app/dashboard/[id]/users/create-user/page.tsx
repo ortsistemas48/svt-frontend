@@ -80,6 +80,11 @@ export default function CreateOrAttachUserPage() {
         resetFormExceptEmail();
         setExistingUser(null);
         setLoading(false);
+        // Generate password for new user when no email
+        const p = genPassword();
+        console.log("Generated password for no email:", p, "Length:", p.length);
+        setPassword(p);
+        setConfirm(p);
         return;
       }
       try {
@@ -107,10 +112,20 @@ export default function CreateOrAttachUserPage() {
           } else {
             setExistingUser(null);
             resetFormExceptEmail();
+            // Generate password for new user after reset
+            const p = genPassword();
+            console.log("Generated password after reset:", p, "Length:", p.length);
+            setPassword(p);
+            setConfirm(p);
           }
         } else {
           setExistingUser(null);
           resetFormExceptEmail();
+          // Generate password for new user after reset
+          const p = genPassword();
+          console.log("Generated password after error reset:", p, "Length:", p.length);
+          setPassword(p);
+          setConfirm(p);
         }
       } catch (e: any) {
         setMsg({ type: "error", text: e.message || "Error cargando datos" });
@@ -123,12 +138,13 @@ export default function CreateOrAttachUserPage() {
 
   // Autogenerar password cuando sea usuario nuevo
   useEffect(() => {
-    if (!isExisting) {
+    if (!isExisting && !loading) {
       const p = genPassword();
+      console.log("Generated password:", p, "Length:", p.length);
       setPassword(p);
       setConfirm(p);
     }
-  }, [isExisting, email]);
+  }, [isExisting, loading, email]);
 
   const resetFormExceptEmail = () => {
     setFirstName("");
@@ -138,8 +154,11 @@ export default function CreateOrAttachUserPage() {
     setRoleId("");
     setEngineerRegistration("");
     setEngineerDegree("");
-    setPassword("");
-    setConfirm("");
+    // Don't reset password and confirm for new users - they should be auto-generated
+    if (isExisting) {
+      setPassword("");
+      setConfirm("");
+    }
     setEngineerKind("");
     setUserChoseEngineer(false);
   };
@@ -183,10 +202,13 @@ export default function CreateOrAttachUserPage() {
         // reforzar autogeneración por si alguien reentró
         if (!password || !confirm) {
           const p = genPassword();
+          console.log("Regenerating password in submit:", p, "Length:", p.length);
           setPassword(p);
           setConfirm(p);
         }
+        console.log("Password validation - password:", password, "length:", (password || "").length);
         if ((password || "").length < 8) {
+          console.log("La contraseña generada es inválida", password);
           setMsg({ type: "error", text: "La contraseña generada es inválida" });
           return;
         }
