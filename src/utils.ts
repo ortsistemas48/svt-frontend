@@ -1,11 +1,7 @@
 import { Application, DailyStatistics } from "./app/types";
 import type { TopModels } from "@/components/Statistics"; 
-import { getUserFromCookies } from "./auth";
-import { isErrored } from "node:stream";
+import localidadesData from "@/georef/localidades.json";
 
-/* =========================
-   Helpers para Server Components
-   ========================= */
 async function getBaseURL() {
   const { headers } = await import("next/headers");
   const h = await headers();
@@ -29,10 +25,6 @@ async function serverFetch(path: string, init: RequestInit = {}) {
   });
 }
 
-/* =========================
-   Universal fetch para APIs internas
-   Usa serverFetch en server y window.fetch en client
-   ========================= */
 function isServer() {
   return typeof window === "undefined";
 }
@@ -475,42 +467,47 @@ export async function fetchStickersByWorkshop(workshopId: number, page = 1, perP
   return data; // {stickers: [...], pagination: {...}}
 }
 
-/* =========================
-   Terceros
-   Nota, estas llamadas son externas, no van por serverFetch
-   ========================= */
 
-const BASE = "https://apis.datos.gob.ar/georef/api";
-
-// Lista fija de provincias de Argentina, incluye CABA
-export type Option = { value: string; label: string };
+type Option = {
+  value: string;
+  label: string;
+  key: string;
+};
 
 export const AR_PROVINCES: Option[] = [
-  { value: "CABA", label: "CABA" },
-  { value: "Buenos Aires", label: "Buenos Aires" },
-  { value: "Catamarca", label: "Catamarca" },
-  { value: "Chaco", label: "Chaco" },
-  { value: "Chubut", label: "Chubut" },
-  { value: "Córdoba", label: "Córdoba" },
-  { value: "Corrientes", label: "Corrientes" },
-  { value: "Entre Ríos", label: "Entre Ríos" },
-  { value: "Formosa", label: "Formosa" },
-  { value: "Jujuy", label: "Jujuy" },
-  { value: "La Pampa", label: "La Pampa" },
-  { value: "La Rioja", label: "La Rioja" },
-  { value: "Mendoza", label: "Mendoza" },
-  { value: "Misiones", label: "Misiones" },
-  { value: "Neuquén", label: "Neuquén" },
-  { value: "Río Negro", label: "Río Negro" },
-  { value: "Salta", label: "Salta" },
-  { value: "San Juan", label: "San Juan" },
-  { value: "San Luis", label: "San Luis" },
-  { value: "Santa Cruz", label: "Santa Cruz" },
-  { value: "Santa Fe", label: "Santa Fe" },
-  { value: "Santiago del Estero", label: "Santiago del Estero" },
-  { value: "Tierra del Fuego", label: "Tierra del Fuego" },
-  { value: "Tucumán", label: "Tucumán" },
+  { value: "CABA", label: "CABA", key: "CABA" },
+  { value: "Buenos Aires", label: "Buenos Aires", key: "BA" },
+  { value: "Catamarca", label: "Catamarca", key: "CAT" },
+  { value: "Chaco", label: "Chaco", key: "CHA" },
+  { value: "Chubut", label: "Chubut", key: "CHU" },
+  { value: "Córdoba", label: "Córdoba", key: "COR" },
+  { value: "Corrientes", label: "Corrientes", key: "CORR" },
+  { value: "Entre Ríos", label: "Entre Ríos", key: "ER" },
+  { value: "Formosa", label: "Formosa", key: "FOR" },
+  { value: "Jujuy", label: "Jujuy", key: "JUJ" },
+  { value: "La Pampa", label: "La Pampa", key: "LP" },
+  { value: "La Rioja", label: "La Rioja", key: "LR" },
+  { value: "Mendoza", label: "Mendoza", key: "MEN" },
+  { value: "Misiones", label: "Misiones", key: "MIS" },
+  { value: "Neuquén", label: "Neuquén", key: "NEU" },
+  { value: "Río Negro", label: "Río Negro", key: "RN" },
+  { value: "Salta", label: "Salta", key: "SAL" },
+  { value: "San Juan", label: "San Juan", key: "SJ" },
+  { value: "San Luis", label: "San Luis", key: "SL" },
+  { value: "Santa Cruz", label: "Santa Cruz", key: "SC" },
+  { value: "Santa Fe", label: "Santa Fe", key: "SF" },
+  { value: "Santiago del Estero", label: "Santiago del Estero", key: "SE" },
+  { value: "Tierra del Fuego", label: "Tierra del Fuego", key: "TF" },
+  { value: "Tucumán", label: "Tucumán", key: "TUC" },
 ];
+
+function normalizeProvinceForDataset(name: string) {
+  const n = name.trim().toLowerCase();
+  if (n === "caba" || n === "capital federal") {
+    return "Ciudad Autónoma de Buenos Aires";
+  }
+  return name;
+}
 
 export async function getProvinces(): Promise<Option[]> {
   return AR_PROVINCES;
@@ -518,87 +515,26 @@ export async function getProvinces(): Promise<Option[]> {
 
 export async function getLocalidadesByProvincia(provinceName: string): Promise<Option[]> {
   if (!provinceName) return [];
-  
-  try {
-    // API has a maximum of 5000 per request, so we'll paginate if needed
-    const baseUrl = `https://apis.datos.gob.ar/georef/api/localidades`;
-    const maxPerPage = 5000; // Maximum allowed by the API
-    const allLocalidades: any[] = [];
-    let inicio = 0;
-    let total = 0;
-    let hasMore = true;
-    
-    // Fetch all pages
-    while (hasMore) {
-      const params = new URLSearchParams({
-        provincia: provinceName,
-        max: String(maxPerPage),
-        inicio: String(inicio),
-      });
-      
-      const res = await fetch(`${baseUrl}?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json",
-        },
-      });
-      
-      if (!res.ok) {
-        // If this is the first request, throw the error
-        if (inicio === 0) {
-          throw new Error(`API returned status ${res.status}`);
-        }
-        // If pagination fails mid-way, return what we have so far
-        console.warn(`Pagination failed at inicio=${inicio}, returning partial results`);
-        break;
-      }
-      
-      const data = await res.json();
-      
-      // Update total on first request
-      if (inicio === 0) {
-        total = data?.total ?? 0;
-      }
-      
-      const localidades = data?.localidades ?? [];
-      const cantidad = data?.cantidad ?? localidades.length;
-      
-      if (localidades.length === 0) {
-        hasMore = false;
-        break;
-      }
-      
-      allLocalidades.push(...localidades);
-      inicio += cantidad;
-      
-      // Check if we've fetched all results
-      if (inicio >= total || cantidad < maxPerPage) {
-        hasMore = false;
-      }
-    }
-    
-    // Process all collected localidades
-    const seen = new Set<string>();
-    const items = allLocalidades
-      .filter((l: any) => {
-        const k = String(l.id);
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      })
-      .map((l: any) => ({
-        value: l.nombre,
-        label: l.nombre,
-        key: String(l.id),
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' })); // Sort alphabetically in Spanish
 
-    return items;
-  } catch (error) {
-    // Log error but don't throw - return empty array so UI can fall back to manual input
-    console.error("Error fetching localidades from API:", error);
-    throw error; // Re-throw so the calling code can handle it (set cityApiFailed)
-  }
+  const target = normalizeProvinceForDataset(provinceName);
+  const seen = new Set<string>();
+
+  const items = localidadesData.localidades
+    .filter((l: any) => l.provincia?.nombre?.toLowerCase() === target.toLowerCase())
+    .filter((l: any) => {
+      const k = String(l.id);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
+    .map((l: any) => ({
+      value: l.nombre,
+      label: l.nombre,
+      key: String(l.id),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, "es", { sensitivity: "base" }));
+
+  return items;
 }
 
 /* =========================

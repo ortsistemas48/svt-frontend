@@ -31,7 +31,6 @@ interface VehicleFormProps {
   onDeleteCarDoc?: (docId: number) => Promise<void> | void;
 }
 
-/* --------- Helpers --------- */
 const toDateInputValue = (v: any): string => {
   if (!v) return "";
   if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
@@ -43,7 +42,6 @@ const toDateInputValue = (v: any): string => {
   return `${y}-${m}-${day}`;
 };
 
-/* --------- Config UI --------- */
 const formData1: FormFieldData[] = [
   { label: "Dominio", placeholder: "Ej: AB123AB", name: "license_plate", isRequired: true },
   { label: "Marca", placeholder: "Ej: Fiat", name: "brand", isRequired: true },
@@ -156,7 +154,6 @@ const formData2: FormFieldData[] = [
   { label: "Póliza del seguro", type: "text", placeholder: "Ej: 1234567890", name: "insurance" },
 ];
 
-/* --------- Reglas de validación --------- */
 const MSG = {
   brand: "Letras y números, máx. 15.",
   model: "Campo requerido.",
@@ -243,7 +240,6 @@ export default function VehicleForm({
 }: VehicleFormProps) {
   const { setIsIdle, errors, setErrors } = useApplication() as any;
 
-  // Derivar el flag de sin vencimiento desde car
   const greenCardNoExpiration =
     !car?.green_card_expiration ||
     car?.green_card_expiration === "" ||
@@ -254,20 +250,16 @@ export default function VehicleForm({
 
   const getCarError = (name: string) => (errors ? errors[`car_${name}`] : "");
 
-  // Evitar que el autofill pise datos existentes
   const engineAuto = useRef<boolean>(!car?.engine_brand || String(car?.engine_brand).trim() === "");
   const chassisAuto = useRef<boolean>(!car?.chassis_brand || String(car?.chassis_brand).trim() === "");
   const didAutofill = useRef(false);
   const fetchedByPlateRef = useRef<string | null>(null);
   
-  // Estado para rastrear si el usuario está escribiendo en el campo brand
   const [isTypingInBrand, setIsTypingInBrand] = useState(false);
   
-  // Estados para rastrear si los campos han sido editados manualmente
   const [engineBrandManuallyEdited, setEngineBrandManuallyEdited] = useState(false);
   const [chassisBrandManuallyEdited, setChassisBrandManuallyEdited] = useState(false);
 
-  // Marcar que la carga inicial ha terminado después del primer render
   useEffect(() => {
     if (didAutofill.current) return;
     const bRaw = String(car?.brand ?? "");
@@ -326,7 +318,6 @@ export default function VehicleForm({
     if (!p) return setCarError(name, "");
     if (!v) return setCarError(name, "");
 
-    // Fechas, permitir pasado si tu flujo lo requiere, aquí solo formato válido
     if (name === "green_card_expiration" || name === "license_expiration") {
       if (name === "green_card_expiration" && greenCardNoExpiration) {
         setCarError(name, "");
@@ -337,7 +328,6 @@ export default function VehicleForm({
       return;
     }
 
-    // Validación de pesos con suma cuando están los tres
     if (name === "total_weight" || name === "front_weight" || name === "back_weight") {
       const total = Number(car?.total_weight);
       const front = Number(car?.front_weight);
@@ -385,13 +375,11 @@ export default function VehicleForm({
         setChassisBrandManuallyEdited(true);
       }
       
-      // Si está escribiendo en brand, autocompletar engine_brand y chassis_brand
       if (key === "brand") {
         setIsTypingInBrand(true);
         setCar((prev: any) => {
           const newCar = { ...prev, [key]: soft };
 
-          // Copiar desde Marca solo si el campo sigue en modo auto
           if (engineAuto.current) {
             newCar.engine_brand = SANITIZE.engine_brand ? SANITIZE.engine_brand(soft) : soft;
           }
@@ -408,7 +396,6 @@ export default function VehicleForm({
       return;
     }
     if (key === "green_card_expiration" || key === "license_expiration") {
-      // Para inputs date llega AAAA-MM-DD
       const v = value ?? "";
       setCar((prev: any) => ({ ...prev, [key]: v }));
       validateOne(key, v);
@@ -418,7 +405,6 @@ export default function VehicleForm({
   };
 
   const handleFocus = (key: string) => {
-    // Si entra al campo brand, marcar que está escribiendo
     if (key === "brand") {
       setIsTypingInBrand(true);
     }
@@ -432,7 +418,6 @@ export default function VehicleForm({
     }
     validateOne(key, strict);
     
-    // Si sale del campo brand, marcar que ya no está escribiendo
     if (key === "brand") {
       setIsTypingInBrand(false);
     }
@@ -578,10 +563,8 @@ export default function VehicleForm({
             })}
           </div>
 
-          {/* Separador */}
           <div className="bg-[#dedede] w-px h-full max-xl:hidden" />
 
-          {/* Columna derecha */}
           <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8">
             {formData2.map((field, index) => {
               const commonProps = {
