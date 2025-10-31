@@ -18,6 +18,8 @@ type FormFieldProps = {
   error?: string;
   disabled?: boolean;
   isRequired?: boolean;
+  lang?: string;
+  displayValue?: string;
 
   innerCheckboxLabel?: string;
   innerCheckboxChecked?: boolean;
@@ -39,6 +41,8 @@ export default function PersonFormField({
   error,
   disabled = false,
   isRequired = false,
+  lang,
+  displayValue,
   innerCheckboxLabel,
   innerCheckboxChecked,
   onInnerCheckboxChange,
@@ -78,6 +82,7 @@ export default function PersonFormField({
           onFocus={onFocus}
           onBlur={onBlur}
           disabled={disabled}
+          lang={lang}
           className={`${cls} disabled:opacity-60`}
         >
           <option value="">Seleccionar {label.toLowerCase()}</option>
@@ -88,18 +93,26 @@ export default function PersonFormField({
           ))}
         </select>
       ) : (
-        <input
-          id={id}
-          name={name}
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          disabled={disabled}
-          className={`${cls} disabled:opacity-60`}
-        />
+        <div className={displayValue && type === "month" ? "relative" : ""}>
+          <input
+            id={id}
+            name={name}
+            type={type}
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            disabled={disabled}
+            lang={lang}
+            className={`${cls} disabled:opacity-60 ${displayValue && type === "month" ? "text-transparent [color:transparent]" : ""}`}
+          />
+          {displayValue && type === "month" && (
+            <div className={`pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm ${disabled ? "opacity-60" : ""} ${error ? "text-red-600" : "text-black"}`}>
+              {displayValue}
+            </div>
+          )}
+        </div>
       )}
 
       {showInnerCheckbox ? (

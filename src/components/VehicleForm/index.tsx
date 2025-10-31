@@ -46,20 +46,6 @@ const formData1: FormFieldData[] = [
   { label: "Dominio", placeholder: "Ej: AB123AB", name: "license_plate", isRequired: true },
   { label: "Marca", placeholder: "Ej: Fiat", name: "brand", isRequired: true },
   { label: "Modelo", placeholder: "Ej: Cronos", name: "model", isRequired: true },
-  { label: "Mes de patentamiento", options: [
-    { value: "enero", label: "Enero" },
-    { value: "febrero", label: "Febrero" },
-    { value: "marzo", label: "Marzo" },
-    { value: "abril", label: "Abril" },
-    { value: "mayo", label: "Mayo" },
-    { value: "junio", label: "Junio" },
-    { value: "julio", label: "Julio" },
-    { value: "agosto", label: "Agosto" },
-    { value: "septiembre", label: "Septiembre" },
-    { value: "octubre", label: "Octubre" },
-    { value: "noviembre", label: "Noviembre" },
-    { value: "diciembre", label: "Diciembre" },
-  ], name: "registration_month", isRequired: true },
   { label: "Peso total (KG)", placeholder: "Ej: 2000", name: "total_weight", isRequired: true },
   { label: "Peso eje delantero (KG)", placeholder: "Ej: 1000", name: "front_weight", isRequired: true },
   { label: "Peso eje trasero (KG)", placeholder: "Ej: 1000", name: "back_weight", isRequired: true },
@@ -159,6 +145,7 @@ const MSG = {
   model: "Campo requerido.",
   manufacture_year: "Debe tener 4 dígitos, ej: 2025.",
   registration_year: "Debe tener 4 dígitos, ej: 2025.",
+  registration_month_year: "Mes y año inválidos, usa AAAA-MM.",
   engine_brand: "Letras y números, máx. 15.",
   engine_number: "Cualquier símbolo, máx. 17.",
   chassis_number: "Cualquier símbolo, máx. 17.",
@@ -176,6 +163,7 @@ const PATTERN: Record<string, RegExp> = {
   model: /^.+$/,
   manufacture_year: /^\d{4}$/,
   registration_year: /^\d{4}$/,
+  registration_month_year: /^\d{4}-\d{2}$/,
   engine_brand: /^[A-Z0-9 ]{1,15}$/,
   engine_number: /^.{1,17}$/,
   chassis_number: /^.{1,17}$/,
@@ -196,6 +184,7 @@ const SANITIZE: Record<string, (s: string) => string> = {
   model: (s) => s,
   manufacture_year: (s) => clamp(onlyDigits(s), 4),
   registration_year: (s) => clamp(onlyDigits(s), 4),
+  registration_month_year: (s) => clamp(s, 7),
   engine_brand: (s) => clamp(alnumSpaceUpper(s), 15),
   engine_number: (s) => clamp(s, 17),
   chassis_number: (s) => clamp(s, 17),
@@ -213,6 +202,7 @@ const FIELD_LABEL: Record<string, string> = {
   manufacture_year: "Año de fabricación",
   registration_year: "Año de patentamiento",
   registration_month: "Mes de patentamiento",
+  registration_month_year: "Patentamiento",
 
   weight: "Peso del auto",
   fuel_type: "Tipo de combustible",
@@ -259,6 +249,43 @@ export default function VehicleForm({
   
   const [engineBrandManuallyEdited, setEngineBrandManuallyEdited] = useState(false);
   const [chassisBrandManuallyEdited, setChassisBrandManuallyEdited] = useState(false);
+
+  const monthNameToNumber = (name: string) => {
+    const m: Record<string, string> = {
+      "enero": "01",
+      "febrero": "02",
+      "marzo": "03",
+      "abril": "04",
+      "mayo": "05",
+      "junio": "06",
+      "julio": "07",
+      "agosto": "08",
+      "septiembre": "09",
+      "octubre": "10",
+      "noviembre": "11",
+      "diciembre": "12",
+    };
+    return m[String(name || "").toLowerCase()] ?? "";
+  };
+  const numberToMonthName = (num: string) => {
+    const m: Record<string, string> = {
+      "01": "enero",
+      "02": "febrero",
+      "03": "marzo",
+      "04": "abril",
+      "05": "mayo",
+      "06": "junio",
+      "07": "julio",
+      "08": "agosto",
+      "09": "septiembre",
+      "10": "octubre",
+      "11": "noviembre",
+      "12": "diciembre",
+    };
+    return m[num] ?? "";
+  };
+
+  // helpers para mapear mes nombre <-> número
 
   useEffect(() => {
     if (didAutofill.current) return;
@@ -358,6 +385,26 @@ export default function VehicleForm({
   };
 
   const handleChange = (key: string, value: string) => {
+    if (key === "registration_month_year") {
+      const v = SANITIZE.registration_month_year ? SANITIZE.registration_month_year(value) : value;
+      if (!v) {
+        setCar((prev: any) => ({ ...prev, registration_year: "", registration_month: "" }));
+        setCarError("registration_month_year", "");
+        return;
+      }
+      const ok = /^\d{4}-\d{2}$/.test(v);
+      if (!ok) {
+        setCarError("registration_month_year", MSG.registration_month_year);
+        return;
+      }
+      const [year, monthNum] = v.split("-");
+      const monthName = numberToMonthName(monthNum);
+      setCar((prev: any) => ({ ...prev, registration_year: year, registration_month: monthName }));
+      setCarError("registration_month_year", "");
+      setCarError("registration_year", "");
+      setCarError("registration_month", "");
+      return;
+    }
     if (key === "license_class") {
       const v = SANITIZE.license_class ? SANITIZE.license_class(value) : String(value || "").trim().toUpperCase();
       setCar((prev: any) => ({ ...prev, license_class: v }));
@@ -509,15 +556,28 @@ export default function VehicleForm({
                       <div className="col-span-1 max-md:col-span-1">
                         <FormField
                           label="Patentamiento"
-                          placeholder="Ej: 2025"
-                          type="text"
-                          name="registration_year"
+                          placeholder="MM/AAAA"
+                          type="month"
+                          name="registration_month_year"
                           isOwner={true}
-                          value={car?.registration_year ?? ""}
-                          onChange={(val) => handleChange("registration_year", val)}
-                          onFocus={() => handleFocus("registration_year")}
-                          onBlur={() => handleBlur("registration_year")}
-                          error={getCarError("registration_year")}
+                          lang="en-US"
+                          displayValue={(function() {
+                            const y = String(car?.registration_year ?? "").trim();
+                            const mName = String(car?.registration_month ?? "").trim();
+                            const mm = monthNameToNumber(mName);
+                            if (!y || !mm) return "00/0000";
+                            return `${mm}/${y}`;
+                          })()}
+                          value={(function() {
+                            const y = String(car?.registration_year ?? "").padStart(4, "");
+                            const monthName = String(car?.registration_month ?? "").toLowerCase();
+                            const m = monthNameToNumber(monthName);
+                            return y && m ? `${y}-${m}` : "";
+                          })()}
+                          onChange={(val) => handleChange("registration_month_year", val)}
+                          onFocus={() => handleFocus("registration_month_year")}
+                          onBlur={() => handleBlur("registration_month_year")}
+                          error={getCarError("registration_month_year")}
                           isRequired={true}
                         />
                       </div>
