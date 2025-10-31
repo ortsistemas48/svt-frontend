@@ -44,21 +44,18 @@ export default function WorkshopSettingsPage() {
   const { id } = useParams<{ id: string }>();
   const workshopId = Number(id);
 
-  // Datos del taller
   const [ws, setWs] = useState<Workshop | null>(null);
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
 
-  // Pasos
   const [steps, setSteps] = useState<StepRow[]>([]);
   const [loadingSteps, setLoadingSteps] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
   const [err, setErr] = useState("");
 
-  // Observaciones
   const [obsOpen, setObsOpen] = useState(false);
   const [obsStep, setObsStep] = useState<{ step_id: number; title: string; description?: string | null } | null>(null);
-  const [obs, setObs] = useState<Observation[]>([]); // ítems de la categoría seleccionada
+  const [obs, setObs] = useState<Observation[]>([]); 
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   type ObsView = "categories" | "items";
@@ -69,10 +66,8 @@ export default function WorkshopSettingsPage() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
-  // Toggle de animación de layout
   const [layoutOn, setLayoutOn] = useState(true);
 
-  // Cargar taller
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -93,7 +88,6 @@ export default function WorkshopSettingsPage() {
     };
   }, [workshopId]);
 
-  // Cargar pasos
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -116,7 +110,6 @@ export default function WorkshopSettingsPage() {
     };
   }, [workshopId]);
 
-  // Phone handler
   const savePhone = async () => {
     try {
       setSavingPhone(true);
@@ -133,7 +126,6 @@ export default function WorkshopSettingsPage() {
         const e = await res.json().catch(() => ({}));
         throw new Error(e.error || "No se pudo guardar el teléfono");
       }
-      // Update the workshop data
       setWs(prev => prev ? { ...prev, phone: phone.trim() } : null);
     } catch (e: any) {
       setErr(e.message || "Error al guardar el teléfono");
@@ -142,16 +134,14 @@ export default function WorkshopSettingsPage() {
     }
   };
 
-  // Split en 2 columnas
   const mid = Math.ceil(steps.length / 2);
   const left = steps.slice(0, mid);
   const right = steps.slice(mid);
 
-  // Drag and drop (sin animación de layout durante drag)
   const dragIndex = useRef<number | null>(null);
   const onDragStartIdx = (globalIdx: number) => () => {
     dragIndex.current = globalIdx;
-    setLayoutOn(false); // desactiva animación al arrastrar
+    setLayoutOn(false); 
   };
   const onDragOverIdx = (globalIdx: number) => (e: React.DragEvent) => {
     e.preventDefault();
@@ -167,12 +157,11 @@ export default function WorkshopSettingsPage() {
   };
   const onDragEnd = () => {
     dragIndex.current = null;
-    setLayoutOn(true); // vuelve a activar animación
+    setLayoutOn(true);
   };
 
-  // Reordenar con flechas (con animación)
   const move = (index: number, dir: -1 | 1) => {
-    setLayoutOn(true); // asegura animación en este caso
+    setLayoutOn(true); 
     setSteps((prev) => {
       const arr = [...prev];
       const j = index + dir;
@@ -204,7 +193,6 @@ export default function WorkshopSettingsPage() {
     }
   };
 
-  // Observaciones jerárquicas (categorías → ítems)
   const openObs = async (s: StepRow) => {
     setObsStep({ step_id: s.step_id, title: s.name, description: s.description });
     setObsOpen(true);
@@ -291,7 +279,6 @@ export default function WorkshopSettingsPage() {
   };
 
   const saveEdit = async () => {
-    // Renombrar categoría
     if (editingCatId) {
       const name = inputValue.trim();
       if (!name || !obsStep) return;
@@ -313,7 +300,6 @@ export default function WorkshopSettingsPage() {
       return;
     }
 
-    // Editar observación
     if (!editingId || !obsStep || !selectedCategory) return;
     const desc = inputValue.trim();
     if (!desc) return;

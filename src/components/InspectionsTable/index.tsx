@@ -8,7 +8,6 @@ import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import TableFilters from "../TableFilters";
 import RefreshButton from "../RefreshButton";
 
-/* 1) Tonos de estado, texto fuerte y fondo claro */
 const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> = {
   Completado: { text: "text-green-700", bg: "bg-green-50" },
   "En curso": { text: "text-blue-700", bg: "bg-blue-50" },
@@ -22,18 +21,16 @@ export default function InspectionTable() {
   const { id } = useParams();
   const [items, setItems] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState(""); // Displayed search value
-  const [searchQuery, setSearchQuery] = useState(""); // Actual search query used for API
+  const [q, setQ] = useState(""); 
+  const [searchQuery, setSearchQuery] = useState(""); 
   const [page, setPage] = useState(1);
   const perPage = 5;
   const [total, setTotal] = useState(0);
 
-  // Filter states
   const [showFilters, setShowFilters] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>("Todos"); // Empty means all statuses
+  const [statusFilter, setStatusFilter] = useState<string>("Todos");
   const router = useRouter();
 
-  // Modal
   const [deleteTarget, setDeleteTarget] = useState<Application | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -84,7 +81,6 @@ export default function InspectionTable() {
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
-  // Datos compactos para el modal
   const deleteSummary = useMemo(() => {
     if (!deleteTarget) return null;
     const lp = deleteTarget.car?.license_plate || "-";
@@ -113,20 +109,17 @@ export default function InspectionTable() {
 
       setSuccessMsg(`Trámite #${deleteTarget.application_id} eliminado`);
       setDeleteTarget(null);
-      // Refrescar lista
       await fetchApps();
     } catch (e: any) {
       setErrorMsg(e?.message || "Error eliminando el trámite");
     } finally {
       setDeleting(false);
-      // limpiar mensaje de éxito a los 3s
       setTimeout(() => setSuccessMsg(null), 3000);
     }
   };
 
   return (
     <div className="">
-      {/* Mensajes */}
       {errorMsg && (
         <div className="mb-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
           {errorMsg}
@@ -138,7 +131,6 @@ export default function InspectionTable() {
         </div>
       )}
 
-      {/* Search and filters section */}
       <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 gap-3 px-[1.5px] pt-1">
           <input
@@ -176,15 +168,12 @@ export default function InspectionTable() {
             <SlidersHorizontal size={16} className="text-white" />
             <span className="hidden sm:inline text-white">Filtrar</span>
           </button>
-          {/* Refresh button */}
           <RefreshButton loading={loading} fetchApps={fetchApps} />
         </div>
       </div>
 
-      {/* Filter overlay */}
       {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
-      {/* Card con borde propio, 2) header blanco, 4) líneas pegadas a los bordes */}
       <div className="insp-table overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
@@ -222,7 +211,6 @@ export default function InspectionTable() {
                       <div className="text-xs text-gray-600 sm:text-sm">{time}</div>
                     </td>
 
-                    {/* 1) Pill con texto y fondo del mismo tono, más claro */}
                     <td className="p-3 text-center">
                       <span className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm ${tone.text} ${tone.bg}`}>
                         {item.status}
@@ -291,7 +279,6 @@ export default function InspectionTable() {
         </div>
       </div>
 
-      {/* Pagination and refresh button section */}
       <div className="mt-6 flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
         {!loading && total > perPage && (
           <div className="flex items-center gap-2">
@@ -318,15 +305,12 @@ export default function InspectionTable() {
         )}
       </div>
 
-      {/* Modal de confirmación */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
             onClick={() => !deleting && setDeleteTarget(null)}
           />
-          {/* Caja */}
           <div className="absolute inset-0 flex items-center justify-center p-4">
             <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl">
               <div className="p-4 sm:p-6">
@@ -380,8 +364,6 @@ export default function InspectionTable() {
         </div>
       )}
 
-      {/* Fallback global por si TableTemplate no expone props de clase
-          2) Header blanco, 4) líneas de división a los bordes, colapso de bordes */}
       <style jsx global>{`
         .insp-table thead { background-color: #fff !important; }
         .insp-table table { border-collapse: collapse; width: 100%; }

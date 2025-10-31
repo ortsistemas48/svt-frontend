@@ -44,16 +44,13 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
   return (
     <div className="bg-white">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* breadcrumb simple */}
         <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
           <div className="flex items-center gap-1">
             <span className="text-gray-600">Inicio</span>
           </div>
         </article>
 
-        {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-3 min-[1400px]:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          {/* Solo visible desde 1400px */}
           <Card className="max-[1399px]:hidden">
             <div className="p-5 h-30 flex flex-col items-center justify-center text-center">
               <p className="text-md text-[#4C4C4C]">Revisiones del día</p>
@@ -112,9 +109,6 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
           </Card>
         </div>
 
-
-
-        {/* accesos rápidos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {quick.map(({ key, title, href, icon: Icon }) => (
             <Link key={key} href={href} className="group">
@@ -135,9 +129,7 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
           ))}
         </div>
 
-        {/* dos columnas, últimos y cola */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-          {/* Últimas revisiones */}
           <Card className="xl:col-span-2">
             <div className="p-5 border-b border-gray-100 flex items-center justify-between">
               <div>
@@ -149,7 +141,6 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
               </Link>
             </div>
 
-            {/* contenido */}
             {latestApps.items?.length ? (
               <div className="p-5 overflow-x-auto">
                 <table className="min-w-full text-sm">

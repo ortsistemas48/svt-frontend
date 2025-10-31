@@ -142,7 +142,6 @@ export default function VehicleDocsSimpleDrop({
     return () => created.forEach((u) => URL.revokeObjectURL(u));
   }, [queue]);
 
-  // refs por tipo para inputs individuales (mini dropzone por tarjeta)
   const inputRefs = useRef<Record<CarDocType, HTMLInputElement | null>>({
     green_card_front: null,
     green_card_back: null,
@@ -152,7 +151,6 @@ export default function VehicleDocsSimpleDrop({
     insurance_back: null,
   });
 
-  // validación y seteo por tipo
   const pickForType = (type: CarDocType, files: FileList | null) => {
     if (!files || !files.length) return;
     const file = files[0];
@@ -165,7 +163,6 @@ export default function VehicleDocsSimpleDrop({
 
     setQueue((prev) => ({ ...prev, [type]: file }));
 
-    // mover foco sugerido, igual que en pickForActive
     const isFront = Object.values(groupToTypes[group])[0] === type || type.endsWith("_front");
     if (isFront && (type === groupToTypes[group].front)) {
       setFace("Dorso");
@@ -178,7 +175,6 @@ export default function VehicleDocsSimpleDrop({
     }
   };
 
-  // drag and drop por tarjeta
   const makeDropHandlers = (type: CarDocType) => {
     return {
       onDragOver: (e: React.DragEvent) => { e.preventDefault(); },
@@ -212,10 +208,8 @@ export default function VehicleDocsSimpleDrop({
 
   return (
     <section className="mt-10">
-      {/* header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          {/* iconito svg a la izquierda del título */}
           <img
             src="/images/icons/DropzoneIcon.svg"
             alt=""
@@ -248,7 +242,7 @@ export default function VehicleDocsSimpleDrop({
                 onClick={() => {
                   setGroup(g);
                   setFace(f);
-                  inputRefs.current[t]?.click(); // abrir file picker de la tarjeta
+                  inputRefs.current[t]?.click(); 
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {

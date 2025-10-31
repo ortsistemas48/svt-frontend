@@ -615,7 +615,6 @@ export default function InspectionStepsClient({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4 mt-8 w-full">
-        {/* Título y descripción, una debajo de la otra */}
         <div className="md:col-span-2">
           <h4 className="text-sm font-medium text-zinc-900">Observaciones generales</h4>
           <p className="text-xs text-zinc-500 mt-1">
@@ -623,7 +622,6 @@ export default function InspectionStepsClient({
           </p>
         </div>
 
-        {/* Área de texto */}
         <div className="rounded-[10px] text-sm border border-zinc-200 bg-white p-4 w-full self-start md:col-span-2">
           <textarea
             value={globalText}
@@ -647,7 +645,7 @@ export default function InspectionStepsClient({
       
       <section className="rounded-[10px] border border-zinc-200 bg-white p-4 w-full mt-6">
         <div className="flex items-center justify-between mb-1">
-          <h4 className="text-sm font-medium text-zinc-900">Subir informes técnicos y fotos del vehiculo.</h4>
+          <h4 className="text-sm font-medium text-zinc-900">Subir informes técnicos y/o fotos del vehiculo. (opcional)</h4>
           {inspDocsLoading && <span className="text-xs text-zinc-500">Actualizando...</span>}
         </div>
         <p className="text-xs text-zinc-500 mb-3">
