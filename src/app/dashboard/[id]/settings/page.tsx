@@ -36,6 +36,7 @@ type StepRow = {
 };
 
 type Observation = { id: number; description: string };
+type Category = { category_id: number; name: string };
 
 const API = "/api";
 
@@ -57,9 +58,14 @@ export default function WorkshopSettingsPage() {
   // Observaciones
   const [obsOpen, setObsOpen] = useState(false);
   const [obsStep, setObsStep] = useState<{ step_id: number; title: string; description?: string | null } | null>(null);
-  const [obs, setObs] = useState<Observation[]>([]);
+  const [obs, setObs] = useState<Observation[]>([]); // ítems de la categoría seleccionada
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  type ObsView = "categories" | "items";
+  const [obsView, setObsView] = useState<ObsView>("categories");
   const [obsLoading, setObsLoading] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingCatId, setEditingCatId] = useState<number | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
@@ -198,18 +204,47 @@ export default function WorkshopSettingsPage() {
     }
   };
 
-  // Observaciones
+  // Observaciones jerárquicas (categorías → ítems)
   const openObs = async (s: StepRow) => {
     setObsStep({ step_id: s.step_id, title: s.name, description: s.description });
     setObsOpen(true);
     setObs([]);
+    setCategories([]);
+    setSelectedCategory(null);
+    setObsView("categories");
     setEditingId(null);
+    setEditingCatId(null);
     setComposerOpen(false);
     setInputValue("");
+    await fetchCategories(s.step_id);
+  };
+
+  const fetchCategories = async (stepId: number) => {
     try {
       setObsLoading(true);
       const res = await fetch(
-        `${API}/workshops/${workshopId}/steps/${s.step_id}/observations`,
+        `${API}/workshops/${workshopId}/steps/${stepId}/categories`,
+        { credentials: "include" }
+      );
+      if (!res.ok) throw new Error("No se pudieron cargar las categorías");
+      const data = (await res.json()) as Category[];
+      setCategories(data);
+    } catch (e: any) {
+      setErr(e.message || "Error al cargar categorías");
+    } finally {
+      setObsLoading(false);
+    }
+  };
+
+  const goToItems = async (cat: Category) => {
+    if (!obsStep) return;
+    try {
+      setObsLoading(true);
+      setObs([]);
+      setSelectedCategory(cat);
+      setObsView("items");
+      const res = await fetch(
+        `${API}/workshops/${workshopId}/steps/${obsStep.step_id}/categories/${cat.category_id}/observations`,
         { credentials: "include" }
       );
       if (!res.ok) throw new Error("No se pudieron cargar las observaciones");
@@ -224,9 +259,9 @@ export default function WorkshopSettingsPage() {
 
   const createObs = async () => {
     const desc = inputValue.trim();
-    if (!desc) return;
+    if (!desc || !obsStep || !selectedCategory) return;
     const res = await fetch(
-      `${API}/workshops/${workshopId}/steps/${obsStep!.step_id}/observations`,
+      `${API}/workshops/${workshopId}/steps/${obsStep.step_id}/categories/${selectedCategory.category_id}/observations`,
       {
         method: "POST",
         credentials: "include",
@@ -243,16 +278,47 @@ export default function WorkshopSettingsPage() {
 
   const startEdit = (o: Observation) => {
     setEditingId(o.id);
+    setEditingCatId(null);
     setComposerOpen(true);
     setInputValue(o.description);
   };
 
+  const startEditCategory = (c: Category) => {
+    setEditingCatId(c.category_id);
+    setEditingId(null);
+    setComposerOpen(true);
+    setInputValue(c.name);
+  };
+
   const saveEdit = async () => {
-    if (!editingId) return;
+    // Renombrar categoría
+    if (editingCatId) {
+      const name = inputValue.trim();
+      if (!name || !obsStep) return;
+      const res = await fetch(
+        `${API}/workshops/${workshopId}/steps/${obsStep.step_id}/categories/${editingCatId}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        }
+      );
+      if (!res.ok) return;
+      const updated = await res.json();
+      setCategories((prev) => prev.map((c) => (c.category_id === editingCatId ? { ...c, name: updated.name } : c)));
+      setEditingCatId(null);
+      setComposerOpen(false);
+      setInputValue("");
+      return;
+    }
+
+    // Editar observación
+    if (!editingId || !obsStep || !selectedCategory) return;
     const desc = inputValue.trim();
     if (!desc) return;
     const res = await fetch(
-      `${API}/workshops/${workshopId}/steps/${obsStep!.step_id}/observations/${editingId}`,
+      `${API}/workshops/${workshopId}/steps/${obsStep.step_id}/categories/${selectedCategory.category_id}/observations/${editingId}`,
       {
         method: "PUT",
         credentials: "include",
@@ -269,13 +335,15 @@ export default function WorkshopSettingsPage() {
 
   const cancelEditOrAdd = () => {
     setEditingId(null);
+    setEditingCatId(null);
     setComposerOpen(false);
     setInputValue("");
   };
 
   const removeObs = async (idObs: number) => {
+    if (!obsStep || !selectedCategory) return;
     const res = await fetch(
-      `${API}/workshops/${workshopId}/steps/${obsStep!.step_id}/observations/${idObs}`,
+      `${API}/workshops/${workshopId}/steps/${obsStep.step_id}/categories/${selectedCategory.category_id}/observations/${idObs}`,
       {
         method: "DELETE",
         credentials: "include",
@@ -284,6 +352,40 @@ export default function WorkshopSettingsPage() {
     if (!res.ok) return;
     setObs((prev) => prev.filter((o) => o.id !== idObs));
     if (editingId === idObs) cancelEditOrAdd();
+  };
+
+  const createCategory = async () => {
+    const name = inputValue.trim();
+    if (!name || !obsStep) return;
+    const res = await fetch(
+      `${API}/workshops/${workshopId}/steps/${obsStep.step_id}/categories`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      }
+    );
+    if (!res.ok) return;
+    const created = await res.json();
+    setCategories((prev) => [...prev, { category_id: created.category_id, name }]);
+    setComposerOpen(false);
+    setInputValue("");
+  };
+
+  const removeCategory = async (catId: number) => {
+    if (!obsStep) return;
+    const res = await fetch(
+      `${API}/workshops/${workshopId}/steps/${obsStep.step_id}/categories/${catId}`,
+      { method: "DELETE", credentials: "include" }
+    );
+    if (!res.ok) return;
+    setCategories((prev) => prev.filter((c) => c.category_id !== catId));
+    if (selectedCategory?.category_id === catId) {
+      setSelectedCategory(null);
+      setObs([]);
+      setObsView("categories");
+    }
   };
 
   return (
@@ -522,7 +624,7 @@ export default function WorkshopSettingsPage() {
         </div>
       </section>
 
-      {/* Modal Observaciones */}
+      {/* Modal Observaciones (categorías → ítems) */}
       {obsOpen && obsStep && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
@@ -533,26 +635,138 @@ export default function WorkshopSettingsPage() {
             }}
           />
           <div className="relative w-full max-w-2xl rounded-[8px] bg-white p-6 shadow-xl">
-            <h3 className="text-base font-semibold">{obsStep.title}</h3>
-            {obsStep.description && (
-              <p className="text-xs text-gray-500 mt-1">{obsStep.description}</p>
-            )}
+            <div className="flex items-start justify-between">
+              <div>
+                {obsView === "categories" ? (
+                  <>
+                    <h3 className="text-base font-semibold">Observaciones — {obsStep.title}</h3>
+                    {obsStep.description && (
+                      <p className="text-xs text-gray-500 mt-1">{obsStep.description}</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="text-[#0040B8] text-xs font-medium flex items-center gap-1 mb-1"
+                      onClick={() => {
+                        setObsView("categories");
+                        setSelectedCategory(null);
+                        setObs([]);
+                      }}
+                    >
+                      <ChevronRight size={14} className="rotate-180" /> Volver a categorías
+                    </button>
+                    <h3 className="text-base font-semibold">{selectedCategory?.name || "Categoría"}</h3>
+                    <p className="text-xs text-gray-500 mt-1">Gestioná las observaciones de esta categoría</p>
+                  </>
+                )}
+              </div>
+            </div>
 
             <div className="h-px bg-gray-200 my-4" />
 
             {obsLoading ? (
               <p className="text-sm text-gray-600">Cargando…</p>
-            ) : (
+            ) : obsView === "categories" ? (
               <div>
-                {obs.length === 0 && !composerOpen && (
-                  <div className="text-center py-6">
-                    <p className="text-sm text-gray-600">No tienes ninguna observación</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Agrega observaciones tocando el botón de abajo.
-                    </p>
+                <div className="space-y-2">
+                  {categories.map((c) => (
+                    <div key={c.category_id} className="flex items-center gap-2">
+                      <button
+                        className="flex-1 text-left px-3 py-2 rounded-[4px] border hover:bg-gray-50"
+                        onClick={() => goToItems(c)}
+                        title="Abrir"
+                      >
+                        {c.name}
+                      </button>
+                      <button
+                        onClick={() => startEditCategory(c)}
+                        className="p-2 rounded-[4px] border hover:bg-gray-50"
+                        title="Renombrar categoría"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => removeCategory(c.category_id)}
+                        className="p-2 rounded-[4px] border hover:bg-gray-50"
+                        title="Eliminar categoría"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  {categories.length === 0 && (
+                    <div className="text-center py-6">
+                      <p className="text-sm text-gray-600">No hay categorías configuradas</p>
+                      <p className="text-xs text-gray-500 mt-1">Agregá una categoría para este paso.</p>
+                    </div>
+                  )}
+                </div>
+
+                {composerOpen && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <input
+                      autoFocus
+                      className="flex-1 rounded-[4px] border px-3 py-2 text-sm"
+                      placeholder={editingCatId ? "Renombrar categoría" : "Nombre de la categoría"}
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                    />
+                    {editingCatId ? (
+                      <>
+                        <button
+                          onClick={saveEdit}
+                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-emerald-600 text-white hover:bg-emerald-700"
+                          title="Guardar"
+                        >
+                          <Check size={16} />
+                        </button>
+                        <button
+                          onClick={cancelEditOrAdd}
+                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-gray-200 hover:bg-gray-300"
+                          title="Cancelar"
+                        >
+                          <X size={16} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={createCategory}
+                          disabled={!inputValue.trim()}
+                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+                          title="Agregar"
+                        >
+                          <Check size={16} />
+                        </button>
+                        <button
+                          onClick={cancelEditOrAdd}
+                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-gray-200 hover:bg-gray-300"
+                          title="Cancelar"
+                        >
+                          <X size={16} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
 
+                {!composerOpen && (
+                  <button
+                    onClick={() => {
+                      setComposerOpen(true);
+                      setEditingCatId(null);
+                      setEditingId(null);
+                      setInputValue("");
+                    }}
+                    className="mt-6 w-full flex items-center justify-center gap-2 rounded-[4px] bg-[#EDF2FF] text-[#0040B8] py-3 hover:bg-[#E3EAFF]"
+                  >
+                    <Plus size={18} /> Agregar categoría
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div>
                 <div className="space-y-2">
                   {obs.map((o) => (
                     <div key={o.id} className="flex items-center gap-2">
@@ -577,6 +791,12 @@ export default function WorkshopSettingsPage() {
                       </button>
                     </div>
                   ))}
+                  {obs.length === 0 && !composerOpen && (
+                    <div className="text-center py-6">
+                      <p className="text-sm text-gray-600">No tienes ninguna observación</p>
+                      <p className="text-xs text-gray-500 mt-1">Agrega observaciones tocando el botón de abajo.</p>
+                    </div>
+                  )}
                 </div>
 
                 {composerOpen && (
@@ -627,17 +847,18 @@ export default function WorkshopSettingsPage() {
                   </div>
                 )}
 
-                <button
-                  onClick={() => {
-                    setComposerOpen(true);
-                    setEditingId(null);
-                    setInputValue("");
-                  }}
-                  className="mt-6 w-full flex items-center justify-center gap-2 rounded-[4px] bg-[#EDF2FF] text-[#0040B8] py-3 hover:bg-[#E3EAFF]"
-                >
-                  <Plus size={18} />
-                  Agregar nueva observación
-                </button>
+                {!composerOpen && (
+                  <button
+                    onClick={() => {
+                      setComposerOpen(true);
+                      setEditingId(null);
+                      setInputValue("");
+                    }}
+                    className="mt-6 w-full flex items-center justify-center gap-2 rounded-[4px] bg-[#EDF2FF] text-[#0040B8] py-3 hover:bg-[#E3EAFF]"
+                  >
+                    <Plus size={18} /> Agregar nueva observación
+                  </button>
+                )}
               </div>
             )}
 
