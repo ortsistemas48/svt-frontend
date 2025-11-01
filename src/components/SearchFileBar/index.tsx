@@ -19,13 +19,13 @@ export default function SearchEmailBar({ workshopId }: { workshopId: number }) {
       <div className="flex-1 w-full flex items-center border border-gray-300 rounded-[4px] px-4 h-14 sm:h-14 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent">
         <Search size={20} className="text-gray-500 mr-3 flex-shrink-0" />
         <input
-          type="email"
-          placeholder="Ingrese el email del usuario para crear la cuenta"
+          type="text"
+          placeholder="Ingrese el dominio que desea buscar"
           className="w-full text-base sm:text-md focus:outline-none bg-transparent placeholder:text-gray-400"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && go()}
-          aria-label="Email del usuario"
+          aria-label="Dominio del legajo"
         />
       </div>
 
@@ -33,7 +33,6 @@ export default function SearchEmailBar({ workshopId }: { workshopId: number }) {
         onClick={go}
         className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-5 py-3 rounded-[4px] flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-base min-h-[56px]"
       >
-        <span className="hidden sm:inline">Crear Usuario</span>
         <ArrowRight size={22} strokeWidth={2.5} />
       </button>
     </div>

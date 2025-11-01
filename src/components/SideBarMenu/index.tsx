@@ -9,6 +9,7 @@ import {
   Printer,
   ChartColumn,
   Users,
+  FileText,
   Home,
   BanknoteIcon
 } from "lucide-react";
@@ -33,6 +34,7 @@ export default function SideBarMenu({ userType, loading }: Props) {
     { href: `/dashboard/${id}/stickers`, icon: ScrollText, label: "Asignar obleas", roles: ["titular"] },
     { href: `/dashboard/${id}/payment`, icon: BanknoteIcon, label: "Pago de revisiones", roles: ["titular"] },
     { href: `/dashboard/${id}/statistics`, icon: ChartColumn, label: "Estadísticas", roles: ["titular", "ingeniero"] },
+    { href: `/dashboard/${id}/files`, icon: FileText, label: "Legajos", roles: ["all"] },
     { href: `/dashboard/${id}/users`, icon: Users, label: "Usuarios", roles: ["titular"] },
   ];
 
