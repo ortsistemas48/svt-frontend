@@ -1,7 +1,8 @@
 'use client';
 import { ChevronRight, Clock, CheckCircle2, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import clsx from "clsx";
+import { useRouter } from "next/navigation";
 
 type SearchHistoryItem = {
   id: string | number;
@@ -10,57 +11,9 @@ type SearchHistoryItem = {
   userName: string;
   userDni: string;
   searchDate: string; // formato: "DD/MM/YYYY HH:mm hs"
-  status: "Pendiente" | "Disponible" | "Cancelado";
+  status: "Pendiente" | "Completado" | "En curso" | "A Inspeccionar" | "Emitir CRT";
+  applicationId: number;
 };
-
-// Mock data - reemplazar con datos reales cuando esté listo el backend
-const MOCK_SEARCH_HISTORY: SearchHistoryItem[] = [
-  {
-    id: 1,
-    vehiclePlate: "AB123AB",
-    vehicleModel: "Fiat Cronos",
-    userName: "Alejo Vaquero",
-    userDni: "46971353",
-    searchDate: "30/07/2025 22:20 hs",
-    status: "Pendiente"
-  },
-  {
-    id: 2,
-    vehiclePlate: "CD456CD",
-    vehicleModel: "Toyota Corolla",
-    userName: "Alejo Isaias Vaq...",
-    userDni: "12345678",
-    searchDate: "29/07/2025 15:30 hs",
-    status: "Disponible"
-  },
-  {
-    id: 3,
-    vehiclePlate: "EF789EF",
-    vehicleModel: "Volkswagen Gol",
-    userName: "María González",
-    userDni: "87654321",
-    searchDate: "28/07/2025 10:15 hs",
-    status: "Cancelado"
-  },
-  {
-    id: 4,
-    vehiclePlate: "GH012GH",
-    vehicleModel: "Ford Focus",
-    userName: "Juan Pérez",
-    userDni: "11223344",
-    searchDate: "27/07/2025 14:45 hs",
-    status: "Pendiente"
-  },
-  {
-    id: 5,
-    vehiclePlate: "IJ345IJ",
-    vehicleModel: "Chevrolet Onix",
-    userName: "Laura Martínez",
-    userDni: "55667788",
-    searchDate: "26/07/2025 09:00 hs",
-    status: "Disponible"
-  },
-];
 
 function getStatusConfig(status: SearchHistoryItem["status"]) {
   switch (status) {
@@ -71,19 +24,12 @@ function getStatusConfig(status: SearchHistoryItem["status"]) {
         icon: Clock,
         iconColor: "text-yellow-600"
       };
-    case "Disponible":
+    case "Completado":
       return {
         bg: "bg-green-50",
         text: "text-green-700",
         icon: CheckCircle2,
         iconColor: "text-green-600"
-      };
-    case "Cancelado":
-      return {
-        bg: "bg-red-50",
-        text: "text-red-700",
-        icon: XCircle,
-        iconColor: "text-red-600"
       };
     default:
       return {
@@ -95,13 +41,81 @@ function getStatusConfig(status: SearchHistoryItem["status"]) {
   }
 }
 
-export default function FileHistoryTable() {
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(MOCK_SEARCH_HISTORY);
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${day}/${month}/${year} ${hours}:${minutes} hs`;
+}
+
+export default function FileHistoryTable({ workshopId, searchQuery = "" }: { workshopId: number; searchQuery?: string }) {
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [isClearing, setIsClearing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const perPage = 4;
+  const router = useRouter();
+
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      const usp = new URLSearchParams({
+        page: String(page),
+        per_page: String(perPage),
+        status: "Completado", // Filtrar solo completadas en el backend
+      });
+      
+      if (searchQuery?.trim()) {
+        usp.set("q", searchQuery.trim());
+      }
+
+      const res = await fetch(
+        `/api/applications/workshop/${workshopId}/full?${usp.toString()}`,
+        { credentials: "include" }
+      );
+      
+      if (!res.ok) throw new Error("Error al traer aplicaciones");
+      
+      const data = await res.json();
+      const items = data.items ?? [];
+      
+      const formattedItems: SearchHistoryItem[] = items.map((item: any) => ({
+        id: item.application_id,
+        applicationId: item.application_id,
+        vehiclePlate: item.car?.license_plate || "-",
+        vehicleModel: item.car?.model || "-",
+        userName: item.owner ? `${item.owner.first_name} ${item.owner.last_name}`.trim() : "-",
+        userDni: item.owner?.dni || "-",
+        searchDate: formatDate(item.date),
+        status: item.status
+      }));
+      
+      setSearchHistory(formattedItems);
+      // Usar el total del backend que ya está filtrado por status
+      setTotalPages(Math.max(1, Math.ceil((data.total ?? 0) / perPage)));
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+      setSearchHistory([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    fetchApplications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workshopId, page, searchQuery]);
 
   const handleClearHistory = () => {
     setIsClearing(true);
-    // Simular delay de borrado
     setTimeout(() => {
       setSearchHistory([]);
       setIsClearing(false);
@@ -109,8 +123,7 @@ export default function FileHistoryTable() {
   };
 
   const handleItemClick = (item: SearchHistoryItem) => {
-    // TODO: Navegar a detalles del legajo cuando esté implementado
-    console.log("Ver detalles de:", item);
+    router.push(`/dashboard/${workshopId}/files/${item.applicationId}`);
   };
 
   return (
@@ -119,13 +132,13 @@ export default function FileHistoryTable() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-0.5">
-              Historial de búsqueda
+              Listado de revisiones
             </h3>
             <p className="text-xs text-gray-500">
-              Aquí aparecen las ultimas búsquedas de legajos
+              Aquí aparecen las ultimas revisiones
             </p>
           </div>
-          <button
+          {/* <button
             onClick={handleClearHistory}
             disabled={searchHistory.length === 0 || isClearing}
             className={clsx(
@@ -135,94 +148,136 @@ export default function FileHistoryTable() {
             )}
           >
             {isClearing ? "Borrando..." : "Borrar historial"}
-          </button>
+          </button> */}
         </div>
       </div>
 
       {/* List Section - Contenedor separado */}
       <div className="bg-white rounded-[10px] border border-gray-200 overflow-hidden">
-        <div className="divide-y divide-gray-200">
-          {searchHistory.length === 0 ? (
-            <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
-              {/* Icono circular con fondo azul claro */}
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                <img 
-                  src="/images/icons/empty-file.svg" 
-                  alt="Documento vacío" 
-                  className="w-14 h-14"
-                  style={{ filter: 'brightness(0) saturate(100%) invert(44%) sepia(96%) saturate(1352%) hue-rotate(195deg) brightness(95%) contrast(91%)' }}
-                />
+        {loading ? (
+          <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0040B8] mb-4"></div>
+            <p className="text-sm text-gray-500">Cargando legajos...</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {searchHistory.length === 0 ? (
+              <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
+                {/* Icono circular con fondo azul claro */}
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                  <img 
+                    src="/images/icons/empty-file.svg" 
+                    alt="Documento vacío" 
+                    className="w-14 h-14"
+                    style={{ filter: 'brightness(0) saturate(100%) invert(44%) sepia(96%) saturate(1352%) hue-rotate(195deg) brightness(95%) contrast(91%)' }}
+                  />
+                </div>
+                {/* Texto principal */}
+                <p className="text-base font-semibold text-gray-900 mb-2">
+                  Todavía no has realizado búsquedas
+                </p>
+                {/* Texto secundario */}
+                <p className="text-sm text-gray-500 max-w-md">
+                  Cuando busques tus primeros legajos aparecerán aquí
+                </p>
               </div>
-              {/* Texto principal */}
-              <p className="text-base font-semibold text-gray-900 mb-2">
-                Todavía no has realizado búsquedas
-              </p>
-              {/* Texto secundario */}
-              <p className="text-sm text-gray-500 max-w-md">
-                Cuando busques tus primeros legajos aparecerán aquí
-              </p>
-            </div>
-          ) : (
-            searchHistory.map((item) => {
-              const statusConfig = getStatusConfig(item.status);
-              const StatusIcon = statusConfig.icon;
+            ) : (
+              searchHistory.map((item) => {
+                const statusConfig = getStatusConfig(item.status);
+                const StatusIcon = statusConfig.icon;
 
-              return (
-                <div
-                  key={item.id}
-                  className="px-8 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => handleItemClick(item)}
-                >
-                  <div className="flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
-                    {/* Vehicle/Item Identifier */}
-                    <div className="flex-1 min-w-[100px]">
-                      <p className="font-bold text-gray-900 text-sm mb-0.5">
-                        {item.vehiclePlate}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {item.vehicleModel}
-                      </p>
-                    </div>
+                return (
+                  <div
+                    key={item.id}
+                    className="px-8 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => handleItemClick(item)}
+                  >
+                    <div className="flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
+                      {/* Vehicle/Item Identifier */}
+                      <div className="flex-1 min-w-[100px]">
+                        <p className="font-bold text-gray-900 text-sm mb-0.5">
+                          {item.vehiclePlate}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {item.vehicleModel}
+                        </p>
+                      </div>
 
-                    {/* User/Owner Information */}
-                    <div className="flex-1 min-w-[100px]">
-                      <p className="text-xs font-medium text-gray-900 mb-0.5">
-                        {item.userName}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {item.userDni}
-                      </p>
-                    </div>
+                      {/* User/Owner Information */}
+                      <div className="flex-1 min-w-[100px]">
+                        <p className="text-xs font-medium text-gray-900 mb-0.5">
+                          {item.userName}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {item.userDni}
+                        </p>
+                      </div>
 
-                    {/* Date and Time */}
-                    <div className="flex-1 min-w-[120px]">
-                      <p className="text-xs text-gray-900">
-                        {item.searchDate}
-                      </p>
-                    </div>
+                      {/* Date and Time */}
+                      <div className="flex-1 min-w-[120px]">
+                        <p className="text-xs text-gray-900">
+                          {item.searchDate}
+                        </p>
+                      </div>
 
-                    {/* Status Indicator */}
-                    <div className="flex-1 flex justify-center min-w-[100px]">
-                      <span className={clsx(
-                        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-                        statusConfig.bg,
-                        statusConfig.text
-                      )}>
-                        <StatusIcon size={14} className={statusConfig.iconColor} />
-                        {item.status}
-                      </span>
-                    </div>
+                      {/* Status Indicator */}
+                      <div className="flex-1 flex justify-center min-w-[100px]">
+                        <span className={clsx(
+                          "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+                          statusConfig.bg,
+                          statusConfig.text
+                        )}>
+                          <StatusIcon size={14} className={statusConfig.iconColor} />
+                          {item.status}
+                        </span>
+                      </div>
 
-                    {/* Action Icon */}
-                    <div className="flex items-center justify-end min-w-[24px]">
-                      <ChevronRight size={18} className="text-[#0040B8]" />
+                      {/* Action Icon */}
+                      <div className="flex items-center justify-end min-w-[24px]">
+                        <ChevronRight size={18} className="text-[#0040B8]" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+                );
+              })
+            )}
+          </div>
+        )}
+        
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="px-8 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Página {page} de {totalPages}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+                className={clsx(
+                  "px-3 py-1 rounded border text-sm",
+                  page === 1
+                    ? "border-gray-300 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                )}
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setPage(page + 1)}
+                disabled={page === totalPages}
+                className={clsx(
+                  "px-3 py-1 rounded border text-sm",
+                  page === totalPages
+                    ? "border-gray-300 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                )}
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

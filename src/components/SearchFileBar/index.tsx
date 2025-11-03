@@ -1,16 +1,15 @@
 // app/workshops/[id]/users/page.tsx  (extracto)
 "use client";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Search, ArrowRight } from "lucide-react";
 
-export default function SearchEmailBar({ workshopId }: { workshopId: number }) {
-  const [email, setEmail] = useState("");
-  const router = useRouter();
+export default function SearchFileBar({ workshopId, onSearch }: { workshopId: number; onSearch?: (query: string) => void }) {
+  const [domain, setDomain] = useState("");
 
-  const go = () => {
-    if (!email.trim()) return;
-    router.push(`/dashboard/${workshopId}/users/create-user?email=${encodeURIComponent(email.trim())}`);
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch(domain.trim());
+    }
   };
 
   return (
@@ -22,15 +21,15 @@ export default function SearchEmailBar({ workshopId }: { workshopId: number }) {
           type="text"
           placeholder="Ingrese el dominio que desea buscar"
           className="w-full text-base sm:text-md focus:outline-none bg-transparent placeholder:text-gray-400"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && go()}
+          value={domain}
+          onChange={(e) => setDomain(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           aria-label="Dominio del legajo"
         />
       </div>
 
       <button
-        onClick={go}
+        onClick={handleSearch}
         className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-5 py-3 rounded-[4px] flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-base min-h-[56px]"
       >
         <ArrowRight size={22} strokeWidth={2.5} />

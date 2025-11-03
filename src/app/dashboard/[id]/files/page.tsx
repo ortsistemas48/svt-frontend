@@ -1,10 +1,15 @@
+"use client";
 import FileHistoryTable from "@/components/FileHistoryTable";
 import { ChevronRight } from "lucide-react";
 import SearchFileBar from "@/components/SearchFileBar";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 
-export default async function FilesPage( { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default function FilesPage() {
+  const { id } = useParams();
   const workshopId = Number(id);
+  const [searchQuery, setSearchQuery] = useState("");
+
   return (
     <div className="">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -20,17 +25,17 @@ export default async function FilesPage( { params }: { params: Promise<{ id: str
         {/* Header Section */}
         <div className="text-center mb-6 sm:mb-8">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl text-[#0040B8] mb-2 sm:mb-3">
-            Historial de legajos
+            Detalle de legajos
           </h2>
           <p className="text-sm sm:text-base text-gray-500 max-w-2xl mx-auto leading-relaxed mb-6 sm:mb-8">
-          Aquí podrás ver y buscar el historial de cualquier legajo.
+          Aquí podrás ver y buscar el detalle de cualquier legajo.
           </p>
-          <SearchFileBar workshopId={workshopId} />
+          <SearchFileBar workshopId={workshopId} onSearch={setSearchQuery} />
         </div>
 
         {/* File History Table */}
         <div className="overflow-hidden">
-          <FileHistoryTable />
+          <FileHistoryTable workshopId={workshopId} searchQuery={searchQuery} />
         </div>
       </div>
     </div>
