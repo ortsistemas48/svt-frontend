@@ -45,9 +45,9 @@ const ZONE_BY_PROVINCE: Record<string, "SUR" | "CENTRO" | "NORTE"> = {
 };
 
 const UNIT_PRICE: Record<"SUR" | "CENTRO" | "NORTE", number> = {
-  SUR: 1,
-  CENTRO: 2,
-  NORTE: 3,
+  SUR: 4000,
+  CENTRO: 3000,
+  NORTE: 2500,
 };
 
 function formatARS(n: number) {
@@ -65,9 +65,9 @@ export default function PaymentPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
 
-  const [qty, setQty] = useState(300);
+  const [qty, setQty] = useState(250);
   const [qtyInput, setQtyInput] = useState(String(qty));
-  const minQty = 300;
+  const minQty = 250;
   const maxQty = 20000;
   const progress = useMemo(() => {
     const pct = ((qty - minQty) / (maxQty - minQty)) * 100;
@@ -361,7 +361,7 @@ export default function PaymentPage() {
                     }}
                     className="w-40 rounded-[4px] border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[#0040B8]"
                   />
-                  <span className="text-xs text-gray-500">Mínimo 300</span>
+                  <span className="text-xs text-gray-500">Mínimo 250</span>
                 </div>
               </div>
 
