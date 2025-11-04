@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Download, Search, SlidersHorizontal } from "lucide-react";
+import { Download, Eye, Search, SlidersHorizontal } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import { Application } from "@/app/types";
 import { useParams } from "next/navigation";
 import { isDataEmpty } from "@/utils";
 import TableFilters from "../TableFilters";
 import RefreshButton from "../RefreshButton";
+import Link from "next/link";
 
 /** 1) Tonos de estado, texto fuerte y fondo claro */
 const STATUS_TONES: Record<string, { text: string; bg: string }> = {
@@ -41,11 +42,31 @@ export default function CompletedApplicationsTable() {
   const [pagination, setPagination] = useState<PaginationData | null>(null);
   const itemsPerPage = 5;
   const { id } = useParams();
-  
+
   // Filter states
   const [showFilters, setShowFilters] = useState(false);
   const [resultFilter, setResultFilter] = useState<string>("Todos"); // Empty means all statuses
+  const handleDownload = async (applicationId: number) => {
+    const url = `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/certificado.pdf`;
 
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `certificado_${applicationId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
+  };
   const fetchApplications = async (pageNum: number = page) => {
     try {
       setIsLoading(true);
@@ -212,20 +233,25 @@ export default function CompletedApplicationsTable() {
 
                   <td className="p-0">
                     <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
+                      <Link 
+                        href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                        title="Ver certificado"
+                      >
+                        <Eye size={16} />
+                      </Link>
                       <button
                         type="button"
-                        onClick={() =>
-                          window.open(
-                            `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`,
-                            "_blank"
-                          )
-                        }
+                        onClick={() => handleDownload(item.application_id)}
                         className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
                         title="Descargar certificado"
                       >
                         <Download size={16} />
                       </button>
                     </div>
+                    
                   </td>
                 </tr>
               );
@@ -267,7 +293,7 @@ export default function CompletedApplicationsTable() {
             </button>
           </div>
         )}
-        
+
         {/* Refresh button */}
       </div>
     </div>
