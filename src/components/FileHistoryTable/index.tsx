@@ -1,5 +1,5 @@
 'use client';
-import { ChevronRight, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
@@ -13,31 +13,19 @@ type SearchHistoryItem = {
   searchDate: string; // formato: "DD/MM/YYYY HH:mm hs"
   status: "Pendiente" | "Completado" | "En curso" | "A Inspeccionar" | "Emitir CRT";
   applicationId: number;
+  result: "Apto" | "Condicional" | "Rechazado"
 };
 
-function getStatusConfig(status: SearchHistoryItem["status"]) {
-  switch (status) {
-    case "Pendiente":
-      return {
-        bg: "bg-yellow-50",
-        text: "text-yellow-700",
-        icon: Clock,
-        iconColor: "text-yellow-600"
-      };
-    case "Completado":
-      return {
-        bg: "bg-green-50",
-        text: "text-green-700",
-        icon: CheckCircle2,
-        iconColor: "text-green-600"
-      };
+function getResultConfig(result: SearchHistoryItem["result"]) {
+  switch (result) {
+    case "Apto":
+      return { bg: "bg-blue-50", text: "text-blue-700" };
+    case "Condicional":
+      return { bg: "bg-amber-50", text: "text-amber-700" };
+    case "Rechazado":
+      return { bg: "bg-gray-100", text: "text-black" };
     default:
-      return {
-        bg: "bg-gray-50",
-        text: "text-gray-700",
-        icon: Clock,
-        iconColor: "text-gray-600"
-      };
+      return { bg: "bg-gray-50", text: "text-gray-700" };
   }
 }
 
@@ -71,6 +59,10 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
       
       if (searchQuery?.trim()) {
         usp.set("q", searchQuery.trim());
+        const digits = searchQuery.replace(/\D+/g, "");
+        if (digits) {
+          usp.set("application_id", digits);
+        }
       }
 
       const res = await fetch(
@@ -91,7 +83,8 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
         userName: item.owner ? `${item.owner.first_name} ${item.owner.last_name}`.trim() : "-",
         userDni: item.owner?.dni || "-",
         searchDate: formatDate(item.date),
-        status: item.status
+        status: item.status,
+        result: item.result
       }));
       
       setSearchHistory(formattedItems);
@@ -134,7 +127,7 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
             <h3 className="text-sm font-semibold text-gray-900 mb-0.5">
               Listado de revisiones
             </h3>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm text-gray-500">
               Aquí aparecen las ultimas revisiones
             </p>
           </div>
@@ -154,6 +147,19 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
 
       {/* List Section - Contenedor separado */}
       <div className="bg-white rounded-[10px] border border-gray-200 overflow-hidden">
+        {/* Headers */}
+        {!loading && searchHistory.length > 0 && (
+          <div className="px-8 py-2 border-b border-gray-200 hidden sm:block">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-24 min-w-[80px] text-xs font-medium text-gray-500 text-left">CRT/CNI</div>
+              <div className="flex-1 min-w-[100px] text-xs font-medium text-gray-500">Vehículo</div>
+              <div className="flex-1 min-w-[100px] text-xs font-medium text-gray-500">Titular</div>
+              <div className="flex-1 min-w-[120px] text-xs font-medium text-gray-500">Fecha</div>
+              <div className="w-40 min-w-[120px] text-xs font-medium text-gray-500 text-center">Resultado</div>
+              <div className="w-6" />
+            </div>
+          </div>
+        )}
         {loading ? (
           <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0040B8] mb-4"></div>
@@ -183,8 +189,7 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
               </div>
             ) : (
               searchHistory.map((item) => {
-                const statusConfig = getStatusConfig(item.status);
-                const StatusIcon = statusConfig.icon;
+                const resultConfig = getResultConfig(item.result);
 
                 return (
                   <div
@@ -193,42 +198,44 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
                     onClick={() => handleItemClick(item)}
                   >
                     <div className="flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
-                      {/* Vehicle/Item Identifier */}
+                      {/* CRT/CNI (application id) */}
+                      <div className="w-24 min-w-[80px] text-sm text-gray-900">{item.applicationId}</div>
+
+                      {/* Vehículo */}
                       <div className="flex-1 min-w-[100px]">
                         <p className="font-bold text-gray-900 text-sm mb-0.5">
                           {item.vehiclePlate}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-500">
                           {item.vehicleModel}
                         </p>
                       </div>
 
-                      {/* User/Owner Information */}
+                      {/* Titular */}
                       <div className="flex-1 min-w-[100px]">
-                        <p className="text-xs font-medium text-gray-900 mb-0.5">
+                        <p className="text-sm font-medium text-gray-900 mb-0.5">
                           {item.userName}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-500">
                           {item.userDni}
                         </p>
                       </div>
 
-                      {/* Date and Time */}
+                      {/* Fecha */}
                       <div className="flex-1 min-w-[120px]">
-                        <p className="text-xs text-gray-900">
+                        <p className="text-sm text-gray-900">
                           {item.searchDate}
                         </p>
                       </div>
 
-                      {/* Status Indicator */}
-                      <div className="flex-1 flex justify-center min-w-[100px]">
+                      {/* Resultado */}
+                      <div className="w-40 min-w-[120px] flex justify-center">
                         <span className={clsx(
-                          "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-                          statusConfig.bg,
-                          statusConfig.text
+                          "inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
+                          resultConfig.bg,
+                          resultConfig.text
                         )}>
-                          <StatusIcon size={14} className={statusConfig.iconColor} />
-                          {item.status}
+                          {item.result || "-"}
                         </span>
                       </div>
 

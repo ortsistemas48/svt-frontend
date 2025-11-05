@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { CarType, PersonType } from "@/app/types";
 import renderVehicle from "@/components/VehicleTable";
 import renderPerson from "@/components/PersonTable";
+import renderDocument from "@/components/DocumentCard";
 import { Car, ChevronRight, Clock, CheckCircle2, XCircle, Plus } from "lucide-react";
 import clsx from "clsx";
 import VehicleDocsDropzone, { type ExistingDoc as CarExistingDoc, type PendingCarDoc } from "@/components/VehicleDocsDropzone";
@@ -542,16 +543,19 @@ export default function FileDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-md text-gray-900">Archivos de revisión</h3>
+                <h3 className="text-md text-gray-900">Documentación del vehículo</h3>
               </div>
             </div>
             <div className="p-6">
-              <VehicleDocsDropzone
-                existing={carDocsForDropzone}
-                onDeleteExisting={deleteCarDoc}
-                onPendingChange={handlePendingCarDocsChange}
-                resetToken={car?.license_plate}
-              />
+              {carDocs.length > 0 ? (
+                <div className="space-y-3">
+                  {carDocs.map((d) => (
+                    <div key={d.id}>{renderDocument(d.file_name, d.file_url)}</div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No hay documentos del vehículo</p>
+              )}
             </div>
           </div>
 
@@ -564,18 +568,44 @@ export default function FileDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-md text-gray-900">Archivos de revisión tecnica</h3>
+                <h3 className="text-md text-gray-900">Archivos de revisión técnica</h3>
               </div>
             </div>
             <div className="p-6">
-              <Dropzone
-                onPendingChange={handlePendingTechDocsChange}
-                existing={techDocs}
-                onDeleteExisting={deleteTechDoc}
-                title=""
-                maxSizeMB={15}
-                resetToken={dropzoneResetToken}
-              />
+              {techDocs.length > 0 ? (
+                <div className="space-y-3">
+                  {techDocs.map((d) => (
+                    <div key={d.id}>{renderDocument(d.file_name, d.file_url)}</div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No hay documentos de revisión técnica</p>
+              )}
+            </div>
+          </div>
+
+          {/* Certificado (CRT) */}
+          <div className="bg-white rounded-[10px] shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m4-4H8" />
+                  </svg>
+                </div>
+                <h3 className="text-md text-gray-900">Certificado (CRT)</h3>
+              </div>
+            </div>
+            <div className="p-6 flex items-center justify-between">
+              <p className="text-sm text-gray-700">Descargá el certificado en PDF</p>
+              <a
+                href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/certificado.pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-[#0040B8] text-white rounded hover:bg-[#0035A0]"
+              >
+                Descargar CRT
+              </a>
             </div>
           </div>
 
@@ -703,16 +733,14 @@ export default function FileDetailPage() {
           </div>
 
           {/* Agregar documentos */}
-          <div className="bg-white rounded-[10px] border border-[#0040B8] p-5 cursor-pointer hover:bg-blue-50 transition-colors" onClick={() => setView("documents")}>
+          <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("documents")}>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-md text-gray-900 mb-1">Agregar documentos</h2>
-                <p className="text-sm text-gray-500">Aquí podrás agregar, editar o eliminar documentos</p>
+                <h2 className="text-md text-gray-900 mb-1">Ver documentos</h2>
+                <p className="text-sm text-gray-500">Aquí podrás ver los documentos adjuntos al legajo</p>
               </div>
-              <div className="w-6 h-6 rounded-full bg-white border border-[#0040B8] flex items-center justify-center">
-                <Plus size={16} className="text-[#0040B8]" />
+              <ChevronRight size={24} className="text-gray-400" />
               </div>
-            </div>
           </div>
         </div>
 
