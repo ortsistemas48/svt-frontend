@@ -56,18 +56,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
         <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 space-y-6">
           {/* Datos del vehículo */}
           <div className="relative max-w-4xl mx-auto rounded-2xl border border-[#d3d3d3] overflow-hidden">
-            {/* Badge de estado en esquina */}
-            <div
-              className={clsx(
-                "absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
-                estadoCfg.wrap,
-                estadoCfg.text
-              )}
-              title={`Estado: ${estado || "No disponible"}`}
-            >
-              <estadoCfg.Icon className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{estado || "No disponible"}</span>
-            </div>
+            
 
             <div className="bg-purple-50 px-5 py-4 flex items-center gap-3">
               <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -119,16 +108,44 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
                   <p className={valueCls}>{fmtDate(insp.expiration_date)}</p>
                 </div>
                 <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Resultado de revisión</p>
+                  <p className={labelCls}>Estado de oblea</p>
                   <p className={clsx(
                     valueCls,
                     insp.result === "Apto" && "text-emerald-700",
                     insp.result === "Condicional" && "text-amber-700",
                     insp.result === "Rechazado" && "text-rose-700"
                   )}>
-                    {insp.result || "No disponible"}
+                    {estado || "No disponible"}
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Barra de resultado abajo */}
+            <div className="border-t border-[#eaeaea]" />
+            <div
+              className={clsx(
+                "px-5 py-2",
+                insp.result === "Apto" && "bg-blue-50",
+                insp.result === "Condicional" && "bg-orange-50",
+                insp.result === "Rechazado" && "bg-zinc-50",
+                !insp.result && "bg-zinc-50"
+              )}
+            >
+              <div
+                className={clsx(
+                  "w-full px-1 py-2 text-left text-sm font-normal flex items-center gap-2",
+                  insp.result === "Apto" && "text-blue-700",
+                  insp.result === "Condicional" && "text-orange-700",
+                  insp.result === "Rechazado" && "text-black",
+                  !insp.result && "text-zinc-700"
+                )}
+              >
+                {insp.result === "Apto" && <CheckCircle className="h-4 w-4 text-blue-700" />}
+                {insp.result === "Condicional" && <Circle className="h-4 w-4 text-orange-700" />}
+                {insp.result === "Rechazado" && <XCircle className="h-4 w-4 text-black" />}
+                {!insp.result && <Circle className="h-4 w-4 text-zinc-600" />}
+                {insp.result ? `Resultado de la revisión: ${insp.result}` : "Resultado de la revisión: No disponible"}
               </div>
             </div>
 
