@@ -91,8 +91,9 @@ export type Application = {
     dni: string;
   } | null;
   date: string;
-  status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT";
-  result?: "Apto" | "Condicional" | "Rechazado"
+  status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección";
+  result?: "Apto" | "Condicional" | "Rechazado";
+  result_2?: "Apto" | "Condicional" | "Rechazado";
 };
 
 export type UserTypeInWorkshop = {

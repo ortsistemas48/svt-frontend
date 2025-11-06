@@ -11,12 +11,13 @@ import RefreshButton from "../RefreshButton";
 const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> = {
   Completado: { text: "text-green-700", bg: "bg-green-50" },
   "En curso": { text: "text-blue-700", bg: "bg-blue-50" },
+  "Segunda Inspección": { text: "text-amber-700", bg: "bg-amber-50" },
   Pendiente: { text: "text-red-700", bg: "bg-red-50" },
   "A Inspeccionar": { text: "text-amber-700", bg: "bg-amber-50" },
   "Emitir CRT": { text: "text-violet-700", bg: "bg-violet-100" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
-const TABLE_FILTERS = ["Todos", "Pendiente", "En curso", "Completado", "A Inspeccionar", "Emitir CRT"];
+const TABLE_FILTERS = ["Todos", "Pendiente", "En curso", "Completado", "A Inspeccionar", "Emitir CRT", "Segunda Inspección"];
 export default function InspectionTable() {
   const { id } = useParams();
   const [items, setItems] = useState<Application[]>([]);

@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Download, Eye, Search, SlidersHorizontal } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Download, Eye, Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import { Application } from "@/app/types";
 import { useParams } from "next/navigation";
@@ -46,8 +46,30 @@ export default function CompletedApplicationsTable() {
   // Filter states
   const [showFilters, setShowFilters] = useState(false);
   const [resultFilter, setResultFilter] = useState<string>("Todos"); // Empty means all statuses
-  const handleDownload = async (applicationId: number) => {
-    const url = `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/certificado.pdf`;
+  
+  // Dropdown menu state
+  const [openDownloadDropdown, setOpenDownloadDropdown] = useState<number | null>(null);
+  const [openViewDropdown, setOpenViewDropdown] = useState<number | null>(null);
+  const downloadDropdownRef = useRef<HTMLDivElement>(null);
+  const viewDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (downloadDropdownRef.current && !downloadDropdownRef.current.contains(event.target as Node)) {
+        setOpenDownloadDropdown(null);
+      }
+      if (viewDropdownRef.current && !viewDropdownRef.current.contains(event.target as Node)) {
+        setOpenViewDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleDownload = async (applicationId: number, inspectionNumber: 1 | 2 = 1) => {
+    const certificateName = inspectionNumber === 2 ? 'certificado_2.pdf' : 'certificado.pdf';
+    const url = `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/${certificateName}`;
 
     try {
       const response = await fetch(url);
@@ -56,16 +78,27 @@ export default function CompletedApplicationsTable() {
 
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = `certificado_${applicationId}.pdf`;
+      const fileName = inspectionNumber === 2 
+        ? `certificado_2da_inspeccion_${applicationId}.pdf` 
+        : `certificado_${applicationId}.pdf`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
       // Clean up the blob URL
       window.URL.revokeObjectURL(blobUrl);
+      setOpenDownloadDropdown(null); // Close dropdown after download
     } catch (error) {
       console.error('Download failed:', error);
     }
+  };
+
+  const handleView = (applicationId: number, inspectionNumber: 1 | 2 = 1) => {
+    const certificateName = inspectionNumber === 2 ? 'certificado_2.pdf' : 'certificado.pdf';
+    const url = `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/${certificateName}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setOpenViewDropdown(null); // Close dropdown after opening
   };
   const fetchApplications = async (pageNum: number = page) => {
     try {
@@ -129,6 +162,7 @@ export default function CompletedApplicationsTable() {
     { label: "Titular" },
     { label: "Fecha de creación" },
     { label: "Resultado" },
+    { label: "2do Resultado" },
     { label: "Acciones" },
   ];
 
@@ -231,25 +265,105 @@ export default function CompletedApplicationsTable() {
                     </span>
                   </td>
 
+                  {/* 2do Resultado */}
+                  <td className="p-3 text-center">
+                    {item.result_2 ? (
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${STATUS_TONES[item.result_2]?.text || DEFAULT_TONE.text} ${STATUS_TONES[item.result_2]?.bg || DEFAULT_TONE.bg}`}>
+                        {item.result_2}
+                      </span>
+                    ) : (
+                      <span className="text-xs sm:text-sm text-gray-400">-</span>
+                    )}
+                  </td>
+
                   <td className="p-0">
                     <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
-                      <Link 
-                        href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
-                        title="Ver certificado"
-                      >
-                        <Eye size={16} />
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleDownload(item.application_id)}
-                        className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
-                        title="Descargar certificado"
-                      >
-                        <Download size={16} />
-                      </button>
+                      {/* View certificate - Show dropdown if result_2 exists */}
+                      {item.result_2 ? (
+                        <div className="relative" ref={openViewDropdown === item.application_id ? viewDropdownRef : null}>
+                          <button
+                            type="button"
+                            onClick={() => setOpenViewDropdown(openViewDropdown === item.application_id ? null : item.application_id)}
+                            className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+                            title="Ver certificado"
+                          >
+                            <Eye size={16} />
+                            <ChevronDown size={12} />
+                          </button>
+                          
+                          {openViewDropdown === item.application_id && (
+                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                              <button
+                                onClick={() => handleView(item.application_id, 1)}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors rounded-t-lg flex items-center gap-2"
+                              >
+                                <Eye size={14} />
+                                <span>1ra Inspección</span>
+                              </button>
+                              <button
+                                onClick={() => handleView(item.application_id, 2)}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors rounded-b-lg flex items-center gap-2 border-t border-gray-100"
+                              >
+                                <Eye size={14} />
+                                <span>2da Inspección</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <Link 
+                          href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                          title="Ver certificado"
+                        >
+                          <Eye size={16} />
+                        </Link>
+                      )}
+                      
+                      {/* Download certificate - Show dropdown if result_2 exists */}
+                      {item.result_2 ? (
+                        <div className="relative" ref={openDownloadDropdown === item.application_id ? downloadDropdownRef : null}>
+                          <button
+                            type="button"
+                            onClick={() => setOpenDownloadDropdown(openDownloadDropdown === item.application_id ? null : item.application_id)}
+                            className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+                            title="Descargar certificado"
+                          >
+                            <Download size={16} />
+                            <ChevronDown size={12} />
+                          </button>
+                          
+                          {openDownloadDropdown === item.application_id && (
+                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                              <button
+                                onClick={() => handleDownload(item.application_id, 1)}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors rounded-t-lg flex items-center gap-2"
+                              >
+                                <Download size={14} />
+                                <span>1ra Inspección</span>
+                              </button>
+                              <button
+                                onClick={() => handleDownload(item.application_id, 2)}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors rounded-b-lg flex items-center gap-2 border-t border-gray-100"
+                              >
+                                <Download size={14} />
+                                <span>2da Inspección</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(item.application_id, 1)}
+                          className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                          title="Descargar certificado"
+                        >
+                          <Download size={16} />
+                        </button>
+                      )}
                     </div>
                     
                   </td>

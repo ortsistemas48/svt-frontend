@@ -115,7 +115,7 @@ export default function SelectApplicationType() {
       description: "Continuar con una revisión existente",
       disabled: false,
       handleOnClick: () => {
-        alert("Funcionalidad en construcción");
+        router.push(`/dashboard/${id}/applications/continue-application`);
       },
     },
   ];

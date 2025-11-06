@@ -3,8 +3,12 @@ import Link from "next/link";
 import StickerOrdersTable from "@/components/StickerOrdersTable";
 
 
-export default function BuyObleaPage({ params }: any) {
-  const { id } = params;
+export default async function BuyObleaPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  const { id } = await params;
 
   return (
     <div>

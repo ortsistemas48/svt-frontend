@@ -14,9 +14,10 @@ const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> 
   Pendiente: { text: "text-red-700", bg: "bg-red-50" },
   "A Inspeccionar": { text: "text-amber-700", bg: "bg-amber-50" },
   "Emitir CRT": { text: "text-violet-700", bg: "bg-violet-100" },
+  "Segunda Inspección": { text: "text-amber-700", bg: "bg-amber-50" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
-const TABLE_FILTERS = ["Todos", "En curso", "A Inspeccionar", "Emitir CRT"];
+const TABLE_FILTERS = ["Todos", "En curso", "A Inspeccionar", "Segunda Inspección", "Emitir CRT"];
 export default function QueueTable() {
   const { id } = useParams();
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function QueueTable() {
       const usp = new URLSearchParams({
         page: String(page),
         per_page: String(perPage),
-        status_in: "A Inspeccionar,En curso,Emitir CRT",
+        status_in: "A Inspeccionar,En curso,Emitir CRT,Segunda Inspección",
       });
       if (searchQuery.trim()) usp.set("q", searchQuery.trim());
       if (statusFilter === "Todos") usp.delete("status");

@@ -70,7 +70,7 @@ async function fetchApplicationStatus(appId: number) {
   }
 
   const data = await res.json();
-  return data.status as string;
+  return { status: data.status as string, result: data.result as string };
 }
 
 async function ensureInspection(appId: number) {
@@ -95,7 +95,10 @@ async function ensureInspection(appId: number) {
   }
 
   const data = await res.json();
-  return data.inspection_id as number;
+  return {
+    inspection_id: data.inspection_id as number,
+    is_second: data.is_second as boolean
+  };
 }
 
 async function fetchSteps(appId: number) {
@@ -179,12 +182,16 @@ export default async function InspectionPage({
   const appId = Number(applicationId);
   const workshopId = id;
 
-  const applicationStatus = await fetchApplicationStatus(appId);
-  if (applicationStatus === "Completado") {
+  const applicationData = await fetchApplicationStatus(appId);
+  if (applicationData.status === "Completado") {
     redirect(`/dashboard/${workshopId}/applications`);
   }
-
-  const inspectionId = await ensureInspection(appId);
+  
+  // Detect if it's a second inspection from status
+  const isSecondInspection = applicationData.status === "Segunda Inspección";
+  
+  const inspectionData = await ensureInspection(appId);
+  const inspectionId = inspectionData.inspection_id;
 
   const [steps, detailsResp] = await Promise.all([
     fetchSteps(appId),
@@ -197,19 +204,24 @@ export default async function InspectionPage({
     licensePlate,
   } = detailsResp;
 
+  // If second inspection, start with empty statuses (backend returns empty details)
   const initialStatuses: Record<
     number,
     "Apto" | "Condicional" | "Rechazado" | undefined
   > = {};
 
-  detailsRows.forEach((row) => {
-    if (row.detail?.status) {
-      initialStatuses[row.step_id] = row.detail.status;
-    }
-  });
+  // Only load statuses if NOT second inspection
+  if (!isSecondInspection) {
+    detailsRows.forEach((row) => {
+      if (row.detail?.status) {
+        initialStatuses[row.step_id] = row.detail.status;
+      }
+    });
+  }
 
   const plateLabel = (licensePlate?.trim() || "Sin dominio").toUpperCase();
   const { name: userType} = await fetchUserTypeInWorkshop({ workshopId });
+  
   return (
     <div className="min-w-full">
       <article className="flex items-center justify-between text-lg mb-6 px-4">
@@ -222,14 +234,46 @@ export default async function InspectionPage({
         </div>
       </article>
 
+      {isSecondInspection && applicationData.result === "Condicional" && (
+        <div className="mx-4 mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-lg shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 mt-0.5">
+              <svg
+                className="w-6 h-6 text-amber-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-amber-900 mb-1">
+                Segunda Inspección - Resultado Condicional
+              </h3>
+              <p className="text-sm text-amber-800">
+                Esta es una segunda inspección para un vehículo que obtuvo resultado "Condicional" en la primera revisión. 
+                Por favor, verifique cuidadosamente todos los puntos que fueron marcados como condicionales anteriormente.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <InspectionStepsClient
         inspectionId={inspectionId}
         appId={appId}
         steps={[...steps].sort((a, b) => a.order - b.order)}
         initialStatuses={initialStatuses}
         apiBase="/api"
-        initialGlobalObs={globalObs}
+        initialGlobalObs={isSecondInspection ? "" : globalObs}
         userType={userType}
+        isSecondInspection={isSecondInspection}
       />
     
     </div>

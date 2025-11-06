@@ -44,7 +44,8 @@ export default function InspectionStepsClient({
   initialStatuses,
   apiBase,
   initialGlobalObs,
-  userType
+  userType,
+  isSecondInspection
 }: {
   inspectionId: number;
   appId: number;
@@ -52,7 +53,8 @@ export default function InspectionStepsClient({
   initialStatuses: Record<number, Status | undefined>;
   apiBase: string | undefined;
   initialGlobalObs?: string;
-  userType: string
+  userType: string;
+  isSecondInspection?: boolean;
 }) {
   const { id } = useParams();
   const router = useRouter();
