@@ -12,7 +12,7 @@ import Link from "next/link";
 /** 1) Tonos de estado, texto fuerte y fondo claro */
 const STATUS_TONES: Record<string, { text: string; bg: string }> = {
   Apto: { text: "text-green-700", bg: "bg-green-50" },
-  Rechazado: { text: "text-red-700", bg: "bg-red-50" },
+  Rechazado: { text: "text-black-700", bg: "bg-gray-200" },
   Condicional: { text: "text-amber-700", bg: "bg-amber-50" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
