@@ -215,18 +215,9 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
   const fullName = `${user?.first_name} ${user?.last_name}`|| "Usuario";
 
   return (
-    <aside className="overflow-hidden relative h-[calc(100vh-32px)] w-[290px] max-[1500px]:w-[256px] bg-white md:shadow rounded-[10px] p-4">
-      {/* HEADER: logo + botón cerrar */}
-      <div className="mb-6 flex items-center justify-between px-1">
-        <Link
-          href={`/dashboard/${id ?? ""}`}
-          className="flex items-center gap-2 group"
-          aria-label="Ir al inicio"
-        >
-          {/* logo minimal, podés reemplazar por <img src="/logo.svg" .../> */}
-          <img src="/images/logo.svg" alt="" />
-        </Link>
-
+    <aside className="overflow-hidden relative h-[calc(100vh-102px)] w-[290px] max-[1500px]:w-[256px] bg-white md:shadow rounded-[10px] p-4">
+      {/* Botón cerrar (solo mobile) */}
+      <div className="mb-4 flex items-center justify-end px-1">
         <button
           type="button"
           onClick={onToggleSidebar}
@@ -254,7 +245,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
               setOpenProfileModal(true);
             }
           }}
-          className="w-full flex items-center justify-between rounded-[8px] p-3 hover:bg-gray-50 transition cursor-pointer"
+          className="w-full flex items-center justify-between rounded-[8px] px-3 pb-3 hover:bg-gray-50 transition cursor-pointer"
           aria-label="Abrir perfil"
           title="Abrir perfil"
         >

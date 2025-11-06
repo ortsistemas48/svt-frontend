@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@/context/UserContext";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar"; // si no lo usás, podés quitarlo
@@ -174,10 +175,22 @@ export default function DashboardClientLayout({
     <DashboardProvider>
       <div className="h-screen flex flex-col bg-[#f5f5f5]">
         <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar desktop, siempre visible */}
-          <div className="pl-4 min-h-full pt-4 hidden lg:block">
-            <Sidebar />
+        {/* Sidebar desktop, siempre visible */}
+        <div className="pl-4 min-h-full pt-4 hidden lg:block">
+          {/* Logo encima del sidebar */}
+          <div className="mb-3">
+            <div className="bg-white rounded-[10px] shadow px-4 py-4 flex items-center justify-center w-[290px] max-[1500px]:w-[256px]">
+              <Link
+                href={`/dashboard/${workshopId ?? ""}`}
+                aria-label="Ir al inicio"
+                className="inline-flex"
+              >
+                <img src="/images/logo.svg" alt="" className="h-7 w-auto" />
+              </Link>
+            </div>
           </div>
+          <Sidebar />
+        </div>
 
           {/* Sidebar mobile/tablet, off-canvas */}
           {sidebarOpen && (
@@ -191,6 +204,18 @@ export default function DashboardClientLayout({
               {/* panel */}
               <div className="absolute left-0 top-0 h-full w-[84%] max-w-[320px] bg-white shadow-xl">
                 <div className="h-full p-4">
+                  {/* Logo encima del sidebar (mobile) */}
+                  <div className="mb-4">
+                    <div className="bg-white rounded-[10px] shadow p-3 flex items-center justify-center">
+                      <Link
+                        href={`/dashboard/${workshopId ?? ""}`}
+                        aria-label="Ir al inicio"
+                        className="inline-flex"
+                      >
+                        <img src="/images/logo.svg" alt="" className="h-8 w-auto" />
+                      </Link>
+                    </div>
+                  </div>
                   <Sidebar onToggleSidebar={() => setSidebarOpen(false)} />
                 </div>
               </div>

@@ -409,38 +409,51 @@ export default function InspectionStepsClient({
     }
   };
 
-  const generateCertificate = async (status: Status) => {
-    if (!apiBase) {
-      setError("Falta configurar NEXT_PUBLIC_API_URL");
-      return;
-    }
-    if (isCompleted) {
-      setError("La revisión ya está completada");
-      return;
-    }
 
-    const allMarkedNow = steps.every((s) => Boolean(statusByStep[s.step_id]));
-    if (!allMarkedNow) {
-      setError("Marcá un estado en todos los pasos antes de generar el certificado");
-      return;
-    }
+  async function pollJobUntilDone(jobUrl: string, newTab: Window, onTick?: (info: string) => void) {
+    const started = Date.now();
+    const MAX_MS = 5 * 60 * 1000; 
+    let delay = 1200; 
 
-    setCertLoading(true);
-    setError(null);
-    setMsg(null);
+    while (true) {
+      if (Date.now() - started > MAX_MS) {
+        throw new Error("Timeout esperando el certificado");
+      }
 
-    const newTab = window.open("", "_blank");
-    if (!newTab) {
-      setCertLoading(false);
-      setError("El navegador bloqueó la ventana emergente");
-      return;
+      const res = await fetch(jobUrl, { credentials: "include" });
+      // si hubo 404 muy rápido, esperar y reintentar
+      if (res.status === 404) {
+        await new Promise(r => setTimeout(r, delay));
+        delay = Math.min(delay + 400, 4000);
+        continue;
+      }
+
+      const data = await res.json().catch(() => ({} as any));
+      const status = data?.status as "pending" | "running" | "done" | "error" | undefined;
+
+      if (!status) {
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+
+      if (status === "done") {
+        return data?.result; // dict con public_url
+      }
+      if (status === "error") {
+        const msg = data?.error || "Error en el job de certificado";
+        throw new Error(msg);
+      }
+
+      if (onTick) onTick(status === "running" ? "Procesando certificado..." : "En cola, por favor espera...");
+      await new Promise(r => setTimeout(r, delay));
+      delay = Math.min(delay + 300, 4000);
     }
+  }
+
+  function writeWaitingHtml(tab: Window, line2 = "Por favor espera un momento...") {
     try {
-      try {
-        newTab.opener = null;
-      } catch { }
-
-      newTab.document.write(`
+      tab.document.open();
+      tab.document.write(`
         <html>
           <head>
             <title>Generando certificado...</title>
@@ -476,22 +489,54 @@ export default function InspectionStepsClient({
             <div class="container">
               <div class="spinner"></div>
               <h2>Generando certificado</h2>
-              <p>Por favor espera un momento...</p>
+              <p id="status-line">${line2}</p>
             </div>
           </body>
         </html>
       `);
-      newTab.document.close();
+      tab.document.close();
+    } catch {}
+  }
+
+  async function generateCertificate(status: Status) {
+    if (!apiBase) {
+      setError("Falta configurar NEXT_PUBLIC_API_URL");
+      return;
+    }
+    if (isCompleted) {
+      setError("La revisión ya está completada");
+      return;
+    }
+
+    const allMarkedNow = steps.every((s) => Boolean(statusByStep[s.step_id]));
+    if (!allMarkedNow) {
+      setError("Marcá un estado en todos los pasos antes de generar el certificado");
+      return;
+    }
+
+    setCertLoading(true);
+    setError(null);
+    setMsg(null);
+
+    const newTab = window.open("", "_blank");
+    if (!newTab) {
+      setCertLoading(false);
+      setError("El navegador bloqueó la ventana emergente");
+      return;
+    }
+
+    try {
+      try { newTab.opener = null; } catch {}
+      writeWaitingHtml(newTab);
 
       const saved = await saveAll();
       if (!saved) {
-        try {
-          if (!newTab.closed) newTab.close();
-        } catch { }
+        try { if (!newTab.closed) newTab.close(); } catch {}
         setCertLoading(false);
         return;
       }
 
+      // disparar generación
       const res = await fetch(
         `${apiBase}/certificates/certificates/application/${appId}/generate`,
         {
@@ -502,25 +547,52 @@ export default function InspectionStepsClient({
         }
       );
 
-      const data = await res.json().catch(() => ({} as any));
-      if (!res.ok) throw new Error(data?.error || "No se pudo generar el certificado");
+      // compat hacia atrás, si vuelve 200 con URL directo
+      if (res.ok && res.status === 200) {
+        const data = await res.json().catch(() => ({} as any));
+        const url = data?.public_url || data?.template_url;
+        if (!url) throw new Error("No se recibió el link del certificado");
+        newTab.location.href = url;
+        setMsg("Certificado generado");
+        setConfirmOpen(false);
+        router.push(`/dashboard/${id}/inspections-queue`);
+        return;
+      }
 
-      const url = data?.public_url || data?.template_url;
-      if (!url) throw new Error("No se recibió el link del certificado");
+      // flujo 202 con job_id
+      if (res.status === 202) {
+        const data = await res.json().catch(() => ({} as any));
+        const jobId = data?.job_id as string | undefined;
+        if (!jobId) throw new Error("No se recibió job_id del generador");
 
-      newTab.location.href = url;
-      setMsg("Certificado generado");
-      setConfirmOpen(false);
-      router.push(`/dashboard/${id}/inspections-queue`);
+        const jobUrl = `${apiBase}/certificates/certificates/job/${jobId}`;
+
+        const result = await pollJobUntilDone(jobUrl, newTab, (line) => {
+          try {
+            const el = newTab.document.getElementById("status-line");
+            if (el) el.textContent = line;
+          } catch {}
+        });
+
+        const url = result?.public_url || result?.template_url;
+        if (!url) throw new Error("No se recibió el link del certificado");
+        newTab.location.href = url;
+        setMsg("Certificado generado");
+        setConfirmOpen(false);
+        router.push(`/dashboard/${id}/inspections-queue`);
+        return;
+      }
+
+      // si no es ni 200 ni 202, es error
+      const errData = await res.json().catch(() => ({} as any));
+      throw new Error(errData?.error || "No se pudo generar el certificado");
     } catch (e: any) {
-      try {
-        if (!newTab.closed) newTab.close();
-      } catch { }
+      try { if (!newTab.closed) newTab.close(); } catch {}
       setError(e.message || "Error generando certificado");
     } finally {
       setCertLoading(false);
     }
-  };
+  }
 
   return (
     <div className="w-full px-4 pb-10">

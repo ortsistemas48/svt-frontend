@@ -231,9 +231,11 @@ export default function VehicleForm({
   const { setIsIdle, errors, setErrors } = useApplication() as any;
 
   const greenCardNoExpiration =
-    !car?.green_card_expiration ||
-    car?.green_card_expiration === "" ||
-    car?.green_card_no_expiration === true;
+    car?.green_card_no_expiration === true ||
+    (
+      car?.green_card_no_expiration === undefined &&
+      (!car?.green_card_expiration || car?.green_card_expiration === "")
+    );
 
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));

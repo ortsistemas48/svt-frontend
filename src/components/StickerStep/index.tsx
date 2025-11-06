@@ -201,12 +201,10 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
       if (id !== fetchRef.current.id) return;
 
       if (res.status === 404) {
-        setCar((prev: any) => ({ 
-          ...(prev || {}), 
+        // Limpiar por completo los datos del vehículo si no existe, dejando solo el dominio
+        setCar({ 
           license_plate: plate,
-          sticker_id: undefined,
-          sticker: undefined,
-        }));
+        });
         setVehicleFound(false);
         setMode("result");
         setErrors((prev: any) => {
