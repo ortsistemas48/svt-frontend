@@ -13,6 +13,7 @@ import {
   type LucideIcon,
   Banknote,
   Building2, 
+  ListChecks,
 } from "lucide-react";
 import NavItem from "@/components/NavItem";
 import { UserTypeInWorkshop } from "@/app/types";
@@ -38,6 +39,7 @@ export default function SideBarMenu({ userType, loading }: Props) {
 
     { href: `/admin-dashboard/payments`, icon: Banknote, label: "Aprobar Pagos" },
     { href: `/admin-dashboard/approve-workshops`, icon: UserCheck, label: "Aprobar Talleres" },
+    { href: `/admin-dashboard/inspection-validity`, icon: ListChecks, label: "Validez CRT" },
     { href: `/admin-dashboard/support`, icon: ShieldUser, label: "Soporte" },
   ];
 
