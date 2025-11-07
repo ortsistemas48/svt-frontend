@@ -221,8 +221,8 @@ export default function ContinueApplicationPage() {
             <div className="max-w-4xl mx-auto px-4 py-8">
                 {!foundApplication ? (
                     <>
-                        <div className="bg-white rounded-lg shadow-md p-6">
-                            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                        <div className="bg-white rounded-[10px] border border-gray-200 p-6">
+                            <h2 className="text-xl text-gray-900 mb-2">
                                 Continuar Revisión
                             </h2>
                             <p className="text-sm text-gray-600 mb-6">
@@ -242,13 +242,13 @@ export default function ContinueApplicationPage() {
                                             onKeyPress={handleKeyPress}
                                             placeholder="Ej: ABC123 o AB123CD"
                                             disabled={loading}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0040B8] focus:border-transparent outline-none transition-all disabled:bg-gray-100 disabled:cursor-not-allowed text-lg font-mono"
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-[4px] focus:ring-2 focus:ring-[#0040B8] focus:border-transparent outline-none transition-all disabled:bg-gray-100 disabled:cursor-not-allowed text-lg"
                                         />
                                     </div>
                                     <button
                                         onClick={handleSearch}
                                         disabled={loading || !licensePlate.trim()}
-                                        className="px-6 py-3 bg-[#0040B8] text-white rounded-lg hover:bg-[#0030A0] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium min-w-[120px]"
+                                        className="px-6 py-3 bg-[#0040B8] text-white rounded-[4px] hover:bg-[#0030A0] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium min-w-[120px]"
                                     >
                                         {loading ? (
                                             <>
@@ -267,16 +267,16 @@ export default function ContinueApplicationPage() {
                                 
 
                                 {error && (
-                                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                                    <div className="p-4 bg-red-50 border border-red-200 rounded-[4px]">
                                         <p className="text-sm text-red-700">{error}</p>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-[10px]">
                             <h3 className="text-sm font-semibold text-blue-900 mb-2">
-                                ℹ️ Información
+                                Información
                             </h3>
                             <ul className="text-sm text-blue-800 space-y-1">
                                 <li>• Se buscará la última revisión con resultado "Condicional"</li>
@@ -291,29 +291,29 @@ export default function ContinueApplicationPage() {
                         <div className="flex justify-end">
                             <button
                                 onClick={handleNewSearch}
-                                className="px-4 py-2 text-sm font-medium text-[#0040B8] bg-white border border-[#0040B8] rounded-lg hover:bg-[#0040B8] hover:text-white transition-all duration-200 shadow-sm"
+                                className="px-4 py-2 text-sm font-medium text-[#0040B8] bg-white border border-[#0040B8] rounded-[4px] hover:bg-[#0040B8] hover:text-white transition-all duration-200 shadow-sm"
                             >
-                                ← Nueva búsqueda
+                                Nueva búsqueda
                             </button>
                         </div>
 
                         {/* Application Details Card */}
-                        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                        <div className="bg-white rounded-[10px] border border-gray-200 p-6">
                             <div className="mb-4">
-                                <h2 className="text-2xl font-semibold text-gray-900 mb-1">
-                                    ✓ Revisión Encontrada
+                                <h2 className="text-xl text-gray-900 mb-1">
+                                    Revisión Encontrada
                                 </h2>
                                 <p className="text-sm text-gray-600">
                                     Revisión con resultado Condicional
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-[4px]">
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                                        CRT #
+                                        CRT/CNI
                                     </p>
-                                    <p className="text-lg font-semibold text-gray-900">
+                                    <p className="text-md font-semibold text-gray-900">
                                         {foundApplication.application_id}
                                     </p>
                                 </div>
@@ -321,7 +321,7 @@ export default function ContinueApplicationPage() {
                                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
                                         Dominio
                                     </p>
-                                    <p className="text-lg font-semibold text-gray-900 font-mono">
+                                    <p className="text-md font-semibold text-gray-900">
                                         {foundApplication.car?.license_plate || "N/A"}
                                     </p>
                                 </div>
@@ -329,7 +329,7 @@ export default function ContinueApplicationPage() {
                                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
                                         Vehículo
                                     </p>
-                                    <p className="text-lg font-medium text-gray-900">
+                                    <p className="text-md font-medium text-gray-900">
                                         {foundApplication.car?.brand} {foundApplication.car?.model}
                                     </p>
                                 </div>
@@ -337,7 +337,7 @@ export default function ContinueApplicationPage() {
                                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
                                         Titular
                                     </p>
-                                    <p className="text-lg font-medium text-gray-900">
+                                    <p className="text-md font-medium text-gray-900">
                                         {foundApplication.owner?.first_name} {foundApplication.owner?.last_name}
                                     </p>
                                 </div>
@@ -345,7 +345,7 @@ export default function ContinueApplicationPage() {
                                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
                                         Fecha de Creación
                                     </p>
-                                    <p className="text-lg font-medium text-gray-900">
+                                    <p className="text-md font-medium text-gray-900">
                                         {foundApplication.date 
                                             ? new Date(foundApplication.date).toLocaleDateString("es-AR")
                                             : "N/A"}
@@ -355,7 +355,7 @@ export default function ContinueApplicationPage() {
                                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
                                         Estado Actual
                                     </p>
-                                    <p className="text-lg font-medium text-gray-900">
+                                    <p className="text-md font-medium text-gray-900">
                                         {foundApplication.status}
                                     </p>
                                 </div>
@@ -371,8 +371,8 @@ export default function ContinueApplicationPage() {
                         </div>
 
                         {/* Action Options */}
-                        <div className="bg-white rounded-lg shadow-md p-6">
-                            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                        <div className="bg-white rounded-[10px] border border-gray-200 p-6">
+                            <h3 className="text-xl text-gray-900 mb-4">
                                 ¿Qué desea hacer?
                             </h3>
                             <p className="text-sm text-gray-600 mb-6">
@@ -380,59 +380,23 @@ export default function ContinueApplicationPage() {
                             </p>
 
                             {error && (
-                                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-[4px]">
                                     <p className="text-sm text-red-700">{error}</p>
                                 </div>
                             )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Begin Inspection Option */}
-                                <button
-                                    onClick={handleBeginInspection}
-                                    disabled={actionLoading !== null || foundApplication.result !== "Condicional"}
-                                    className="group relative flex flex-col items-center justify-center p-6 border-2 border-[#0040B8] rounded-lg hover:bg-[#0040B8] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[180px]"
-                                >
-                                    {actionLoading === "inspection" ? (
-                                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-white border-t-transparent"></div>
-                                    ) : (
-                                        <>
-                                            <div className="mb-4 p-3 rounded-full bg-[#0040B8] group-hover:bg-white transition-colors duration-200">
-                                                <svg
-                                                    className="w-8 h-8 text-white group-hover:text-[#0040B8] transition-colors duration-200"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <h4 className="text-lg font-semibold mb-2 text-center">
-                                                Comenzar Segunda Inspección
-                                            </h4>
-                                            <p className="text-sm text-center opacity-80">
-                                                Continuar con el proceso de inspección inmediatamente
-                                            </p>
-                                        </>
-                                    )}
-                                </button>
-
-                                {/* Send to Queue Option */}
                                 <button
                                     onClick={handleSendToQueue}
                                     disabled={actionLoading !== null}
-                                    className="group relative flex flex-col items-center justify-center p-6 border-2 border-gray-300 rounded-lg hover:border-[#0040B8] hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[180px]"
+                                    className="group relative flex flex-col items-center justify-center p-6 border-2 border-gray-300 rounded-[4px] hover:border-[#0040B8] hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[180px]"
                                 >
                                     {actionLoading === "queue" ? (
                                         <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#0040B8] border-t-transparent"></div>
                                     ) : (
                                         <>
                                             <div className="mb-4 p-3 rounded-full bg-gray-200 group-hover:bg-[#0040B8] transition-colors duration-200">
-                                                <svg
+                                            <svg
                                                     className="w-8 h-8 text-gray-600 group-hover:text-white transition-colors duration-200"
                                                     fill="none"
                                                     stroke="currentColor"
@@ -450,7 +414,41 @@ export default function ContinueApplicationPage() {
                                                 Enviar a Cola
                                             </h4>
                                             <p className="text-sm text-center text-gray-600">
-                                                Agregar a la cola de inspecciones pendientes
+                                                Agregar a la cola de inspecciones
+                                            </p>
+                                        </>
+                                    )}
+                                </button>              
+
+                                <button
+                                    onClick={handleBeginInspection}
+                                    disabled={actionLoading !== null || foundApplication.result !== "Condicional"}
+                                    className="group relative flex flex-col items-center justify-center p-6 border-2 border-gray-300 rounded-[4px] hover:border-[#0040B8] hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[180px]"
+                                >
+                                    {actionLoading === "inspection" ? (
+                                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#0040B8] border-t-transparent"></div>
+                                    ) : (
+                                        <>
+                                            <div className="mb-4 p-3 rounded-full bg-gray-200 group-hover:bg-[#0040B8] transition-colors duration-200">
+                                            <svg
+                                                    className="w-8 h-8 text-gray-600 group-hover:text-white transition-colors duration-200"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                                                    />
+                                                </svg>
+                                            </div>
+                                            <h4 className="text-lg font-semibold mb-2 text-center">
+                                                Comenzar Segunda Inspección
+                                            </h4>
+                                            <p className="text-sm text-center opacity-80">
+                                                Continuar con el proceso de inspección
                                             </p>
                                         </>
                                     )}

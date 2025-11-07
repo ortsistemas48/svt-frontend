@@ -518,7 +518,7 @@ export default function VehicleForm({
       )}
 
       <fieldset>
-        <div className="grid grid-cols-[1fr_1px_1fr] max-[1320px]:grid-cols-1 gap-10 items-start">
+        <div className="grid grid-cols-[1fr_1px_1fr] max-[1420px]:grid-cols-1 gap-10 items-start">
           {/* Columna izquierda */}
           <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8 self-start">
             {formData1.map((field, index) => {
