@@ -35211,32 +35211,6 @@
       }
     },
     {
-      "id": "14014010",
-      "nombre": "Córdoba",
-      "fuente": "INDEC",
-      "provincia": {
-        "id": "14",
-        "nombre": "Córdoba"
-      },
-      "departamento": {
-        "id": "14014",
-        "nombre": "Capital"
-      },
-      "municipio": {
-        "id": "140077",
-        "nombre": "Córdoba"
-      },
-      "localidad_censal": {
-        "id": "14014010",
-        "nombre": "Córdoba"
-      },
-      "categoria": "Componente de localidad compuesta",
-      "centroide": {
-        "lon": -64.1836065316143,
-        "lat": -31.416804474519
-      }
-    },
-    {
       "id": "14021010",
       "nombre": "Agua de Oro",
       "fuente": "INDEC",
