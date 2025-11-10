@@ -19,6 +19,8 @@ type Application = {
   status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección";
   result?: "Apto" | "Condicional" | "Rechazado";
   result_2?: "Apto" | "Condicional" | "Rechazado";
+  inspection_1_date?: string | null;
+  inspection_2_date?: string | null;
 };
 
 export default function ContinueApplicationPage() {
@@ -29,6 +31,21 @@ export default function ContinueApplicationPage() {
     const [error, setError] = useState<string | null>(null);
     const [foundApplication, setFoundApplication] = useState<Application | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+    // Helper function to check if 60 days have passed since the first inspection
+    const isInspectionExpired = (application: Application): boolean => {
+        if (!application.inspection_1_date || application.inspection_2_date) {
+            return false;
+        }
+
+        const inspection1Date = new Date(application.inspection_1_date);
+        const currentDate = new Date();
+        const daysDifference = Math.floor(
+            (currentDate.getTime() - inspection1Date.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        return daysDifference > 60;
+    };
 
     const handleSearch = async () => {
         const plate = licensePlate.trim().toUpperCase().replace(/[-\s]/g, "");
@@ -61,8 +78,9 @@ export default function ContinueApplicationPage() {
             const data = await res.json();
             const applications: Application[] = data.items ?? [];
 
-
+            
             // Filter applications with 'Condicional' result, matching license plate, and NO result_2 yet
+            console.log(applications);
             const condicionalApps = applications.filter(
                 (app) => 
                     app.result === "Condicional" && 
@@ -88,6 +106,13 @@ export default function ContinueApplicationPage() {
 
             // Get the last (most recent) application
             const lastApplication = condicionalApps[0];
+            
+            // Check if the 60-day period has expired
+            if (isInspectionExpired(lastApplication)) {
+                setError("El periodo para continuar el trámite ha caducado, (60 días).");
+                return;
+            }
+            
             setFoundApplication(lastApplication);
 
         } catch (err: any) {
@@ -100,6 +125,12 @@ export default function ContinueApplicationPage() {
 
     const handleBeginInspection = async () => {
         if (!foundApplication) return;
+        
+        // Check if the 60-day period has expired
+        if (isInspectionExpired(foundApplication)) {
+            setError("El periodo para continuar el trámite ha caducado, (60 días).");
+            return;
+        }
         
         // Verify that the application has "Condicional" result before proceeding
         if (foundApplication.result !== "Condicional") {
@@ -166,6 +197,12 @@ export default function ContinueApplicationPage() {
 
     const handleSendToQueue = async () => {
         if (!foundApplication) return;
+        
+        // Check if the 60-day period has expired
+        if (isInspectionExpired(foundApplication)) {
+            setError("El periodo para continuar el trámite ha caducado, (60 días).");
+            return;
+        }
         
         setActionLoading("queue");
         setError(null);
@@ -367,8 +404,97 @@ export default function ContinueApplicationPage() {
                                         {foundApplication.result}
                                     </span>
                                 </div>
+                                {foundApplication.inspection_1_date && (
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                                            Fecha 1ra Inspección
+                                        </p>
+                                        <p className="text-md font-medium text-gray-900">
+                                            {new Date(foundApplication.inspection_1_date).toLocaleDateString("es-AR")}
+                                        </p>
+                                    </div>
+                                )}
+                                {foundApplication.inspection_1_date && !foundApplication.inspection_2_date && (
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                                            Días Restantes
+                                        </p>
+                                        <p className={`text-md font-semibold ${
+                                            (() => {
+                                                const inspection1Date = new Date(foundApplication.inspection_1_date);
+                                                const currentDate = new Date();
+                                                const daysPassed = Math.floor(
+                                                    (currentDate.getTime() - inspection1Date.getTime()) / (1000 * 60 * 60 * 24)
+                                                );
+                                                const daysRemaining = 60 - daysPassed;
+                                                if (daysRemaining <= 0) return "text-red-600";
+                                                if (daysRemaining <= 10) return "text-amber-600";
+                                                return "text-green-600";
+                                            })()
+                                        }`}>
+                                            {(() => {
+                                                const inspection1Date = new Date(foundApplication.inspection_1_date);
+                                                const currentDate = new Date();
+                                                const daysPassed = Math.floor(
+                                                    (currentDate.getTime() - inspection1Date.getTime()) / (1000 * 60 * 60 * 24)
+                                                );
+                                                const daysRemaining = 60 - daysPassed;
+                                                return daysRemaining > 0 ? `${daysRemaining} días` : "Caducado";
+                                            })()}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
+
+                        {/* Expiration Warning */}
+                        {foundApplication.inspection_1_date && !foundApplication.inspection_2_date && (() => {
+                            const inspection1Date = new Date(foundApplication.inspection_1_date);
+                            const currentDate = new Date();
+                            const daysPassed = Math.floor(
+                                (currentDate.getTime() - inspection1Date.getTime()) / (1000 * 60 * 60 * 24)
+                            );
+                            const daysRemaining = 60 - daysPassed;
+                            
+                            if (daysRemaining <= 0) {
+                                return (
+                                    <div className="p-4 bg-red-50 border-2 border-red-500 rounded-[10px]">
+                                        <div className="flex items-start gap-3">
+                                            <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                            <div>
+                                                <h4 className="text-sm font-semibold text-red-900 mb-1">
+                                                    Periodo Caducado
+                                                </h4>
+                                                <p className="text-sm text-red-700">
+                                                    El periodo para continuar el trámite ha caducado, (60 días).
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            } else if (daysRemaining <= 10) {
+                                return (
+                                    <div className="p-4 bg-amber-50 border-2 border-amber-500 rounded-[10px]">
+                                        <div className="flex items-start gap-3">
+                                            <svg className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <div>
+                                                <h4 className="text-sm font-semibold text-amber-900 mb-1">
+                                                    Atención: Plazo Próximo a Vencer
+                                                </h4>
+                                                <p className="text-sm text-amber-700">
+                                                    Quedan solo {daysRemaining} días para completar la segunda inspección antes de que caduque el trámite.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
 
                         {/* Action Options */}
                         <div className="bg-white rounded-[10px] border border-gray-200 p-6">
@@ -388,7 +514,7 @@ export default function ContinueApplicationPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <button
                                     onClick={handleSendToQueue}
-                                    disabled={actionLoading !== null}
+                                    disabled={actionLoading !== null || isInspectionExpired(foundApplication)}
                                     className="group relative flex flex-col items-center justify-center p-6 border-2 border-gray-300 rounded-[4px] hover:border-[#0040B8] hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[180px]"
                                 >
                                     {actionLoading === "queue" ? (
@@ -422,7 +548,7 @@ export default function ContinueApplicationPage() {
 
                                 <button
                                     onClick={handleBeginInspection}
-                                    disabled={actionLoading !== null || foundApplication.result !== "Condicional"}
+                                    disabled={actionLoading !== null || foundApplication.result !== "Condicional" || isInspectionExpired(foundApplication)}
                                     className="group relative flex flex-col items-center justify-center p-6 border-2 border-gray-300 rounded-[4px] hover:border-[#0040B8] hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[180px]"
                                 >
                                     {actionLoading === "inspection" ? (

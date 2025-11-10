@@ -1,7 +1,7 @@
 // components/InspectionTable/index.tsx
 "use client";
-import { useEffect, useMemo, useState } from "react";
-import { Play, Pencil, Trash2, X, Search, SlidersHorizontal } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Play, Pencil, Trash2, X, Search, SlidersHorizontal, EllipsisVertical } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Application } from "@/app/types";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
@@ -36,6 +36,48 @@ export default function InspectionTable() {
   const [deleting, setDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailTarget, setDetailTarget] = useState<Application | null>(null);
+  const detailCloseBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  const openDetail = (application: Application) => {
+    setDetailTarget(application);
+    setDetailOpen(true);
+  };
+
+  const closeDetail = () => {
+    setDetailOpen(false);
+    setTimeout(() => setDetailTarget(null), 200);
+  };
+
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return "-";
+    const dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) return "-";
+    const date = dt.toLocaleDateString("es-AR");
+    const time = dt.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+    return `${date} ${time}`;
+  };
+
+  const formatPersonName = (first?: string | null, last?: string | null) => {
+    const parts = [first, last]
+      .map((part) => (part || "").trim())
+      .filter((part) => part.length > 0);
+    return parts.length ? parts.join(" ") : "-";
+  };
+
+  const getResultTone = (result?: Application["result"] | null) => {
+    switch (result) {
+      case "Apto":
+        return "text-blue-700";
+      case "Condicional":
+        return "text-amber-700";
+      case "Rechazado":
+        return "text-black";
+      default:
+        return "text-gray-900";
+    }
+  };
 
   const headers: TableHeader[] = [
     { label: "CRT" },
@@ -69,7 +111,7 @@ export default function InspectionTable() {
       console.error(err);
       setItems([]);
       setTotal(0);
-      setErrorMsg("No se pudieron cargar las aplicaciones");
+      setErrorMsg("No se pudieron   cargar las aplicaciones");
     } finally {
       setLoading(false);
     }
@@ -79,6 +121,26 @@ export default function InspectionTable() {
     fetchApps();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, page, searchQuery, statusFilter]);
+
+  useEffect(() => {
+    if (!detailOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeDetail();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [detailOpen]);
+
+  useEffect(() => {
+    if (!detailOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const timeout = setTimeout(() => detailCloseBtnRef.current?.focus(), 0);
+    return () => {
+      clearTimeout(timeout);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [detailOpen]);
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
@@ -240,6 +302,16 @@ export default function InspectionTable() {
                             <Pencil size={16} />
                           </button>
                         )}
+                        {item.status === "Completado" && (
+                          <button
+                            type="button"
+                            className="cursor-pointer rounded p-1 text-[#0040B8] transition-colors hover:bg-blue-50 hover:opacity-80"
+                            title="Ver detalle del trámite"
+                            onClick={() => openDetail(item)}
+                          >
+                            <EllipsisVertical size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -305,6 +377,116 @@ export default function InspectionTable() {
           </div>
         )}
       </div>
+
+      {/* Detail overlay */}
+      <div
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-200 ${
+          detailOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={closeDetail}
+        aria-hidden={!detailOpen}
+      />
+
+      {/* Detail drawer */}
+      <aside
+        role="dialog"
+        aria-modal="true"
+        className={`fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] bg-white shadow-2xl transform transition-transform duration-200 ${
+          detailOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <h2 className="text-base font-semibold sm:text-lg">
+            {detailTarget ? `Trámite #${detailTarget.application_id}` : "Detalle del trámite"}
+          </h2>
+          <button
+            ref={detailCloseBtnRef}
+            onClick={closeDetail}
+            className="rounded p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+            aria-label="Cerrar panel"
+            title="Cerrar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="h-[calc(100%-56px)] overflow-y-auto p-4">
+          {detailTarget ? (
+            <div className="space-y-6">
+              <section>
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                  Información general
+                </h3>
+                <div className="space-y-2 text-sm text-gray-700">
+                  <DetailRow label="Estado" value={detailTarget.status} />
+                  <DetailRow
+                    label="Resultado (1ª)"
+                    value={detailTarget.result || "-"}
+                    valueClassName={getResultTone(detailTarget.result)}
+                  />
+                  <DetailRow
+                    label="Resultado (2ª)"
+                    value={detailTarget.result_2 || "-"}
+                    valueClassName={getResultTone(detailTarget.result_2)}
+                  />
+                  <DetailRow label="Fecha de creación" value={formatDateTime(detailTarget.date)} />
+                  <DetailRow label="Usuario" value={detailTarget.user_name ?? "-"} />
+                </div>
+              </section>
+
+              <section>
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                  Vehículo
+                </h3>
+                <div className="space-y-2 text-sm text-gray-700">
+                  <DetailRow label="Dominio" value={detailTarget.car?.license_plate || "-"} />
+                  <DetailRow label="Marca" value={detailTarget.car?.brand || "-"} />
+                  <DetailRow label="Modelo" value={detailTarget.car?.model || "-"} />
+                </div>
+              </section>
+
+              <section>
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                  Titular
+                </h3>
+                <div className="space-y-2 text-sm text-gray-700">
+                  <DetailRow
+                    label="Nombre"
+                    value={formatPersonName(detailTarget.owner?.first_name, detailTarget.owner?.last_name)}
+                  />
+                  <DetailRow label="DNI" value={detailTarget.owner?.dni || "-"} />
+                </div>
+              </section>
+
+              <section>
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                  Conductor
+                </h3>
+                <div className="space-y-2 text-sm text-gray-700">
+                  <DetailRow
+                    label="Nombre"
+                    value={formatPersonName(detailTarget.driver?.first_name, detailTarget.driver?.last_name)}
+                  />
+                  <DetailRow label="DNI" value={detailTarget.driver?.dni || "-"} />
+                </div>
+              </section>
+
+              <section>
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                  Inspecciones
+                </h3>
+                <div className="space-y-2 text-sm text-gray-700">
+                  <DetailRow label="Fecha 1ª Inspección" value={formatDateTime(detailTarget.inspection_1_date)} />
+                  <DetailRow label="Fecha 2ª Inspección" value={formatDateTime(detailTarget.inspection_2_date)} />
+                </div>
+              </section>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600">Selecciona un trámite para ver sus datos.</p>
+          )}
+        </div>
+      </aside>
 
       {deleteTarget && (
         <div className="fixed inset-0 z-50">
@@ -377,4 +559,25 @@ export default function InspectionTable() {
 
 function Sk({ className = "" }: { className?: string }) {
   return <div className={`rounded bg-gray-200/80 ${className}`} />;
+}
+
+function DetailRow({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value?: string | number | null;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="flex items-start justify-between rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
+      <span className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</span>
+      <span
+        className={`max-w-[60%] break-words text-right text-sm ${valueClassName || "text-gray-900"}`}
+      >
+        {value !== undefined && value !== null && value !== "" ? value : "-"}
+      </span>
+    </div>
+  );
 }

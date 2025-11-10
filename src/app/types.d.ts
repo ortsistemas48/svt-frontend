@@ -94,6 +94,9 @@ export type Application = {
   status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección";
   result?: "Apto" | "Condicional" | "Rechazado";
   result_2?: "Apto" | "Condicional" | "Rechazado";
+  inspection_1_date?: string | null;
+  inspection_2_date?: string | null;
+  user_name?: string | null;
 };
 
 export type UserTypeInWorkshop = {

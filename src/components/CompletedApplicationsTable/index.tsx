@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Download, Eye, Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import { Application } from "@/app/types";
@@ -33,6 +34,13 @@ interface ApiResponse {
   pagination: PaginationData;
 }
 
+type DropdownState = {
+  id: number;
+  placement: "up" | "down";
+  top: number;
+  left: number;
+};
+
 export default function CompletedApplicationsTable() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,24 +56,40 @@ export default function CompletedApplicationsTable() {
   const [resultFilter, setResultFilter] = useState<string>("Todos"); // Empty means all statuses
   
   // Dropdown menu state
-  const [openDownloadDropdown, setOpenDownloadDropdown] = useState<number | null>(null);
-  const [openViewDropdown, setOpenViewDropdown] = useState<number | null>(null);
-  const downloadDropdownRef = useRef<HTMLDivElement>(null);
-  const viewDropdownRef = useRef<HTMLDivElement>(null);
+  const [viewDropdownState, setViewDropdownState] = useState<DropdownState | null>(null);
+  const [downloadDropdownState, setDownloadDropdownState] = useState<DropdownState | null>(null);
+  const viewDropdownRef = useRef<HTMLDivElement | null>(null);
+  const downloadDropdownRef = useRef<HTMLDivElement | null>(null);
+  const viewTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const downloadTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (downloadDropdownRef.current && !downloadDropdownRef.current.contains(event.target as Node)) {
-        setOpenDownloadDropdown(null);
+      const targetNode = event.target as Node;
+
+      if (
+        downloadDropdownState &&
+        !downloadDropdownRef.current?.contains(targetNode) &&
+        !downloadTriggerRef.current?.contains(targetNode)
+      ) {
+        setDownloadDropdownState(null);
+        downloadTriggerRef.current = null;
       }
-      if (viewDropdownRef.current && !viewDropdownRef.current.contains(event.target as Node)) {
-        setOpenViewDropdown(null);
+
+      if (
+        viewDropdownState &&
+        !viewDropdownRef.current?.contains(targetNode) &&
+        !viewTriggerRef.current?.contains(targetNode)
+      ) {
+        setViewDropdownState(null);
+        viewTriggerRef.current = null;
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [downloadDropdownState, viewDropdownState]);
 
   const handleDownload = async (applicationId: number, inspectionNumber: 1 | 2 = 1) => {
     const certificateName = inspectionNumber === 2 ? 'certificado_2.pdf' : 'certificado.pdf';
@@ -86,9 +110,9 @@ export default function CompletedApplicationsTable() {
       link.click();
       document.body.removeChild(link);
 
-      // Clean up the blob URL
       window.URL.revokeObjectURL(blobUrl);
-      setOpenDownloadDropdown(null); // Close dropdown after download
+      setDownloadDropdownState(null);
+      downloadTriggerRef.current = null;
     } catch (error) {
       console.error('Download failed:', error);
     }
@@ -98,7 +122,8 @@ export default function CompletedApplicationsTable() {
     const certificateName = inspectionNumber === 2 ? 'certificado_2.pdf' : 'certificado.pdf';
     const url = `https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/${certificateName}`;
     window.open(url, '_blank', 'noopener,noreferrer');
-    setOpenViewDropdown(null); // Close dropdown after opening
+    setViewDropdownState(null);
+    viewTriggerRef.current = null;
   };
   const fetchApplications = async (pageNum: number = page) => {
     try {
@@ -154,6 +179,101 @@ export default function CompletedApplicationsTable() {
     fetchApplications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, page, searchQuery, resultFilter]);
+
+  const DROPDOWN_HEIGHT = 128;
+  const DROPDOWN_WIDTH = 208;
+  const DROPDOWN_MARGIN = 8;
+
+  const computeDropdownState = (button: HTMLButtonElement, applicationId: number): DropdownState => {
+    const rect = button.getBoundingClientRect();
+    const shouldOpenUp =
+      rect.bottom + DROPDOWN_HEIGHT + DROPDOWN_MARGIN > window.innerHeight;
+    const placement: DropdownState["placement"] = shouldOpenUp ? "up" : "down";
+
+    let top =
+      placement === "down"
+        ? rect.bottom + DROPDOWN_MARGIN
+        : rect.top - DROPDOWN_HEIGHT - DROPDOWN_MARGIN;
+    const minTop = DROPDOWN_MARGIN;
+    const maxTop = window.innerHeight - DROPDOWN_HEIGHT - DROPDOWN_MARGIN;
+    if (top < minTop) top = minTop;
+    if (top > maxTop) top = maxTop;
+
+    let left = rect.right - DROPDOWN_WIDTH;
+    const minLeft = DROPDOWN_MARGIN;
+    const maxLeft = window.innerWidth - DROPDOWN_WIDTH - DROPDOWN_MARGIN;
+    if (left < minLeft) left = minLeft;
+    if (left > maxLeft) left = maxLeft;
+
+    return { id: applicationId, placement, top, left };
+  };
+
+  const toggleViewDropdown = (
+    applicationId: number,
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.stopPropagation();
+    const button = event.currentTarget;
+
+    if (viewDropdownState?.id === applicationId) {
+      setViewDropdownState(null);
+      viewTriggerRef.current = null;
+      return;
+    }
+
+    const nextState = computeDropdownState(button, applicationId);
+    setViewDropdownState(nextState);
+    viewTriggerRef.current = button;
+    setDownloadDropdownState(null);
+    downloadTriggerRef.current = null;
+  };
+
+  const toggleDownloadDropdown = (
+    applicationId: number,
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.stopPropagation();
+    const button = event.currentTarget;
+
+    if (downloadDropdownState?.id === applicationId) {
+      setDownloadDropdownState(null);
+      downloadTriggerRef.current = null;
+      return;
+    }
+
+    const nextState = computeDropdownState(button, applicationId);
+    setDownloadDropdownState(nextState);
+    downloadTriggerRef.current = button;
+    setViewDropdownState(null);
+    viewTriggerRef.current = null;
+  };
+
+  useEffect(() => {
+    if (!viewDropdownState && !downloadDropdownState) return;
+
+    const handleScrollOrResize = () => {
+      setViewDropdownState(null);
+      setDownloadDropdownState(null);
+      viewTriggerRef.current = null;
+      downloadTriggerRef.current = null;
+    };
+
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+    return () => {
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
+  }, [viewDropdownState, downloadDropdownState]);
+
+  useEffect(() => {
+    if (!viewDropdownState) {
+      viewDropdownRef.current = null;
+    }
+    if (!downloadDropdownState) {
+      downloadDropdownRef.current = null;
+    }
+  }, [viewDropdownState, downloadDropdownState]);
 
 
   const headers: TableHeader[] = [
@@ -214,7 +334,7 @@ export default function CompletedApplicationsTable() {
       {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={resultFilter} setStatusFilter={setResultFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
       {/* Card de tabla con borde propio */}
-      <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+      <div className="rounded-lg border border-gray-200 overflow-visible bg-white">
         <div className="overflow-x-auto">
           <TableTemplate
             headers={headers}
@@ -280,36 +400,50 @@ export default function CompletedApplicationsTable() {
                     <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
                       {/* View certificate - Show dropdown if result_2 exists */}
                       {item.result_2 ? (
-                        <div className="relative" ref={openViewDropdown === item.application_id ? viewDropdownRef : null}>
-                          <button
-                            type="button"
-                            onClick={() => setOpenViewDropdown(openViewDropdown === item.application_id ? null : item.application_id)}
-                            className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
-                            title="Ver certificado"
-                          >
-                            <Eye size={16} />
-                            <ChevronDown size={12} />
-                          </button>
-                          
-                          {openViewDropdown === item.application_id && (
-                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                              <button
-                                onClick={() => handleView(item.application_id, 1)}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors rounded-t-lg flex items-center gap-2"
+                        <>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={(event) => toggleViewDropdown(item.application_id, event)}
+                              className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+                              title="Ver certificado"
+                            >
+                              <Eye size={16} />
+                              <ChevronDown size={12} />
+                            </button>
+                          </div>
+
+                          {viewDropdownState?.id === item.application_id &&
+                            createPortal(
+                              <div
+                                ref={(node) => {
+                                  viewDropdownRef.current = node;
+                                }}
+                                className="z-[60] w-52 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                                style={{
+                                  position: "fixed",
+                                  top: viewDropdownState.top,
+                                  left: viewDropdownState.left,
+                                }}
                               >
-                                <Eye size={14} />
-                                <span>1ra Inspección</span>
-                              </button>
-                              <button
-                                onClick={() => handleView(item.application_id, 2)}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors rounded-b-lg flex items-center gap-2 border-t border-gray-100"
-                              >
-                                <Eye size={14} />
-                                <span>2da Inspección</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                                <button
+                                  onClick={() => handleView(item.application_id, 1)}
+                                  className="flex w-full items-center gap-2 px-4 py-2 text-sm transition-colors hover:bg-gray-50"
+                                >
+                                  <Eye size={14} />
+                                  <span>1ra Inspección</span>
+                                </button>
+                                <button
+                                  onClick={() => handleView(item.application_id, 2)}
+                                  className="flex w-full items-center gap-2 border-t border-gray-100 px-4 py-2 text-sm transition-colors hover:bg-gray-50"
+                                >
+                                  <Eye size={14} />
+                                  <span>2da Inspección</span>
+                                </button>
+                              </div>,
+                              document.body
+                            )}
+                        </>
                       ) : (
                         <Link 
                           href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`}
@@ -324,36 +458,50 @@ export default function CompletedApplicationsTable() {
                       
                       {/* Download certificate - Show dropdown if result_2 exists */}
                       {item.result_2 ? (
-                        <div className="relative" ref={openDownloadDropdown === item.application_id ? downloadDropdownRef : null}>
-                          <button
-                            type="button"
-                            onClick={() => setOpenDownloadDropdown(openDownloadDropdown === item.application_id ? null : item.application_id)}
-                            className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
-                            title="Descargar certificado"
-                          >
-                            <Download size={16} />
-                            <ChevronDown size={12} />
-                          </button>
-                          
-                          {openDownloadDropdown === item.application_id && (
-                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                              <button
-                                onClick={() => handleDownload(item.application_id, 1)}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors rounded-t-lg flex items-center gap-2"
+                        <>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={(event) => toggleDownloadDropdown(item.application_id, event)}
+                              className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+                              title="Descargar certificado"
+                            >
+                              <Download size={16} />
+                              <ChevronDown size={12} />
+                            </button>
+                          </div>
+
+                          {downloadDropdownState?.id === item.application_id &&
+                            createPortal(
+                              <div
+                                ref={(node) => {
+                                  downloadDropdownRef.current = node;
+                                }}
+                                className="z-[60] w-52 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                                style={{
+                                  position: "fixed",
+                                  top: downloadDropdownState.top,
+                                  left: downloadDropdownState.left,
+                                }}
                               >
-                                <Download size={14} />
-                                <span>1ra Inspección</span>
-                              </button>
-                              <button
-                                onClick={() => handleDownload(item.application_id, 2)}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors rounded-b-lg flex items-center gap-2 border-t border-gray-100"
-                              >
-                                <Download size={14} />
-                                <span>2da Inspección</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                                <button
+                                  onClick={() => handleDownload(item.application_id, 1)}
+                                  className="flex w-full items-center gap-2 px-4 py-2 text-sm transition-colors hover:bg-gray-50"
+                                >
+                                  <Download size={14} />
+                                  <span>1ra Inspección</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDownload(item.application_id, 2)}
+                                  className="flex w-full items-center gap-2 border-t border-gray-100 px-4 py-2 text-sm transition-colors hover:bg-gray-50"
+                                >
+                                  <Download size={14} />
+                                  <span>2da Inspección</span>
+                                </button>
+                              </div>,
+                              document.body
+                            )}
+                        </>
                       ) : (
                         <button
                           type="button"
