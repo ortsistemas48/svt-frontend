@@ -58,6 +58,7 @@ export function InspectionStepsViewOnlyClient({
   initialGlobalObs,
   userType,
   inspectionDocs,
+  showBackButton = false,
 }: {
   inspectionId: number;
   appId: number;
@@ -67,6 +68,7 @@ export function InspectionStepsViewOnlyClient({
   initialGlobalObs: string;
   userType: string;
   inspectionDocs: InspDoc[];
+  showBackButton?: boolean;
 }) {
   const { id } = useParams();
   const router = useRouter();
@@ -82,7 +84,7 @@ export function InspectionStepsViewOnlyClient({
   }, [steps, statusByStep]);
 
   return (
-    <div className="w-full px-4 pb-10">
+    <div className="w-full">
       <div className="w-full space-y-4">
         {steps.map((s) => {
           const current = statusByStep[s.step_id];
@@ -184,6 +186,7 @@ export function InspectionStepsViewOnlyClient({
         </section>
       )}
 
+      {showBackButton && (
         <div className="mt-6 flex justify-center">
           <button
             onClick={() => router.push(`/dashboard/${id}/files/${appId}`)}
@@ -193,6 +196,7 @@ export function InspectionStepsViewOnlyClient({
             Volver
           </button>
         </div>
+      )}
     </div>
   );
 }

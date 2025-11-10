@@ -13,10 +13,15 @@ type SearchHistoryItem = {
   searchDate: string; // formato: "DD/MM/YYYY HH:mm hs"
   status: "Pendiente" | "Completado" | "En curso" | "A Inspeccionar" | "Emitir CRT";
   applicationId: number;
-  result: "Apto" | "Condicional" | "Rechazado"
+  result: "Apto" | "Condicional" | "Rechazado" | null;
+  result_2?: "Apto" | "Condicional" | "Rechazado" | null;
 };
 
-function getResultConfig(result: SearchHistoryItem["result"]) {
+function getResultConfig(result: SearchHistoryItem["result"] | null) {
+  if (!result) {
+    return { bg: "bg-gray-50", text: "text-gray-700" };
+  }
+  
   switch (result) {
     case "Apto":
       return { bg: "bg-blue-50", text: "text-blue-700" };
@@ -84,7 +89,8 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
         userDni: item.owner?.dni || "-",
         searchDate: formatDate(item.date),
         status: item.status,
-        result: item.result
+        result: item.result_2 || item.result || null,
+        result_2: item.result_2 || null
       }));
       
       setSearchHistory(formattedItems);

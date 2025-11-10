@@ -38,6 +38,10 @@ export default function FileDetailPage() {
   const [view, setView] = useState<View>("main");
   const [status, setStatus] = useState<string>("");
   const [date, setDate] = useState<string>("");
+  const [result, setResult] = useState<string | null>(null);
+  const [result2, setResult2] = useState<string | null>(null);
+  const [inspection1Date, setInspection1Date] = useState<string | null>(null);
+  const [inspection2Date, setInspection2Date] = useState<string | null>(null);
   const [pendingCarDocs, setPendingCarDocs] = useState<PendingCarDoc[]>([]);
   const [pendingTechDocs, setPendingTechDocs] = useState<File[]>([]);
   const [techDocs, setTechDocs] = useState<InspDoc[]>([]);
@@ -103,6 +107,10 @@ export default function FileDetailPage() {
         if (appRes.ok) {
           const appData = await appRes.json();
           setStatus(appData.status || "Pendiente");
+          setResult(appData.result || null);
+          setResult2(appData.result_2 || null);
+          
+          // Formatear fecha de creación de la aplicación
           if (appData.date) {
             const dateObj = new Date(appData.date);
             const day = String(dateObj.getDate()).padStart(2, '0');
@@ -111,6 +119,28 @@ export default function FileDetailPage() {
             const hours = String(dateObj.getHours()).padStart(2, '0');
             const minutes = String(dateObj.getMinutes()).padStart(2, '0');
             setDate(`${day}/${month}/${year} ${hours}:${minutes} hs`);
+          }
+          
+          // Formatear fecha de creación de la primera inspección
+          if (appData.inspection_1_date) {
+            const dateObj = new Date(appData.inspection_1_date);
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const year = dateObj.getFullYear();
+            const hours = String(dateObj.getHours()).padStart(2, '0');
+            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+            setInspection1Date(`${day}/${month}/${year} ${hours}:${minutes} hs`);
+          }
+          
+          // Formatear fecha de creación de la segunda inspección
+          if (appData.inspection_2_date) {
+            const dateObj = new Date(appData.inspection_2_date);
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const year = dateObj.getFullYear();
+            const hours = String(dateObj.getHours()).padStart(2, '0');
+            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+            setInspection2Date(`${day}/${month}/${year} ${hours}:${minutes} hs`);
           }
         }
       } catch (err) {
@@ -155,6 +185,53 @@ export default function FileDetailPage() {
           text: "text-gray-700",
           icon: Clock,
           iconColor: "text-gray-600"
+        };
+    }
+  }
+
+  function getResultConfig(result: string | null) {
+    if (!result) {
+      return {
+        bg: "bg-gray-50",
+        text: "text-gray-700",
+        icon: Clock,
+        iconColor: "text-gray-600",
+        label: "Pendiente"
+      };
+    }
+    
+    switch (result) {
+      case "Apto":
+        return {
+          bg: "bg-blue-50",
+          text: "text-blue-700",
+          icon: CheckCircle2,
+          iconColor: "text-blue-600",
+          label: "Apto"
+        };
+      case "Condicional":
+        return {
+          bg: "bg-amber-50",
+          text: "text-amber-700",
+          icon: Clock,
+          iconColor: "text-amber-600",
+          label: "Condicional"
+        };
+      case "Rechazado":
+        return {
+          bg: "bg-gray-100",
+          text: "text-black",
+          icon: XCircle,
+          iconColor: "text-black",
+          label: "Rechazado"
+        };
+      default:
+        return {
+          bg: "bg-gray-50",
+          text: "text-gray-700",
+          icon: Clock,
+          iconColor: "text-gray-600",
+          label: result
         };
     }
   }
@@ -713,6 +790,10 @@ export default function FileDetailPage() {
           </div>
 
           {/* Ficha técnica */}
+          {(() => {
+            const resultConfig = getResultConfig(result);
+            const ResultIcon = resultConfig.icon;
+            return (
           <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection`)}>
             <div className="flex items-center justify-between">
               <div>
@@ -721,16 +802,44 @@ export default function FileDetailPage() {
               </div>
               <div className="flex items-center gap-4 justify-between w-[50%]">
                 <div className="text-left">
-                  <p className="text-sm text-gray-600">Fecha de creación:<br/>{date || "-"}</p>
+                      <p className="text-sm text-gray-600">Fecha de creación:<br/>{inspection1Date || "-"}</p>
+                    </div>
+                    <span className={clsx("inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium", resultConfig.bg, resultConfig.text)}>
+                      <ResultIcon size={16} className={resultConfig.iconColor} />
+                      {resultConfig.label}
+                    </span>
+                    <ChevronRight size={24} className="text-gray-400" />
+                  </div>
                 </div>
-                <span className={clsx("inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium", statusConfig.bg, statusConfig.text)}>
-                  <StatusIcon size={16} className={statusConfig.iconColor} />
-                  {status || "Pendiente"}
+              </div>
+            );
+          })()}
+
+          {/* Ficha técnica segunda revisión - Solo se muestra si result_2 no es null */}
+          {result2 && (() => {
+            const result2Config = getResultConfig(result2);
+            const Result2Icon = result2Config.icon;
+            return (
+              <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection`)}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-md text-gray-900 mb-1">Ficha técnica segunda revisión</h2>
+                    <p className="text-sm text-gray-500">Ficha técnica de segunda revisión, solo visualización</p>
+                  </div>
+                  <div className="flex items-center gap-4 justify-between w-[50%]">
+                    <div className="text-left">
+                      <p className="text-sm text-gray-600">Fecha de creación:<br/>{inspection2Date || "-"}</p>
+                </div>
+                    <span className={clsx("inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium", result2Config.bg, result2Config.text)}>
+                      <Result2Icon size={16} className={result2Config.iconColor} />
+                      {result2Config.label}
                 </span>
                 <ChevronRight size={24} className="text-gray-400" />
               </div>
             </div>
           </div>
+            );
+          })()}
 
           {/* Agregar documentos */}
           <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("documents")}>
