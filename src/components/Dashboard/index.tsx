@@ -1,16 +1,14 @@
 import Link from 'next/link';
 import {
   CircleFadingPlus,
-  RefreshCw,
-  ClipboardList,
-  ChevronRight,
   AlertTriangle,
   ScrollText,
   ArrowUp
 } from 'lucide-react';
 import clsx from 'clsx';
-import { fetchDailyStatistics, fetchLatestApplications, fetchQueueApplications } from '@/utils';
+import { fetchDailyStatistics, fetchLatestApplications } from '@/utils';
 import Card from '../Card';
+import QuickActions from '../QuickActions';
 
 type Status = 'Pendiente' | 'En Cola' | 'En curso' | 'Completado' | 'A Inspeccionar' | 'Emitir CRT';
 
@@ -31,12 +29,7 @@ interface DashboardProps {
 export default async function Dashboard({ workshopId, date }: DashboardProps) {
   const statistics = await fetchDailyStatistics(workshopId, date);
   const latestApps = await fetchLatestApplications(workshopId);
-  const quick = [
-    { key: 'new', title: 'Nueva revisión', href: `/dashboard/${workshopId}/applications`, icon: CircleFadingPlus },
-    { key: 'continue', title: 'Continuar revisión', href: `/dashboard/${workshopId}/applications/continue-application`, icon: ClipboardList },
-    { key: 'queue', title: 'Cola de revisiones', href: `/dashboard/${workshopId}/inspections-queue`, icon: RefreshCw },
-  ];
-
+  
   return (
     <div className="bg-white">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -105,25 +98,10 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          {quick.map(({ key, title, href, icon: Icon }) => (
-            <Link key={key} href={href} className="group">
-              <Card className="h-full">
-                <div className="px-4 py-3.5 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-[50px] bg-[#E6ECF8] text-[#0040B8] flex items-center justify-center">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-md ml-2">{title}</h4>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 group-hover:text-[#0040B8] transition-colors" />
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <QuickActions
+          workshopId={workshopId}
+          availableInspections={statistics.workshop.available_inspections}
+        />
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
           <Card className="xl:col-span-2">

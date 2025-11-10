@@ -280,7 +280,6 @@ export default function CompletedApplicationsTable() {
     { label: "CRT" },
     { label: "Vehículo" },
     { label: "Titular" },
-    { label: "Fecha de creación" },
     { label: "Resultado" },
     { label: "2do Resultado" },
     { label: "Acciones" },
@@ -373,10 +372,7 @@ export default function CompletedApplicationsTable() {
                     <div className="text-xs sm:text-sm text-gray-600">{item.owner?.dni || "-"}</div>
                   </td>
 
-                  <td className="p-3 text-center text-sm sm:text-base">
-                    <div>{date}</div>
-                    <div className="text-xs sm:text-sm text-gray-600">{time} hs</div>
-                  </td>
+                  
 
                   {/* 1) Pill con tonos según estado */}
                   <td className="p-3 text-center">

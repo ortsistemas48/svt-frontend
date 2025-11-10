@@ -80,7 +80,6 @@ export default function ContinueApplicationPage() {
 
             
             // Filter applications with 'Condicional' result, matching license plate, and NO result_2 yet
-            console.log(applications);
             const condicionalApps = applications.filter(
                 (app) => 
                     app.result === "Condicional" && 

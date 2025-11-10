@@ -3,14 +3,12 @@ import { useRouter, useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { RefreshCw, CircleFadingPlus } from "lucide-react";
 import Link from "next/link";
-
+import { handleCreateApplication } from "@/utils";
 type WorkshopLite = {
   id: number;
   name?: string;
   available_inspections?: number | null;
 };
-
-const API_BASE = "/api";
 
 export default function SelectApplicationType() {
   const router = useRouter();
@@ -28,7 +26,7 @@ export default function SelectApplicationType() {
         setWsLoading(true);
         setWsError(null);
 
-        const res = await fetch(`${API_BASE}/workshops/${id}`, {
+        const res = await fetch(`/api/workshops/${id}`, {
           credentials: "include",
           cache: "no-store",
         });
@@ -65,36 +63,7 @@ export default function SelectApplicationType() {
     [creating, wsLoading, available]
   );
 
-  const handleCreateApplication = async () => {
-    // doble guard por si alguien intenta forzar el click
-    if (available === 0) {
-      alert("No tenés inspecciones disponibles para iniciar una nueva revisión");
-      return;
-    }
-
-    try {
-      setCreating(true);
-      const res = await fetch(`${API_BASE}/applications/applications`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workshop_id: Number(id) }),
-      });
-
-      const data = await res.json().catch(() => ({} as any));
-      if (!res.ok) {
-        throw new Error(data?.error || "No se pudo crear el trámite");
-      }
-      if (!data.application_id) throw new Error("No se recibió un ID válido");
-
-      router.push(`/dashboard/${id}/applications/create-applications/${data.application_id}`);
-    } catch (error: any) {
-      console.error("Error al crear la aplicación:", error);
-      alert(error?.message || "Hubo un error al crear el trámite, intentá de nuevo");
-    } finally {
-      setCreating(false);
-    }
-  };
+  
 
   const options = [
     {
@@ -106,7 +75,7 @@ export default function SelectApplicationType() {
           ? "Sin inspecciones disponibles, contactá al administrador"
           : "Iniciar una nueva revisión desde cero",
       disabled: newDisabled,
-      handleOnClick: handleCreateApplication,
+      handleOnClick: () => handleCreateApplication(available, id, setCreating, router),
     },
     {
       key: "continue",
