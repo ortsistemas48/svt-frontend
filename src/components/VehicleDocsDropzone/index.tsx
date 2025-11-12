@@ -29,6 +29,7 @@ type Props = {
   resetToken?: number | string;
   onPendingChange?: (items: PendingCarDoc[]) => void;
   onDeleteExisting?: (docId: number) => Promise<void> | void;
+  onDoneCountChange?: (count: number) => void;
 };
 
 const accept = ["image/png", "image/jpeg", "image/webp"];
@@ -64,6 +65,7 @@ export default function VehicleDocsSimpleDrop({
   resetToken,
   onPendingChange,
   onDeleteExisting,
+  onDoneCountChange,
 }: Props) {
   // helpers para inicialización
   const makeEmptyQueue = () =>
@@ -196,6 +198,13 @@ export default function VehicleDocsSimpleDrop({
 
   const doneCount = ALL_TYPES.filter((t) => has(t)).length;
 
+  // Notify parent about doneCount changes
+  useEffect(() => {
+    if (onDoneCountChange) {
+      onDoneCountChange(doneCount);
+    }
+  }, [doneCount, onDoneCountChange]);
+
   const nextMissing = getNextMissing();
   const thisType = activeType;
   const thisReady = has(thisType);
@@ -223,7 +232,7 @@ export default function VehicleDocsSimpleDrop({
           Listos: {doneCount}/6, Formatos: JPG, PNG, WEBP, hasta 20 MB
         </p>
       </div>
-
+  
       <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {GROUPS.map((g) =>
           (["Frente", "Dorso"] as const).map((f) => {

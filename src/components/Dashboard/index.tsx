@@ -74,6 +74,17 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
               <p className="mt-3 text-3xl font-semibold text-[#0040B8]">
                 {statistics.workshop.available_inspections}
               </p>
+              {statistics.workshop.available_inspections === 0 && (
+                <div className="mt-3">
+                  <Link
+                    href={`/dashboard/${workshopId}/payment`}
+                    className="inline-flex items-center gap-1 text-xs text-[#0040B8] hover:underline"
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    Comprá revisiones
+                  </Link>
+                </div>
+              )}
             </div>
           </Card>
 
@@ -88,12 +99,22 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
               >
                 {statistics.sticker_stock.available}
               </p>
-              {statistics.sticker_stock.available <= 250 && (
+              {statistics.sticker_stock.available === 0 ? (
+                <div className="mt-3">
+                  <Link
+                    href={`/dashboard/${workshopId}/stickers/assign-stickers`}
+                    className="inline-flex items-center gap-1 text-xs text-rose-600 hover:underline"
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    Asigná obleas a tu taller
+                  </Link>
+                </div>
+              ) : statistics.sticker_stock.available <= 250 ? (
                 <div className="mt-2 inline-flex items-center gap-2 text-xs text-rose-600">
                   <AlertTriangle className="h-4 w-4" />
                   Stock bajo
                 </div>
-              )}
+              ) : null}
             </div>
           </Card>
         </div>

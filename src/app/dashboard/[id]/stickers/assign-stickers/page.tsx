@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Plus,
   Save,
   Trash2,
   Layers,
   ChevronRight,
+  ChevronLeft,
   SquareStack,
   AlertTriangle,
 } from "lucide-react";
@@ -17,7 +18,7 @@ import clsx from "clsx";
 const API = "/api";
 
 /* ===================== Tipos ===================== */
-type RangeInput = { id: string; lead: string; start: string; end: string; tail: string; };
+type RangeInput = { id: string; lead: string; start: string; end: string; };
 
 type Group = {
   id: string;
@@ -64,7 +65,7 @@ function genRange(r: RangeInput): { list: string[]; error?: string } {
   const items: string[] = [];
   for (let i = start; i <= end; i++) {
     const num = String(i).padStart(width, "0");
-    items.push(`${r.lead || ""}${num}${r.tail || ""}`);
+    items.push(`${r.lead || ""}${num}`);
   }
   return { list: items };
 }
@@ -85,13 +86,11 @@ function flattenUnique<T>(arrs: T[][]): { list: T[]; dups: Set<T> } {
 /* ===================== Componente ===================== */
 export default function AsignarObleasPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const workshopId = Number(params.id);
 
   const [groupName, setGroupName] = useState("");
-  const [ranges, setRanges] = useState<RangeInput[]>([{ id: uid(), lead: "", start: "", end: "", tail: "" }]);
-
-  const [noExpiry, setNoExpiry] = useState(false);
-  const [expirationDate, setExpirationDate] = useState<string>("");
+  const [ranges, setRanges] = useState<RangeInput[]>([{ id: uid(), lead: "", start: "", end: "" }]);
 
   const [groups, setGroups] = useState<Group[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -115,25 +114,21 @@ export default function AsignarObleasPage() {
     return { total: list.length, items: list, dupCount: dups.size, error: anyError };
   }, [ranges]);
 
-  const addRange = () => setRanges((prev) => [...prev, { id: uid(), lead: "", start: "", end: "", tail: "" }]);
+  const addRange = () => setRanges((prev) => [...prev, { id: uid(), lead: "", start: "", end: "" }]);
   const removeRange = (rid: string) => setRanges((prev) => prev.filter((r) => r.id !== rid));
   const updateRange = (rid: string, patch: Partial<RangeInput>) =>
     setRanges((prev) => prev.map((r) => (r.id === rid ? { ...r, ...patch } : r)));
 
   const resetForm = () => {
     setGroupName("");
-    setRanges([{ id: uid(), lead: "", start: "", end: "", tail: "" }]);
-    setNoExpiry(false);
-    setExpirationDate("");
+    setRanges([{ id: uid(), lead: "", start: "", end: "" }]);
   };
 
   const canSave =
     !!workshopId &&
-    groupName.trim().length > 0 &&
     ranges.length > 0 &&
     !preview.error &&
-    preview.total > 0 &&
-    (noExpiry || !!expirationDate);
+    preview.total > 0;
 
   const saveGroup = async () => {
     setErrMsg(null);
@@ -145,9 +140,9 @@ export default function AsignarObleasPage() {
 
       const body = {
         workshop_id: workshopId,
-        name: groupName.trim(),
+        name: groupName.trim() || "",
         stickers: preview.items,
-        expiration_date: noExpiry ? null : expirationDate || null,
+        expiration_date: null,
       };
 
       const res = await fetch(`${API}/stickers/orders`, {
@@ -203,7 +198,6 @@ export default function AsignarObleasPage() {
             Creá packs de obleas, generá las obleas que necesitás y guardalas para usarlas.
           </p>
         </div>
-
         {(errMsg || okMsg) && (
           <div className="mb-4">
             {errMsg && (
@@ -227,8 +221,8 @@ export default function AsignarObleasPage() {
               Nuevo pack de obleas
             </h2>
 
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
+            <div className="mt-4">
+              <div>
                 <label className="block text-sm text-gray-700 mb-1">Nombre del pack (opcional)</label>
                 <input
                   type="text"
@@ -237,29 +231,6 @@ export default function AsignarObleasPage() {
                   placeholder="Ej: Obleas Septiembre 2025"
                   className="w-full rounded-[4px] border border-gray-300 px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
                 />
-              </div>
-
-              <div className="md:col-span-1">
-                <label className="block text-sm text-gray-700 mb-1">Fecha de vencimiento</label>
-                <input
-                  type="date"
-                  value={noExpiry ? "" : expirationDate}
-                  onChange={(e) => setExpirationDate(e.target.value)}
-                  disabled={noExpiry}
-                  className={clsx(
-                    "w-full rounded-[4px] border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent",
-                    noExpiry ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed" : "border-gray-300"
-                  )}
-                />
-                <label className="inline-flex items-center gap-2 text-sm mt-2">
-                  <input
-                    type="checkbox"
-                    checked={noExpiry}
-                    onChange={(e) => setNoExpiry(e.target.checked)}
-                    className="h-4 w-4"
-                  />
-                  Sin vencimiento
-                </label>
               </div>
             </div>
           </div>
@@ -283,8 +254,8 @@ export default function AsignarObleasPage() {
               <div className="mt-4 space-y-3">
                 {ranges.map((r, idx) => (
                   <div key={r.id} className="rounded-[4px] border border-gray-200 p-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                      <div className="sm:col-span-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-1">
                         <label className="block text-xs text-gray-600 mb-1">Prefijo (opcional)</label>
                         <input
                           value={r.lead}
@@ -294,7 +265,7 @@ export default function AsignarObleasPage() {
                         />
                       </div>
 
-                      <div className="sm:col-span-3">
+                      <div className="sm:col-span-1">
                         <label className="block text-xs text-gray-600 mb-1">Desde</label>
                         <input
                           value={r.start}
@@ -307,7 +278,7 @@ export default function AsignarObleasPage() {
                         <p className="mt-1 text-[11px] text-gray-500">Podés usar ceros, por ejemplo 0001</p>
                       </div>
 
-                      <div className="sm:col-span-3">
+                      <div className="sm:col-span-1">
                         <label className="block text-xs text-gray-600 mb-1">Hasta</label>
                         <input
                           value={r.end}
@@ -316,16 +287,6 @@ export default function AsignarObleasPage() {
                           placeholder="0050"
                           inputMode="numeric"
                           pattern="[0-9]*"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-3">
-                        <label className="block text-xs text-gray-600 mb-1">Sufijo (opcional)</label>
-                        <input
-                          value={r.tail}
-                          onChange={(e) => updateRange(r.id, { tail: e.target.value })}
-                          className="w-full rounded-[4px] border border-gray-300 px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
-                          placeholder="-X"
                         />
                       </div>
                     </div>
@@ -409,6 +370,16 @@ export default function AsignarObleasPage() {
             </ul>
           </div>
         )}
+
+        <div className="mt-8 flex justify-start">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Volver
+          </button>
+        </div>
 
         <div className="h-2" />
       </div>

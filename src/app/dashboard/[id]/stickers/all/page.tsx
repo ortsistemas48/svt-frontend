@@ -1,9 +1,12 @@
-import { ChevronRight, TicketPercent } from "lucide-react";
-import Link from "next/link";
+"use client";
+
+import { ChevronRight, ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import AllStickersTable from "@/components/AllStickersTable";
 
 
 export default function BuyObleaPage() {
+  const router = useRouter();
 
   return (
     <div>
@@ -26,6 +29,16 @@ export default function BuyObleaPage() {
         </div>
 
         <AllStickersTable />
+
+        <div className="mt-8 flex justify-start">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Volver
+          </button>
+        </div>
       </div>
     </div>
   );

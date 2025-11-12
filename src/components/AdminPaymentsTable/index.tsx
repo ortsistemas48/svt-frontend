@@ -43,10 +43,10 @@ const STATUS_BADGES: Record<
   PaymentOrder["status"],
   { text: string; bg: string; fg: string }
 > = {
-  PENDING: { text: "Pendiente", bg: "bg-gray-100", fg: "text-gray-700" },
-  IN_REVIEW: { text: "En revisión", bg: "bg-amber-100", fg: "text-amber-800" },
-  APPROVED: { text: "Aprobada", bg: "bg-emerald-100", fg: "text-emerald-800" },
-  REJECTED: { text: "Rechazada", bg: "bg-rose-100", fg: "text-rose-800" },
+  PENDING: { text: "Pendiente de pago", bg: "bg-gray-100", fg: "text-gray-700" },
+  IN_REVIEW: { text: "Pendiente de acreditación", bg: "bg-amber-100", fg: "text-amber-800" },
+  APPROVED: { text: "Aprobado", bg: "bg-emerald-100", fg: "text-emerald-800" },
+  REJECTED: { text: "Rechazado", bg: "bg-rose-100", fg: "text-rose-800" },
 };
 
 export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus }: Props) {
@@ -184,10 +184,10 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
             title="Filtrar por estado"
           >
             <option value="ALL">Todos</option>
-            <option value="PENDING">Pendiente</option>
-            <option value="IN_REVIEW">En revisión</option>
-            <option value="APPROVED">Aprobadas</option>
-            <option value="REJECTED">Rechazadas</option>
+            <option value="PENDING">Pendiente de pago</option>
+            <option value="IN_REVIEW">Pendiente de acreditación</option>
+            <option value="APPROVED">Aprobado</option>
+            <option value="REJECTED">Rechazado</option>
           </select>
 
           <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
@@ -224,12 +224,13 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
         </div>
       </div>
 
-      {/* Tabla (sin columna ID, con nombre de taller) */}
+      {/* Tabla con nombre de taller */}
       <div className="rounded-lg border border-gray-200 overflow-hidden bg-white mt-3">
         <div className="overflow-x-auto">
           <table className="w-full text-sm sm:text-base">
             <thead className="bg-white text-gray-600">
               <tr className="border-b border-gray-200">
+                <th className="p-3 text-center text-xs sm:text-sm font-medium">Orden</th>
                 <th className="p-3 text-center text-xs sm:text-sm font-medium">Taller</th>
                 <th className="p-3 text-center text-xs sm:text-sm font-medium">Cantidad</th>
                 <th className="p-3 text-center text-xs sm:text-sm font-medium">Monto</th>
@@ -248,6 +249,9 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
               ) : (
                 pageItems.map((o) => (
                   <tr key={o.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-3 text-center">
+                      <div className="mx-auto w-fit rounded-md bg-gray-100 px-2 py-1 text-xs font-medium">#{o.id}</div>
+                    </td>
                     <td className="p-3 text-center">{workshopLabel(o)}</td>
                     <td className="p-3 text-center">{o.quantity}</td>
                     <td className="p-3 text-center"><Money v={o.amount} /></td>
@@ -323,7 +327,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
         aria-hidden={!open}
       />
 
-      {/* Drawer detalle (sin ID visible, muestra nombre de taller) */}
+      {/* Drawer detalle con ID y nombre de taller */}
       <aside
         role="dialog"
         aria-modal="true"
@@ -334,7 +338,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
       >
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h2 className="text-base sm:text-lg font-semibold truncate">
-            {selected ? `Orden de pago, ${workshopLabel(selected)}` : "Detalle de orden"}
+            {selected ? `Orden #${selected.id} - ${workshopLabel(selected)}` : "Detalle de orden"}
           </h2>
           <button
             ref={closeBtnRef}
@@ -351,6 +355,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
           {selected ? (
             <div className="space-y-6">
               <div className="-mx-4 divide-y divide-gray-200">
+                <InfoRow label="Orden" value={`#${selected.id}`} />
                 <InfoRow label="Taller" value={workshopLabel(selected)} />
                 <InfoRow label="Estado" value={<Badge s={selected.status} />} />
                 <InfoRow label="Cantidad" value={selected.quantity} />
@@ -378,7 +383,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                 />
               </div>
 
-              {(selected.status === "PENDING" || selected.status === "IN_REVIEW") && (
+              {selected.status === "IN_REVIEW" && (
                 <div className="flex items-center justify-center gap-3">
                   <button
                     type="button"
@@ -403,6 +408,12 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                 </div>
               )}
 
+              {selected.status === "PENDING" && (
+                <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                  Esta orden está pendiente de pago. El taller debe subir el comprobante antes de poder aprobarla.
+                </div>
+              )}
+
               {errorMsg && <p className="text-sm text-rose-700">{errorMsg}</p>}
             </div>
           ) : (
@@ -411,7 +422,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
         </div>
       </aside>
 
-      {/* Modal confirmar (sin mencionar ID) */}
+      {/* Modal confirmar */}
       {confirmOpen && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center"

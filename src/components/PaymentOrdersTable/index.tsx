@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, X, Upload } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import RefreshButton from "@/components/RefreshButton";
+import PaymentDropzone from "@/components/PaymentDropzone";
 import clsx from "clsx";
 
 type PaymentOrder = {
@@ -17,9 +18,11 @@ type PaymentOrder = {
   status: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED";
   created_at?: string | null;
   updated_at?: string | null;
+  receipt_url?: string | null;
+  receipt_uploaded_at?: string | null;
 };
 
-const TABLE_FILTERS = ["Todas", "Pendientes", "En revisión", "Aprobadas", "Rechazadas"] as const;
+const TABLE_FILTERS = ["Todas", "Pendiente de pago", "Pendiente de acreditación", "Aprobado", "Rechazado"] as const;
 
 export default function PaymentOrdersTable() {
   const { id } = useParams(); // workshop id desde la ruta
@@ -37,6 +40,12 @@ export default function PaymentOrdersTable() {
   const [page, setPage] = useState(1);
   const perPage = 8;
 
+  // Estados para subir comprobante
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<PaymentOrder | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
   const headers: TableHeader[] = [
     { label: "Orden" },
     { label: "Creación" },
@@ -45,6 +54,7 @@ export default function PaymentOrdersTable() {
     { label: "Unitario" },
     { label: "Total" },
     { label: "Estado" },
+    { label: "Acciones" },
   ];
 
   const fetchOrders = async () => {
@@ -88,10 +98,10 @@ export default function PaymentOrdersTable() {
     if (statusFilter !== "Todas") {
       const map: Record<(typeof TABLE_FILTERS)[number], PaymentOrder["status"] | null> = {
         Todas: null,
-        Pendientes: "PENDING",
-        "En revisión": "IN_REVIEW",
-        Aprobadas: "APPROVED",
-        Rechazadas: "REJECTED",
+        "Pendiente de pago": "PENDING",
+        "Pendiente de acreditación": "IN_REVIEW",
+        "Aprobado": "APPROVED",
+        "Rechazado": "REJECTED",
       };
       const target = map[statusFilter];
       if (target) list = list.filter((o) => o.status === target);
@@ -118,8 +128,64 @@ export default function PaymentOrdersTable() {
     return "bg-gray-100 text-gray-700";
   };
 
+  const translateStatus = (status: PaymentOrder["status"]) => {
+    const translations: Record<PaymentOrder["status"], string> = {
+      PENDING: "Pendiente de pago",
+      IN_REVIEW: "Pendiente de acreditación",
+      APPROVED: "Aprobado",
+      REJECTED: "Rechazado",
+    };
+    return translations[status] || status;
+  };
+
   const formatARS = (n: number) =>
     n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+
+  const openUploadModal = (order: PaymentOrder) => {
+    setSelectedOrder(order);
+    setPendingFile(null);
+    setShowUploadModal(true);
+  };
+
+  const closeUploadModal = () => {
+    setShowUploadModal(false);
+    setSelectedOrder(null);
+    setPendingFile(null);
+  };
+
+  const handleUploadReceipt = async () => {
+    if (!selectedOrder || !pendingFile) return;
+
+    try {
+      setUploading(true);
+      setErrorMsg(null);
+      setSuccessMsg(null);
+
+      const fd = new FormData();
+      fd.append("file", pendingFile);
+
+      const res = await fetch(`/api/payment_receipts/orders/${selectedOrder.id}/receipt`, {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
+
+      if (!res.ok) {
+        if (res.status === 413) throw new Error("El archivo excede 15MB, subí un comprobante más liviano");
+        if (res.status === 415) throw new Error("Formato inválido. Permitidos: JPG, PNG, WEBP o PDF");
+        const t = await res.text().catch(() => "");
+        throw new Error(t || "No se pudo subir el comprobante");
+      }
+
+      setSuccessMsg("Comprobante subido correctamente. La orden está pendiente de acreditación.");
+      closeUploadModal();
+      fetchOrders(); // Refrescar la tabla
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Error al subir el comprobante");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div>
@@ -241,8 +307,24 @@ export default function PaymentOrdersTable() {
                           toneForStatus(item.status)
                         )}
                       >
-                        {item.status}
+                        {translateStatus(item.status)}
                       </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      {item.status === "PENDING" && !item.receipt_url ? (
+                        <button
+                          onClick={() => openUploadModal(item)}
+                          className="inline-flex items-center gap-1 rounded-[4px] border border-[#0040B8] bg-[#0040B8] px-3 py-1.5 text-xs text-white hover:bg-[#00379f]"
+                        >
+                          Subir comprobante
+                        </button>
+                      ) : item.receipt_url ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                          <span>✓</span> Comprobante subido
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </td>
                   </tr>
                 );
@@ -269,6 +351,9 @@ export default function PaymentOrdersTable() {
                   </td>
                   <td className="p-3 text-center">
                     <Sk className="mx-auto h-5 w-20 rounded-full" />
+                  </td>
+                  <td className="p-3 text-center">
+                    <Sk className="mx-auto h-6 w-24 rounded" />
                   </td>
                 </tr>
               )}
@@ -303,6 +388,65 @@ export default function PaymentOrdersTable() {
           </div>
         )}
       </div>
+
+      {/* Modal para subir comprobante */}
+      {showUploadModal && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-xs sm:max-w-lg max-h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl my-4 flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b p-3 sm:p-4 flex-shrink-0">
+              <h3 className="text-base sm:text-lg font-semibold">
+                Subir comprobante - Orden #{selectedOrder.id}
+              </h3>
+              <button
+                className="rounded-full border p-1 hover:bg-gray-50"
+                onClick={closeUploadModal}
+                aria-label="Cerrar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-3 sm:p-5 overflow-y-auto flex-1">
+              <section className="rounded-[4px] border bg-white/60 p-3 sm:p-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                  Seleccioná el comprobante de pago
+                </h4>
+                <PaymentDropzone
+                  onPendingChange={(files) => setPendingFile(files[0] || null)}
+                  title="Comprobante, imagen o PDF"
+                />
+              </section>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 sm:gap-3 border-t bg-white p-3 sm:p-4 flex-shrink-0">
+              <button
+                onClick={closeUploadModal}
+                disabled={uploading}
+                className="rounded-[4px] border px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                type="button"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUploadReceipt}
+                disabled={uploading || !pendingFile}
+                className={clsx(
+                  "rounded-[4px] px-3 sm:px-4 py-2 text-xs sm:text-sm text-white",
+                  uploading || !pendingFile
+                    ? "bg-[#0040B8]/60 cursor-not-allowed"
+                    : "bg-[#0040B8] hover:bg-[#00379f]"
+                )}
+                type="button"
+              >
+                {uploading ? "Subiendo..." : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Estilos globales para que la tabla quede limpia */}
       <style jsx global>{`

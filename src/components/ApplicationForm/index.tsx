@@ -60,6 +60,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   }, [applicationId]);
 
   const [pendingCarDocs, setPendingCarDocs] = useState<PendingCarDoc[]>([]);
+  const [vehicleDocsCount, setVehicleDocsCount] = useState(0);
 
   const onDeleteCarDoc = useCallback(async (docId: number) => {
     await deleteDocument(docId);
@@ -524,6 +525,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             onPendingCarDocsChange={setPendingCarDocs}
             existingCarDocs={existingDocsByRole.car as any}
             onDeleteCarDoc={onDeleteCarDoc}
+            onVehicleDocsCountChange={setVehicleDocsCount}
           />
         );
       case 4:
@@ -585,7 +587,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         {step !== 4 && !isIdle && (
           <button
             onClick={handleNext}
-            disabled={loading || hasBlockingErrors}
+            disabled={loading || hasBlockingErrors || (step === 3 && vehicleDocsCount < 6)}
             className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5 disabled:opacity-60"
           >
             {loading ? "Guardando..." : "Continuar"}

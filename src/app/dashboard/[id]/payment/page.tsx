@@ -140,31 +140,30 @@ export default function PaymentPage() {
     const onConfirmPayment = async () => {
     if (!ws) return;
 
-    // obligatorio: al menos un archivo
-    if (pendingFiles.length === 0) {
-        setProofError("Subí el comprobante para continuar");
-        return;
-    }
-
     try {
         setSubmitting(true);
         setErrorMsg(null);
         setOkMsg(null);
         setProofError(null);
 
-        // 1) crear orden pendiente
+        // Determinar el status según si hay archivo o no
+        const hasReceipt = pendingFiles.length > 0;
+        const orderStatus = hasReceipt ? "IN_REVIEW" : "PENDING";
+
+        // 1) crear orden
         const body = {
         workshop_id: ws.id,
         quantity: qty,
         zone,
         unit_price: unit,
         amount: total,
+        status: orderStatus,
         };
         const res = await fetch(`${API}/payments/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(body),
+        body: JSON.stringify(body), 
         });
         if (!res.ok) {
         const e = await res.json().catch(() => ({}));
@@ -172,23 +171,29 @@ export default function PaymentPage() {
         }
         const { order } = await res.json();
 
+        // 2) Si hay comprobante, subirlo
+        if (hasReceipt) {
         const fd = new FormData();
         fd.append("file", pendingFiles[0]);
 
         const up = await fetch(`${API}/payment_receipts/orders/${order.id}/receipt`, {
-        method: "POST",
-        credentials: "include",
-        body: fd,
+            method: "POST",
+            credentials: "include",
+            body: fd,
         });
 
         if (!up.ok) {
-        if (up.status === 413) throw new Error("El archivo excede 15MB, subí un comprobante más liviano");
-        if (up.status === 415) throw new Error("Formato inválido. Permitidos: JPG, PNG, WEBP o PDF");
-        const t = await up.text().catch(() => "");
-        throw new Error(t || "No se pudo subir el comprobante");
+            if (up.status === 413) throw new Error("El archivo excede 15MB, subí un comprobante más liviano");
+            if (up.status === 415) throw new Error("Formato inválido. Permitidos: JPG, PNG, WEBP o PDF");
+            const t = await up.text().catch(() => "");
+            throw new Error(t || "No se pudo subir el comprobante");
         }
 
-        setOkMsg("Orden generada y comprobante subido, la estamos revisando");
+        setOkMsg("La orden está pendiente a su acreditación");
+        } else {
+        setOkMsg("Orden guardada. Recordá subir el comprobante para acreditar el pago");
+        }
+
         setPendingFiles([]);
         setShowModal(false);
     } catch (e: any) {
@@ -350,6 +355,12 @@ export default function PaymentPage() {
 
         {/* Tabla de órdenes */}
         <div className="mt-10">
+          <div className="mb-6">
+            <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">Pack de revisiones</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              Acá aparecen los pack de revisiones adquiridos por tu taller
+            </p>
+          </div>
           <PaymentOrdersTable />
         </div>
 
@@ -376,7 +387,7 @@ export default function PaymentPage() {
 
                 {/* Paso 2, datos bancarios copiable */}
                 <section className="rounded-[4px] border bg-gradient-to-b from-[#F8FAFF] to-white p-3 sm:p-4">
-                  <h4 className="text-sm font-semibold text-gray-900">2- Datos para transferencia</h4>
+                  <h4 className="text-sm font-semibold text-gray-900">2- Datos la para transferencia</h4>
                   <ul className="mt-3 space-y-2 text-xs sm:text-sm text-gray-800">
                     <CopyRow label="Titular" value="CheckRTO S.A." onCopy={copy} copiedKey={copied} k="titular" />
                     <CopyRow label="CUIT" value="00-00000000-0" onCopy={copy} copiedKey={copied} k="cuit" />
@@ -392,7 +403,7 @@ export default function PaymentPage() {
                 "rounded-[4px] border bg-white/60 p-3 sm:p-4",
                 proofError ? "border-rose-300" : "border-gray-200" 
                 )}>
-                <h4 className="text-sm font-semibold text-gray-900">3- Subí el comprobante <span className="text-rose-600">*</span></h4>
+                <h4 className="text-sm font-semibold text-gray-900">3- Subí el comprobante <span className="text-gray-500">(opcional)</span></h4>
                 <div className="mt-2">
                     <PaymentDropzone onPendingChange={(files) => {
                     setPendingFiles(files);
@@ -415,17 +426,16 @@ export default function PaymentPage() {
                 </button>
                 <button
                     onClick={onConfirmPayment}
-                    disabled={submitting || pendingFiles.length === 0}
+                    disabled={submitting}
                     className={clsx(
                     "rounded-[4px] px-3 sm:px-4 py-2 text-xs sm:text-sm text-white",
-                    submitting || pendingFiles.length === 0
+                    submitting
                         ? "bg-[#0040B8]/60 cursor-not-allowed"
                         : "bg-[#0040B8] hover:bg-[#00379f]"
                     )}
                     type="button"
-                    title={pendingFiles.length === 0 ? "Subí el comprobante para continuar" : undefined}
                 >
-                    {submitting ? "Enviando..." : "Enviar"}
+                    {submitting ? "Guardando..." : "Guardar"}
                 </button>
                 </div>
             </div>

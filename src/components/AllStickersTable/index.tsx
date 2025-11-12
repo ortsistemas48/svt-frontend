@@ -97,7 +97,6 @@ export default function StickerOrdersTable() {
     { label: "Número" },
     { label: "Estado" },
     { label: "Emitida" },
-    { label: "Vencimiento" },
     { label: "Patente" },
     { label: "Acciones" },
   ];
@@ -318,9 +317,6 @@ export default function StickerOrdersTable() {
                     <td className="p-3 text-center">
                       <div className="text-sm sm:text-base">{fmtDate(item.issued_at)}</div>
                     </td>
-                    <td className="p-3 text-center">
-                      <div className="text-sm sm:text-base">{fmtDate(item.expiration_date)}</div>
-                    </td>
 
 {/* 
                     <td className="p-3 text-center">
@@ -364,8 +360,6 @@ export default function StickerOrdersTable() {
                   <td className="p-3 text-center"><Sk className="mx-auto h-4 w-28" /></td>
                   <td className="p-3 text-center"><Sk className="mx-auto h-4 w-20" /></td>
                   <td className="p-3 text-center"><Sk className="mx-auto h-4 w-24" /></td>
-                  <td className="p-3 text-center"><Sk className="mx-auto h-4 w-24" /></td>
-                  <td className="p-3 text-center"><Sk className="mx-auto h-4 w-28" /></td>
                   <td className="p-3 text-center"><Sk className="mx-auto h-4 w-16" /></td>
                   <td className="p-3 text-center">
                     <div className="flex items-center justify-center">

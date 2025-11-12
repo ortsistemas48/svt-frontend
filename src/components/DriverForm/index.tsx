@@ -242,7 +242,6 @@ export default function DriverForm({
         },
         onModeChange: (m) => {
           // opcional: podrías setear descripciones dinámicas aquí si lo necesitás
-          // console.log("OwnerForm mode:", m);
         },
       }}
       // Si quisieras que, sin búsqueda, arranque en edit:

@@ -29,6 +29,7 @@ interface VehicleFormProps {
   onPendingCarDocsChange?: (files: PendingCarDoc[]) => void;
   existingCarDocs?: CarExistingDoc[];
   onDeleteCarDoc?: (docId: number) => Promise<void> | void;
+  onVehicleDocsCountChange?: (count: number) => void;
 }
 
 const toDateInputValue = (v: any): string => {
@@ -227,6 +228,7 @@ export default function VehicleForm({
   onPendingCarDocsChange,
   existingCarDocs = [],
   onDeleteCarDoc,
+  onVehicleDocsCountChange,
 }: VehicleFormProps) {
   const { setIsIdle, errors, setErrors } = useApplication() as any;
 
@@ -682,6 +684,7 @@ export default function VehicleForm({
             existing={existingCarDocs as CarExistingDoc[]}
             onDeleteExisting={onDeleteCarDoc}
             onPendingChange={(items: PendingCarDoc[]) => onPendingCarDocsChange?.(items as any)}
+            onDoneCountChange={onVehicleDocsCountChange}
             resetToken={car?.license_plate}
           />
       </div>

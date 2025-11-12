@@ -82,7 +82,6 @@ export default function CreateOrAttachUserPage() {
         setLoading(false);
         // Generate password for new user when no email
         const p = genPassword();
-        console.log("Generated password for no email:", p, "Length:", p.length);
         setPassword(p);
         setConfirm(p);
         return;
@@ -114,7 +113,6 @@ export default function CreateOrAttachUserPage() {
             resetFormExceptEmail();
             // Generate password for new user after reset
             const p = genPassword();
-            console.log("Generated password after reset:", p, "Length:", p.length);
             setPassword(p);
             setConfirm(p);
           }
@@ -123,7 +121,6 @@ export default function CreateOrAttachUserPage() {
           resetFormExceptEmail();
           // Generate password for new user after reset
           const p = genPassword();
-          console.log("Generated password after error reset:", p, "Length:", p.length);
           setPassword(p);
           setConfirm(p);
         }
@@ -140,7 +137,6 @@ export default function CreateOrAttachUserPage() {
   useEffect(() => {
     if (!isExisting && !loading) {
       const p = genPassword();
-      console.log("Generated password:", p, "Length:", p.length);
       setPassword(p);
       setConfirm(p);
     }
@@ -202,13 +198,10 @@ export default function CreateOrAttachUserPage() {
         // reforzar autogeneración por si alguien reentró
         if (!password || !confirm) {
           const p = genPassword();
-          console.log("Regenerating password in submit:", p, "Length:", p.length);
           setPassword(p);
           setConfirm(p);
         }
-        console.log("Password validation - password:", password, "length:", (password || "").length);
         if ((password || "").length < 8) {
-          console.log("La contraseña generada es inválida", password);
           setMsg({ type: "error", text: "La contraseña generada es inválida" });
           return;
         }
