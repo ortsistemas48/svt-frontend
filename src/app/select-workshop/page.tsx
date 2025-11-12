@@ -88,7 +88,7 @@ export default function SelectWorkshopPage() {
         </div>
 
         {/* Scrollable Workshops List */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-10">
           <section className="flex flex-col gap-3">
             {workshops.length > 0 ? (
               workshops.map((w) => (

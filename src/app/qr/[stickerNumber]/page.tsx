@@ -199,7 +199,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
           {/* Leyenda legal */}
           <div className="max-w-4xl mx-auto rounded-2xl border border-[#d3d3d3] bg-white p-6 text-center">
             <p className="text-sm text-zinc-700 leading-relaxed">
-              Este certificado y su oblea asociada han sido emitidos a través de CheckRTO S.A, sistema integral de gestión validado conforme a lo establecido por la Ley Nacional de Tránsito N° 24.449 y su Decreto Reglamentario N° 779/95, contando con la autorización otorgada por la autoridad competente para la asignación de obleas oficiales, lo que garantiza su plena validez legal y autenticidad.
+            Por la presente quien suscribe, deja constancia en carácter de declaración jurada que los CNI correspondientes a la presente planchuela, han sido utilizados para la prestación del servicio de RTO a Vehículos de Jurisdicción local en TRT registrado en la ANSV, procediendo en esta instancia, a la correspondiente rendición para la auditoría periódica y permanente del organismo correspondiente.
             </p>
           </div>
         </div>

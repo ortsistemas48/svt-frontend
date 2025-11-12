@@ -58,14 +58,14 @@ export default function StickerOrdersTable() {
       );
       if (!res.ok) {
         const t = await res.text().catch(() => "");
-        throw new Error(t || "No se pudieron traer los grupos de obleas");
+        throw new Error(t || "No se pudieron traer los packs de obleas");
       }
       const data: StickerOrder[] = await res.json();
       setOrders(Array.isArray(data) ? data : []);
     } catch (err: any) {
       console.error(err);
       setOrders([]);
-      setErrorMsg(err?.message || "Error al cargar grupos de obleas");
+      setErrorMsg(err?.message || "Error al cargar packs de obleas");
     } finally {
       setLoading(false);
     }
@@ -131,12 +131,12 @@ export default function StickerOrdersTable() {
     <div>
       {/* Mensajes */}
       {errorMsg && (
-        <div className="mb-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-3 rounded-[4px] border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
           {errorMsg}
         </div>
       )}
       {successMsg && (
-        <div className="mb-3 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+        <div className="mb-3 rounded-[4px] border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
           {successMsg}
         </div>
       )}
@@ -148,8 +148,8 @@ export default function StickerOrdersTable() {
             disabled={loading}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
-            placeholder="Buscar grupos de obleas por nombre"
+            className="flex-1 rounded-[4px] border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
+            placeholder="Buscar packs de obleas por nombre"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 setSearchQuery(q);
@@ -163,7 +163,7 @@ export default function StickerOrdersTable() {
               setSearchQuery(q);
               setPage(1);
             }}
-            className="flex items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+            className="flex items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
           >
             <Search size={16} />
             <span className="hidden sm:inline">Buscar</span>
@@ -174,7 +174,7 @@ export default function StickerOrdersTable() {
               setShowFilters(!showFilters);
               setPage(1);
             }}
-            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
           >
             <SlidersHorizontal size={16} className="text-white" />
             <span className="hidden sm:inline text-white">Filtrar</span>
@@ -217,7 +217,7 @@ export default function StickerOrdersTable() {
               headers={headers}
               items={pageItems}
               isLoading={loading}
-              emptyMessage="No hay grupos de obleas para mostrar"
+              emptyMessage="No hay packs de obleas para mostrar"
               rowsPerSkeleton={perPage}
               renderRow={(item) => {
                 const created = item.created_at ? new Date(item.created_at) : null;
@@ -289,7 +289,7 @@ export default function StickerOrdersTable() {
         {total > perPage && (
           <div className="flex items-center gap-2">
             <button
-              className="rounded-md border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
@@ -300,7 +300,7 @@ export default function StickerOrdersTable() {
               Página {page} de {totalPages}
             </span>
             <button
-              className="rounded-md border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
             >

@@ -74,7 +74,7 @@ export default function RegisterOwnerForm() {
             className="mx-auto"
           />
 
-          <h1 className="text-center text-lg text-black font-medium">¡Crea tu cuenta en AutoCheck!</h1>
+          <h1 className="text-center text-lg text-black font-medium">¡Crea tu cuenta en CheckRTO!</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-6 sm:mt-8">

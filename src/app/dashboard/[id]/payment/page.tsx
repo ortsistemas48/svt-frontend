@@ -45,9 +45,9 @@ const ZONE_BY_PROVINCE: Record<string, "SUR" | "CENTRO" | "NORTE"> = {
 };
 
 const UNIT_PRICE: Record<"SUR" | "CENTRO" | "NORTE", number> = {
-  SUR: 4000,
-  CENTRO: 3000,
-  NORTE: 2500,
+  SUR: 3500,
+  CENTRO: 2500,
+  NORTE: 2000,
 };
 
 function formatARS(n: number) {
@@ -69,10 +69,6 @@ export default function PaymentPage() {
   const [qtyInput, setQtyInput] = useState(String(qty));
   const minQty = 250;
   const maxQty = 20000;
-  const progress = useMemo(() => {
-    const pct = ((qty - minQty) / (maxQty - minQty)) * 100;
-    return Math.max(0, Math.min(100, Math.round(pct)));
-  }, [qty]);
   useEffect(() => {
     setQtyInput(String(qty));
   }, [qty]);
@@ -187,7 +183,7 @@ export default function PaymentPage() {
 
         if (!up.ok) {
         if (up.status === 413) throw new Error("El archivo excede 15MB, subí un comprobante más liviano");
-        if (up.status === 415) throw new Error("Formato inválido, permitidos, JPG, PNG, WEBP o PDF");
+        if (up.status === 415) throw new Error("Formato inválido. Permitidos: JPG, PNG, WEBP o PDF");
         const t = await up.text().catch(() => "");
         throw new Error(t || "No se pudo subir el comprobante");
         }
@@ -210,14 +206,14 @@ export default function PaymentPage() {
           <div className="flex items-center gap-1">
             <span className="text-gray-600">Inicio</span>
             <ChevronRight size={16} className="sm:w-5 sm:h-5" />
-            <span className="text-[#0040B8] font-medium">Pagos</span>
+            <span className="text-[#0040B8] font-medium">Compra de revisiones</span>
           </div>
         </article>
 
         {/* Hero minimal */}
         <div className="text-center mb-8 sm:mb-10">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl text-[#0040B8] mb-2 sm:mb-3">
-            Pagos del taller
+            Compra de pack de revisiones
           </h2>
           <p className="text-sm sm:text-base text-gray-500 max-w-2xl mx-auto leading-relaxed">
             Elegí la cantidad de revisiones, y realiza una transferencia para habilitar tu cupo.
@@ -273,57 +269,17 @@ export default function PaymentPage() {
 
               {/* NUEVO, stock disponible */}
             </div>
-            {/* Contenido centrado, slider grueso y resumen alineado */}
+            {/* Contenido centrado, ingreso único por input y resumen alineado */}
             <div className="p-6">
-              {/* Slider centrado */}
+              {/* Ingreso único */}
               <div className="mx-auto max-w-3xl rounded-2xl border border-gray-200 bg-white/60 p-6">
                 <label htmlFor="qty" className="mb-3 block text-center text-sm text-gray-700">
                   Cantidad de revisiones
                 </label>
 
-                <div className="mx-auto grid w-full grid-cols-[auto_1fr_auto] items-center gap-4">
-                  <button
-                    className="h-10 rounded-[4px] border px-3 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={() => setQty((q) => Math.max(minQty, q - 1))}
-                    aria-label="Restar"
-                  >
-                    −1
-                  </button>
-
+                <div className="mt-2 flex items-center justify-center gap-3">
                   <input
                     id="qty"
-                    type="range"
-                    min={minQty}
-                    max={maxQty}
-                    /* sin step => por default es 1 */
-                    value={qty}
-                    onChange={(e) => setQty(parseInt(e.target.value || "0", 10))}
-                    className="range-modern w-full"
-                    style={{
-                      background: `linear-gradient(90deg, #0040B8 ${progress}%, #e5e7eb ${progress}%)`,
-                    }}
-                  />
-
-                  <button
-                    className="h-10 rounded-[4px] border px-3 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={() => setQty((q) => Math.min(maxQty, q + 1))}
-                    aria-label="Sumar"
-                  >
-                    +1
-                  </button>
-                </div>
-
-                <div className="mt-4 grid grid-cols-3 items-center text-xs text-gray-600">
-                  <span>{minQty}</span>
-                  <div className="text-center">
-                    Selección actual: <span className="font-semibold text-gray-900">{qty}</span>
-                  </div>
-                  <span className="text-right">{maxQty.toLocaleString("es-AR")}</span>
-                </div>
-
-                {/* input numérico para accesibilidad */}
-                <div className="mt-4 flex items-center justify-center gap-3">
-                  <input
                     type="number"
                     min={minQty}
                     max={maxQty}
@@ -415,18 +371,18 @@ export default function PaymentPage() {
                 <section className="rounded-[4px] border bg-white/60 p-3 sm:p-4">
                   <h4 className="text-sm font-semibold text-gray-900">1- Monto a transferir</h4>
                   <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#0040B8]">{formatARS(total)}</p>
-                  <p className="mt-1 text-xs sm:text-sm text-gray-600 break-words">Concepto: Revisiones - {qty} - {zone}</p>
+                  <p className="mt-1 text-xs sm:text-sm text-gray-600 break-words">Concepto: {qty} revisiones - {zone}</p>
                 </section>
 
                 {/* Paso 2, datos bancarios copiable */}
                 <section className="rounded-[4px] border bg-gradient-to-b from-[#F8FAFF] to-white p-3 sm:p-4">
                   <h4 className="text-sm font-semibold text-gray-900">2- Datos para transferencia</h4>
                   <ul className="mt-3 space-y-2 text-xs sm:text-sm text-gray-800">
-                    <CopyRow label="Titular" value="Talleres SRL" onCopy={copy} copiedKey={copied} k="titular" />
-                    <CopyRow label="CUIT" value="30-00000000-0" onCopy={copy} copiedKey={copied} k="cuit" />
+                    <CopyRow label="Titular" value="CheckRTO S.A." onCopy={copy} copiedKey={copied} k="titular" />
+                    <CopyRow label="CUIT" value="00-00000000-0" onCopy={copy} copiedKey={copied} k="cuit" />
                     <CopyRow label="Banco" value="Banco Demo" onCopy={copy} copiedKey={copied} k="banco" />
                     <CopyRow label="CBU" value="0000000000000000000000" onCopy={copy} copiedKey={copied} k="cbu" />
-                    <CopyRow label="Alias" value="talleres.demo.ar" onCopy={copy} copiedKey={copied} k="alias" />
+                    <CopyRow label="Alias" value="demo.ar" onCopy={copy} copiedKey={copied} k="alias" />
                   </ul>
                   <p className="mt-2 text-xs text-gray-500">Copiá los datos y realizá la transferencia</p>
                 </section>
@@ -434,7 +390,7 @@ export default function PaymentPage() {
                 {/* Paso 3, comprobante */}
                 <section className={clsx(
                 "rounded-[4px] border bg-white/60 p-3 sm:p-4",
-                proofError ? "border-rose-300" : "border-gray-200" // <--- resalta si falta
+                proofError ? "border-rose-300" : "border-gray-200" 
                 )}>
                 <h4 className="text-sm font-semibold text-gray-900">3- Subí el comprobante <span className="text-rose-600">*</span></h4>
                 <div className="mt-2">
@@ -449,7 +405,6 @@ export default function PaymentPage() {
                 </section>
               </div>
 
-                {/* Footer del modal */}
                 <div className="flex items-center justify-end gap-2 sm:gap-3 border-t bg-white p-3 sm:p-4 flex-shrink-0">
                 <button
                     onClick={closeModal}
@@ -478,51 +433,11 @@ export default function PaymentPage() {
         )}
       </div>
 
-      {/* estilos del slider moderno */}
-      <style jsx global>{`
-        .range-modern {
-            -webkit-appearance: none;
-            appearance: none;
-            height: 12px;
-            border-radius: 9999px;
-            outline: none;
-        }
-        .range-modern::-webkit-slider-runnable-track {
-            height: 12px;
-            border-radius: 9999px;
-            background: transparent; /* el background lo damos inline con el gradient */
-        }
-        .range-modern::-moz-range-track {
-            height: 12px;
-            border-radius: 9999px;
-            background: transparent;
-        }
-        .range-modern::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 28px;
-            height: 28px;
-            border-radius: 9999px;
-            background: white;
-            border: 3px solid #0040b8;
-            box-shadow: 0 2px 8px rgba(0,0,0,.12);
-            margin-top: -8px; /* centra el thumb en el track de 12px */
-        }
-        .range-modern::-moz-range-thumb {
-            width: 28px;
-            height: 28px;
-            border-radius: 9999px;
-            background: white;
-            border: 3px solid #0040b8;
-            box-shadow: 0 2px 8px rgba(0,0,0,.12);
-        }
-        `}</style>
 
     </div>
   );
 }
 
-/* resumen mini card */
 function SummaryItem({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div
@@ -537,7 +452,6 @@ function SummaryItem({ label, value, highlight = false }: { label: string; value
   );
 }
 
-/* fila copiable compacta */
 function CopyRow({
   label,
   value,
