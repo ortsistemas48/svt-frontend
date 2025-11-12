@@ -39,7 +39,7 @@ export default function SideBarMenu({ userType, loading }: Props) {
 
     { href: `/admin-dashboard/payments`, icon: Banknote, label: "Aprobar Pagos" },
     { href: `/admin-dashboard/approve-workshops`, icon: UserCheck, label: "Aprobar Talleres" },
-    { href: `/admin-dashboard/inspection-validity`, icon: ListChecks, label: "Validez CRT" },
+    { href: `/admin-dashboard/inspection-validity`, icon: ListChecks, label: "Validar Jurisdicciones" },
     { href: `/admin-dashboard/support`, icon: ShieldUser, label: "Soporte" },
   ];
 

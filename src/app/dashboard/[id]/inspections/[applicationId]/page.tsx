@@ -173,6 +173,29 @@ async function fetchDetails(inspectionId: number) {
   };
 }
 
+async function fetchInspectionDocuments(inspectionId: number) {
+  const base = await getBaseURL();
+  const headersObj = await getCookieHeader();
+
+  const res = await fetch(
+    `${base}/api/inspections/inspections/${inspectionId}/documents?role=global`,
+    {
+      headers: {
+        ...headersObj,
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    // No bloquear la carga si falla esta parte; devolver vacío
+    return [] as any[];
+  }
+
+  const data = await res.json();
+  return (Array.isArray(data) ? data : []) as any[];
+}
+
 export default async function InspectionPage({
   params,
 }: {
@@ -193,9 +216,10 @@ export default async function InspectionPage({
   const inspectionData = await ensureInspection(appId);
   const inspectionId = inspectionData.inspection_id;
 
-  const [steps, detailsResp] = await Promise.all([
+  const [steps, detailsResp, inspDocs] = await Promise.all([
     fetchSteps(appId),
     fetchDetails(inspectionId),
+    fetchInspectionDocuments(inspectionId),
   ]);
 
   const {
@@ -274,6 +298,8 @@ export default async function InspectionPage({
         initialGlobalObs={isSecondInspection ? "" : globalObs}
         userType={userType}
         isSecondInspection={isSecondInspection}
+        initialInspDocs={inspDocs}
+        initialIsCompleted={applicationData.status === "Completado"}
       />
     
     </div>

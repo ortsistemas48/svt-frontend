@@ -45,7 +45,9 @@ export default function InspectionStepsClient({
   apiBase,
   initialGlobalObs,
   userType,
-  isSecondInspection
+  isSecondInspection,
+  initialInspDocs,
+  initialIsCompleted
 }: {
   inspectionId: number;
   appId: number;
@@ -55,11 +57,13 @@ export default function InspectionStepsClient({
   initialGlobalObs?: string;
   userType: string;
   isSecondInspection?: boolean;
+  initialInspDocs?: InspDoc[];
+  initialIsCompleted?: boolean;
 }) {
   const { id } = useParams();
   const router = useRouter();
 
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(Boolean(initialIsCompleted));
   const [statusByStep, setStatusByStep] = useState<Record<number, Status | undefined>>(
     initialStatuses || {}
   );
@@ -82,11 +86,14 @@ export default function InspectionStepsClient({
   const [leaves, setLeaves] = useState<ObservationLeaf[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
-  const [inspDocs, setInspDocs] = useState<InspDoc[]>([]);
-  const [pendingInspFiles, setPendingInspFiles] = useState<File[]>([]);
+  const [inspDocsTech, setInspDocsTech] = useState<InspDoc[]>([]);
+  const [inspDocsPhotos, setInspDocsPhotos] = useState<InspDoc[]>([]);
+  const [pendingTechFiles, setPendingTechFiles] = useState<File[]>([]);
+  const [pendingPhotoFiles, setPendingPhotoFiles] = useState<File[]>([]);
   const [inspDocsLoading, setInspDocsLoading] = useState(false);
   const [inspDocsDeletingId, setInspDocsDeletingId] = useState<number | null>(null);
-  const [dzResetToken, setDzResetToken] = useState(0);
+  const [dzResetTokenTech, setDzResetTokenTech] = useState(0);
+  const [dzResetTokenPhotos, setDzResetTokenPhotos] = useState(0);
 
   const MAX_CHARS = 750;
   const obsCharCount = globalText.length;
@@ -115,33 +122,29 @@ export default function InspectionStepsClient({
     [steps, statusByStep]
   );
 
-  useEffect(() => {
-    if (!apiBase) return;
-    (async () => {
-      try {
-        const res = await fetch(`${apiBase}/applications/get-applications/${appId}`, {
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.status === "Completado") setIsCompleted(true);
-        }
-      } catch { }
-    })();
-  }, [apiBase, appId]);
+  // Estado de completado provisto desde el servidor para evitar un fetch extra al montar
 
-  const fetchInspectionDocuments = async () => {
+  const fetchInspectionDocumentsByType = async (typeKey: "technical_report" | "vehicle_photo") => {
+    if (!apiBase) return;
+    const url = `${apiBase}/inspections/inspections/${inspectionId}/documents?role=global&type=${typeKey}`;
+    const res = await fetch(url, { credentials: "include" });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      throw new Error(j?.error || "No se pudieron cargar los documentos");
+    }
+    const data: InspDoc[] = await res.json();
+    if (typeKey === "technical_report") setInspDocsTech(data);
+    if (typeKey === "vehicle_photo") setInspDocsPhotos(data);
+  };
+
+  const fetchBothTypes = async () => {
     if (!apiBase) return;
     try {
       setInspDocsLoading(true);
-      const url = `${apiBase}/inspections/inspections/${inspectionId}/documents?role=global`;
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j?.error || "No se pudieron cargar los documentos");
-      }
-      const data: InspDoc[] = await res.json();
-      setInspDocs(data);
+      await Promise.all([
+        fetchInspectionDocumentsByType("technical_report"),
+        fetchInspectionDocumentsByType("vehicle_photo"),
+      ]);
     } catch (e: any) {
       setError(e.message || "Error cargando documentos");
     } finally {
@@ -151,13 +154,14 @@ export default function InspectionStepsClient({
 
   useEffect(() => {
     if (!apiBase) return;
-    fetchInspectionDocuments();
+    fetchBothTypes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiBase, inspectionId]);
 
-  const onPendingInspectionDocsChange = (files: File[]) => setPendingInspFiles(files);
+  const onPendingTechChange = (files: File[]) => setPendingTechFiles(files);
+  const onPendingPhotosChange = (files: File[]) => setPendingPhotoFiles(files);
 
-  const deleteInspectionDocument = async (docId: number) => {
+  const deleteInspectionDocument = async (typeKey: "technical_report" | "vehicle_photo", docId: number) => {
     if (!apiBase) {
       setError("Falta configurar NEXT_PUBLIC_API_URL");
       return;
@@ -173,7 +177,7 @@ export default function InspectionStepsClient({
         const j = await res.json().catch(() => ({}));
         throw new Error(j?.error || "No se pudo borrar el documento");
       }
-      await fetchInspectionDocuments();
+      await fetchInspectionDocumentsByType(typeKey);
     } catch (e: any) {
       setError(e.message || "Error borrando documento");
     } finally {
@@ -345,10 +349,11 @@ export default function InspectionStepsClient({
     setError(null);
 
     try {
-      if (pendingInspFiles.length > 0) {
+      if (pendingTechFiles.length > 0) {
         const form = new FormData();
-        pendingInspFiles.forEach((f) => form.append("files", f));
+        pendingTechFiles.forEach((f) => form.append("files", f));
         form.append("role", "global");
+        form.append("type", "technical_report");
         const uploadRes = await fetch(
           `${apiBase}/inspections/inspections/${inspectionId}/documents`,
           {
@@ -359,10 +364,31 @@ export default function InspectionStepsClient({
         );
         const upData = await uploadRes.json().catch(() => ({}));
         if (!uploadRes.ok) {
-          throw new Error(upData?.error || "No se pudieron subir los archivos");
+          throw new Error(upData?.error || "No se pudieron subir los archivos de informes técnicos");
         }
-        setPendingInspFiles([]);
-        await fetchInspectionDocuments();
+        setPendingTechFiles([]);
+        await fetchInspectionDocumentsByType("technical_report");
+      }
+
+      if (pendingPhotoFiles.length > 0) {
+        const form = new FormData();
+        pendingPhotoFiles.forEach((f) => form.append("files", f));
+        form.append("role", "global");
+        form.append("type", "vehicle_photo");
+        const uploadRes = await fetch(
+          `${apiBase}/inspections/inspections/${inspectionId}/documents`,
+          {
+            method: "POST",
+            credentials: "include",
+            body: form,
+          }
+        );
+        const upData = await uploadRes.json().catch(() => ({}));
+        if (!uploadRes.ok) {
+          throw new Error(upData?.error || "No se pudieron subir las fotos del vehículo");
+        }
+        setPendingPhotoFiles([]);
+        await fetchInspectionDocumentsByType("vehicle_photo");
       }
 
       const items = steps
@@ -400,7 +426,8 @@ export default function InspectionStepsClient({
       }
 
       setMsg("Revisión guardada");
-      setDzResetToken((t) => t + 1);
+      setDzResetTokenTech((t) => t + 1);
+      setDzResetTokenPhotos((t) => t + 1);
       setTimeout(() => setMsg(null), 1500);
       return true;
     } catch (e: any) {
@@ -719,22 +746,37 @@ export default function InspectionStepsClient({
       
       <section className="rounded-[10px] border border-zinc-200 bg-white p-4 w-full mt-6">
         <div className="flex items-center justify-between mb-1">
-          <h4 className="text-sm font-medium text-zinc-900">Subir informes técnicos y/o fotos del vehiculo. (opcional)</h4>
+          <h4 className="text-sm font-medium text-zinc-900">Subir informes técnicos y fotos del vehículo</h4>
           {inspDocsLoading && <span className="text-xs text-zinc-500">Actualizando...</span>}
         </div>
-        <p className="text-xs text-zinc-500 mb-3">
+        <p className="text-xs text-zinc-500 mb-4">
           Los archivos que agregues quedan pendientes y se suben cuando guardás la revisión.
         </p>
 
-        <div className={clsx(isCompleted && "opacity-50")}>
-          <Dropzone
-            onPendingChange={onPendingInspectionDocsChange}
-            existing={inspDocs}
-            onDeleteExisting={(docId) => deleteInspectionDocument(docId)}
-            title=""
-            maxSizeMB={15}
-            resetToken={dzResetToken}
-          />
+        <div className="grid grid-cols-1 gap-6">
+          <div className={clsx(isCompleted && "opacity-50")}>
+            <h5 className="text-sm font-medium text-zinc-800 mb-2">Informes técnicos</h5>
+            <Dropzone
+              onPendingChange={onPendingTechChange}
+              existing={inspDocsTech}
+              onDeleteExisting={(docId) => deleteInspectionDocument("technical_report", docId)}
+              title=""
+              maxSizeMB={15}
+              resetToken={dzResetTokenTech}
+            />
+          </div>
+
+          <div className={clsx(isCompleted && "opacity-50")}>
+            <h5 className="text-sm font-medium text-zinc-800 mb-2">Fotos del vehículo</h5>
+            <Dropzone
+              onPendingChange={onPendingPhotosChange}
+              existing={inspDocsPhotos}
+              onDeleteExisting={(docId) => deleteInspectionDocument("vehicle_photo", docId)}
+              title=""
+              maxSizeMB={15}
+              resetToken={dzResetTokenPhotos}
+            />
+          </div>
         </div>
       </section>
 
