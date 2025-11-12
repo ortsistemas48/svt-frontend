@@ -41,6 +41,12 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
       ? { Icon: XCircle, wrap: "bg-rose-50 border-rose-200", text: "text-rose-700" }
       : { Icon: Circle, wrap: "bg-zinc-50 border-zinc-200", text: "text-zinc-700" };
 
+  // Estado CRT vigente/vencido según fecha de caducidad
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const expDate = insp?.expiration_date ? new Date(insp.expiration_date) : null;
+  const isCrtVigente = expDate ? !isNaN(expDate.getTime()) && expDate >= startOfToday : false;
+
   return (
     <div className="min-h-screen bg-gray-50 py-6">
       <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -57,6 +63,17 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
           {/* Datos del vehículo */}
           <div className="relative max-w-4xl mx-auto rounded-2xl border border-[#d3d3d3] overflow-hidden">
             
+
+            {/* Badge CRT vigente/vencido arriba a la derecha */}
+            <div
+              className={clsx(
+                "absolute top-3 right-3 rounded-full border px-3 py-1 text-[12px] font-medium flex items-center gap-1",
+                isCrtVigente ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-rose-50 border-rose-200 text-rose-700"
+              )}
+            >
+              <span className="opacity-70">CRT:</span>
+              <span>{isCrtVigente ? "Vigente" : "Vencido"}</span>
+            </div>
 
             <div className="bg-purple-50 px-5 py-4 flex items-center gap-3">
               <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center">
