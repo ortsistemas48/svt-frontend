@@ -210,6 +210,17 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
     return users.filter((u) => (u.role || "").toLowerCase().includes("ingeniero")).length;
   }, [users]);
 
+  const disableUnlinkReason = useMemo(() => {
+    if (!selected) return null;
+    if (String(selected.id) === String(user.id)) {
+      return "No podés desvincularte a vos mismo.";
+    }
+    if ((selected.role || "").toLowerCase().includes("ingeniero") && engineersCount <= 1) {
+      return "No se puede desvincular al último Ingeniero del taller.";
+    }
+    return null;
+  }, [selected, user.id, engineersCount]);
+
   const handleRefresh = () => router.refresh();
 
   function openDrawer(user: AnyUser) {
@@ -544,7 +555,8 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                   <button
                     type="button"
                     onClick={handleAskDelete}
-                    disabled={deleting || (selected && (String(selected.id) === String(user.id) || ((selected.role || '').toLowerCase().includes('ingeniero') && engineersCount <= 1)))}
+                    disabled={deleting || Boolean(disableUnlinkReason)}
+                    title={disableUnlinkReason || undefined}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
                   >
                     <Trash2 size={16} />
@@ -552,6 +564,9 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                   </button>
 
                 </div>
+                {disableUnlinkReason && !deleting && (
+                  <p className="mt-2 text-xs text-amber-700 text-center">{disableUnlinkReason}</p>
+                )}
               </div>
 
             </div>
