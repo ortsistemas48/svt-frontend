@@ -30,15 +30,24 @@ type ApiList = {
   total: number;
 };
 
+async function getBaseURL() {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") || h.get("host");
+  if (!host) throw new Error("No host header");
+  const proto = h.get("x-forwarded-proto") || (process.env.NODE_ENV === "production" ? "https" : "http");
+  return `${proto}://${host}`;
+}
+
 function buildURL(path: string, query?: Record<string, any>) {
-  const url = new URL(`/api${path}`, 'http://localhost:3000'); // Base URL for URL constructor
+  const url = new URL(`/api${path}`, 'http://localhost'); // Base only for URL constructor
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v === undefined || v === null || v === "") continue;
       url.searchParams.set(k, String(v));
     }
   }
-  return url.toString();
+  // Return only the path + search params, not the full URL
+  return url.pathname + url.search;
 }
 
 async function fetchAdminOrders(params: {
@@ -47,10 +56,11 @@ async function fetchAdminOrders(params: {
   page?: number;
   page_size?: number;
 }): Promise<ApiList> {
-  const h = await headers(); // 👈 esperar headers()
+  const h = await headers();
   const cookie = h.get("cookie") || "";
-  const url = buildURL("/payments_admin/orders", params);
-  const res = await fetch(url, {
+  const baseURL = await getBaseURL();
+  const path = buildURL("/payments_admin/orders", params);
+  const res = await fetch(`${baseURL}${path}`, {
     method: "GET",
     headers: { cookie },
     cache: "no-store",
