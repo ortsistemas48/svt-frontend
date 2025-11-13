@@ -42,6 +42,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     owner: Doc[]; driver: Doc[]; car: Doc[]; generic: Doc[];
   }>({ owner: [], driver: [], car: [], generic: [] });
   const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | "confirm_car" | null>(null);
+  const [processingAction, setProcessingAction] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [owner, setOwner] = useState<any>({ ...(initialData?.owner || {}) });
   const [driver, setDriver] = useState<any>({ ...(initialData?.driver || {}) });
@@ -596,22 +597,22 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         {step === 4 && (
           <>
             <button
-              disabled={loading}
+              disabled={loading || processingAction}
               onClick={() => {
                 setConfirmAction("queue");
                 setShowConfirmModal(true);
               }}
-              className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5"
+              className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Enviar a cola
             </button>
             <button
-              disabled={loading}
+              disabled={loading || processingAction}
               onClick={() => {
                 setConfirmAction("inspect");
                 setShowConfirmModal(true);
               }}
-              className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5"
+              className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Guardando..." : "Inspeccionar"}
             </button>
@@ -660,45 +661,80 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
               )
             }
 
+            {processingAction && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4 text-[#0040B8]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p className="text-[#0040B8] text-sm font-medium">
+                    {confirmAction === "queue" ? "Enviando a cola..." : confirmAction === "inspect" ? "Procesando..." : "Guardando..."}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-center gap-5 mt-5">
               <button
-                onClick={() => setShowConfirmModal(false)}
-                className="bg-white border border-[#d91e1e] text-[#d91e1e] duration-150 px-4 py-2 rounded-[4px] hover:text-white hover:bg-[#d91e1e]"
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setProcessingAction(false);
+                }}
+                disabled={processingAction}
+                className="bg-white border border-[#d91e1e] text-[#d91e1e] duration-150 px-4 py-2 rounded-[4px] hover:text-white hover:bg-[#d91e1e] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>
               <button
                 onClick={async () => {
-                  // Cerrar modal para evitar dobles clics
-                  setShowConfirmModal(false);
+                  setProcessingAction(true);
 
                   if (confirmAction === "confirm_car") {
                     try {
                       setLoading(true);
                       const ok = await saveVehicle();
-                      if (ok) setStep(4);
+                      if (ok) {
+                        setStep(4);
+                        setShowConfirmModal(false);
+                      }
                     } catch (e) {
                       console.error(e);
                       alert("Hubo un error al guardar los datos del vehículo.");
                     } finally {
                       setLoading(false);
+                      setProcessingAction(false);
                     }
                     return;
                   }
 
                   if (confirmAction === "inspect") {
-                    router.push(`/dashboard/${id}/inspections/${applicationId}`);
+                    try {
+                      await consumeSlot();
+                      router.push(`/dashboard/${id}/inspections/${applicationId}`);
+                    } catch (e) {
+                      console.error(e);
+                      alert("Hubo un error al iniciar la inspección.");
+                      setProcessingAction(false);
+                    }
                     return;
                   }
 
                   if (confirmAction === "queue") {
-                    await sendToQueue();
+                    try {
+                      await sendToQueue();
+                    } catch (e) {
+                      console.error(e);
+                      alert("Hubo un error al enviar a la cola.");
+                      setProcessingAction(false);
+                    }
                     return;
                   }
                 }}
-                className="bg-[#0040B8] text-white px-4 py-2 rounded-[4px] hover:bg-[#0032a0]"
+                disabled={processingAction}
+                className="bg-[#0040B8] text-white px-4 py-2 rounded-[4px] hover:bg-[#0032a0] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Confirmar
+                {processingAction ? "Procesando..." : "Confirmar"}
               </button>
             </div>
           </div>

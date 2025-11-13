@@ -1,6 +1,6 @@
 // components/ApproveWorkshopTable.tsx
 "use client";
-import { Eye, RefreshCcw, Search, SlidersHorizontal, X, Trash2, CheckCircle } from "lucide-react";
+import { Eye, RefreshCcw, Search, SlidersHorizontal, X, Trash2, CheckCircle, MoreVertical, UserX, User, Mail, Phone, CreditCard, Briefcase, Award, FileText, Building2, MapPin, Home, Hash, Factory, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect } from "react";
 
@@ -14,6 +14,8 @@ type Workshop = {
   phone?: string;
   cuit?: string;
   plant_number?: number | null;
+  address?: string;
+  disposition_number?: string;
   created_at?: string;
 };
 
@@ -25,6 +27,8 @@ type Member = {
   dni?: string;
   phone_number?: string;
   role?: string | number;
+  license_number?: string;
+  title_name?: string;
   created_at?: string;
 };
 
@@ -40,6 +44,8 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState<string | null>(null); // "approve" | `kick-${user_id}`
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [openMemberModal, setOpenMemberModal] = useState(false);
 
   const router = useRouter();
 
@@ -93,6 +99,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
       });
       if (!dRes.ok) throw new Error(await dRes.text() || "No se pudo cargar el taller");
       const d = await dRes.json();
+      
       setWsDetail({
         ...ws,
         ...d,
@@ -104,7 +111,8 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
       });
       if (!mRes.ok) throw new Error(await mRes.text() || "No se pudo cargar el personal");
       const ms = await mRes.json();
-      setMembers(ms || []);
+      console.log(ms)
+      setMembers(ms || []); 
     } catch (e: any) {
       setErrorMsg(e.message || "Error cargando datos");
     } finally {
@@ -119,6 +127,16 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
     setWsDetail(null);
     setMembers([]);
     setErrorMsg(null);
+  };
+
+  const openMemberDetails = (member: Member) => {
+    setSelectedMember(member);
+    setOpenMemberModal(true);
+  };
+
+  const closeMemberModal = () => {
+    setOpenMemberModal(false);
+    setSelectedMember(null);
   };
 
   const fmtDate = (d?: string) =>
@@ -325,83 +343,178 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
         </button>
       </div>
 
-      {/* Modal */}
+      {/* Modal del Taller */}
       {openModal && selectedWs && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={actionBusy ? undefined : closeModal} />
-          <div className="relative z-[61] w-full max-w-3xl bg-white rounded-lg shadow-xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b">
-              <h3 className="text-base font-semibold">Detalles del taller</h3>
+          <div className="relative z-[61] w-full max-w-4xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-[#0040B8] to-[#0050D8]">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-full">
+                  <Building2 size={24} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Detalles del Taller</h3>
+                  <p className="text-sm text-white/80">
+                    {selectedWs.name}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={closeModal}
-                className="p-1 rounded hover:bg-gray-100"
+                className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
                 disabled={!!actionBusy}
                 aria-label="Cerrar"
               >
-                <X size={18} />
+                <X size={20} className="text-white" />
               </button>
             </div>
 
-            <div className="px-5 py-4 space-y-4">
+            {/* Content */}
+            <div className="px-6 py-6 space-y-6 overflow-y-auto flex-1">
               {loadingDetail ? (
-                <div className="text-sm text-gray-500">Cargando...</div>
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-sm text-gray-500">Cargando información del taller...</div>
+                </div>
               ) : errorMsg ? (
-                <div className="text-red-600 text-sm border border-red-200 bg-red-50 rounded px-3 py-2">
+                <div className="text-red-600 text-sm border border-red-200 bg-red-50 rounded-lg px-4 py-3">
                   {errorMsg}
                 </div>
               ) : wsDetail ? (
                 <>
-                  {/* Info del taller */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <InfoRow label="Nombre" value={wsDetail.name} />
-                    <InfoRow label="Razón social" value={wsDetail.razon_social || wsDetail.razonSocial || "-"} />
-                    <InfoRow label="Provincia" value={wsDetail.province} />
-                    <InfoRow label="Localidad" value={wsDetail.city} />
-                    <InfoRow label="Teléfono" value={wsDetail.phone || "-"} />
-                    <InfoRow label="CUIT" value={wsDetail.cuit || "-"} />
-                    <InfoRow label="Nro de planta" value={String(wsDetail.plant_number ?? "-")} />
+                  {/* Información General */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                      <Building2 size={16} className="text-[#0040B8]" />
+                      Información General
+                    </h4>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <DetailRow 
+                        icon={<Factory size={18} className="text-gray-500" />}
+                        label="Nombre del taller" 
+                        value={wsDetail.name} 
+                      />
+                      <DetailRow 
+                        icon={<Building2 size={18} className="text-gray-500" />}
+                        label="Razón social" 
+                        value={wsDetail.razon_social || wsDetail.razonSocial || "-"} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Ubicación */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                      <MapPin size={16} className="text-[#0040B8]" />
+                      Ubicación
+                    </h4>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <DetailRow 
+                        icon={<MapPin size={18} className="text-gray-500" />}
+                        label="Provincia" 
+                        value={wsDetail.province} 
+                      />
+                      <DetailRow 
+                        icon={<MapPin size={18} className="text-gray-500" />}
+                        label="Localidad" 
+                        value={wsDetail.city} 
+                      />
+                      <DetailRow 
+                        icon={<Home size={18} className="text-gray-500" />}
+                        label="Dirección" 
+                        value={wsDetail.address || "-"} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Información Legal y Contacto */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                      <FileText size={16} className="text-[#0040B8]" />
+                      Información Legal y Contacto
+                    </h4>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <DetailRow 
+                        icon={<FileText size={18} className="text-gray-500" />}
+                        label="CUIT" 
+                        value={wsDetail.cuit || "-"} 
+                      />
+                      <DetailRow 
+                        icon={<Phone size={18} className="text-gray-500" />}
+                        label="Teléfono" 
+                        value={wsDetail.phone || "-"} 
+                      />
+                      <DetailRow 
+                        icon={<Hash size={18} className="text-gray-500" />}
+                        label="Número de planta" 
+                        value={String(wsDetail.plant_number ?? "-")} 
+                      />
+                      <DetailRow 
+                        icon={<Hash size={18} className="text-gray-500" />}
+                        label="Número de disposición" 
+                        value={wsDetail.disposition_number || "-"} 
+                      />
+                    </div>
                   </div>
 
                   {/* Personal */}
-                  <div className="mt-2">
-                    <div className="text-gray-700 font-medium mb-2">Personal</div>
-                    <div className="border border-gray-200 rounded">
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                      <Users size={16} className="text-[#0040B8]" />
+                      Personal Asignado ({members.length})
+                    </h4>
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 text-gray-600">
                           <tr>
-                            <th className="p-2 text-left">Nombre</th>
-                            <th className="p-2 text-left">Email</th>
-                            <th className="p-2 text-left">DNI</th>
-                            <th className="p-2 text-left">Rol</th>
-                            <th className="p-2 text-center">Acciones</th>
+                            <th className="p-3 text-left font-medium">Nombre</th>
+                            <th className="p-3 text-left font-medium">Email</th>
+                            <th className="p-3 text-left font-medium">DNI</th>
+                            <th className="p-3 text-left font-medium">Rol</th>
+                            <th className="p-3 text-center font-medium">Acciones</th>
                           </tr>
                         </thead>
                         <tbody>
                           {members.length === 0 ? (
                             <tr>
-                              <td colSpan={5} className="text-center py-6 text-gray-500">
-                                Sin personal asignado.
+                              <td colSpan={5} className="text-center py-8 text-gray-500">
+                                <Users size={32} className="mx-auto mb-2 text-gray-400" />
+                                <p>Sin personal asignado</p>
                               </td>
                             </tr>
                           ) : (
                             members.map((m) => (
-                              <tr key={m.user_id} className="border-t">
-                                <td className="p-2">
+                              <tr key={m.user_id} className="border-t hover:bg-gray-50 transition-colors">
+                                <td className="p-3 font-medium text-gray-900">
                                   {(m.first_name || "") + " " + (m.last_name || "")}
                                 </td>
-                                <td className="p-2">{m.email || "-"}</td>
-                                <td className="p-2">{m.dni || "-"}</td>
-                                <td className="p-2">{String(m.role ?? "-")}</td>
-                                <td className="p-2 text-center">
-                                  <button
-                                    className="inline-flex items-center gap-1 px-2 py-1 rounded border border-red-300 text-red-600 hover:bg-red-50"
-                                    onClick={() => unassignMember(m.user_id)}
-                                    disabled={actionBusy === `kick-${m.user_id}`}
-                                    title="Rechazar persona"
-                                  >
-                                    <Trash2 size={14} />
-                                    {actionBusy === `kick-${m.user_id}` ? "Quitando..." : "Rechazar"}
-                                  </button>
+                                <td className="p-3 text-gray-600">{m.email || "-"}</td>
+                                <td className="p-3 text-gray-600">{m.dni || "-"}</td>
+                                <td className="p-3">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {String(m.role ?? "-")}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-center">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <button
+                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-colors text-xs font-medium"
+                                      onClick={() => unassignMember(m.user_id)}
+                                      disabled={actionBusy === `kick-${m.user_id}`}
+                                      title="Desvincular persona"
+                                    >
+                                      <UserX size={14} />
+                                      {actionBusy === `kick-${m.user_id}` ? "Quitando..." : "Desvincular"}
+                                    </button>
+                                    <button
+                                      className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
+                                      onClick={() => openMemberDetails(m)}
+                                      title="Ver detalles"
+                                    >
+                                      <MoreVertical size={14} />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))
@@ -414,13 +527,13 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
               ) : null}
             </div>
 
-            {/* Footer acciones */}
-            <div className="flex items-center justify-end gap-3 px-5 py-4 border-t">
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-gray-50">
               <button
                 onClick={approveWorkshop}
-                disabled={actionBusy !== null}
-                className={`px-4 py-2 rounded text-sm inline-flex items-center gap-2 ${
-                  actionBusy === "approve"
+                disabled={actionBusy !== null || loadingDetail}
+                className={`px-5 py-2.5 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition-colors ${
+                  actionBusy === "approve" || loadingDetail
                     ? "opacity-70 cursor-wait bg-[#0040B8]/80 text-white"
                     : "bg-[#0040B8] hover:bg-[#0035A0] text-white"
                 }`}
@@ -428,6 +541,118 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
               >
                 <CheckCircle size={16} />
                 {actionBusy === "approve" ? "Aprobando..." : "Aprobar taller"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de detalles del miembro */}
+      {openMemberModal && selectedMember && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={closeMemberModal} />
+          <div className="relative z-[71] w-full max-w-3xl bg-white rounded-lg shadow-xl">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-[#0040B8] to-[#0050D8]">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-full">
+                  <User size={24} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Información del Usuario</h3>
+                  <p className="text-sm text-white/80">
+                    {selectedMember.first_name} {selectedMember.last_name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={closeMemberModal}
+                className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+                aria-label="Cerrar"
+              >
+                <X size={20} className="text-white" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              {/* Información Personal */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                  <User size={16} className="text-[#0040B8]" />
+                  Información Personal
+                </h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <DetailRow 
+                    icon={<User size={18} className="text-gray-500" />}
+                    label="Nombre completo" 
+                    value={`${selectedMember.first_name || "-"} ${selectedMember.last_name || ""}`} 
+                  />
+                  <DetailRow 
+                    icon={<CreditCard size={18} className="text-gray-500" />}
+                    label="DNI" 
+                    value={selectedMember.dni || "-"} 
+                  />
+                  <DetailRow 
+                    icon={<Briefcase size={18} className="text-gray-500" />}
+                    label="Rol" 
+                    value={String(selectedMember.role ?? "-")} 
+                  />
+                </div>
+              </div>
+
+              {/* Información de Contacto */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                  <Mail size={16} className="text-[#0040B8]" />
+                  Información de Contacto
+                </h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <DetailRow 
+                    icon={<Mail size={18} className="text-gray-500" />}
+                    label="Email" 
+                    value={selectedMember.email || "-"} 
+                  />
+                  <DetailRow 
+                    icon={<Phone size={18} className="text-gray-500" />}
+                    label="Teléfono" 
+                    value={selectedMember.phone_number || "-"} 
+                  />
+                </div>
+              </div>
+
+              {/* Información Profesional (solo para Ingenieros) */}
+              {(String(selectedMember.role).toLowerCase() === "ingeniero" || 
+                String(selectedMember.role).toLowerCase() === "ingeniería" ||
+                selectedMember.role === 2) && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                    <Award size={16} className="text-[#0040B8]" />
+                    Información Profesional
+                  </h4>
+                  <div className="bg-blue-50 rounded-lg p-4 space-y-3 border border-blue-100">
+                    <DetailRow 
+                      icon={<Award size={18} className="text-blue-600" />}
+                      label="Número de matrícula" 
+                      value={selectedMember.license_number || "-"} 
+                    />
+                    <DetailRow 
+                      icon={<FileText size={18} className="text-blue-600" />}
+                      label="Título" 
+                      value={selectedMember.title_name || "-"} 
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+              <button
+                onClick={closeMemberModal}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 transition-colors"
+              >
+                Cerrar
               </button>
             </div>
           </div>
@@ -442,6 +667,18 @@ function InfoRow({ label, value }: { label: string; value?: string }) {
     <div className="flex items-start gap-3">
       <div className="w-32 shrink-0 text-gray-500">{label}</div>
       <div className="text-gray-900 break-words">{value || "-"}</div>
+    </div>
+  );
+}
+
+function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value?: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 shrink-0">{icon}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-xs font-medium text-gray-500 mb-0.5">{label}</div>
+        <div className="text-sm text-gray-900 break-words">{value || "-"}</div>
+      </div>
     </div>
   );
 }
