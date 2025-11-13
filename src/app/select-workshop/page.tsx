@@ -65,7 +65,7 @@ export default function SelectWorkshopPage() {
       <header className="absolute top-4 right-4 z-10">
         <button
           onClick={logOutFunction}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors duration-200"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-[4px] border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors duration-200"
           aria-label="Cerrar sesión"
         >
           <LogOut size={16} />
@@ -94,7 +94,7 @@ export default function SelectWorkshopPage() {
               workshops.map((w) => (
                 <article
                   key={w.workshop_id}
-                  className={`relative group flex justify-between items-center border rounded-md p-4 transition-all duration-200 ${
+                  className={`relative group flex justify-between items-center border rounded-[4px] p-4 transition-all duration-200 ${
                     w.is_approved
                       ? "cursor-pointer hover:bg-gray-50 hover:border-[#0040B8] hover:shadow-sm border-gray-200"
                       : "bg-gray-50 border-gray-200 cursor-not-allowed"
@@ -112,7 +112,7 @@ export default function SelectWorkshopPage() {
                   {/* Tooltip solo si está pendiente */}
                   {!w.is_approved && (
                     <div className="absolute left-4 -top-10 hidden group-hover:block z-20">
-                      <div className="bg-gray-900 text-white text-xs rounded-md px-3 py-2 shadow-lg">
+                      <div className="bg-gray-900 text-white text-xs rounded-[4px] px-3 py-2 shadow-lg">
                         Pendiente de aprobación
                       </div>
                       <div className="w-2 h-2 bg-gray-900 rotate-45 mx-3 -mt-1" />
@@ -140,7 +140,7 @@ export default function SelectWorkshopPage() {
                 </article>
               ))
             ) : (
-              <article className="flex justify-center items-center border border-gray-200 rounded-md p-6 text-gray-600">
+              <article className="flex justify-center items-center border border-gray-200 rounded-[4px] p-6 text-gray-600">
                 <div className="flex flex-col sm:flex-row gap-2 items-center">
                   <Info size={20} className="text-gray-400" />
                   <span className="text-sm sm:text-base text-center">
@@ -155,7 +155,7 @@ export default function SelectWorkshopPage() {
         {/* Footer Section - Fixed, siempre visible */}
         <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-lg">
           <button
-            className="w-full flex justify-center items-center bg-[#0040B8] hover:bg-[#0035A0] text-white rounded-md p-4 cursor-pointer transition-colors duration-200 font-medium text-sm sm:text-base"
+            className="w-full flex justify-center items-center bg-[#0040B8] hover:bg-[#0035A0] text-white rounded-[4px] p-4 cursor-pointer transition-colors duration-200 font-medium text-sm sm:text-base"
             onClick={() => router.push("/create-workshop")}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") router.push("/create-workshop");

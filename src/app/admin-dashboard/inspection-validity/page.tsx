@@ -259,7 +259,7 @@ export default function InspectionValidityPage() {
                 placeholder="Buscar localidad..."
                 value={locSearch}
                 onChange={(e) => setLocSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="Buscar localidad"
               />
             </div>
@@ -267,7 +267,7 @@ export default function InspectionValidityPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border ${allVisibleSelected ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-blue-50 border-blue-200 text-blue-700'} hover:bg-blue-100 disabled:opacity-60`}
+              className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-[4px] border ${allVisibleSelected ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-blue-50 border-blue-200 text-blue-700'} hover:bg-blue-100 disabled:opacity-60`}
               onClick={() => toggleSelectAllLocalidades(!allVisibleSelected)}
               disabled={visibleCount === 0}
               aria-label={allVisibleSelected ? 'Desmarcar todas' : 'Marcar todas'}
@@ -277,7 +277,7 @@ export default function InspectionValidityPage() {
               {allVisibleSelected ? `Desmarcar todas (${visibleCount})` : `Marcar todas (${visibleCount})`}
             </button>
             <button
-              className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border hover:bg-slate-50 disabled:opacity-60"
+              className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-[4px] border hover:bg-slate-50 disabled:opacity-60"
               onClick={clearAllSelections}
               disabled={selectedLocCount === 0}
               aria-label="Quitar todas las selecciones"
@@ -299,7 +299,7 @@ export default function InspectionValidityPage() {
               max={120}
               value={bulkLoc.up_to_36 as any}
               onChange={(e) => setBulkLoc(b => ({ ...b, up_to_36: e.target.value === "" ? "" : Number(e.target.value) }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
@@ -310,7 +310,7 @@ export default function InspectionValidityPage() {
               max={120}
               value={bulkLoc.from_3_to_7 as any}
               onChange={(e) => setBulkLoc(b => ({ ...b, from_3_to_7: e.target.value === "" ? "" : Number(e.target.value) }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
@@ -321,20 +321,20 @@ export default function InspectionValidityPage() {
               max={120}
               value={bulkLoc.over_7 as any}
               onChange={(e) => setBulkLoc(b => ({ ...b, over_7: e.target.value === "" ? "" : Number(e.target.value) }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex gap-2 md:justify-end">
             <button
               onClick={applyAndSaveBulkToSelectedLocalidades}
               disabled={selectedLocCount === 0 || saving}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+              className="px-4 py-2 rounded-[4px] bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
             >
               {saving ? "Guardando..." : `Aplicar y guardar (${selectedLocCount})`}
             </button>
             <button
               onClick={() => setBulkLoc({ up_to_36: "", from_3_to_7: "", over_7: "" })}
-              className="px-3 py-2 rounded-md border"
+              className="px-3 py-2 rounded-[4px] border"
             >
               Limpiar
             </button>
@@ -399,7 +399,7 @@ export default function InspectionValidityPage() {
                     max={120}
                     value={bulk.up_to_36 as any}
                     onChange={(e) => setBulk(b => ({ ...b, up_to_36: e.target.value === "" ? "" : Number(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -410,7 +410,7 @@ export default function InspectionValidityPage() {
                     max={120}
                     value={bulk.from_3_to_7 as any}
                     onChange={(e) => setBulk(b => ({ ...b, from_3_to_7: e.target.value === "" ? "" : Number(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -421,19 +421,19 @@ export default function InspectionValidityPage() {
                     max={120}
                     value={bulk.over_7 as any}
                     onChange={(e) => setBulk(b => ({ ...b, over_7: e.target.value === "" ? "" : Number(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={applyBulkToAll}
-                    className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                    className="px-4 py-2 rounded-[4px] bg-blue-600 text-white hover:bg-blue-700"
                   >
                     Aplicar a todos
                   </button>
                   <button
                     onClick={() => setBulk({ up_to_36: "", from_3_to_7: "", over_7: "" })}
-                    className="px-3 py-2 rounded-md border"
+                    className="px-3 py-2 rounded-[4px] border"
                   >
                     Limpiar
                   </button>
@@ -442,7 +442,7 @@ export default function InspectionValidityPage() {
             </div>
 
             <div className="overflow-auto">
-              <table className="min-w-full border border-slate-200 rounded-md overflow-hidden">
+              <table className="min-w-full border border-slate-200 rounded-[4px] overflow-hidden">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="text-left text-sm font-medium text-slate-700 px-3 py-2 border-b">Tipo de uso</th>
@@ -466,7 +466,7 @@ export default function InspectionValidityPage() {
                             max={120}
                             value={row.up_to_36 as any}
                             onChange={(e) => handleChange(value, "up_to_36", e.target.value)}
-                            className="w-28 px-2 py-1.5 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-28 px-2 py-1.5 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </td>
                         <td className="px-3 py-2 border-b">
@@ -476,7 +476,7 @@ export default function InspectionValidityPage() {
                             max={120}
                             value={row.from_3_to_7 as any}
                             onChange={(e) => handleChange(value, "from_3_to_7", e.target.value)}
-                            className="w-28 px-2 py-1.5 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-28 px-2 py-1.5 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </td>
                         <td className="px-3 py-2 border-b">
@@ -486,7 +486,7 @@ export default function InspectionValidityPage() {
                             max={120}
                             value={row.over_7 as any}
                             onChange={(e) => handleChange(value, "over_7", e.target.value)}
-                            className="w-28 px-2 py-1.5 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-28 px-2 py-1.5 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </td>
                       </tr>
@@ -500,7 +500,7 @@ export default function InspectionValidityPage() {
               <button
                 disabled={!canSave || saving}
                 onClick={handleSave}
-                className="px-5 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                className="px-5 py-2 rounded-[4px] bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
               >
                 {saving ? "Guardando..." : "Guardar"}
               </button>
@@ -532,7 +532,7 @@ const LocalidadRow = React.memo(function LocalidadRow({ option, selected, onTogg
         <span className="text-sm truncate">{option.label}</span>
       </label>
       <button
-        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-slate-300 hover:bg-slate-50"
+        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-[4px] border border-slate-300 hover:bg-slate-50"
         onClick={() => onEdit(option)}
         aria-label={`Editar esta localidad: ${option.label}`}
         title={`Editar esta localidad`}

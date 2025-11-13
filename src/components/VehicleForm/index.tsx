@@ -507,7 +507,7 @@ export default function VehicleForm({
       </div>
 
       {carErrorsList.length > 0 && (
-        <div className="border border-red-300 bg-red-50 text-red-700 text-sm rounded-md px-4 py-3">
+        <div className="border border-red-300 bg-red-50 text-red-700 text-sm rounded-[4px] px-4 py-3">
           <p className="font-medium mb-1">Revisá estos campos:</p>
           <ul className="list-disc pl-5 space-y-1">
             {carErrorsList.map(({ field, label, msg }) => (

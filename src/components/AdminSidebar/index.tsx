@@ -278,7 +278,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                 </div>
               </div>
               <button
-                className="p-2 rounded-md hover:bg-gray-100"
+                className="p-2 rounded-[4px] hover:bg-gray-100"
                 onClick={() => setOpenProfileModal(false)}
                 aria-label="Cerrar"
                 title="Cerrar"
@@ -291,22 +291,22 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
               <div className="bg-gray-50/60 border-r p-4">
                 <ul className="space-y-2">
                   <li>
-                    <button className="w-full text-left px-3 py-2 rounded-md bg-white shadow-sm text-sm font-medium">
+                    <button className="w-full text-left px-3 py-2 rounded-[4px] bg-white shadow-sm text-sm font-medium">
                       General
                     </button>
                   </li>
                   <li>
-                    <button className="w-full text-left px-3 py-2 rounded-md hover:bg-white text-sm">
+                    <button className="w-full text-left px-3 py-2 rounded-[4px] hover:bg-white text-sm">
                       Perfil
                     </button>
                   </li>
                   <li>
-                    <button className="w-full text-left px-3 py-2 rounded-md hover:bg-white text-sm">
+                    <button className="w-full text-left px-3 py-2 rounded-[4px] hover:bg-white text-sm">
                       Notificaciones
                     </button>
                   </li>
                   <li>
-                    <button className="w-full text-left px-3 py-2 rounded-md hover:bg-white text-sm">
+                    <button className="w-full text-left px-3 py-2 rounded-[4px] hover:bg-white text-sm">
                       Suscripción
                     </button>
                   </li>
@@ -315,7 +315,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                 <div className="mt-6">
                   <button
                     onClick={logOutFunction}
-                    className="w-full text-left px-3 py-2 rounded-md text-red-600 hover:bg-red-50 text-sm"
+                    className="w-full text-left px-3 py-2 rounded-[4px] text-red-600 hover:bg-red-50 text-sm"
                   >
                     Cerrar sesión
                   </button>
@@ -356,7 +356,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Ejemplo</span>
-                    <select className="text-sm border rounded-md px-2 py-1">
+                    <select className="text-sm border rounded-[4px] px-2 py-1">
                       <option>Ejemplo</option>
                       <option>Opción 2</option>
                     </select>
@@ -388,7 +388,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                 </div>
               </div>
               <button
-                className="p-2 rounded-md hover:bg-gray-100"
+                className="p-2 rounded-[4px] hover:bg-gray-100"
                 onClick={() => setOpenProfileModal(false)}
                 aria-label="Cerrar"
                 title="Cerrar"
@@ -403,7 +403,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                   <li>
                     <button 
                       onClick={() => setActiveSection('perfil')}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-[4px] text-sm flex items-center gap-2 transition-colors ${
                         activeSection === 'perfil' 
                           ? 'bg-blue-100 text-blue-700' 
                           : 'hover:bg-white text-gray-700'
@@ -416,7 +416,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                   <li>
                     <button 
                       onClick={() => setActiveSection('seguridad')}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-[4px] text-sm flex items-center gap-2 transition-colors ${
                         activeSection === 'seguridad' 
                           ? 'bg-blue-100 text-blue-700' 
                           : 'hover:bg-white text-gray-700'
@@ -430,7 +430,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                 <div className="mt-auto">
                   <button
                     onClick={logOutFunction}
-                    className="w-full text-left px-3 py-2 rounded-md text-red-600 hover:bg-red-50 text-sm flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 rounded-[4px] text-red-600 hover:bg-red-50 text-sm flex items-center gap-2"
                   >
                     <LogOut size={16} />
                     Cerrar sesión
@@ -482,14 +482,14 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                               type="tel"
                               value={phoneValue}
                               onChange={e => setPhoneValue(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               placeholder="Ej, 3511234567"
                             />
                             <div className="flex gap-2">
                               <button
                                 type="button"
                                 onClick={() => { setEditingPhone(false); setPhoneMsg(null); setPhoneValue((user as any)?.phone_number || ""); }}
-                                className="px-3 py-1.5 rounded-md border"
+                                className="px-3 py-1.5 rounded-[4px] border"
                               >
                                 Cancelar
                               </button>
@@ -497,7 +497,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                                 type="button"
                                 onClick={handleSavePhone}
                                 disabled={savingPhone}
-                                className="px-4 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                                className="px-4 py-1.5 rounded-[4px] bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
                               >
                                 {savingPhone ? "Guardando..." : "Guardar"}
                               </button>
@@ -528,7 +528,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                         type={showPasswords.current ? "text" : "password"}
                         value={pwCurrent}
                         onChange={e => setPwCurrent(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Ingresa tu contraseña actual"
                       />
                       <button
@@ -548,7 +548,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                         type={showPasswords.new ? "text" : "password"}
                         value={pwNew}
                         onChange={e => setPwNew(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Ingresa tu nueva contraseña"
                       />
                       <button
@@ -568,7 +568,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                         type={showPasswords.confirm ? "text" : "password"}
                         value={pwConfirm}
                         onChange={e => setPwConfirm(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Repite tu nueva contraseña"
                       />
                       <button
@@ -590,7 +590,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                     <button
                       onClick={handleSavePassword}
                       disabled={savingPw}
-                      className="ml-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60"
+                      className="ml-auto px-6 py-2 bg-blue-600 text-white rounded-[4px] hover:bg-blue-700 disabled:opacity-60"
                     >
                       {savingPw ? "Guardando..." : "Guardar"}
                     </button>

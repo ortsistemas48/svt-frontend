@@ -37,7 +37,7 @@ export default function TableFilters({ tableFilters, statusFilter, setStatusFilt
                     setStatusFilter(e.target.value);
                     setShowFilters(false);
                   }}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+                  className="w-full rounded-[4px] border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
                 >
                   {tableFilters.map((filter) => (
                     <option key={filter} value={filter}>{filter}</option>

@@ -16,6 +16,7 @@ type InspDoc = {
   size_bytes?: number;
   mime_type?: string;
   created_at?: string;
+  type?: string;
 };
 
 const STATUS_UI: Record<Status, { stepBorder: string; text: string }> = {
@@ -149,40 +150,154 @@ export function InspectionStepsViewOnlyClient({
       {inspectionDocs.length > 0 && (
         <section className="rounded-[10px] border border-zinc-200 bg-white p-4 w-full mt-6">
           <div className="flex items-center justify-between mb-1">
-            <h4 className="text-sm font-medium text-zinc-900">Informes técnicos y/o fotos del vehículo</h4>
+            <h4 className="text-sm font-medium text-zinc-900">Documentos de la revisión</h4>
           </div>
           <p className="text-xs text-zinc-500 mb-3">
-            Documentos adjuntos a la revisión técnica.
+            Documentos adjuntos a esta revisión técnica, agrupados por tipo.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
-            {inspectionDocs.map((d) => (
-              <div
-                key={d.id}
-                className="relative rounded-lg border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="w-16 h-16 rounded-lg bg-[#F5F7FF] flex items-center justify-center overflow-hidden">
-                    {d.mime_type?.startsWith("image/") ? (
-                      <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-zinc-400">
-                        {iconForMime(d.mime_type)}
+          {/* Informes técnicos */}
+          {inspectionDocs.filter(d => d.type === "technical_report").length > 0 && (
+            <div className="mt-2">
+              <h5 className="text-sm font-medium text-zinc-800">Informes técnicos</h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-3">
+                {inspectionDocs.filter(d => d.type === "technical_report").map((d) => (
+                  <div
+                    key={d.id}
+                    className="relative rounded-lg border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex flex-col items-center text-center space-y-3">
+                      <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="w-full group">
+                        <div className="w-16 h-16 mx-auto rounded-lg bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
+                          {d.mime_type?.startsWith("image/") ? (
+                            <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="text-zinc-400">
+                              {iconForMime(d.mime_type)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="w-full mt-2">
+                          <p className="text-sm font-medium text-gray-900 truncate group-hover:underline" title={d.file_name}>
+                            {d.file_name}
+                          </p>
+                          <p className="text-xs text-[#7a7a7a] mt-1">
+                            {d.mime_type || "archivo"} · {prettySize(d.size_bytes)}
+                          </p>
+                        </div>
+                      </a>
+                      <div className="w-full flex justify-center">
+                        <a
+                          href={d.file_url}
+                          target="_blank"
+                          download={d.file_name}
+                          className="text-xs text-[#0040B8] hover:underline"
+                        >
+                          Ver Documento
+                        </a>
                       </div>
-                    )}
+                    </div>
                   </div>
-                  <div className="w-full">
-                    <p className="text-sm font-medium text-gray-900 truncate" title={d.file_name}>
-                      {d.file_name}
-                    </p>
-                    <p className="text-xs text-[#7a7a7a] mt-1">
-                      {d.mime_type || "archivo"} · {prettySize(d.size_bytes)}
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+
+          {/* Fotos del vehículo */}
+          {inspectionDocs.filter(d => d.type === "vehicle_photo").length > 0 && (
+            <div className="mt-5">
+              <h5 className="text-sm font-medium text-zinc-800">Fotos del vehículo</h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-3">
+                {inspectionDocs.filter(d => d.type === "vehicle_photo").map((d) => (
+                  <div
+                    key={d.id}
+                    className="relative rounded-lg border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex flex-col items-center text-center space-y-3">
+                      <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="w-full group">
+                        <div className="w-16 h-16 mx-auto rounded-lg bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
+                          {d.mime_type?.startsWith("image/") ? (
+                            <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="text-zinc-400">
+                              {iconForMime(d.mime_type)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="w-full mt-2">
+                          <p className="text-sm font-medium text-gray-900 truncate group-hover:underline" title={d.file_name}>
+                            {d.file_name}
+                          </p>
+                          <p className="text-xs text-[#7a7a7a] mt-1">
+                            {d.mime_type || "archivo"} · {prettySize(d.size_bytes)}
+                          </p>
+                        </div>
+                      </a>
+                      <div className="w-full flex justify-center">
+                        <a
+                          href={d.file_url}
+                          target="_blank"
+                          download={d.file_name}
+                          className="text-xs text-[#0040B8] hover:underline"
+                        >
+                          Ver Documento
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Otros documentos sin tipo conocido */}
+          {inspectionDocs.filter(d => !d.type || (d.type !== "technical_report" && d.type !== "vehicle_photo")).length > 0 && (
+            <div className="mt-5">
+              <h5 className="text-sm font-medium text-zinc-800">Otros</h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-3">
+                {inspectionDocs
+                  .filter(d => !d.type || (d.type !== "technical_report" && d.type !== "vehicle_photo"))
+                  .map((d) => (
+                  <div
+                    key={d.id}
+                    className="relative rounded-lg border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex flex-col items-center text-center space-y-3">
+                      <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="w-full group">
+                        <div className="w-16 h-16 mx-auto rounded-lg bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
+                          {d.mime_type?.startsWith("image/") ? (
+                            <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="text-zinc-400">
+                              {iconForMime(d.mime_type)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="w-full mt-2">
+                          <p className="text-sm font-medium text-gray-900 truncate group-hover:underline" title={d.file_name}>
+                            {d.file_name}
+                          </p>
+                          <p className="text-xs text-[#7a7a7a] mt-1">
+                            {d.mime_type || "archivo"} · {prettySize(d.size_bytes)}
+                          </p>
+                        </div>
+                      </a>
+                      <div className="w-full flex justify-center">
+                        <a
+                          href={d.file_url}
+                          target="_blank"
+                          download={d.file_name}
+                          className="text-xs text-[#0040B8] hover:underline"
+                        >
+                          Ver Documento
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       )}
 

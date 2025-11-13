@@ -63,6 +63,7 @@ export default function CreateOrAttachUserPage() {
 
   const isExisting = !!existingUser;
   const [userChoseEngineer, setUserChoseEngineer] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const engineerEditable = roleId === ENGINEER_ROLE_ID && (!isExisting || userChoseEngineer);
   const ctaLabel = isExisting ? "Asociar al taller" : "Crear usuario";
@@ -176,6 +177,7 @@ export default function CreateOrAttachUserPage() {
   }, [roleId]);
 
   const submit = async () => {
+    if (submitting) return;
     setMsg(null);
     if (!roleId) {
       setMsg({ type: "error", text: "Selecciona un rol" });
@@ -194,6 +196,7 @@ export default function CreateOrAttachUserPage() {
     }
 
     try {
+      setSubmitting(true);
       if (!isExisting) {
         // reforzar autogeneración por si alguien reentró
         if (!password || !confirm) {
@@ -265,6 +268,8 @@ export default function CreateOrAttachUserPage() {
       }
     } catch (e: any) {
       setMsg({ type: "error", text: e.message || "Error" });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -293,8 +298,8 @@ export default function CreateOrAttachUserPage() {
                   className={inputCls}
                   value={firstName}
                   onChange={(e)=>setFirstName(e.target.value)}
-                  readOnly={isExisting}
-                  disabled={isExisting}
+                  readOnly={isExisting || submitting}
+                  disabled={isExisting || submitting}
                   placeholder="Ej, Alejo Joaquin"
                 />
               </div>
@@ -305,8 +310,8 @@ export default function CreateOrAttachUserPage() {
                   className={inputCls}
                   value={lastName}
                   onChange={(e)=>setLastName(e.target.value)}
-                  readOnly={isExisting}
-                  disabled={isExisting}
+                  readOnly={isExisting || submitting}
+                  disabled={isExisting || submitting}
                   placeholder="Ej, Vaquero Yornet"
                 />
               </div>
@@ -317,8 +322,8 @@ export default function CreateOrAttachUserPage() {
                   className={inputCls}
                   value={dni}
                   onChange={(e)=>setDni(e.target.value)}
-                  readOnly={isExisting}
-                  disabled={isExisting}
+                  readOnly={isExisting || submitting}
+                  disabled={isExisting || submitting}
                   placeholder="Ej, 99.999.999"
                 />
               </div>
@@ -329,8 +334,8 @@ export default function CreateOrAttachUserPage() {
                   className={inputCls}
                   value={phone}
                   onChange={(e)=>setPhone(e.target.value)}
-                  readOnly={isExisting}
-                  disabled={isExisting}
+                  readOnly={isExisting || submitting}
+                  disabled={isExisting || submitting}
                   placeholder="Ej, 3519999999"
                 />
               </div>
@@ -351,6 +356,7 @@ export default function CreateOrAttachUserPage() {
                   className="w-full border rounded p-3"
                   value={roleId}
                   onChange={(e)=>onChangeRole(e.target.value ? Number(e.target.value) : "")}
+                  disabled={submitting}
                 >
                   <option value="">Seleccione un rol</option>
                   {roles.map(r => (
@@ -370,7 +376,7 @@ export default function CreateOrAttachUserPage() {
                       className={engineerInputCls}
                       value={engineerKind}
                       onChange={(e)=>setEngineerKind(e.target.value as "Titular" | "Suplente" | "")}
-                      disabled={!engineerEditable}
+                      disabled={!engineerEditable || submitting}
                     >
                       <option value="">Seleccionar</option>
                       <option value="Titular">Titular</option>
@@ -385,8 +391,8 @@ export default function CreateOrAttachUserPage() {
                       value={engineerRegistration}
                       onChange={(e)=>setEngineerRegistration(e.target.value)}
                       placeholder="Ej, 12345"
-                      readOnly={!engineerEditable}
-                      disabled={!engineerEditable}
+                      readOnly={!engineerEditable || submitting}
+                      disabled={!engineerEditable || submitting}
                     />
                   </div>
 
@@ -397,8 +403,8 @@ export default function CreateOrAttachUserPage() {
                       value={engineerDegree}
                       onChange={(e)=>setEngineerDegree(e.target.value)}
                       placeholder="Ej, Ing. Mecánico"
-                      readOnly={!engineerEditable}
-                      disabled={!engineerEditable}
+                      readOnly={!engineerEditable || submitting}
+                      disabled={!engineerEditable || submitting}
                     />
                   </div>
                 </>
@@ -423,11 +429,17 @@ export default function CreateOrAttachUserPage() {
               <button
                 onClick={()=>router.back()}
                 className="border text-[#0040B8] hover:bg-[#0040B8] duration-150 hover:text-white border-[#0040B8] px-5 py-3 rounded"
+                disabled={submitting}
               >
                 Volver
               </button>
-              <button onClick={submit} className="bg-[#0040B8] text-white px-6 py-3 rounded">
-                {ctaLabel}
+              <button onClick={submit} disabled={submitting} className="bg-[#0040B8] text-white px-6 py-3 rounded disabled:opacity-60">
+                {submitting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                    {isExisting ? "Asociando..." : "Creando..."}
+                  </span>
+                ) : ctaLabel}
               </button>
             </div>
           </div>

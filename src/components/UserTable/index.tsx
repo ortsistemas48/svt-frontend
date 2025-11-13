@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import clsx from "clsx";
+import { useUser } from "@/context/UserContext";
 
 type AnyUser = {
   id: string | number;
@@ -132,7 +133,7 @@ function RoleDropdown({
                 onMouseEnter={() => setActive(i)}
                 onClick={() => { onChange(r); setOpen(false); btnRef.current?.focus(); }}
                 className={clsx(
-                  "w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm text-left",
+                  "w-full flex items-center gap-2 px-2 py-2 rounded-[4px] text-sm text-left",
                   isAct ? "bg-gray-100" : "bg-white"
                 )}
               >
@@ -186,6 +187,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
   const [savingRole, setSavingRole] = useState(false);
   const [roleError, setRoleError] = useState<string | null>(null);
   const [roleOk, setRoleOk] = useState<string | null>(null);
+  const { user } = useUser();
 
   const router = useRouter();
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -203,6 +205,10 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
       return fn.includes(q) || ln.includes(q) || email.includes(q) || dni.includes(q) || ph.includes(q) || role.includes(q);
     });
   }, [users, searchText]);
+
+  const engineersCount = useMemo(() => {
+    return users.filter((u) => (u.role || "").toLowerCase().includes("ingeniero")).length;
+  }, [users]);
 
   const handleRefresh = () => router.refresh();
 
@@ -222,9 +228,41 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
     }, 200);
   }
 
+  function handleAskDelete() {
+    if (!selected) return;
+    const isSelf = String(selected.id) === String(user.id);
+    const isEngineer = (selected.role || "").toLowerCase().includes("ingeniero");
+    const isLastEngineer = isEngineer && engineersCount <= 1;
+    if (isSelf) {
+      setDeleteError("No podés desvincularte a vos mismo.");
+      setConfirmOpen(false);
+      return;
+    }
+    if (isLastEngineer) {
+      setDeleteError("No se puede desvincular al último Ingeniero del taller.");
+      setConfirmOpen(false);
+      return;
+    }
+    setDeleteError(null);
+    setConfirmOpen(true);
+  }
+
   async function doDelete(workshopId: number) {
     if (!selected) return;
     try {
+      // Server-side guard redundante por seguridad
+      const isSelf = String(selected.id) === String(user.id);
+      const isEngineer = (selected.role || "").toLowerCase().includes("ingeniero");
+      const isLastEngineer = isEngineer && engineersCount <= 1;
+      if (isSelf) {
+        setDeleteError("No podés desvincularte a vos mismo.");
+        return;
+      }
+      if (isLastEngineer) {
+        setDeleteError("No se puede desvincular al último Ingeniero del taller.");
+        return;
+      }
+
       setDeleting(true);
       setDeleteError(null);
 
@@ -316,7 +354,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
     <div className="p-4 sm:p-6">
       {/* 3) Input y botones fuera del borde, por eso están fuera del card de la tabla */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
-        <div className="flex-1 flex items-center border border-gray-300 rounded-md px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
+        <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
           <Search size={18} className="text-gray-500 mr-2 flex-shrink-0" />
           <input
             type="text"
@@ -327,12 +365,12 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
         </div>
 
         <div className="flex gap-2 sm:gap-3">
-          {/* <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
+          {/* <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
             <SlidersHorizontal size={16} />
             <span className="hidden sm:inline">Filtrar</span>
           </button> */}
           <button
-            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
+            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
             onClick={handleRefresh}
           >
             <RefreshCcw size={16} />
@@ -505,9 +543,9 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                 <div className="flex justify-center">
                   <button
                     type="button"
-                    onClick={() => setConfirmOpen(true)}
-                    disabled={deleting}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
+                    onClick={handleAskDelete}
+                    disabled={deleting || (selected && (String(selected.id) === String(user.id) || ((selected.role || '').toLowerCase().includes('ingeniero') && engineersCount <= 1)))}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
                   >
                     <Trash2 size={16} />
                     {deleting ? "Desvinculando..." : "Desvincular usuario del taller"}
@@ -560,7 +598,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
               <button
                 type="button"
                 onClick={() => setConfirmOpen(false)}
-                className="px-4 py-2 rounded-md border border-gray-300 bg-white text-sm hover:bg-gray-50"
+                className="px-4 py-2 rounded-[4px] border border-gray-300 bg-white text-sm hover:bg-gray-50"
               >
                 Cancelar
               </button>
@@ -568,7 +606,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                 type="button"
                 onClick={() => doDelete(Number(id))}
                 disabled={deleting}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
               >
                 <Trash2 size={16} />
                 {deleting ? "Desvinculando..." : "Sí, desvincular"}

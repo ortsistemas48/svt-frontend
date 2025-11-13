@@ -162,7 +162,7 @@ export default function UserTable({ users, onDelete }: Props) {
     <div className="p-4 sm:p-6">
       {/* Filtros y acciones, fuera del card de tabla */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
-        <div className="flex-1 flex items-center border border-gray-300 rounded-md px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
+        <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
           <Search size={18} className="text-gray-500 mr-2 flex-shrink-0" />
           <input
             type="text"
@@ -173,12 +173,12 @@ export default function UserTable({ users, onDelete }: Props) {
         </div>
 
         <div className="flex gap-2 sm:gap-3">
-          <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
+          <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
             <SlidersHorizontal size={16} />
             <span className="hidden sm:inline">Filtrar</span>
           </button>
           <button
-            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
+            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
             onClick={handleRefresh}
           >
             <RefreshCcw size={16} />
@@ -413,7 +413,7 @@ export default function UserTable({ users, onDelete }: Props) {
                       type="button"
                       onClick={() => setConfirmOpen(true)}
                       disabled={deleting}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
                     >
                       <Trash2 size={16} />
                       {deleting ? "Procesando..." : "Desvincular usuario"}
@@ -459,7 +459,7 @@ export default function UserTable({ users, onDelete }: Props) {
               <button
                 type="button"
                 onClick={() => setConfirmOpen(false)}
-                className="px-4 py-2 rounded-md border border-gray-300 bg-white text-sm hover:bg-gray-50"
+                className="px-4 py-2 rounded-[4px] border border-gray-300 bg-white text-sm hover:bg-gray-50"
               >
                 Cancelar
               </button>
@@ -467,7 +467,7 @@ export default function UserTable({ users, onDelete }: Props) {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
               >
                 <Trash2 size={16} />
                 {deleting ? "Procesando..." : "Sí, desvincular"}

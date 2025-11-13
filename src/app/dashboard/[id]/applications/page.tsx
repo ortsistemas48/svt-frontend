@@ -37,7 +37,7 @@ export default function InspectionsPage() {
 
         {/* Error Message */}
         {showError && applicationErrors.general && (
-          <div className="border border-red-300 bg-red-50 text-red-700 text-xs sm:text-sm rounded-md px-3 sm:px-4 py-2 sm:py-3 mb-4 sm:mb-6">
+          <div className="border border-red-300 bg-red-50 text-red-700 text-xs sm:text-sm rounded-[4px] px-3 sm:px-4 py-2 sm:py-3 mb-4 sm:mb-6">
             {applicationErrors.general}
           </div>
         )}

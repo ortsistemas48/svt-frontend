@@ -215,12 +215,12 @@ export default function StickerOrdersTable() {
   return (
     <div>
       {errorMsg && (
-        <div className="mb-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-3 rounded-[4px] border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
           {errorMsg}
         </div>
       )}
       {successMsg && (
-        <div className="mb-3 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+        <div className="mb-3 rounded-[4px] border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
           {successMsg}
         </div>
       )}
@@ -231,7 +231,7 @@ export default function StickerOrdersTable() {
             disabled={loading}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
+            className="flex-1 rounded-[4px] border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
             placeholder="Buscar por número, patente u orden"
             onKeyDown={(e) => {
               if (e.key === "Enter") setSearchQuery(q);
@@ -240,7 +240,7 @@ export default function StickerOrdersTable() {
           <button
             disabled={loading}
             onClick={() => setSearchQuery(q)}
-            className="flex items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+            className="flex items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
           >
             <Search size={16} />
             <span className="hidden sm:inline">Buscar</span>
@@ -249,7 +249,7 @@ export default function StickerOrdersTable() {
           <button
             disabled={loading}
             onClick={() => setShowFilters(!showFilters)}
-            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
           >
             <SlidersHorizontal size={16} className="text-white" />
             <span className="hidden sm:inline text-white">Filtrar</span>
@@ -337,7 +337,7 @@ export default function StickerOrdersTable() {
                         aria-haspopup="menu"
                         aria-expanded={isMenuOpen}
                         onClick={() => setOpenMenuId((cur) => (cur === item.id ? null : item.id))}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-700 hover:bg-gray-100"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-[4px] text-gray-700 hover:bg-gray-100"
                       >
                         <EllipsisVertical size={18} />
                         <span className="sr-only">Abrir acciones</span>
@@ -363,7 +363,7 @@ export default function StickerOrdersTable() {
                   <td className="p-3 text-center"><Sk className="mx-auto h-4 w-16" /></td>
                   <td className="p-3 text-center">
                     <div className="flex items-center justify-center">
-                      <Sk className="h-8 w-8 rounded-md" />
+                      <Sk className="h-8 w-8 rounded-[4px]" />
                     </div>
                   </td>
                 </tr>
@@ -377,7 +377,7 @@ export default function StickerOrdersTable() {
         {meta.total > meta.per_page && (
           <div className="flex items-center gap-2">
             <button
-              className="rounded-md border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={!meta.has_prev}
             >
@@ -388,7 +388,7 @@ export default function StickerOrdersTable() {
               Página {meta.page} de {meta.total_pages}
             </span>
             <button
-              className="rounded-md border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => p + 1)}
               disabled={!meta.has_next}
             >
@@ -454,7 +454,7 @@ function RowActionsMenu({
   return (
     <div
       ref={ref}
-      className="absolute right-2 top-10 z-20 w-56 overflow-hidden rounded-md border border-gray-200 bg-white"
+      className="absolute right-2 top-10 z-20 w-56 overflow-hidden rounded-[4px] border border-gray-200 bg-white"
       role="menu"
       aria-orientation="vertical"
     >

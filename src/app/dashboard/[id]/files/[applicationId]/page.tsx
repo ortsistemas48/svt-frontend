@@ -636,7 +636,7 @@ export default function FileDetailPage() {
             </div>
           </div>
 
-          {/* Archivos de revisión tecnica */}
+          {/* Archivos de revisión técnica - ahora dentro de cada ficha técnica */}
           <div className="bg-white rounded-[10px] shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
@@ -648,20 +648,32 @@ export default function FileDetailPage() {
                 <h3 className="text-md text-gray-900">Archivos de revisión técnica</h3>
               </div>
             </div>
-            <div className="p-6">
-              {techDocs.length > 0 ? (
-                <div className="space-y-3">
-                  {techDocs.map((d) => (
-                    <div key={d.id}>{renderDocument(d.file_name, d.file_url)}</div>
-                  ))}
+            <div className="p-6 space-y-2">
+              <p className="text-sm text-gray-700">
+                Los documentos de revisión técnica se encuentran dentro de cada ficha técnica.
+              </p>
+              <div className="text-sm">
+                <a
+                  className="text-[#0040B8] hover:underline"
+                  href={`/dashboard/${id}/files/${applicationId}/inspection`}
+                >
+                  Ir a ficha técnica primera revisión
+                </a>
+              </div>
+              {result2 && (
+                <div className="text-sm">
+                  <a
+                    className="text-[#0040B8] hover:underline"
+                    href={`/dashboard/${id}/files/${applicationId}/inspection?is_second=true`}
+                  >
+                    Ir a ficha técnica segunda revisión
+                  </a>
                 </div>
-              ) : (
-                <p className="text-sm text-gray-500">No hay documentos de revisión técnica</p>
               )}
             </div>
           </div>
 
-          {/* Certificado (CRT) */}
+          {/* Certificado Revisión Técnica */}
           <div className="bg-white rounded-[10px] shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
@@ -670,19 +682,35 @@ export default function FileDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m4-4H8" />
                   </svg>
                 </div>
-                <h3 className="text-md text-gray-900">Certificado (CRT)</h3>
+                <h3 className="text-md text-gray-900">Certificado Revisión Técnica</h3>
               </div>
             </div>
-            <div className="p-6 flex items-center justify-between">
-              <p className="text-sm text-gray-700">Descargá el certificado en PDF</p>
-              <a
-                href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/certificado.pdf`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 bg-[#0040B8] text-white rounded hover:bg-[#0035A0]"
-              >
-                Descargar CRT
-              </a>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-700">Descargá el certificado de la primera revisión</p>
+                <a
+                  href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/certificado.pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-[#0040B8] text-white rounded hover:bg-[#0035A0]"
+                >
+                  Descargar CRT 1ra revisión
+                </a>
+              </div>
+
+              {result2 && (
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-700">Descargá el certificado de la segunda revisión</p>
+                  <a
+                    href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/certificado_2.pdf`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-[#0040B8] text-white rounded hover:bg-[#0035A0]"
+                  >
+                    Descargar CRT 2da revisión
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 
@@ -797,7 +825,7 @@ export default function FileDetailPage() {
           <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection`)}>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-md text-gray-900 mb-1">Ficha técnica</h2>
+                <h2 className="text-md text-gray-900 mb-1">Ficha técnica primera revisión</h2>
                 <p className="text-sm text-gray-500">Ficha técnica no modificable, solo visualización</p>
               </div>
               <div className="flex items-center gap-4 justify-between w-[50%]">
@@ -820,7 +848,7 @@ export default function FileDetailPage() {
             const result2Config = getResultConfig(result2);
             const Result2Icon = result2Config.icon;
             return (
-              <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection`)}>
+              <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection?is_second=true`)}>
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-md text-gray-900 mb-1">Ficha técnica segunda revisión</h2>

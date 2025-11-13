@@ -231,7 +231,7 @@ export default function DashboardClientLayout({
                   onClick={() => setSidebarOpen(true)}
                   aria-label="Abrir sidebar"
                   title="Abrir sidebar"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white shadow hover:bg-gray-50"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-[4px] border border-slate-200 bg-white shadow hover:bg-gray-50"
                 >
                   <PanelLeftOpen className="h-4 w-4 text-slate-700" />
                 </button>

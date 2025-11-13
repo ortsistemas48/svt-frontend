@@ -1,5 +1,5 @@
 // app/dashboard/[id]/files/[applicationId]/ficha-tecnica/page.tsx
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import { cookies, headers } from "next/headers";
 import fetchUserTypeInWorkshop from "@/auth";
 import { InspectionStepsViewOnlyClient } from "./InspectionStepsViewOnlyClient";
@@ -251,10 +251,6 @@ export default async function FichaTecnicaPage({
                 Legajos
               </a>
               <ChevronRight size={20} />
-              <a href={`/dashboard/${workshopId}/files/${applicationId}`} className="text-[#0040B8] hover:underline">
-                Detalle
-              </a>
-              <ChevronRight size={20} />
               <span className="text-[#0040B8]">Ficha técnica segunda revisión</span>
             </div>
           </article>
@@ -313,13 +309,18 @@ export default async function FichaTecnicaPage({
             Legajos
           </a>
           <ChevronRight size={20} />
-          <a href={`/dashboard/${workshopId}/files/${applicationId}`} className="text-[#0040B8] hover:underline">
-            Detalle
-          </a>
-          <ChevronRight size={20} />
           <span className="text-[#0040B8]">{pageTitle}</span>
           <ChevronRight size={20} />
           <span className="text-[#0040B8]">{plateLabel}</span>
+        </div>
+        <div>
+          <a
+            href={`/dashboard/${workshopId}/files/${applicationId}`}
+            className="inline-flex items-center gap-1 text-[#0040B8] hover:underline hover:text-[#0035A0] font-medium"
+          >
+            <ChevronLeft size={18} />
+            Volver al detalle
+          </a>
         </div>
       </article>
 

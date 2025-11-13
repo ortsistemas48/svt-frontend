@@ -86,7 +86,7 @@ export default function RegisterOwnerForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nombre@dominio.com"
-              className="w-full border border-gray-300 rounded-md px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
+              className="w-full border border-gray-300 rounded-[4px] px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
               focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
               required
             />
@@ -101,7 +101,7 @@ export default function RegisterOwnerForm() {
               value={dni}
               onChange={(e) => setDni(e.target.value)}
               placeholder="Ej: 12345678"
-              className="w-full border border-gray-300 rounded-md px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
+              className="w-full border border-gray-300 rounded-[4px] px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
               focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
               required
             />
@@ -115,7 +115,7 @@ export default function RegisterOwnerForm() {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="Ej: Juan Diego"
-              className="w-full border border-gray-300 rounded-md px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
+              className="w-full border border-gray-300 rounded-[4px] px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
               focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
               required
             />
@@ -129,7 +129,7 @@ export default function RegisterOwnerForm() {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="Ej: Martin"
-              className="w-full border border-gray-300 rounded-md px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
+              className="w-full border border-gray-300 rounded-[4px] px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
               focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
               required
             />
@@ -138,7 +138,7 @@ export default function RegisterOwnerForm() {
           <div className="relative md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
               <input
-                className="w-full border border-gray-300 rounded-md placeholder:text-sm px-3 py-2.5 sm:px-4 sm:py-3 pr-10 text-sm sm:text-base 
+                className="w-full border border-gray-300 rounded-[4px] placeholder:text-sm px-3 py-2.5 sm:px-4 sm:py-3 pr-10 text-sm sm:text-base 
                 focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
                 type={showPass ? "text" : "password"}
                 placeholder={"Ingresá una contraseña"}
@@ -168,7 +168,7 @@ export default function RegisterOwnerForm() {
           <div className="relative md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
               <input
-                className="w-full border border-gray-300 rounded-md placeholder:text-sm px-3 py-2.5 sm:px-4 sm:py-3 pr-10 text-sm sm:text-base 
+                className="w-full border border-gray-300 rounded-[4px] placeholder:text-sm px-3 py-2.5 sm:px-4 sm:py-3 pr-10 text-sm sm:text-base 
                 focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
                 type={showPass ? "text" : "password"}
                 placeholder={"Repetí la contraseña"}
@@ -191,7 +191,7 @@ export default function RegisterOwnerForm() {
           {msg && (
             <div className="flex justify-center mt-4 md:col-span-2">
                 <div
-                className={`rounded-md border px-4 w-full py-3 text-center text-sm sm:text-base ${
+                className={`rounded-[4px] border px-4 w-full py-3 text-center text-sm sm:text-base ${
                     msg.type === "error" 
                       ? "border-red-300 bg-red-50 text-red-800" 
                       : "border-green-300 bg-green-50 text-green-800"
@@ -206,7 +206,7 @@ export default function RegisterOwnerForm() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-4 w-full bg-[#0040B8] text-white text-sm sm:text-base font-medium rounded-md py-3 sm:py-3.5 
+              className="mt-4 w-full bg-[#0040B8] text-white text-sm sm:text-base font-medium rounded-[4px] py-3 sm:py-3.5 
               hover:bg-[#0035A0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               {loading ? (

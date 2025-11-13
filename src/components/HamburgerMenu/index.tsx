@@ -41,7 +41,7 @@ export default function HamburgerMenu() {
     <div className="block md:hidden relative z-50">
       <button
         type="button"
-        className="p-2 w-10 h-10 text-gray-600 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="p-2 w-10 h-10 text-gray-600 rounded-[4px] hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-controls="navbar-hamburger"
         aria-expanded={isOpen}
         onClick={() => setIsOpen(prev => !prev)}
@@ -61,7 +61,7 @@ export default function HamburgerMenu() {
       {isOpen && (
         <ul
           id="navbar-hamburger"
-          className="absolute min-w-full left-[-10px] mt-2 bg-white shadow-lg rounded-md py-2"
+          className="absolute min-w-full left-[-10px] mt-2 bg-white shadow-lg rounded-[4px] py-2"
         >
           {links.map(link => (
             <li key={link.href}>

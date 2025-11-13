@@ -108,7 +108,7 @@ export default function UserProfile() {
           <div className="space-y-1">
             <button
               onClick={goSelectWorkshop}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-[#0040B8] hover:bg-blue-50 rounded-md transition-colors duration-150 group"
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-[#0040B8] hover:bg-blue-50 rounded-[4px] transition-colors duration-150 group"
             >
               <ArrowLeft className="w-4 h-4 group-hover:scale-110 transition-transform duration-150" />
               Volver a seleccionar taller
@@ -116,7 +116,7 @@ export default function UserProfile() {
 
             <button
               onClick={logOutFunction}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors duration-150 group"
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-[4px] transition-colors duration-150 group"
             >
               <svg
                 className="w-4 h-4 group-hover:scale-110 transition-transform duration-150"

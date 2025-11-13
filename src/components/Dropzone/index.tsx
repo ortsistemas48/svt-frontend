@@ -190,7 +190,7 @@ export default function Dropzone({
         <button
           type="button"
           onClick={onBrowse}
-          className="mt-4 mb-2 px-4 py-2 bg-[#fff] text-[#0040B8] border border-[#0040B8] rounded-md text-sm duration-150 hover:bg-[#0040B8] hover:text-[#fff]"
+          className="mt-4 mb-2 px-4 py-2 bg-[#fff] text-[#0040B8] border border-[#0040B8] rounded-[4px] text-sm duration-150 hover:bg-[#0040B8] hover:text-[#fff]"
         >
           Elegí archivos
         </button>

@@ -112,7 +112,7 @@ export default function WorkshopTable({ workshops }: Props) {
     <div className="p-4 sm:p-6">
       {/* Filtros y acciones, fuera del card de tabla */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
-        <div className="flex-1 flex items-center border border-gray-300 rounded-md px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
+        <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
           <Search size={18} className="text-gray-500 mr-2 flex-shrink-0" />
           <input
             type="text"
@@ -124,7 +124,7 @@ export default function WorkshopTable({ workshops }: Props) {
 
         <div className="flex gap-2 sm:gap-3">
           <button
-            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
+            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
             onClick={handleRefresh}
           >
             <RefreshCcw size={16} />

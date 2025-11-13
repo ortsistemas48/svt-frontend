@@ -165,7 +165,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
     <div className="p-4 sm:p-6">
       {/* Búsqueda y acciones */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
-        <div className="flex-1 flex items-center border border-gray-300 rounded-md px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
+        <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
           <Search size={18} className="text-gray-500 mr-2 flex-shrink-0" />
           <input
             type="text"
@@ -190,12 +190,12 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
             <option value="REJECTED">Rechazado</option>
           </select>
 
-          <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
+          <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
             <SlidersHorizontal size={16} />
             <span className="hidden sm:inline">Filtrar</span>
           </button>
           <button
-            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-md flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
+            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
             onClick={handleRefresh}
           >
             <RefreshCcw size={16} />
@@ -250,7 +250,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                 pageItems.map((o) => (
                   <tr key={o.id} className="hover:bg-gray-50 transition-colors">
                     <td className="p-3 text-center">
-                      <div className="mx-auto w-fit rounded-md bg-gray-100 px-2 py-1 text-xs font-medium">#{o.id}</div>
+                      <div className="mx-auto w-fit rounded-[4px] bg-gray-100 px-2 py-1 text-xs font-medium">#{o.id}</div>
                     </td>
                     <td className="p-3 text-center">{workshopLabel(o)}</td>
                     <td className="p-3 text-center">{o.quantity}</td>
@@ -389,7 +389,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                     type="button"
                     onClick={() => setConfirmOpen("APPROVE")}
                     disabled={processing}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-sm"
                     title="Aprobar"
                   >
                     <CheckCircle2 size={16} />
@@ -399,7 +399,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                     type="button"
                     onClick={() => setConfirmOpen("REJECT")}
                     disabled={processing}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
                     title="Rechazar"
                   >
                     <XCircle size={16} />
@@ -409,7 +409,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
               )}
 
               {selected.status === "PENDING" && (
-                <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                <div className="rounded-[4px] bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
                   Esta orden está pendiente de pago. El taller debe subir el comprobante antes de poder aprobarla.
                 </div>
               )}
@@ -455,7 +455,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
               <button
                 type="button"
                 onClick={() => setConfirmOpen(null)}
-                className="px-4 py-2 rounded-md border border-gray-300 bg-white text-sm hover:bg-gray-50"
+                className="px-4 py-2 rounded-[4px] border border-gray-300 bg-white text-sm hover:bg-gray-50"
               >
                 Cancelar
               </button>
@@ -463,7 +463,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                 type="button"
                 onClick={confirmAction}
                 disabled={processing}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-white text-sm ${
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-[4px] text-white text-sm ${
                   confirmOpen === "APPROVE" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"
                 } disabled:opacity-60`}
               >

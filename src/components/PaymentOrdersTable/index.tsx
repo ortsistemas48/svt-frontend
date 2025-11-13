@@ -191,12 +191,12 @@ export default function PaymentOrdersTable() {
     <div>
       {/* Mensajes */}
       {errorMsg && (
-        <div className="mb-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+        <div className="mb-3 rounded-[4px] border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700">
           {errorMsg}
         </div>
       )}
       {successMsg && (
-        <div className="mb-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <div className="mb-3 rounded-[4px] border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
           {successMsg}
         </div>
       )}
@@ -282,7 +282,7 @@ export default function PaymentOrdersTable() {
                 return (
                   <tr key={item.id} className="transition-colors hover:bg-gray-50">
                     <td className="p-3 text-center">
-                      <div className="mx-auto w-fit rounded-md bg-gray-100 px-2 py-1 text-xs font-medium">{item.id}</div>
+                      <div className="mx-auto w-fit rounded-[4px] bg-gray-100 px-2 py-1 text-xs font-medium">{item.id}</div>
                     </td>
                     <td className="p-3 text-center">
                       <div className="text-sm">{date}</div>
@@ -367,7 +367,7 @@ export default function PaymentOrdersTable() {
         {total > perPage && (
           <div className="flex items-center gap-2">
             <button
-              className="rounded-md border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
@@ -378,7 +378,7 @@ export default function PaymentOrdersTable() {
               Página {page} de {totalPages}
             </span>
             <button
-              className="rounded-md border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
             >
