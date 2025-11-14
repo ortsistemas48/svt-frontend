@@ -45,11 +45,23 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState<string | null>(null); // "approve" | `kick-${user_id}`
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [openMemberModal, setOpenMemberModal] = useState(false);
 
   const router = useRouter();
 
   useEffect(() => { setPage(1); }, [searchText, pageSize]);
+
+  const workshopOwnerEmail = useMemo(() => {
+    if (!members || members.length === 0) return "-";
+    const normalize = (v: unknown) => String(v ?? "").toLowerCase();
+    const owners = members.filter((m) => {
+      const r = normalize(m.role);
+      return r.includes("titular") || r.includes("owner") || r.includes("dueño");
+    });
+    const firstOwnerWithEmail = owners.find((m) => !!m.email?.trim());
+    if (firstOwnerWithEmail?.email) return firstOwnerWithEmail.email;
+    const firstWithEmail = members.find((m) => !!m.email?.trim());
+    return firstWithEmail?.email || "-";
+  }, [members]);
 
   async function approveUser(userId: string | number) {
     const res = await fetch(
@@ -131,11 +143,9 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
 
   const openMemberDetails = (member: Member) => {
     setSelectedMember(member);
-    setOpenMemberModal(true);
   };
 
   const closeMemberModal = () => {
-    setOpenMemberModal(false);
     setSelectedMember(null);
   };
 
@@ -347,27 +357,25 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
       {openModal && selectedWs && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={actionBusy ? undefined : closeModal} />
-          <div className="relative z-[61] w-full max-w-4xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="relative z-[61] w-full max-w-4xl bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-[#0040B8] to-[#0050D8]">
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
               <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-full">
-                  <Building2 size={24} className="text-white" />
+                <div className="p-2 rounded-full bg-[#F3F6FF]">
+                  <Building2 size={20} className="text-[#0040B8]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Detalles del Taller</h3>
-                  <p className="text-sm text-white/80">
-                    {selectedWs.name}
-                  </p>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">Detalles del Taller</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">{selectedWs.name}</p>
                 </div>
               </div>
               <button
                 onClick={closeModal}
-                className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+                className="p-1.5 rounded-full border hover:bg-gray-50 transition-colors"
                 disabled={!!actionBusy}
                 aria-label="Cerrar"
               >
-                <X size={20} className="text-white" />
+                <X size={18} className="text-gray-700" />
               </button>
             </div>
 
@@ -439,6 +447,11 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                         icon={<FileText size={18} className="text-gray-500" />}
                         label="CUIT" 
                         value={wsDetail.cuit || "-"} 
+                      />
+                      <DetailRow 
+                        icon={<Mail size={18} className="text-gray-500" />}
+                        label="Email del taller" 
+                        value={workshopOwnerEmail} 
                       />
                       <DetailRow 
                         icon={<Phone size={18} className="text-gray-500" />}
@@ -527,6 +540,112 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
               ) : null}
             </div>
 
+            {/* Member side panel (inline, no nested modal) */}
+            {selectedMember && (
+              <div className="absolute right-0 top-0 h-full w-full sm:w-[420px] bg-white border-l shadow-xl z-[62] flex flex-col">
+                <div className="flex items-center justify-between px-5 py-4 border-b bg-white">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-[#F3F6FF]">
+                      <User size={18} className="text-[#0040B8]" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900">Información del Usuario</h4>
+                      <p className="text-xs text-gray-600">
+                        {selectedMember.first_name} {selectedMember.last_name}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={closeMemberModal}
+                    className="p-1.5 rounded-full border hover:bg-gray-50 transition-colors"
+                    aria-label="Cerrar panel"
+                  >
+                    <X size={16} className="text-gray-700" />
+                  </button>
+                </div>
+
+                <div className="px-5 py-5 space-y-5 overflow-y-auto flex-1">
+                  {/* Información Personal */}
+                  <div>
+                    <h5 className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <User size={14} className="text-[#0040B8]" />
+                      Información Personal
+                    </h5>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-100">
+                      <DetailRow 
+                        icon={<User size={16} className="text-gray-500" />}
+                        label="Nombre completo" 
+                        value={`${selectedMember.first_name || "-"} ${selectedMember.last_name || ""}`} 
+                      />
+                      <DetailRow 
+                        icon={<CreditCard size={16} className="text-gray-500" />}
+                        label="DNI" 
+                        value={selectedMember.dni || "-"} 
+                      />
+                      <DetailRow 
+                        icon={<Briefcase size={16} className="text-gray-500" />}
+                        label="Rol" 
+                        value={String(selectedMember.role ?? "-")} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Información de Contacto */}
+                  <div>
+                    <h5 className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <Mail size={14} className="text-[#0040B8]" />
+                      Información de Contacto
+                    </h5>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-100">
+                      <DetailRow 
+                        icon={<Mail size={16} className="text-gray-500" />}
+                        label="Email" 
+                        value={selectedMember.email || "-"} 
+                      />
+                      <DetailRow 
+                        icon={<Phone size={16} className="text-gray-500" />}
+                        label="Teléfono" 
+                        value={selectedMember.phone_number || "-"} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Información Profesional (solo para Ingenieros) */}
+                  {(String(selectedMember.role).toLowerCase() === "ingeniero" || 
+                    String(selectedMember.role).toLowerCase() === "ingeniería" ||
+                    selectedMember.role === 2) && (
+                    <div>
+                      <h5 className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <Award size={14} className="text-[#0040B8]" />
+                        Información Profesional
+                      </h5>
+                      <div className="bg-blue-50 rounded-lg p-4 space-y-3 border border-blue-100">
+                        <DetailRow 
+                          icon={<Award size={16} className="text-blue-600" />}
+                          label="Número de matrícula" 
+                          value={selectedMember.license_number || "-"} 
+                        />
+                        <DetailRow 
+                          icon={<FileText size={16} className="text-blue-600" />}
+                          label="Título" 
+                          value={selectedMember.title_name || "-"} 
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-end gap-3 px-5 py-3 border-t bg-gray-50">
+                  <button
+                    onClick={closeMemberModal}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 transition-colors"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Footer */}
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-gray-50">
               <button
@@ -547,117 +666,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
         </div>
       )}
 
-      {/* Modal de detalles del miembro */}
-      {openMemberModal && selectedMember && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={closeMemberModal} />
-          <div className="relative z-[71] w-full max-w-3xl bg-white rounded-lg shadow-xl">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-[#0040B8] to-[#0050D8]">
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-full">
-                  <User size={24} className="text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Información del Usuario</h3>
-                  <p className="text-sm text-white/80">
-                    {selectedMember.first_name} {selectedMember.last_name}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={closeMemberModal}
-                className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
-                aria-label="Cerrar"
-              >
-                <X size={20} className="text-white" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
-              {/* Información Personal */}
-              <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                  <User size={16} className="text-[#0040B8]" />
-                  Información Personal
-                </h4>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  <DetailRow 
-                    icon={<User size={18} className="text-gray-500" />}
-                    label="Nombre completo" 
-                    value={`${selectedMember.first_name || "-"} ${selectedMember.last_name || ""}`} 
-                  />
-                  <DetailRow 
-                    icon={<CreditCard size={18} className="text-gray-500" />}
-                    label="DNI" 
-                    value={selectedMember.dni || "-"} 
-                  />
-                  <DetailRow 
-                    icon={<Briefcase size={18} className="text-gray-500" />}
-                    label="Rol" 
-                    value={String(selectedMember.role ?? "-")} 
-                  />
-                </div>
-              </div>
-
-              {/* Información de Contacto */}
-              <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                  <Mail size={16} className="text-[#0040B8]" />
-                  Información de Contacto
-                </h4>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  <DetailRow 
-                    icon={<Mail size={18} className="text-gray-500" />}
-                    label="Email" 
-                    value={selectedMember.email || "-"} 
-                  />
-                  <DetailRow 
-                    icon={<Phone size={18} className="text-gray-500" />}
-                    label="Teléfono" 
-                    value={selectedMember.phone_number || "-"} 
-                  />
-                </div>
-              </div>
-
-              {/* Información Profesional (solo para Ingenieros) */}
-              {(String(selectedMember.role).toLowerCase() === "ingeniero" || 
-                String(selectedMember.role).toLowerCase() === "ingeniería" ||
-                selectedMember.role === 2) && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                    <Award size={16} className="text-[#0040B8]" />
-                    Información Profesional
-                  </h4>
-                  <div className="bg-blue-50 rounded-lg p-4 space-y-3 border border-blue-100">
-                    <DetailRow 
-                      icon={<Award size={18} className="text-blue-600" />}
-                      label="Número de matrícula" 
-                      value={selectedMember.license_number || "-"} 
-                    />
-                    <DetailRow 
-                      icon={<FileText size={18} className="text-blue-600" />}
-                      label="Título" 
-                      value={selectedMember.title_name || "-"} 
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-gray-50">
-              <button
-                onClick={closeMemberModal}
-                className="px-5 py-2.5 rounded-lg text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 transition-colors"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* No nested modal: member details render inline within workshop modal */}
     </div>
   );
 }

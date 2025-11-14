@@ -26,8 +26,8 @@ type Props = {
 // Etiquetas legibles para el resumen de errores
 const FIELD_LABEL: Record<string, string> = {
   dni: "DNI",
-  first_name: "Nombre",
-  last_name: "Apellido",
+  first_name: "Nombre/s",
+  last_name: "Apellido/s",
   street: "Domicilio",
   province: "Provincia",
   city: "Localidad",
@@ -164,6 +164,10 @@ export default function PersonForm({
           )}
         </div>
       )}
+
+      <p className="px-4 mb-4 text-sm text-gray-600">
+        Los campos marcados con <span className="text-red-600">*</span> son obligatorios.
+      </p>
 
       <div
         className={`grid ${!isSamePerson ? "grid-cols-[1fr_1px_1fr]" : "px-4 grid-cols-1"

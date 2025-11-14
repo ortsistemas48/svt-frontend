@@ -31,11 +31,18 @@ type Props = {
 };
 
 export default function WorkshopTable({ workshops }: Props) {
+  type Member = {
+    user_id: number | string;
+    email?: string;
+    role?: string | number;
+  };
   const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Workshop | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
   const router = useRouter();
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
@@ -71,9 +78,24 @@ export default function WorkshopTable({ workshops }: Props) {
     router.refresh();
   };
 
-  function openDrawer(workshop: Workshop) {
+  async function openDrawer(workshop: Workshop) {
     setSelected(workshop);
     setOpen(true);
+    setMembers([]);
+    setLoadingMembers(true);
+    try {
+      const res = await fetch(`/api/workshops/admin/${workshop.id}/members`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setMembers(Array.isArray(data) ? data : []);
+      } else {
+        setMembers([]);
+      }
+    } catch {
+      setMembers([]);
+    } finally {
+      setLoadingMembers(false);
+    }
   }
   function closeDrawer() {
     setOpen(false);
@@ -107,6 +129,19 @@ export default function WorkshopTable({ workshops }: Props) {
       </span>
     </div>
   );
+
+  const workshopOwnerEmail = useMemo(() => {
+    if (!members || members.length === 0) return "-";
+    const norm = (v: unknown) => String(v ?? "").toLowerCase();
+    const owners = members.filter((m) => {
+      const r = norm(m.role);
+      return r.includes("titular") || r.includes("owner") || r.includes("dueño");
+    });
+    const firstOwnerWithEmail = owners.find((m) => (m.email ?? "").trim().length > 0);
+    if (firstOwnerWithEmail?.email) return firstOwnerWithEmail.email;
+    const firstWithEmail = members.find((m) => (m.email ?? "").trim().length > 0);
+    return firstWithEmail?.email || "-";
+  }, [members]);
 
   return (
     <div className="p-4 sm:p-6">
@@ -338,6 +373,7 @@ export default function WorkshopTable({ workshops }: Props) {
                 <Row label="Provincia" value={selected.province} />
                 <Row label="Dirección" value={selected.address} />
                 <Row label="CUIT" value={selected.cuit} />
+                <Row label="Email del taller" value={loadingMembers ? "Cargando..." : workshopOwnerEmail} />
                 <Row label="Teléfono" value={selected.phone} />
                 <Row label="Número de Planta" value={selected.plant_number} />
                 <Row label="Número de Disposición" value={selected.disposition_number} />

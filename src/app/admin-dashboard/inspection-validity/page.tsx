@@ -66,6 +66,11 @@ export default function InspectionValidityPage() {
   const selectedVisibleCount = useMemo(() => filteredLocalidades.reduce((acc, l) => acc + (selectedLocalidades[l.key] ? 1 : 0), 0), [filteredLocalidades, selectedLocalidades]);
   const visibleCount = filteredLocalidades.length;
   const allVisibleSelected = visibleCount > 0 && selectedVisibleCount === visibleCount;
+  const totalCount = localidades.length;
+  const allSelected = totalCount > 0 && selectedLocCount === totalCount;
+
+  // Filtro por tipo de uso para lote de localidades (ALL = todos)
+  const [bulkLocUsage, setBulkLocUsage] = useState<"ALL" | UsageType["value"]>("ALL");
 
   useEffect(() => {
     getProvinces().then(setProvinces);
@@ -163,6 +168,12 @@ export default function InspectionValidityPage() {
     setSelectedLocalidades(next);
   };
 
+  const toggleSelectAllLocalidadesAll = (checked: boolean) => {
+    const next: Record<string, boolean> = { ...selectedLocalidades };
+    localidades.forEach(l => { next[l.key] = checked; });
+    setSelectedLocalidades(next);
+  };
+
   const clearAllSelections = () => setSelectedLocalidades({});
 
   const handleToggleRow = useCallback((key: string, checked: boolean) => {
@@ -191,7 +202,11 @@ export default function InspectionValidityPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ localidad_keys: selectedKeys, values }),
+          body: JSON.stringify({
+            localidad_keys: selectedKeys,
+            values,
+            usage_codes: bulkLocUsage === "ALL" ? undefined : [bulkLocUsage]
+          }),
         }
       );
       if (!res.ok) throw new Error(await res.text());
@@ -263,18 +278,18 @@ export default function InspectionValidityPage() {
                 aria-label="Buscar localidad"
               />
             </div>
-            <span className="hidden md:inline px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700">{selectedLocCount} seleccionadas de {visibleCount}</span>
+            <span className="hidden md:inline px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700">{selectedLocCount} seleccionadas de {totalCount}</span>
           </div>
           <div className="flex items-center gap-2">
             <button
-              className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-[4px] border ${allVisibleSelected ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-blue-50 border-blue-200 text-blue-700'} hover:bg-blue-100 disabled:opacity-60`}
-              onClick={() => toggleSelectAllLocalidades(!allVisibleSelected)}
-              disabled={visibleCount === 0}
-              aria-label={allVisibleSelected ? 'Desmarcar todas' : 'Marcar todas'}
-              title={allVisibleSelected ? 'Desmarcar todas' : 'Marcar todas'}
+              className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-[4px] border ${allSelected ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-blue-50 border-blue-200 text-blue-700'} hover:bg-blue-100 disabled:opacity-60`}
+              onClick={() => toggleSelectAllLocalidadesAll(!allSelected)}
+              disabled={totalCount === 0}
+              aria-label={allSelected ? 'Desmarcar todas las localidades' : 'Marcar todas las localidades'}
+              title={allSelected ? 'Desmarcar todas las localidades' : 'Marcar todas las localidades'}
             >
               <CheckSquare size={14} />
-              {allVisibleSelected ? `Desmarcar todas (${visibleCount})` : `Marcar todas (${visibleCount})`}
+              {allSelected ? `Desmarcar todas (${totalCount})` : `Marcar todas (${totalCount})`}
             </button>
             <button
               className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-[4px] border hover:bg-slate-50 disabled:opacity-60"
@@ -290,7 +305,20 @@ export default function InspectionValidityPage() {
         </div>
 
         {/* Barra compacta de edición por lote */}
-        <div className="mb-3 grid grid-cols-1 md:grid-cols-[repeat(3,minmax(0,220px))_auto] gap-3 items-end">
+        <div className="mb-3 grid grid-cols-1 md:grid-cols-[minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_auto] gap-3 items-end">
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Tipo de uso</label>
+            <select
+              value={bulkLocUsage}
+              onChange={(e) => setBulkLocUsage(e.target.value as any)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="ALL">Todos</option>
+              {USAGE_TYPES.map(u => (
+                <option key={u.value} value={u.value}>{u.label}</option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="block text-xs text-slate-600 mb-1">Hasta 36 meses</label>
             <input

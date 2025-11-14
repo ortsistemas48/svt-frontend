@@ -141,6 +141,15 @@ export default function PaymentOrdersTable() {
   const formatARS = (n: number) =>
     n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 
+  // Una orden se considera vencida si pasaron más de 10 días desde su creación
+  const isExpired = (order: PaymentOrder) => {
+    if (!order.created_at) return false;
+    const created = new Date(order.created_at).getTime();
+    if (Number.isNaN(created)) return false;
+    const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
+    return Date.now() - created > TEN_DAYS_MS;
+  };
+
   const openUploadModal = (order: PaymentOrder) => {
     setSelectedOrder(order);
     setPendingFile(null);
@@ -301,23 +310,33 @@ export default function PaymentOrdersTable() {
                     <td className="p-3 text-center">{formatARS(item.unit_price)}</td>
                     <td className="p-3 text-center font-semibold">{formatARS(item.amount)}</td>
                     <td className="p-3 text-center">
-                      <span
-                        className={clsx(
-                          "inline-block rounded-full px-2 py-1 text-xs font-medium",
-                          toneForStatus(item.status)
-                        )}
-                      >
-                        {translateStatus(item.status)}
-                      </span>
+                      {item.status === "PENDING" && isExpired(item) ? (
+                        <span className="inline-block rounded-full bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700">
+                          Vencido
+                        </span>
+                      ) : (
+                        <span
+                          className={clsx(
+                            "inline-block rounded-full px-2 py-1 text-xs font-medium",
+                            toneForStatus(item.status)
+                          )}
+                        >
+                          {translateStatus(item.status)}
+                        </span>
+                      )}
                     </td>
                     <td className="p-3 text-center">
-                      {item.status === "PENDING" && !item.receipt_url ? (
+                      {item.status === "PENDING" && !item.receipt_url && !isExpired(item) ? (
                         <button
                           onClick={() => openUploadModal(item)}
                           className="inline-flex items-center gap-1 rounded-[4px] border border-[#0040B8] bg-[#0040B8] px-3 py-1.5 text-xs text-white hover:bg-[#00379f]"
                         >
                           Subir comprobante
                         </button>
+                      ) : item.status === "PENDING" && !item.receipt_url && isExpired(item) ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-rose-700">
+                          Vencido
+                        </span>
                       ) : item.receipt_url ? (
                         <span className="inline-flex items-center gap-1 text-xs text-green-600">
                           <span>✓</span> Comprobante subido

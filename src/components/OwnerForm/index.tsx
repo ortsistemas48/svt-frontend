@@ -132,8 +132,8 @@ export default function OwnerForm({
   const baseFormData = useMemo(
     () => [
       { label: "DNI", placeholder: "Ej: 39959950", name: "dni", type: "text", isRequired: true },
-      { label: "Nombre", placeholder: "Ej: Ángel Isaías", name: "first_name", isRequired: true },
-      { label: "Apellido", placeholder: "Ej: Vaquero", name: "last_name", isRequired: true },
+      { label: "Nombre/s", placeholder: "Ej: Ángel Isaías", name: "first_name", isRequired: true },
+      { label: "Apellido/s", placeholder: "Ej: Vaquero", name: "last_name", isRequired: true },
       { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street", isRequired: true },
       { label: "Provincia", options: provinceOptions, name: "province", isRequired: true },
       cityApiFailed || (cityOptions.length === 0 && !loadingCities && data?.province)
