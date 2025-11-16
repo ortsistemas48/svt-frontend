@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowRight, PlusCircle, CheckCircle2, Clock, XCircle } from "lucide-react";
 
 type SupportTicket = {
@@ -20,6 +20,7 @@ type SupportTicket = {
 export default function HelpTicketsPage() {
   const params = useParams<{ id: string }>();
   const workshopId = useMemo(() => Number(params?.id), [params]);
+  const router = useRouter();
 
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const PAGE_SIZE = 5;
@@ -159,7 +160,11 @@ export default function HelpTicketsPage() {
 
         {!loading &&
           visible.map((t) => (
-            <div key={t.id} className="hover:bg-gray-50 transition-colors duration-300 hover:cursor-pointer bg-white rounded-[10px] border border-gray-200 px-6 py-4 flex items-center justify-between gap-4 relative">
+          <div
+            key={t.id}
+            onClick={() => router.push(`/dashboard/${workshopId}/help/${t.id}`)}
+            className="hover:bg-gray-50 transition-colors duration-300 hover:cursor-pointer bg-white rounded-[10px] border border-gray-200 px-6 py-4 flex items-center justify-between gap-4 relative"
+          >
               <div className="flex-shrink-0 flex items-center justify-center overflow-hidden">
                 <img src="/images/icons/msgIcon.svg" alt="Ticket" className="w-10 h-10" />
               </div>
@@ -182,6 +187,7 @@ export default function HelpTicketsPage() {
 
               <button
                 title="Ver"
+                onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/${workshopId}/help/${t.id}`)}}
                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-gray-500"
               >
                 <ArrowRight className="w-4 h-4" />

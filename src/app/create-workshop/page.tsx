@@ -41,7 +41,7 @@ type PendingMember = {
   last_name?: string;
   dni?: string | null;
   phone_number?: string | null;
-  user_type_id: number | "";
+  user_type_id: number | 6;
   license_number?: string | null;
   title_name?: string | null;
   password?: string;
