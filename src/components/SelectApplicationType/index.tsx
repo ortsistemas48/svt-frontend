@@ -136,7 +136,7 @@ export default function SelectApplicationType() {
             onClick={option.handleOnClick}
             disabled={option.disabled}
             className={[
-              "flex flex-col cursor-pointer items-center justify-center border rounded-lg p-4 sm:p-6 lg:p-8 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-opacity-50 min-h-[140px] sm:min-h-[160px]",
+              "flex flex-col cursor-pointer items-center justify-center border rounded-[4px] p-4 sm:p-6 lg:p-8 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-opacity-50 min-h-[140px] sm:min-h-[160px]",
               option.disabled
                 ? "opacity-50 cursor-not-allowed border-gray-200"
                 : "hover:border-[#0040B8] border-[#0040B8]/50 hover:shadow-lg",

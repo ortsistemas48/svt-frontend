@@ -12,7 +12,7 @@ import { getMissingCarFields, getMissingPersonFields, markStickerAsUsed } from "
 import MissingDataModal from "../MissingDataModal";
 import { useApplication } from "@/context/ApplicationContext";
 import { ApplicationSkeleton } from "../ApplicationSkeleton";
-import type { PendingCarDoc } from "@/components/VehicleDocsDropzone";
+// tipos de VehicleDocsDropzone ya no requieren items tipados
 
 type Props = {
   applicationId: string;
@@ -60,7 +60,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     }
   }, [applicationId]);
 
-  const [pendingCarDocs, setPendingCarDocs] = useState<PendingCarDoc[]>([]);
+  const [pendingCarDocs, setPendingCarDocs] = useState<File[]>([]);
   const [vehicleDocsCount, setVehicleDocsCount] = useState(0);
 
   const onDeleteCarDoc = useCallback(async (docId: number) => {
@@ -127,26 +127,11 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     return res.json();
   }, [applicationId]);
 
-  const uploadPendingVehicleDocuments = useCallback(async (items: PendingCarDoc[]) => {
-    if (!items || items.length === 0) return [] as any[];
-    const form = new FormData();
-    for (const it of items) {
-      form.append("files", it.file, it.file.name);
-      form.append("types", it.type); // arreglo paralelo al de files
-    }
-    form.append("role", "car");
-
-    const res = await fetch(`/api/docs/applications/${applicationId}/documents`, {
-      method: "POST",
-      credentials: "include",
-      body: form,
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error || "Error subiendo documentos del vehículo");
-    }
-    return res.json();
-  }, [applicationId]);
+  const uploadPendingVehicleDocuments = useCallback(async (files: File[]) => {
+    if (!files || files.length === 0) return [] as any[];
+    // reuso el uploader genérico pero con rol 'car'
+    return await uploadPendingDocuments(files, 'car');
+  }, [uploadPendingDocuments]);
 
   useEffect(() => {
     // Si recibimos datos iniciales desde la página, inicializamos estados y evitamos refetch
@@ -588,7 +573,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         {step !== 4 && !isIdle && (
           <button
             onClick={handleNext}
-            disabled={loading || hasBlockingErrors || (step === 3 && vehicleDocsCount < 6)}
+            disabled={loading || hasBlockingErrors || (step === 3 && vehicleDocsCount < 1)}
             className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5 disabled:opacity-60"
           >
             {loading ? "Guardando..." : "Continuar"}
@@ -622,7 +607,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-[10px] max-w-md w-full p-6">
             {/* Título y cuerpo del modal según acción */}
             <h2 className="text-lg font-semibold mb-3">
               {confirmAction === "confirm_car" ? "¿Estás seguro?" : "¿Estás seguro?"}
@@ -636,7 +621,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             {
               (confirmAction === "queue") &&
               (
-                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-[10px]">
                   <div className="flex items-start gap-2">
                     <svg className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -650,7 +635,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             {
               (confirmAction === "inspect") &&
               (
-                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-[10px]">
                   <div className="flex items-start gap-2">
                     <svg className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -662,7 +647,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             }
 
             {processingAction && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-[10px]">
                 <div className="flex items-center justify-center gap-2">
                   <svg className="animate-spin h-4 w-4 text-[#0040B8]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

@@ -186,7 +186,7 @@ export default function StickerOrdersTable() {
 
       {/* Panel de filtros simple */}
       {showFilters && (
-        <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 sm:p-4">
+        <div className="mb-4 rounded-[10px] border border-gray-200 bg-white p-3 sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
             {TABLE_FILTERS.map((opt) => {
               const active = statusFilter === opt;
@@ -210,7 +210,7 @@ export default function StickerOrdersTable() {
       )}
 
       {/* Tabla */}
-      <div className="stk-table overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="stk-table overflow-hidden rounded-[10px] border border-gray-200 bg-white">
         <div className="overflow-x-auto">
           <div className="min-w-[720px]">
             <TableTemplate<StickerOrder>

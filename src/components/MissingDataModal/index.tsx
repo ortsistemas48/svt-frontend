@@ -14,7 +14,7 @@ export default function MissingDataModal({
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg max-w-md w-full p-6">
+      <div className="bg-white rounded-[10px] max-w-md w-full p-6">
         <h2 className="text-xl mb-2 font-bold">No se puede continuar</h2>
         <div className="mb-4">
           <h4 className="font-medium text-lg mb-2">

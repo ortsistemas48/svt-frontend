@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
     const csp = [
       "default-src 'self'",
       "connect-src 'self' ws: wss: https://uedevplogwlaueyuofft.supabase.co",
-      "img-src 'self' data: https://uedevplogwlaueyuofft.supabase.co",
+      "img-src 'self' data: blob: https://uedevplogwlaueyuofft.supabase.co",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",      // permite los inlines y eval que Next necesita
       "style-src 'self' 'unsafe-inline'",       // estilos inline usados por Next y Tailwind
       "connect-src 'self' ws: wss: https://apis.datos.gob.ar", // fetch y HMR

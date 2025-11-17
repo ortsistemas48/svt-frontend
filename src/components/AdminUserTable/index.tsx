@@ -211,7 +211,7 @@ export default function UserTable({ users, onDelete }: Props) {
       </div>
 
       {/* Tabla en card */}
-      <div className="rounded-lg border border-gray-200 overflow-hidden bg-white mt-3">
+      <div className="rounded-[10px] border border-gray-200 overflow-hidden bg-white mt-3">
         <div className="overflow-x-auto">
           <table className="w-full text-sm sm:text-base">
             <thead className="bg-white text-gray-600">
@@ -438,7 +438,7 @@ export default function UserTable({ users, onDelete }: Props) {
           aria-describedby="confirm-desc"
         >
           <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmOpen(false)} />
-          <div className="relative bg-white w-[92%] max-w-md rounded-lg shadow-xl border border-gray-200 p-5">
+          <div className="relative bg-white w-[92%] max-w-md rounded-[10px] shadow-xl border border-gray-200 p-5">
             <div className="flex items-start gap-3">
               <div className="mt-1">
                 <AlertTriangle size={20} className="text-amber-600" />

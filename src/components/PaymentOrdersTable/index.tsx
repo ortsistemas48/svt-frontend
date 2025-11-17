@@ -218,7 +218,7 @@ export default function PaymentOrdersTable() {
               disabled={loading}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:py-3 sm:text-base"
+              className="w-full rounded-[4px] border border-gray-300 pl-9 pr-3 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:py-3 sm:text-base"
               placeholder="Buscar por número de orden"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -236,7 +236,7 @@ export default function PaymentOrdersTable() {
               setShowFilters(!showFilters);
               setPage(1);
             }}
-            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#00379f] disabled:opacity-50 sm:px-4"
+            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-[4px] px-3 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#00379f] disabled:opacity-50 sm:px-4"
           >
             <SlidersHorizontal size={16} className="text-white" />
             <span className="hidden sm:inline">Filtrar</span>

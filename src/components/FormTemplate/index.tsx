@@ -201,7 +201,7 @@ export default function FormTemplate({
     const disableSearch = isSearching;
 
     return (
-      <section className="space-y-6 mb-10 py-6 mt-6 w-full max-w-2xl bg-white rounded-lg">
+      <section className="space-y-6 mb-10 py-6 mt-6 w-full max-w-2xl bg-white rounded-[10px]">
         {(searchConfig.titleIdle || searchConfig.descIdle) && (
           <header className="mb-2">
             {searchConfig.titleIdle && (
@@ -245,7 +245,7 @@ export default function FormTemplate({
               type="button"
               onClick={doSearch}
               disabled={disableSearch}
-              className={`px-6 rounded-[6px] text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${
+              className={`px-6 rounded-[4px] text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${
                 disableSearch ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >

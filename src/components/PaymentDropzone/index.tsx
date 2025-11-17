@@ -89,7 +89,7 @@ export default function PaymentDropzone({
 
       {queue.length === 1 && (
         <ul className="mt-4 grid grid-cols-1 gap-2">
-          <li className="flex items-center justify-between rounded-lg border p-2 text-sm">
+          <li className="flex items-center justify-between rounded-[10px] border p-2 text-sm">
             <div className="min-w-0 truncate">
               {queue[0].name}{" "}
               <span className="text-gray-500">, {(queue[0].size / 1024).toFixed(0)} KB</span>

@@ -76,7 +76,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-blue-100 rounded-[10px] flex items-center justify-center">
                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
@@ -104,7 +104,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-green-100 rounded-[10px] flex items-center justify-center">
                     <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -125,7 +125,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
           <div className={`bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden ${showDriver ? "lg:col-span-2" : "lg:col-span-1"}`}>
             <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-purple-100 rounded-[10px] flex items-center justify-center">
                   <Car className="w-5 h-5 text-purple-500" size={20} strokeWidth={2} />
                 </div>
                 <div>

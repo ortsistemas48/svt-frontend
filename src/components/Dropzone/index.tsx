@@ -233,7 +233,7 @@ export default function Dropzone({
                   </button>
 
                   <div className="flex items-center gap-3">
-                    <div className={`relative w-14 h-14 rounded-lg ${bgForMime(f.type)} flex items-center justify-center overflow-hidden`}>
+                    <div className={`relative w-14 h-14 rounded-[10px] ${bgForMime(f.type)} flex items-center justify-center overflow-hidden`}>
                       {/* {url ? (
                         <>
                           <img src={url} alt={f.name} className="w-full h-full object-cover" />
@@ -272,7 +272,7 @@ export default function Dropzone({
             {existing.map((d) => (
               <div
                 key={d.id}
-                className="relative rounded-lg border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                className="relative rounded-[10px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 {onDeleteExisting && (
                   <button
@@ -288,7 +288,7 @@ export default function Dropzone({
                 )}
 
                 <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="w-16 h-16 rounded-lg bg-[#F5F7FF] flex items-center justify-center overflow-hidden">
+                  <div className="w-16 h-16 rounded-[10px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden">
                     {d.mime_type?.startsWith("image/") ? (
                       <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
                     ) : (

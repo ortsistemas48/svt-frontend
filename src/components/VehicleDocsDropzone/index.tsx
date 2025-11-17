@@ -2,17 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Upload, Check, X, Trash2, Image as ImageIcon } from "lucide-react";
-
-export type CarDocType =
-  | "green_card_front"
-  | "green_card_back"
-  | "license_front"
-  | "license_back"
-  | "insurance_front"
-  | "insurance_back";
-
-export type PendingCarDoc = { file: File; type: CarDocType };
+import { X, Trash2, FileImage } from "lucide-react";
 
 export type ExistingDoc = {
   id: number;
@@ -21,325 +11,237 @@ export type ExistingDoc = {
   size_bytes?: number;
   mime_type?: string;
   created_at?: string;
-  type?: CarDocType | string | null;
+	type?: string | null;
 };
 
 type Props = {
   existing?: ExistingDoc[];
   resetToken?: number | string;
-  onPendingChange?: (items: PendingCarDoc[]) => void;
+	onPendingChange?: (files: File[]) => void;
   onDeleteExisting?: (docId: number) => Promise<void> | void;
   onDoneCountChange?: (count: number) => void;
+	/** Modo de uso: edit (sube archivos) o view (solo ver existentes) */
+	mode?: "edit" | "view";
 };
 
-const accept = ["image/png", "image/jpeg", "image/webp"];
+const ACCEPT_MIME = ["image/png", "image/jpeg", "image/webp"];
 
-const GROUPS = ["Cédula", "Licencia", "Seguro"] as const;
-type Group = typeof GROUPS[number];
-
-const groupToTypes: Record<Group, { front: CarDocType; back: CarDocType }> = {
-  "Cédula": { front: "green_card_front", back: "green_card_back" },
-  "Licencia": { front: "license_front", back: "license_back" },
-  "Seguro": { front: "insurance_front", back: "insurance_back" },
-};
-
-const ALL_TYPES: CarDocType[] = [
-  "green_card_front",
-  "green_card_back",
-  "license_front",
-  "license_back",
-  "insurance_front",
-  "insurance_back",
-];
-
-function prettySize(bytes?: number) {
+const prettySize = (bytes?: number) => {
   if (bytes == null) return "";
   const kb = bytes / 1024;
   if (kb < 1024) return `${kb.toFixed(0)} KB`;
   const mb = kb / 1024;
   return `${mb.toFixed(2)} MB`;
-}
+};
 
-export default function VehicleDocsSimpleDrop({
+export default function VehicleDocsDropzone({
   existing = [],
   resetToken,
   onPendingChange,
   onDeleteExisting,
   onDoneCountChange,
+	mode = "edit",
 }: Props) {
-  // helpers para inicialización
-  const makeEmptyQueue = () =>
-    Object.fromEntries(ALL_TYPES.map((t) => [t, null])) as Record<CarDocType, File | null>;
-  const makeEmptyPreviews = () =>
-    Object.fromEntries(ALL_TYPES.map((t) => [t, null])) as Record<CarDocType, string | null>;
+	// Cola global de archivos
+	const [queue, setQueue] = useState<File[]>([]);
+	const [previews, setPreviews] = useState<(string | null)[]>([]);
+	const [brokenPreview, setBrokenPreview] = useState<Record<number, boolean>>({});
+	const inputRef = useRef<HTMLInputElement>(null);
+	const [isDragging, setIsDragging] = useState(false);
 
-  const [queue, setQueue] = useState<Record<CarDocType, File | null>>(makeEmptyQueue);
-  const [previews, setPreviews] = useState<Record<CarDocType, string | null>>(makeEmptyPreviews);
-
-  // mapear existentes por type, tolerante a mayúsculas, espacios, nulos
-  const existingByType = useMemo(() => {
-    const map: Partial<Record<CarDocType, ExistingDoc>> = {};
-    for (const d of existing) {
-      const raw = d?.type == null ? "" : String(d.type);
-      const t = raw.trim().toLowerCase() as CarDocType;
-      if ((ALL_TYPES as string[]).includes(t)) {
-        map[t] = d;
-      } else if (raw) {
-        // útil para detectar datos mal tipeados en dev
-        console.warn("Documento con type desconocido, lo ignoro:", raw, d);
-      }
-    }
-    return map;
-  }, [existing]);
-
-  // selección actual
-  const [group, setGroup] = useState<Group>("Cédula");
-  const [face, setFace] = useState<"Frente" | "Dorso">("Frente");
-  const activeType: CarDocType =
-    face === "Frente" ? groupToTypes[group].front : groupToTypes[group].back;
-
-  const has = (t: CarDocType) => Boolean(queue[t] || existingByType[t]);
-
-  const getNextMissing = (): { group: Group; face: "Frente" | "Dorso" } | null => {
-    for (const g of GROUPS) {
-      const set = groupToTypes[g];
-      if (!has(set.front)) return { group: g, face: "Frente" };
-      if (!has(set.back)) return { group: g, face: "Dorso" };
-    }
-    return null;
-  };
-
-  // reset al cambiar token
+	// Reset al cambiar token
   useEffect(() => {
     if (resetToken === undefined) return;
-    setQueue(makeEmptyQueue());
-    setPreviews(makeEmptyPreviews());
-    setGroup("Cédula");
-    setFace("Frente");
+		setQueue([]);
+		setPreviews([]);
+		setBrokenPreview({});
   }, [resetToken]);
 
-  // avisar al padre lo que está en cola
+	// Notificar al padre los pendientes tipados
   useEffect(() => {
     if (!onPendingChange) return;
-    const list: PendingCarDoc[] = [];
-    for (const t of ALL_TYPES) {
-      if (queue[t]) list.push({ file: queue[t]!, type: t });
-    }
-    onPendingChange(list);
+		onPendingChange(queue);
   }, [queue, onPendingChange]);
 
-  // previews, regenero desde cero por cada cambio en queue
+	// Generar previews para pendientes
   useEffect(() => {
-    const next = makeEmptyPreviews();
-    const created: string[] = [];
-    for (const t of ALL_TYPES) {
-      const f = queue[t];
-      if (f) {
-        const u = URL.createObjectURL(f);
-        next[t] = u;
-        created.push(u);
-      }
-    }
-    setPreviews(next);
-    return () => created.forEach((u) => URL.revokeObjectURL(u));
+		const urls = queue.map((f) =>
+			(f.type && f.type.startsWith("image/")) || /\.(jpe?g|png|webp)$/i.test(f.name)
+				? URL.createObjectURL(f)
+				: null
+		);
+		setPreviews(urls);
+		return () => {
+			urls.forEach((u) => {
+				if (u) URL.revokeObjectURL(u);
+			});
+		};
   }, [queue]);
 
-  const inputRefs = useRef<Record<CarDocType, HTMLInputElement | null>>({
-    green_card_front: null,
-    green_card_back: null,
-    license_front: null,
-    license_back: null,
-    insurance_front: null,
-    insurance_back: null,
-  });
+	// Progreso: total existentes + en cola
+	const doneCount = useMemo(() => {
+		return (existing?.length || 0) + queue.length;
+	}, [existing, queue]);
 
-  const pickForType = (type: CarDocType, files: FileList | null) => {
-    if (!files || !files.length) return;
-    const file = files[0];
-    const okType =
-      accept.includes(file.type) ||
-      file.type === "" ||
-      /\.(jpe?g|png|webp)$/i.test(file.name);
-    const okSize = file.size <= 20 * 1024 * 1024;
-    if (!okType || !okSize) return;
+	useEffect(() => {
+		onDoneCountChange?.(doneCount);
+	}, [doneCount, onDoneCountChange]);
 
-    setQueue((prev) => ({ ...prev, [type]: file }));
+	const addFiles = (files: FileList | null) => {
+		if (!files || files.length === 0) return;
+		const arr = Array.from(files).filter((f) => {
+			const okType = ACCEPT_MIME.includes(f.type) || f.type === "" || /\.(jpe?g|png|webp)$/i.test(f.name);
+			const okSize = f.size <= 20 * 1024 * 1024;
+			return okType && okSize;
+		});
+		if (arr.length === 0) return;
+		setQueue((prev) => [...prev, ...arr]);
+	};
 
-    const isFront = Object.values(groupToTypes[group])[0] === type || type.endsWith("_front");
-    if (isFront && (type === groupToTypes[group].front)) {
-      setFace("Dorso");
-    } else {
-      const nextMissing = getNextMissing();
-      if (nextMissing) {
-        setGroup(nextMissing.group);
-        setFace(nextMissing.face);
-      }
-    }
-  };
+	const removeQueued = (idx: number) => {
+		setQueue((prev) => prev.filter((_, i) => i !== idx));
+		setBrokenPreview((prev) => {
+			const next: Record<number, boolean> = {};
+			Object.keys(prev).forEach((k) => {
+				const i = Number(k);
+				if (i < idx) next[i] = prev[i];
+				else if (i > idx) next[i - 1] = prev[i];
+			});
+			return next;
+		});
+	};
 
-  const makeDropHandlers = (type: CarDocType) => {
-    return {
-      onDragOver: (e: React.DragEvent) => { e.preventDefault(); },
-      onDrop: (e: React.DragEvent) => {
-        e.preventDefault();
-        pickForType(type, e.dataTransfer.files);
-      },
-    };
-  };
-
-  const clearQueued = (t: CarDocType) =>
-    setQueue((prev) => ({ ...prev, [t]: null }));
-
-  const deleteExisting = async (t: CarDocType) => {
-    const ex = existingByType[t];
-    if (!ex || !onDeleteExisting) return;
-    await onDeleteExisting(ex.id);
-  };
-
-  const doneCount = ALL_TYPES.filter((t) => has(t)).length;
-
-  // Notify parent about doneCount changes
-  useEffect(() => {
-    if (onDoneCountChange) {
-      onDoneCountChange(doneCount);
-    }
-  }, [doneCount, onDoneCountChange]);
-
-  const nextMissing = getNextMissing();
-  const thisType = activeType;
-  const thisReady = has(thisType);
-
-  const bannerPrimary = `AGREGAR ${group.toUpperCase()} - ${face.toUpperCase()}`;
-  let bannerSecondary = "";
-  if (thisReady && nextMissing) bannerSecondary = `Sugerido: ${nextMissing.group} - ${nextMissing.face}`;
-  else if (!nextMissing && !thisReady) bannerSecondary = "Te falta este y listo";
-  else if (!nextMissing && thisReady) bannerSecondary = "Todo listo";
+	const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+		e.preventDefault();
+		setIsDragging(false);
+		addFiles(e.dataTransfer.files);
+	};
 
   return (
     <section className="mt-10">
+			{mode === "edit" && (
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <img
-            src="/images/icons/DropzoneIcon.svg"
-            alt=""
-            className="w-4 h-4"
-          />
-          <h3 className="text-[15px] font-medium text-neutral-800">
-            Documentación del vehículo
-          </h3>
+						<img src="/images/icons/DropzoneIcon.svg" alt="" className="w-4 h-4" />
+						<h3 className="text-[15px] font-medium text-neutral-800">Documentación del vehículo</h3>
         </div>
-        <p className="text-xs text-neutral-500">
-          Listos: {doneCount}/6, Formatos: JPG, PNG, WEBP, hasta 20 MB
-        </p>
+					<p className="text-xs text-neutral-500">Formatos: JPG, PNG, WEBP · hasta 20 MB</p>
       </div>
-  
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {GROUPS.map((g) =>
-          (["Frente", "Dorso"] as const).map((f) => {
-            const t = f === "Frente" ? groupToTypes[g].front : groupToTypes[g].back;
-            const q = queue[t];
-            const p = previews[t];
-            const ex = existingByType[t];
-            const ready = Boolean(q || ex);
-            const { onDragOver, onDrop } = makeDropHandlers(t);
+			)}
 
-            return (
-              <div
-                key={`${g}-${f}`}
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                  setGroup(g);
-                  setFace(f);
-                  inputRefs.current[t]?.click(); 
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    setGroup(g);
-                    setFace(f);
-                    inputRefs.current[t]?.click();
-                  }
-                }}
-                onDragOver={onDragOver}
+			{/* Alerta requerida */}
+			{mode === "edit" && (
+				<div className="mb-4 rounded-[4px] border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+					<strong className="font-medium">Importante:</strong> Obligatorio subir frente y dorso de la cédula verde, licencia de conducir y de la póliza de seguro.
+				</div>
+			)}
+
+			{mode === "edit" && (
+				<div
+					onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+					onDragLeave={() => setIsDragging(false)}
                 onDrop={onDrop}
-                className={[
-                  "relative rounded-[4px] bg-white ring-1 ring-[#d3d3d3] transition focus:outline-none hover:ring-[#0040B8]",
-                ].join(" ")}
+					className={`border-dashed border-2 rounded-xl text-center mt-2 transition-colors ${isDragging ? "border-[#0040B8] bg-[#0040B8]/5" : "border-[#D3D3D3]"}`}
               >
-                {/* input oculto por tarjeta */}
                 <input
-                  ref={(el) => { inputRefs.current[t] = el; }}
+						ref={inputRef}
+						type="file"
+						multiple
                   className="hidden"
-                  type="file"
-                  accept={accept.join(",")}
-                  onChange={(e) => pickForType(t, e.target.files)}
-                />
+						onChange={(e) => {
+							addFiles(e.target.files);
+							// permitir volver a elegir el mismo archivo
+							try { (e.target as HTMLInputElement).value = ""; } catch {}
+						}}
+						accept={ACCEPT_MIME.join(",")}
+					/>
+					<div className="py-8">
+						<img src="/images/icons/DropzoneIcon.svg" alt="" className="mx-auto mb-3 h-12 w-12" />
+						<button
+							type="button"
+							onClick={() => {
+								// limpiar antes de abrir el diálogo para asegurar change con el mismo archivo
+								if (inputRef.current) inputRef.current.value = "";
+								inputRef.current?.click();
+							}}
+							className="rounded-[4px] border border-[#0040B8] px-4 py-2 text-sm text-[#0040B8] duration-150 hover:bg-[#0040B8] hover:text-white"
+						>
+							Elegí archivos
+						</button>
+						<p className="mt-2 text-sm text-[#00000080]">o arrastralos hasta aquí.</p>
+					</div>
+				</div>
+			)}
 
-                <div className="w-full h-[86px] bg-neutral-50 flex items-center justify-center overflow-hidden rounded-t-[4px]">
-                  {q ? (
-                    p ? (
-                      <ImageIcon className="w-5 h-5 text-neutral" />
-                    ) : (
-                      <ImageIcon className="w-5 h-5 text-neutral" />
-                    )
-                  ) : ex ? (
-                    ex.mime_type?.startsWith("image/") ? (
-                      <img src={ex.file_url} alt={ex.file_name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Upload className="w-5 h-5 text-neutral-400" />
-                    )
-                  ) : (
-                    <Upload className="w-5 h-5 text-neutral-300" />
-                  )}
+			{/* Documentos */}
+			<div className="mt-6">
+				{(mode === "view" || existing.length > 0 || queue.length > 0) && (
+					<p className="text-sm text-[#5c5c5c] mb-2">Documentos</p>
+				)}
+				{mode === "view" && existing.length === 0 && (
+					<div className="flex items-center justify-center rounded-[4px] border border-dashed border-[#D3D3D3] bg-white py-10">
+						<div className="text-center px-4">
+							<img src="/images/icons/empty-file.svg" alt="" className="mx-auto mb-3 h-10 w-10 opacity-70" />
+							<p className="text-sm text-neutral-500">No hay documentos disponibles</p>
                 </div>
-
-                <div className="px-2 py-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] text-neutral-600">
-                      {g} - {f}
-                    </p>
-                    {ready && (
-                      <span className="inline-flex items-center justify-center rounded-full bg-white p-1 ring-1 ring-emerald-300">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                      </span>
-                    )}
                   </div>
-                  <p className="text-[11px] font-medium text-neutral-800 truncate">
-                    {q?.name || ex?.file_name || "Sin archivo"}
-                  </p>
-                  {q && (
-                    <p className="text-[11px] text-neutral-400">
-                      {q.type || "imagen"} · {prettySize(q.size)}
-                    </p>
-                  )}
-                </div>
-
-                <div className="absolute top-1 right-1 flex gap-1">
-                  {q && (
+				)}
+				<div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-2">
+					{mode === "edit" && queue.map((f, i) => (
+						<div key={`q-${i}-${f.name}`} className="relative rounded-[4px] bg-white ring-1 ring-[#d3d3d3]">
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); clearQueued(t); }}
-                      className="rounded-full bg-white/90 p-1 ring-1 ring-neutral-200 hover:bg-white"
-                      title="Quitar selección"
-                    >
-                      <X className="w-4 h-4 text-neutral-600" />
+								onClick={() => removeQueued(i)}
+								className="absolute top-1 right-1 rounded-full bg-white/80 ring-1 ring-[#E6E6E6] p-1 hover:bg-white"
+								aria-label="Quitar"
+								title="Quitar"
+							>
+								<X size={14} />
                     </button>
-                  )}
-                  {!q && ex && onDeleteExisting && (
+							<div className="w-full h-[84px] bg-neutral-50 flex items-center justify-center overflow-hidden rounded-t-[4px]">
+								{previews[i] && !brokenPreview[i] ? (
+									<img
+										src={previews[i] as string}
+										alt={f.name}
+										className="w-full h-full object-cover"
+										onError={() => setBrokenPreview((prev) => ({ ...prev, [i]: true }))}
+									/>
+								) : (
+									<FileImage className="w-6 h-6 text-neutral-500" />
+								)}
+							</div>
+							<div className="px-2 py-1">
+								<p className="text-[11px] font-medium text-neutral-800 truncate" title={f.name}>{f.name}</p>
+								<p className="text-[11px] text-neutral-500">{f.type || "imagen"} · {prettySize(f.size)}</p>
+							</div>
+						</div>
+					))}
+					{existing.map((d) => (
+						<div key={`e-${d.id}`} className="relative rounded-[4px] bg-white ring-1 ring-[#d3d3d3]">
+							{onDeleteExisting && mode === "edit" && (
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); deleteExisting(t); }}
-                      className="rounded-full bg-white/90 p-1 ring-1 ring-neutral-200 hover:bg-white"
-                      title="Borrar existente"
+									onClick={() => onDeleteExisting(d.id)}
+									className="absolute top-1 right-1 rounded-full bg-white/90 p-1 ring-1 ring-neutral-200 hover:bg-white"
+									title="Borrar"
                     >
                       <Trash2 className="w-4 h-4 text-neutral-600" />
                     </button>
                   )}
+							<div className="w-full h-[84px] bg-neutral-50 flex items-center justify-center overflow-hidden rounded-t-[4px]">
+								{d.mime_type?.startsWith("image/") ? (
+									<img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
+								) : (
+									<div className="text-[11px] text-neutral-500 px-2 text-center truncate">{d.file_name}</div>
+								)}
+							</div>
+							<div className="px-2 py-1">
+								<p className="text-[11px] font-medium text-neutral-800 truncate" title={d.file_name}>{d.file_name}</p>
+								<p className="text-[11px] text-neutral-500">{d.mime_type || "archivo"} · {prettySize(d.size_bytes)}</p>
                 </div>
               </div>
-            );
-          })
-        )}
+					))}
+				</div>
       </div>
     </section>
   );

@@ -73,7 +73,7 @@ export default function SelectWorkshopPage() {
         </button>
       </header>
 
-      <section className="w-full max-w-md sm:max-w-lg bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col max-h-[90vh] sm:max-h-[80vh]">
+      <section className="w-full max-w-md sm:max-w-lg bg-white rounded-[10px] border border-gray-200 shadow-sm flex flex-col max-h-[90vh] sm:max-h-[80vh]">
         {/* Header Section - Fixed */}
         <div className="px-6 py-6 border-b border-gray-100">
           <article className="text-center text-lg sm:text-xl mb-2">

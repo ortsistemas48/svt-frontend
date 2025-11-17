@@ -76,7 +76,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
             </div>
 
             <div className="bg-purple-50 px-5 py-4 flex items-center gap-3">
-              <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-purple-100 rounded-[10px] flex items-center justify-center">
                 <Car className="w-5 h-5 text-purple-600" />
               </div>
               <div>
@@ -171,7 +171,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
           {/* Datos del taller */}
           <div className="max-w-4xl mx-auto rounded-2xl border border-[#d3d3d3] overflow-hidden">
             <div className="bg-blue-50 px-5 py-4 flex items-center gap-3">
-              <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-blue-100 rounded-[10px] flex items-center justify-center">
                 <Wrench className="w-5 h-5 text-blue-600" />
               </div>
               <div>

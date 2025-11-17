@@ -343,7 +343,7 @@ export default function PaymentPage() {
 
                 <button
                   onClick={openModal}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[6px] bg-[#0040B8] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#00379f]"
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[4px] bg-[#0040B8] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#00379f]"
                 >
                   Generar orden de transferencia
                   <ArrowRight className="h-4 w-4" />

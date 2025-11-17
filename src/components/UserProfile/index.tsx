@@ -80,7 +80,7 @@ export default function UserProfile() {
 
       {/* Popover */}
       {openMenu && (
-        <div className="absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 animate-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-[10px] shadow-xl p-4 z-50 animate-in slide-in-from-top-2 duration-200">
           {/* Info de usuario como en la foto, avatar + nombre + email */}
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
             {avatarUrl ? (

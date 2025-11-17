@@ -225,7 +225,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
       </div>
 
       {/* Tabla con nombre de taller */}
-      <div className="rounded-lg border border-gray-200 overflow-hidden bg-white mt-3">
+      <div className="rounded-[10px] border border-gray-200 overflow-hidden bg-white mt-3">
         <div className="overflow-x-auto">
           <table className="w-full text-sm sm:text-base">
             <thead className="bg-white text-gray-600">
@@ -430,7 +430,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
           role="dialog"
         >
           <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmOpen(null)} />
-          <div className="relative bg-white w-[92%] max-w-md rounded-lg shadow-xl border border-gray-200 p-5">
+          <div className="relative bg-white w-[92%] max-w-md rounded-[10px] shadow-xl border border-gray-200 p-5">
             <div className="flex items-start gap-3">
               <div className="mt-1">
                 {confirmOpen === "APPROVE" ? (

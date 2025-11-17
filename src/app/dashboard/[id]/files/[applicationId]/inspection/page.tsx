@@ -255,7 +255,7 @@ export default async function FichaTecnicaPage({
             </div>
           </article>
           <div className="px-4 py-8">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-[10px] p-6 text-center">
               <p className="text-yellow-800 mb-4">La segunda inspección aún no ha sido creada.</p>
               <a
                 href={`/dashboard/${workshopId}/files/${applicationId}`}

@@ -333,7 +333,7 @@ export default function CompletedApplicationsTable() {
       {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={resultFilter} setStatusFilter={setResultFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
       {/* Card de tabla con borde propio */}
-      <div className="rounded-lg border border-gray-200 overflow-visible bg-white">
+      <div className="rounded-[10px] border border-gray-200 overflow-visible bg-white">
         <div className="overflow-x-auto">
           <TableTemplate
             headers={headers}
@@ -415,7 +415,7 @@ export default function CompletedApplicationsTable() {
                                 ref={(node) => {
                                   viewDropdownRef.current = node;
                                 }}
-                                className="z-[60] w-52 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                                className="z-[60] w-52 overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-lg"
                                 style={{
                                   position: "fixed",
                                   top: viewDropdownState.top,
@@ -473,7 +473,7 @@ export default function CompletedApplicationsTable() {
                                 ref={(node) => {
                                   downloadDropdownRef.current = node;
                                 }}
-                                className="z-[60] w-52 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                                className="z-[60] w-52 overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-lg"
                                 style={{
                                   position: "fixed",
                                   top: downloadDropdownState.top,

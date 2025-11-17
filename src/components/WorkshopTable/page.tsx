@@ -179,7 +179,7 @@ export default function WorkshopTable({ workshops }: Props) {
       </div>
 
       {/* Tabla en card */}
-      <div className="rounded-lg border border-gray-200 overflow-hidden bg-white mt-3">
+      <div className="rounded-[10px] border border-gray-200 overflow-hidden bg-white mt-3">
         <div className="overflow-x-auto">
           <table className="w-full text-sm sm:text-base">
             <thead className="bg-white text-gray-600">

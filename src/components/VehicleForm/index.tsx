@@ -11,7 +11,7 @@ import {
   onlyDigits,
   toUpper,
 } from "../../utils";
-import VehicleDocsDropzone, { type ExistingDoc as CarExistingDoc, type PendingCarDoc } from "@/components/VehicleDocsDropzone";
+import VehicleDocsDropzone, { type ExistingDoc as CarExistingDoc } from "@/components/VehicleDocsDropzone";
 
 interface FormFieldData {
   label: string;
@@ -26,7 +26,7 @@ interface FormFieldData {
 interface VehicleFormProps {
   car: any;
   setCar: (car: any) => void;
-  onPendingCarDocsChange?: (files: PendingCarDoc[]) => void;
+  onPendingCarDocsChange?: (files: File[]) => void;
   existingCarDocs?: CarExistingDoc[];
   onDeleteCarDoc?: (docId: number) => Promise<void> | void;
   onVehicleDocsCountChange?: (count: number) => void;
@@ -683,7 +683,7 @@ export default function VehicleForm({
           <VehicleDocsDropzone
             existing={existingCarDocs as CarExistingDoc[]}
             onDeleteExisting={onDeleteCarDoc}
-            onPendingChange={(items: PendingCarDoc[]) => onPendingCarDocsChange?.(items as any)}
+            onPendingChange={(files: File[]) => onPendingCarDocsChange?.(files)}
             onDoneCountChange={onVehicleDocsCountChange}
             resetToken={car?.license_plate}
           />

@@ -237,7 +237,7 @@ export default function InspectionTable() {
 
       {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
-      <div className="insp-table overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="insp-table overflow-hidden rounded-[10px] border border-gray-200 bg-white">
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
             <TableTemplate<Application>
@@ -518,7 +518,7 @@ export default function InspectionTable() {
                   </button>
                 </div>
 
-                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <div className="mt-4 rounded-[4px] border border-gray-200 bg-gray-50 p-3">
                   <p className="text-sm text-gray-700">
                     Confirmás eliminar el trámite #{deleteSummary?.id}
                     {deleteSummary?.lp && deleteSummary.lp !== "-" ? `, patente ${deleteSummary.lp}` : ""}?
@@ -527,14 +527,14 @@ export default function InspectionTable() {
 
                 <div className="mt-6 flex items-center justify-end gap-3">
                   <button
-                    className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                    className="rounded-[4px] border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-60"
                     onClick={() => setDeleteTarget(null)}
                     disabled={deleting}
                   >
                     Cancelar
                   </button>
                   <button
-                    className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-60"
+                    className="rounded-[4px] bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-60"
                     onClick={handleConfirmDelete}
                     disabled={deleting}
                   >

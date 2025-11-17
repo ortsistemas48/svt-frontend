@@ -626,7 +626,7 @@ export default function InspectionStepsClient({
   return (
     <div className="w-full px-4 pb-10">
       {isCompleted && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-[10px]">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -1020,7 +1020,7 @@ export default function InspectionStepsClient({
 
             <div className="border-t border-zinc-200 p-4 flex justify-end">
               <button
-                className="px-4 py-2 rounded-[6px] border border-zinc-300 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+                className="px-4 py-2 rounded-[4px] border border-zinc-300 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
                 disabled={isCompleted}
                 onClick={() => closeObsModal()}
               >
@@ -1037,12 +1037,12 @@ export default function InspectionStepsClient({
         </div>
       )}
       {msg && (
-        <div className="mt-4 text-sm text-[#41c227] border border-[#41c227] p-3 rounded-[6px] text-center">
+        <div className="mt-4 text-sm text-[#41c227] border border-[#41c227] p-3 rounded-[4px] text-center">
           {msg}
         </div>
       )}
       {error && (
-        <div className="mt-4 text-sm text-[#d11b2d] border border-[#d11b2d] p-3 rounded-[6px] text-center">
+        <div className="mt-4 text-sm text-[#d11b2d] border border-[#d11b2d] p-3 rounded-[4px] text-center">
           {error}
         </div>
       )}

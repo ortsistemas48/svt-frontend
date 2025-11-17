@@ -81,7 +81,7 @@ const renderVehicle = (car: CarType, carDocs: Doc[] = []) => {
     }
 
     return (
-      <div key={item.key} className="bg-gray-50 rounded-lg p-4">
+      <div key={item.key} className="bg-gray-50 rounded-[10px] p-4">
         <dt className="text-sm font-medium text-gray-500 mb-1">{item.label}</dt>
         <dd className="text-sm font-semibold text-gray-900 break-all">
           {value === "No disponible" ? (
@@ -179,7 +179,7 @@ const renderVehicle = (car: CarType, carDocs: Doc[] = []) => {
 
             {remaining > 0 && (
               <details className="group">
-                <summary className="cursor-pointer flex items-center justify-center gap-2 py-3 px-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors duration-200 list-none">
+                <summary className="cursor-pointer flex items-center justify-center gap-2 py-3 px-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-[10px] text-sm font-medium text-gray-700 transition-colors duration-200 list-none">
                   <svg className="w-4 h-4 group-open:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>

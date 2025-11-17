@@ -5,9 +5,9 @@ import { CarType, PersonType } from "@/app/types";
 import renderVehicle from "@/components/VehicleTable";
 import renderPerson from "@/components/PersonTable";
 import renderDocument from "@/components/DocumentCard";
-import { Car, ChevronRight, Clock, CheckCircle2, XCircle, Plus } from "lucide-react";
+import { Car, ChevronRight, Clock, CheckCircle2, XCircle, Plus, FileText } from "lucide-react";
 import clsx from "clsx";
-import VehicleDocsDropzone, { type ExistingDoc as CarExistingDoc, type PendingCarDoc } from "@/components/VehicleDocsDropzone";
+import VehicleDocsDropzone, { type ExistingDoc as CarExistingDoc } from "@/components/VehicleDocsDropzone";
 import Dropzone, { type ExistingDoc as InspDoc } from "@/components/Dropzone";
 
 type Doc = {
@@ -42,7 +42,7 @@ export default function FileDetailPage() {
   const [result2, setResult2] = useState<string | null>(null);
   const [inspection1Date, setInspection1Date] = useState<string | null>(null);
   const [inspection2Date, setInspection2Date] = useState<string | null>(null);
-  const [pendingCarDocs, setPendingCarDocs] = useState<PendingCarDoc[]>([]);
+  const [pendingCarDocs, setPendingCarDocs] = useState<File[]>([]);
   const [pendingTechDocs, setPendingTechDocs] = useState<File[]>([]);
   const [techDocs, setTechDocs] = useState<InspDoc[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -302,8 +302,8 @@ export default function FileDetailPage() {
     }
   }, [applicationId]);
 
-  const handlePendingCarDocsChange = useCallback((items: PendingCarDoc[]) => {
-    setPendingCarDocs(items);
+  const handlePendingCarDocsChange = useCallback((files: File[]) => {
+    setPendingCarDocs(files);
   }, []);
 
   const handlePendingTechDocsChange = useCallback((files: File[]) => {
@@ -335,13 +335,10 @@ export default function FileDetailPage() {
     setError(null);
 
     try {
-      // Subir documentos de vehículo
+      // Subir documentos de vehículo (sin tipos)
       if (pendingCarDocs.length > 0) {
         const form = new FormData();
-        for (const item of pendingCarDocs) {
-          form.append("files", item.file, item.file.name);
-          form.append("types", item.type);
-        }
+        pendingCarDocs.forEach(f => form.append("files", f, f.name));
         form.append("role", "car");
 
         const carRes = await fetch(`/api/docs/applications/${applicationId}/documents`, {
@@ -427,11 +424,11 @@ export default function FileDetailPage() {
     return (
       <div className="min-h-full py-6">
         <div className="max-w-8xl mx-auto px-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <div className="bg-red-50 border border-red-200 rounded-[10px] p-6 text-center">
             <p className="text-red-700 mb-4">{error}</p>
             <button
               onClick={() => router.back()}
-              className="px-4 py-2 bg-[#0040B8] text-white rounded hover:bg-[#0035A0]"
+              className="px-4 py-2 bg-[#0040B8] text-white rounded-[4px] hover:bg-[#0035A0]"
             >
               Volver
             </button>
@@ -467,7 +464,7 @@ export default function FileDetailPage() {
             <div className="bg-white rounded-[10px] border border-gray-200 overflow-hidden">
               <div className="bg-gradient-to-r from-green-50 to-green-100 px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-green-100 rounded-[10px] flex items-center justify-center">
                     <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -496,7 +493,7 @@ export default function FileDetailPage() {
               <div className="bg-white rounded-[10px] border border-gray-200 overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-gray-200">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-blue-100 rounded-[10px] flex items-center justify-center">
                       <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                       </svg>
@@ -553,7 +550,7 @@ export default function FileDetailPage() {
           <div className="bg-white rounded-[10px] border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-purple-100 rounded-[10px] flex items-center justify-center">
                   <Car className="w-5 h-5 text-purple-500" size={20} strokeWidth={2} />
                 </div>
                 <div>
@@ -611,11 +608,11 @@ export default function FileDetailPage() {
             </div>
           </article>
 
-          {/* Archivos de revisión */}
+          {/* Documentación del vehículo */}
           <div className="bg-white rounded-[10px] shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 rounded-[10px] flex items-center justify-center">
                   <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -623,16 +620,11 @@ export default function FileDetailPage() {
                 <h3 className="text-md text-gray-900">Documentación del vehículo</h3>
               </div>
             </div>
-            <div className="p-6">
-              {carDocs.length > 0 ? (
-                <div className="space-y-3">
-                  {carDocs.map((d) => (
-                    <div key={d.id}>{renderDocument(d.file_name, d.file_url)}</div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No hay documentos del vehículo</p>
-              )}
+            <div className="px-6 pb-6">
+              <VehicleDocsDropzone
+                existing={carDocsForDropzone}
+                mode="view"
+              />
             </div>
           </div>
 
@@ -640,7 +632,7 @@ export default function FileDetailPage() {
           <div className="bg-white rounded-[10px] shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 rounded-[10px] flex items-center justify-center">
                   <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -677,10 +669,8 @@ export default function FileDetailPage() {
           <div className="bg-white rounded-[10px] shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m4-4H8" />
-                  </svg>
+                <div className="w-8 h-8 bg-blue-100 rounded-[10px] flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-blue-600" />
                 </div>
                 <h3 className="text-md text-gray-900">Certificado Revisión Técnica</h3>
               </div>
@@ -716,12 +706,12 @@ export default function FileDetailPage() {
 
           {/* Mensajes de estado */}
           {uploadMessage && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm text-center">
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-[4px] text-green-700 text-sm text-center">
               {uploadMessage}
             </div>
           )}
           {error && view === "documents" && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-[4px] text-red-700 text-sm text-center">
               {error}
             </div>
           )}
@@ -733,7 +723,7 @@ export default function FileDetailPage() {
                 onClick={uploadDocuments}
                 disabled={uploading}
                 className={clsx(
-                  "px-6 py-3 rounded-lg font-medium transition-colors",
+                  "px-6 py-3 rounded-[4px] font-medium transition-colors",
                   uploading
                     ? "bg-blue-300 text-white cursor-not-allowed"
                     : "bg-[#0040B8] text-white hover:bg-[#0035A0]"

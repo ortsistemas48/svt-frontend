@@ -386,7 +386,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                   <div className="text-sm text-gray-500">Cargando información del taller...</div>
                 </div>
               ) : errorMsg ? (
-                <div className="text-red-600 text-sm border border-red-200 bg-red-50 rounded-lg px-4 py-3">
+                <div className="text-red-600 text-sm border border-red-200 bg-red-50 rounded-[10px] px-4 py-3">
                   {errorMsg}
                 </div>
               ) : wsDetail ? (
@@ -397,7 +397,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <Building2 size={16} className="text-[#0040B8]" />
                       Información General
                     </h4>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="bg-gray-50 rounded-[10px] p-4 space-y-3">
                       <DetailRow 
                         icon={<Factory size={18} className="text-gray-500" />}
                         label="Nombre del taller" 
@@ -417,7 +417,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <MapPin size={16} className="text-[#0040B8]" />
                       Ubicación
                     </h4>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="bg-gray-50 rounded-[10px] p-4 space-y-3">
                       <DetailRow 
                         icon={<MapPin size={18} className="text-gray-500" />}
                         label="Provincia" 
@@ -442,7 +442,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <FileText size={16} className="text-[#0040B8]" />
                       Información Legal y Contacto
                     </h4>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="bg-gray-50 rounded-[10px] p-4 space-y-3">
                       <DetailRow 
                         icon={<FileText size={18} className="text-gray-500" />}
                         label="CUIT" 
@@ -477,7 +477,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <Users size={16} className="text-[#0040B8]" />
                       Personal Asignado ({members.length})
                     </h4>
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="border border-gray-200 rounded-[10px] overflow-hidden">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 text-gray-600">
                           <tr>
@@ -512,7 +512,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                                 <td className="p-3 text-center">
                                   <div className="flex items-center justify-center gap-2">
                                     <button
-                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-colors text-xs font-medium"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[4px] border border-red-300 text-red-600 hover:bg-red-50 transition-colors text-xs font-medium"
                                       onClick={() => unassignMember(m.user_id)}
                                       disabled={actionBusy === `kick-${m.user_id}`}
                                       title="Desvincular persona"
@@ -521,7 +521,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                                       {actionBusy === `kick-${m.user_id}` ? "Quitando..." : "Desvincular"}
                                     </button>
                                     <button
-                                      className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
+                                      className="inline-flex items-center justify-center p-2 rounded-[4px] border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
                                       onClick={() => openMemberDetails(m)}
                                       title="Ver detalles"
                                     >
@@ -571,7 +571,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <User size={14} className="text-[#0040B8]" />
                       Información Personal
                     </h5>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-100">
+                    <div className="bg-gray-50 rounded-[10px] p-4 space-y-3 border border-gray-100">
                       <DetailRow 
                         icon={<User size={16} className="text-gray-500" />}
                         label="Nombre completo" 
@@ -596,7 +596,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <Mail size={14} className="text-[#0040B8]" />
                       Información de Contacto
                     </h5>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-100">
+                    <div className="bg-gray-50 rounded-[10px] p-4 space-y-3 border border-gray-100">
                       <DetailRow 
                         icon={<Mail size={16} className="text-gray-500" />}
                         label="Email" 
@@ -619,7 +619,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                         <Award size={14} className="text-[#0040B8]" />
                         Información Profesional
                       </h5>
-                      <div className="bg-blue-50 rounded-lg p-4 space-y-3 border border-blue-100">
+                      <div className="bg-blue-50 rounded-[10px] p-4 space-y-3 border border-blue-100">
                         <DetailRow 
                           icon={<Award size={16} className="text-blue-600" />}
                           label="Número de matrícula" 
@@ -638,7 +638,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                 <div className="flex items-center justify-end gap-3 px-5 py-3 border-t bg-gray-50">
                   <button
                     onClick={closeMemberModal}
-                    className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 transition-colors"
+                    className="px-4 py-2 rounded-[4px] text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 transition-colors"
                   >
                     Cerrar
                   </button>
@@ -651,7 +651,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
               <button
                 onClick={approveWorkshop}
                 disabled={actionBusy !== null || loadingDetail}
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition-colors ${
+                className={`px-5 py-2.5 rounded-[4px] text-sm font-medium inline-flex items-center gap-2 transition-colors ${
                   actionBusy === "approve" || loadingDetail
                     ? "opacity-70 cursor-wait bg-[#0040B8]/80 text-white"
                     : "bg-[#0040B8] hover:bg-[#0035A0] text-white"
