@@ -510,7 +510,10 @@ export default function CreateWorkshopPage() {
                                     className="rounded-[4px] border border-[#E2E8F0] bg-white px-2 sm:px-3 py-2 text-xs sm:text-sm min-w-[120px]"
                                     value={m.user_type_id || ""}
                                     onChange={(e) => {
-                                      const val = e.target.value ? Number(e.target.value) : "";
+                                      const strVal = e.target.value;
+                                      if (!strVal) return; // No actualizar si está vacío
+                                      const val = Number(strVal);
+                                      if (isNaN(val)) return; // No actualizar si no es un número válido
                                       setPending(p => p.map(x => {
                                         if (x.id !== m.id) return x;
                                         if (val !== ENGINEER_ROLE_ID) {
@@ -743,7 +746,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
             id: crypto.randomUUID(),
             email: normalized,
             existingUserId: idStr,
-            user_type_id: "",              // el rol se elige en la UI
+            user_type_id: 0,              // el rol se elige en la UI, valor temporal hasta que se seleccione
             first_name,
             last_name,
             dni,
