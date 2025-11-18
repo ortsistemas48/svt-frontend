@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { ChevronRight, ArrowRight, Info, X, Copy, Check } from "lucide-react";
 import clsx from "clsx";
 import PaymentDropzone from "@/components/PaymentDropzone";
-import PaymentOrdersTable from "@/components/PaymentOrdersTable";
+import PaymentOrdersTable, { PaymentOrdersTableRef } from "@/components/PaymentOrdersTable";
 
 const API = "/api";
 
@@ -57,6 +57,7 @@ function formatARS(n: number) {
 export default function PaymentPage() {
   const { id } = useParams<{ id: string }>();
   const workshopId = Number(id);
+  const ordersTableRef = useRef<PaymentOrdersTableRef>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [proofError, setProofError] = useState<string | null>(null);
@@ -193,6 +194,9 @@ export default function PaymentPage() {
         } else {
         setOkMsg("Orden guardada. Recordá subir el comprobante para acreditar el pago");
         }
+
+        // Actualizar la lista de órdenes
+        await ordersTableRef.current?.refresh();
 
         setPendingFiles([]);
         setShowModal(false);
@@ -361,7 +365,7 @@ export default function PaymentPage() {
               Acá aparecen los pack de revisiones adquiridos por tu taller
             </p>
           </div>
-          <PaymentOrdersTable />
+          <PaymentOrdersTable ref={ordersTableRef} />
         </div>
 
         {/* Modal transferencia, layout vertical y más limpio */}

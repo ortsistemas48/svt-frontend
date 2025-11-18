@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, forwardRef, useImperativeHandle } from "react";
 import { useParams } from "next/navigation";
 import { Search, SlidersHorizontal, X, Upload } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
@@ -24,7 +24,11 @@ type PaymentOrder = {
 
 const TABLE_FILTERS = ["Todas", "Pendiente de pago", "Pendiente de acreditación", "Aprobado", "Rechazado"] as const;
 
-export default function PaymentOrdersTable() {
+export type PaymentOrdersTableRef = {
+  refresh: () => Promise<void>;
+};
+
+const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
   const { id } = useParams(); // workshop id desde la ruta
   const [orders, setOrders] = useState<PaymentOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +89,10 @@ export default function PaymentOrdersTable() {
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useImperativeHandle(ref, () => ({
+    refresh: fetchOrders,
+  }));
 
   // filtro en cliente
   const filtered = useMemo(() => {
@@ -485,7 +493,11 @@ export default function PaymentOrdersTable() {
       `}</style>
     </div>
   );
-}
+});
+
+PaymentOrdersTable.displayName = "PaymentOrdersTable";
+
+export default PaymentOrdersTable;
 
 function Sk({ className = "" }: { className?: string }) {
   return <div className={`rounded bg-gray-200/80 ${className}`} />;
