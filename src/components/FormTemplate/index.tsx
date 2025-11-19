@@ -101,10 +101,12 @@ export default function FormTemplate({
   }, [mode, searchConfig]);
 
   // Si ya viene el dataKey cargado en data, saltamos a "edit" (cuando search está activo)
+  // También verifica CUIT si el dataKey es "dni" (para soportar búsqueda por DNI o CUIT)
   useEffect(() => {
     if (!searchConfig?.enabled) return;
     const val = data?.[searchConfig.dataKey];
-    if (val && mode === "idle") setMode("edit");
+    const cuitVal = searchConfig.dataKey === "dni" ? data?.cuit : null;
+    if ((val || cuitVal) && mode === "idle") setMode("edit");
   }, [searchConfig, data, mode]);
 
   useEffect(() => {
@@ -170,7 +172,18 @@ export default function FormTemplate({
       }
 
       if (!res.ok) {
-        setSearchError("Ocurrió un error al buscar.");
+        // Si es un error (400, 404, etc.), seteamos el DNI/CUIT y pasamos a edit
+        // para que el usuario pueda ingresar los datos manualmente
+        const partial = searchConfig.mapNotFound(sanitized) || {};
+        setData((prev: any) => ({ ...prev, ...partial }));
+        setMode("edit");
+        // Mostrar mensaje de error pero permitir edición
+        try {
+          const errorData = await res.clone().json().catch(() => ({}));
+          setSearchError(errorData?.error || "No se encontró la persona. Podés ingresar los datos manualmente.");
+        } catch {
+          setSearchError("No se encontró la persona. Podés ingresar los datos manualmente.");
+        }
         return;
       }
 

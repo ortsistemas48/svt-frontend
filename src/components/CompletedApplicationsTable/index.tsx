@@ -353,7 +353,8 @@ export default function CompletedApplicationsTable() {
               const date = dateObj.toLocaleDateString("es-AR");
               const time = dateObj.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
               const tone = STATUS_TONES[item.result as string] || DEFAULT_TONE;
-
+              const ownerText = item.owner?.cuit ? item.owner?.razon_social : item.owner?.first_name + " " + item.owner?.last_name;
+              const identityText = item.owner?.cuit ? item.owner?.cuit : item.owner?.dni;
               return (
                 <tr key={item.application_id} className="hover:bg-gray-50 transition-colors">
                   <td className="p-3 text-center text-sm sm:text-base font-mono">{item.application_id}</td>
@@ -367,9 +368,9 @@ export default function CompletedApplicationsTable() {
 
                   <td className="p-3 text-center">
                     <div className="font-medium text-sm sm:text-base max-w-[120px] sm:max-w-[160px] truncate mx-auto">
-                      {item.owner?.first_name || "-"} {item.owner?.last_name || ""}
+                      {ownerText}
                     </div>
-                    <div className="text-xs sm:text-sm text-gray-600">{item.owner?.dni || "-"}</div>
+                    <div className="text-xs sm:text-sm text-gray-600">{identityText || "-"}</div>
                   </td>
 
                   
