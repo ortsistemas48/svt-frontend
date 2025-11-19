@@ -36,6 +36,8 @@ export type PersonType = {
   first_name?: string;
   last_name?: string;
   dni?: string;
+  cuit?: string;
+  razon_social?: string;
   phone_number?: string;
   email?: string;
   province?: string;

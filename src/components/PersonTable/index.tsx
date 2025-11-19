@@ -15,6 +15,8 @@ const tableData = [
   { label: "Nombre", key: "first_name" },
   { label: "Apellido", key: "last_name" },
   { label: "DNI", key: "dni" },
+  { label: "CUIT", key: "cuit" },
+  { label: "Razón social", key: "razon_social" },
   { label: "Teléfono", key: "phone_number" },
   { label: "Email", key: "email" },
   { label: "Provincia", key: "province" },
