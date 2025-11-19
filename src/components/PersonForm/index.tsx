@@ -26,6 +26,8 @@ type Props = {
 // Etiquetas legibles para el resumen de errores
 const FIELD_LABEL: Record<string, string> = {
   dni: "DNI",
+  cuit: "CUIT",
+  razon_social: "Razón Social",
   first_name: "Nombre/s",
   last_name: "Apellido/s",
   street: "Domicilio",
@@ -76,6 +78,8 @@ export default function PersonForm({
         first_name: "",
         last_name: "",
         dni: "",
+        cuit: "",
+        razon_social: "",
         phone_number: "",
         email: "",
         province: "",

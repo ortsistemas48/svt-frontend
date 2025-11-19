@@ -84,11 +84,15 @@ export type Application = {
     first_name: string;
     last_name: string;
     dni: string;
+    cuit?: string;
+    razon_social?: string;
   } | null;
   driver: {
     first_name: string;
     last_name: string;
     dni: string;
+    cuit?: string;
+    razon_social?: string;
   } | null;
   date: string;
   status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección";

@@ -10,7 +10,7 @@ import { fetchDailyStatistics, fetchLatestApplications } from '@/utils';
 import Card from '../Card';
 import QuickActions from '../QuickActions';
 
-type Status = 'Pendiente' | 'En Cola' | 'En curso' | 'Completado' | 'A Inspeccionar' | 'Emitir CRT';
+type Status = 'Pendiente' | 'En Cola' | 'En curso' | 'Completado' | 'A Inspeccionar' | 'Emitir CRT' | 'Segunda Inspección';
 
 const BADGE: Record<Status, string> = {
   Pendiente: 'bg-amber-100 text-amber-700 ring-amber-300',
@@ -18,6 +18,7 @@ const BADGE: Record<Status, string> = {
   'En curso': 'bg-blue-100 text-blue-700 ring-blue-300',
   Completado: 'bg-emerald-100 text-emerald-700 ring-emerald-300',
   'A Inspeccionar': 'bg-amber-50 text-amber-700 ring-amber-300',
+  'Segunda Inspección': 'bg-amber-50 text-amber-700 ring-amber-300',
   'Emitir CRT': 'bg-violet-100 text-violet-700 ring-violet-300'
 };
 
@@ -141,6 +142,7 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="text-left text-gray-500">
+                      <th className="py-2 pr-4 font-medium">CRT</th>
                       <th className="py-2 pr-4 font-medium">Patente</th>
                       <th className="py-2 pr-4 font-medium">Titular</th>
                       <th className="py-2 pr-4 font-medium">Estado</th>
@@ -150,9 +152,10 @@ export default async function Dashboard({ workshopId, date }: DashboardProps) {
                   <tbody>
                     {latestApps.items.map((r: any) => (
                       <tr key={r.application_id} className="border-t border-gray-100">
+                        <td className="py-3 pr-4 font-medium text-gray-900">{r.application_id || 'N/A'}</td>
                         <td className="py-3 pr-4 font-medium text-gray-900">{r.car?.license_plate || 'N/A'}</td>
                         <td className="py-3 pr-4 text-gray-700">
-                          {r.owner ? `${r.owner.first_name || ''} ${r.owner.last_name || ''}`.trim() || 'N/A' : 'N/A'}
+                          {r.owner ? r.owner.cuit ? r.owner.razon_social : r.owner.first_name + " " + r.owner.last_name : 'N/A'}  
                         </td>
                         <td className="py-3 pr-4">
                           <span

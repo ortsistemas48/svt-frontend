@@ -165,7 +165,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         const carData = json.car ?? {};
         const hasOwner = Object.keys(ownerData).length > 0;
         const hasDriver = Object.keys(driverData).length > 0;
-
+        
         // ¿Titular y conductor son la misma persona?
         // - explícito: driver.is_owner === true
         // - mismo id (cuando existen ambos)
@@ -347,19 +347,22 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         }
 
         // Guardar titular
+        // Convertir strings vacíos a null para campos opcionales
         res = await fetch(`/api/applications/${applicationId}/owner`, {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            first_name: owner.first_name,
-            last_name: owner.last_name,
-            dni: owner.dni,
-            phone: owner.phone_number,
-            email: owner.email,
-            province: owner.province,
-            city: owner.city,
-            address: owner.street,
+            first_name: owner.first_name?.trim() || null,
+            last_name: owner.last_name?.trim() || null,
+            dni: owner.dni?.trim() || null,
+            cuit: owner.cuit?.trim() || null,
+            razon_social: owner.razon_social?.trim() || null,
+            phone: owner.phone_number?.trim() || null,
+            email: owner.email?.trim() || null,
+            province: owner.province?.trim() || null,
+            city: owner.city?.trim() || null,
+            address: owner.street?.trim() || null,
             is_same_person: driver?.is_owner || false,
           }),
         });
@@ -374,19 +377,22 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             body: JSON.stringify({ is_same_person: true }),
           });
         } else {
+          // Convertir strings vacíos a null para campos opcionales
           res = await fetch(`/api/applications/${applicationId}/driver`, {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              first_name: driver.first_name,
-              last_name: driver.last_name,
-              dni: driver.dni,
-              phone: driver.phone_number,
-              email: driver.email,
-              province: driver.province,
-              city: driver.city,
-              address: driver.street,
+              first_name: driver.first_name?.trim() || null,
+              last_name: driver.last_name?.trim() || null,
+              dni: driver.dni?.trim() || null,
+              cuit: driver.cuit?.trim() || null,
+              razon_social: driver.razon_social?.trim() || null,
+              phone: driver.phone_number?.trim() || null,
+              email: driver.email?.trim() || null,
+              province: driver.province?.trim() || null,
+              city: driver.city?.trim() || null,
+              address: driver.street?.trim() || null,
               is_same_person: false,
             }),
           });

@@ -251,7 +251,8 @@ export default function InspectionTable() {
                 const date = d.toLocaleDateString("es-AR");
                 const time = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
                 const tone = STATUS_TONES[item.status] || DEFAULT_TONE;
-
+                const ownerText = item.owner?.cuit ? item.owner?.razon_social : item.owner?.first_name + " " + item.owner?.last_name;
+                const identityText = item.owner?.cuit ? item.owner?.cuit : item.owner?.dni;
                 return (
                   <tr key={item.application_id} className="transition-colors hover:bg-gray-50">
                     <td className="p-3 text-center">
@@ -265,9 +266,9 @@ export default function InspectionTable() {
                     </td>
                     <td className="p-3 text-center">
                       <div className="mx-auto max-w-[120px] truncate text-sm font-medium sm:max-w-[160px] sm:text-base">
-                        {item.owner?.first_name || "-"} {item.owner?.last_name || ""}
+                        {ownerText}
                       </div>
-                      <div className="text-xs text-gray-600 sm:text-sm">{item.owner?.dni || "-"}</div>
+                      <div className="text-xs text-gray-600 sm:text-sm">{identityText || "-"}</div>
                     </td>
                     <td className="p-3 text-center">
                       <div className="text-sm sm:text-base">{date}</div>

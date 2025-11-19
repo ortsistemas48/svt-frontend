@@ -9,7 +9,7 @@ type SearchHistoryItem = {
   vehiclePlate: string;
   vehicleModel: string;
   userName: string;
-  userDni: string;
+  userIdentity?: string;
   searchDate: string; // formato: "DD/MM/YYYY HH:mm hs"
   status: "Pendiente" | "Completado" | "En curso" | "A Inspeccionar" | "Emitir CRT";
   applicationId: number;
@@ -85,8 +85,8 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
         applicationId: item.application_id,
         vehiclePlate: item.car?.license_plate || "-",
         vehicleModel: item.car?.model || "-",
-        userName: item.owner ? `${item.owner.first_name} ${item.owner.last_name}`.trim() : "-",
-        userDni: item.owner?.dni || "-",
+        userName: item.owner ? item.owner.cuit ? item.owner.razon_social : item.owner.first_name + " " + item.owner.last_name : "-",
+        userIdentity: item.owner?.cuit ? item.owner?.cuit : item.owner?.dni || "-",
         searchDate: formatDate(item.date),
         status: item.status,
         result: item.result_2 || item.result || null,
@@ -196,7 +196,7 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
             ) : (
               searchHistory.map((item) => {
                 const resultConfig = getResultConfig(item.result);
-
+                
                 return (
                   <div
                     key={item.id}
@@ -223,7 +223,7 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
                           {item.userName}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {item.userDni}
+                          {item.userIdentity || "-"}
                         </p>
                       </div>
 
