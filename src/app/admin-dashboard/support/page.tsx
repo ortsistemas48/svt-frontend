@@ -127,7 +127,7 @@ export default function AdminHelpTicketsPage() {
           visible.map((t) => (
             <div
               key={t.id}
-              onClick={() => router.push(`/admin-dashboard/help/${t.id}`)}
+              onClick={() => router.push(`/admin-dashboard/support/${t.id}`)}
               className="hover:bg-gray-50 transition-colors duration-300 hover:cursor-pointer bg-white rounded-[10px] border border-gray-200 px-6 py-4 flex items-center justify-between gap-4 relative"
             >
               <div className="flex-shrink-0 flex items-center justify-center overflow-hidden">
@@ -155,7 +155,7 @@ export default function AdminHelpTicketsPage() {
 
               <button
                 title="Ver"
-                onClick={(e) => { e.stopPropagation(); router.push(`/admin-dashboard/help/${t.id}`); }}
+                onClick={(e) => { e.stopPropagation(); router.push(`/admin-dashboard/support/${t.id}`); }}
                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-gray-500"
               >
                 <ArrowRight className="w-4 h-4" />
@@ -209,7 +209,7 @@ export default function AdminHelpTicketsPage() {
           <div className="text-xs text-gray-500">Todos los tickets resueltos aparecerán aquí</div>
         </div>
         <button
-          onClick={() => router.push("/admin-dashboard/help/resolved")}
+          onClick={() => router.push("/admin-dashboard/support/resolved")}
           className="inline-flex items-center gap-2 rounded-[4px] bg-blue-700 text-white text-sm font-medium px-6 py-3.5 hover:bg-blue-800"
         >
           Tickets resueltos

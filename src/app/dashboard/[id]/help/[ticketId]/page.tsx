@@ -113,6 +113,7 @@ export default function TicketChatPage() {
   async function handleSend() {
     const value = text.trim();
     if (!value || sending) return;
+    if ((currentTicket?.status || "").toLowerCase() === "resuelto") return;
     try {
       setSending(true);
       // Optimistic append
@@ -183,6 +184,7 @@ export default function TicketChatPage() {
 
             {!ticketsLoading && tickets.map((t) => {
               const isActive = t.id === selectedId;
+              const isResolved = (t.status || "").toLowerCase() === "resuelto";
               return (
                 <button
                   key={t.id}
@@ -194,7 +196,11 @@ export default function TicketChatPage() {
                     router.push(`/dashboard/${workshopId}/help/${t.id}`);
                   }}
                   className={`w-full text-left rounded-[10px] border px-4 py-3 flex items-center gap-3 transition-colors ${
-                    isActive ? "border-[#0040B8] bg-[#0040B8]/5" : "border-gray-200 bg-white hover:bg-gray-50"
+                    isActive
+                      ? "border-[#0040B8] bg-[#0040B8]/5"
+                      : isResolved
+                        ? "border-emerald-500 bg-emerald-50"
+                        : "border-gray-200 bg-white hover:bg-gray-50"
                   }`}
                 >
                   <img src="/images/icons/msgIcon.svg" alt="" className="w-8 h-8" />
@@ -202,6 +208,11 @@ export default function TicketChatPage() {
                     <div className="text-xs text-gray-500">Asunto:</div>
                     <div className="text-sm font-medium text-gray-900 truncate">{t.subject}</div>
                   </div>
+                  {isResolved && (
+                    <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                      Resuelto
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -235,6 +246,11 @@ export default function TicketChatPage() {
 
           {/* Messages */}
           <div className="flex-1 overflow-auto px-5 py-4 space-y-3">
+            {(currentTicket?.status || "").toLowerCase() === "resuelto" && (
+              <div className="px-4 py-2 rounded-[8px] border border-emerald-300 bg-emerald-50 text-emerald-800 text-xs">
+                Este ticket fue marcado como Resuelto. No podés enviar nuevos mensajes.
+              </div>
+            )}
             {loading && (
               <div className="space-y-3">
                 {[1, 2, 3, 4].map((i) => (
@@ -298,17 +314,18 @@ export default function TicketChatPage() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
+                  if (e.key === "Enter" && !e.shiftKey && (currentTicket?.status || "").toLowerCase() !== "resuelto") {
                     e.preventDefault();
                     handleSend();
                   }
                 }}
-                placeholder="Escribe tu mensaje aquí..."
+                placeholder={(currentTicket?.status || "").toLowerCase() === "resuelto" ? "Este ticket está resuelto. Ya no se pueden enviar mensajes." : "Escribe tu mensaje aquí..."}
+                disabled={(currentTicket?.status || "").toLowerCase() === "resuelto"}
                 className="flex-1 bg-transparent outline-none text-sm py-1"
               />
               <button
                 onClick={handleSend}
-                disabled={sending || !text.trim()}
+                disabled={sending || !text.trim() || (currentTicket?.status || "").toLowerCase() === "resuelto"}
                 className="p-2 rounded-full text-white bg-[#0040B8] hover:bg-[#0035a0] disabled:opacity-60"
                 title="Enviar"
                 type="button"

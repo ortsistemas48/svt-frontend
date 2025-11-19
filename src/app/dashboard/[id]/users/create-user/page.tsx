@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { genPassword } from "@/utils";
+import { genPassword, fetchUserData } from "@/utils";
 
 type User = {
   id: number;
@@ -64,6 +64,7 @@ export default function CreateOrAttachUserPage() {
   const isExisting = !!existingUser;
   const [userChoseEngineer, setUserChoseEngineer] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [hasTitularEngineer, setHasTitularEngineer] = useState(false);
 
   const engineerEditable = roleId === ENGINEER_ROLE_ID && (!isExisting || userChoseEngineer);
   const ctaLabel = isExisting ? "Asociar al taller" : "Crear usuario";
@@ -143,6 +144,34 @@ export default function CreateOrAttachUserPage() {
     }
   }, [isExisting, loading, email]);
 
+  // Cargar miembros del taller para validar ingeniero titular único
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await fetchUserData({ workshopId });
+        const users = (data && (data as any).users) || [];
+        const hasTitular = users.some((u: any) => {
+          const r = String(u.role || "").toLowerCase();
+          const k = String(u.engineer_kind || "").toLowerCase();
+          return r.includes("ingeniero") && k === "titular";
+        });
+        if (mounted) setHasTitularEngineer(Boolean(hasTitular));
+      } catch {
+        if (mounted) setHasTitularEngineer(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [workshopId]);
+
+  // Si ya hay Titular y el usuario elige Titular, limpiar y avisar
+  useEffect(() => {
+    if (roleId === ENGINEER_ROLE_ID && hasTitularEngineer && engineerKind === "Titular") {
+      setEngineerKind("");
+      setMsg({ type: "error", text: "Ya existe un Ingeniero Titular en este taller. Asignalo como Suplente." });
+    }
+  }, [roleId, hasTitularEngineer, engineerKind]);
+
   const resetFormExceptEmail = () => {
     setFirstName("");
     setLastName("");
@@ -191,6 +220,10 @@ export default function CreateOrAttachUserPage() {
       }
       if (!engineerKind) {
         setMsg({ type: "error", text: "Elegí si el ingeniero es Titular o Suplente" });
+        return;
+      }
+      if (hasTitularEngineer && engineerKind === "Titular") {
+        setMsg({ type: "error", text: "Ya existe un Ingeniero Titular en este taller. Asignalo como Suplente." });
         return;
       }
     }
@@ -379,9 +412,14 @@ export default function CreateOrAttachUserPage() {
                       disabled={!engineerEditable || submitting}
                     >
                       <option value="">Seleccionar</option>
-                      <option value="Titular">Titular</option>
+                      <option value="Titular" disabled={hasTitularEngineer}>Titular {hasTitularEngineer ? "(no disponible)" : ""}</option>
                       <option value="Suplente">Suplente</option>
                     </select>
+                    {hasTitularEngineer && (
+                      <p className="text-xs text-amber-700 mt-2">
+                        Ya existe un Ingeniero Titular en este taller. Agregalo como Suplente.
+                      </p>
+                    )}
                   </div>
 
                   <div>

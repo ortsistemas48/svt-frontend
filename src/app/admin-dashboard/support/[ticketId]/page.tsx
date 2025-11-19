@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, Send } from "lucide-react";
+import { ChevronLeft, Send, Info, X } from "lucide-react";
 
 type SupportTicket = {
   id: number;
@@ -38,8 +38,29 @@ export default function AdminTicketChatPage() {
   const [sending, setSending] = useState(false);
   const [text, setText] = useState("");
 
+  const [resolving, setResolving] = useState(false);
+  const [resolveError, setResolveError] = useState<string | null>(null);
+
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+
+  // Info modal state
+  type WorkshopDetail = {
+    id?: number;
+    name?: string;
+    razon_social?: string;
+    city?: string;
+    province?: string;
+    address?: string | null;
+    cuit?: string | null;
+    phone?: string | null;
+    plant_number?: number;
+    disposition_number?: string;
+  };
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [loadingInfo, setLoadingInfo] = useState(false);
+  const [workshopDetail, setWorkshopDetail] = useState<WorkshopDetail | null>(null);
+  const [infoError, setInfoError] = useState<string | null>(null);
 
   // Left list - all tickets
   useEffect(() => {
@@ -101,6 +122,51 @@ export default function AdminTicketChatPage() {
     return () => clearInterval(iv);
   }, [ticketId]);
 
+  async function markAsResolved() {
+    if (!ticketId || Number.isNaN(ticketId) || resolving) return;
+    try {
+      setResolving(true);
+      setResolveError(null);
+      const res = await fetch(`/api/tickets/admin/${ticketId}/status`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Resuelto" }),
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(t || "No se pudo marcar como resuelto");
+      }
+      setCurrentTicket((prev) => (prev ? { ...prev, status: "Resuelto" } : prev));
+      setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: "Resuelto" } : t)));
+    } catch (e: any) {
+      setResolveError(e?.message || "Error al actualizar el estado");
+    } finally {
+      setResolving(false);
+    }
+  }
+
+  async function openInfoModal() {
+    setInfoOpen(true);
+    setInfoError(null);
+    setWorkshopDetail(null);
+    if (!currentTicket?.workshop_id) return;
+    try {
+      setLoadingInfo(true);
+      const res = await fetch(`/api/workshops/${currentTicket.workshop_id}`, { credentials: "include" });
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(t || `No se pudo cargar el taller #${currentTicket.workshop_id}`);
+      }
+      const data = await res.json().catch(() => ({}));
+      setWorkshopDetail(data || {});
+    } catch (e: any) {
+      setInfoError(e?.message || "Error cargando información del taller");
+    } finally {
+      setLoadingInfo(false);
+    }
+  }
+
   async function handleSend() {
     const value = text.trim();
     if (!value || sending) return;
@@ -146,7 +212,7 @@ export default function AdminTicketChatPage() {
         <aside className="bg-white rounded-[10px] border border-gray-200 h-[72vh] flex flex-col">
           <div className="px-4 py-3">
             <button
-              onClick={() => router.push(`/admin-dashboard/help`)}
+              onClick={() => router.push(`/admin-dashboard/support`)}
               className="w-full inline-flex items-center gap-2 justify-start text-sm text-[#0040B8] font-medium border border-[#0040B8] rounded-[4px] px-4 py-2 hover:bg-[#0040B8]/5 focus:outline-none focus:ring-2 focus:ring-[#0040B8]/30"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -168,6 +234,7 @@ export default function AdminTicketChatPage() {
 
             {!ticketsLoading && tickets.map((t) => {
               const isActive = t.id === selectedId;
+              const isResolved = (t.status || "").toLowerCase() === "resuelto";
               return (
                 <button
                   key={t.id}
@@ -175,15 +242,26 @@ export default function AdminTicketChatPage() {
                     setLoading(true);
                     setMessages([]);
                     setCurrentTicket(null);
-                    router.push(`/admin-dashboard/help/${t.id}`);
+                    router.push(`/admin-dashboard/support/${t.id}`);
                   }}
-                  className={`w-full text-left rounded-[10px] border px-4 py-3 flex items-center gap-3 transition-colors ${isActive ? "border-[#0040B8] bg-[#0040B8]/5" : "border-gray-200 bg-white hover:bg-gray-50"}`}
+                  className={`w-full text-left rounded-[10px] border px-4 py-3 flex items-center gap-3 transition-colors ${
+                    isActive
+                      ? "border-[#0040B8] bg-[#0040B8]/5"
+                      : isResolved
+                        ? "border-emerald-500 bg-emerald-50"
+                        : "border-gray-200 bg-white hover:bg-gray-50"
+                  }`}
                 >
                   <img src="/images/icons/msgIcon.svg" alt="" className="w-8 h-8" />
                   <div className="min-w-0">
                     <div className="text-xs text-gray-500">Asunto:</div>
                     <div className="text-sm font-medium text-gray-900 truncate">{t.subject}</div>
                   </div>
+                  {isResolved && (
+                    <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                      Resuelto
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -201,11 +279,36 @@ export default function AdminTicketChatPage() {
                 </div>
               </div>
               <div>
-                <div className="text-sm font-semibold text-gray-900">Usuario</div>
-                <div className="text-xs text-gray-500">{currentTicket?.full_name || "Ticket"}</div>
+                <div className="text-sm font-semibold text-gray-900">{currentTicket?.full_name || "Cargando..."}</div>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={openInfoModal}
+                className="inline-flex items-center gap-2 rounded-[4px] border border-gray-300 text-gray-700 text-sm px-3 py-2 hover:bg-gray-50"
+                title="Ver información de la persona y taller"
+              >
+                <Info className="w-4 h-4" />
+                Info
+              </button>
+              {(currentTicket?.status || "").toLowerCase() !== "resuelto" && (
+                <button
+                  type="button"
+                  onClick={markAsResolved}
+                  disabled={resolving}
+                  className="inline-flex items-center gap-2 rounded-[4px] border border-[#0040B8] text-[#0040B8] text-sm px-3 py-2 hover:bg-[#0040B8]/5 disabled:opacity-60"
+                  title="Marcar ticket como resuelto"
+                >
+                  {resolving ? "Marcando..." : "Resuelto"}
+                </button>
+              )}
+            </div>
           </div>
+
+          {resolveError && (
+            <div className="px-5 py-2 text-xs text-rose-700">{resolveError}</div>
+          )}
 
           {/* Messages */}
           <div className="flex-1 overflow-auto px-5 py-4 space-y-3">
@@ -276,6 +379,95 @@ export default function AdminTicketChatPage() {
           </div>
         </section>
       </div>
+
+      {/* Info Modal */}
+      {infoOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setInfoOpen(false)} />
+          <div className="relative bg-white w-[92%] max-w-2xl rounded-[10px] shadow-xl border border-gray-200">
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <h3 className="text-base font-semibold">Información del usuario y del taller</h3>
+              <button
+                className="p-2 rounded hover:bg-gray-100"
+                onClick={() => setInfoOpen(false)}
+                aria-label="Cerrar"
+                title="Cerrar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="px-5 py-4 max-h-[70vh] overflow-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border border-gray-200 rounded-[10px]">
+                  <div className="px-4 py-3 border-b">
+                    <div className="text-sm font-semibold text-gray-900">Persona</div>
+                  </div>
+                  <div className="divide-y">
+                    <div className="flex items-center justify-between px-4 py-2 text-sm">
+                      <span className="text-gray-500">Nombre</span>
+                      <span className="text-gray-900">{currentTicket?.full_name || "-"}</span>
+                    </div>
+                    <div className="flex items-center justify-between px-4 py-2 text-sm">
+                      <span className="text-gray-500">Teléfono</span>
+                      <span className="text-gray-900">{currentTicket?.phone || "-"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border border-gray-200 rounded-[10px]">
+                  <div className="px-4 py-3 border-b flex items-center justify-between">
+                    <div className="text-sm font-semibold text-gray-900">Taller</div>
+                    {loadingInfo && <div className="text-xs text-gray-500">Cargando...</div>}
+                  </div>
+                  {infoError ? (
+                    <div className="px-4 py-3 text-sm text-rose-700">{infoError}</div>
+                  ) : (
+                    <div className="divide-y">
+                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                        <span className="text-gray-500">Nombre</span>
+                        <span className="text-gray-900">{workshopDetail?.name || "-"}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                        <span className="text-gray-500">Razón social</span>
+                        <span className="text-gray-900">{workshopDetail?.razon_social || "-"}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                        <span className="text-gray-500">Ciudad</span>
+                        <span className="text-gray-900">{workshopDetail?.city || "-"}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                        <span className="text-gray-500">Provincia</span>
+                        <span className="text-gray-900">{workshopDetail?.province || "-"}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                        <span className="text-gray-500">Dirección</span>
+                        <span className="text-gray-900">{workshopDetail?.address || "-"}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                        <span className="text-gray-500">CUIT</span>
+                        <span className="text-gray-900">{workshopDetail?.cuit || "-"}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                        <span className="text-gray-500">Teléfono</span>
+                        <span className="text-gray-900">{workshopDetail?.phone || "-"}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="px-5 py-3 border-t flex items-center justify-end bg-gray-50 rounded-b-[10px]">
+              <button
+                type="button"
+                onClick={() => setInfoOpen(false)}
+                className="px-4 py-2 rounded-[4px] border border-gray-300 bg-white text-sm hover:bg-gray-50"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
