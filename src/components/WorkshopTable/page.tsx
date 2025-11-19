@@ -6,6 +6,15 @@ import {
   Search,
   SlidersHorizontal,
   X,
+  MoreVertical,
+  User,
+  CreditCard,
+  Briefcase,
+  Award,
+  FileText,
+  Mail,
+  Phone,
+  Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -33,8 +42,16 @@ type Props = {
 export default function WorkshopTable({ workshops }: Props) {
   type Member = {
     user_id: number | string;
+    first_name?: string;
+    last_name?: string;
     email?: string;
+    dni?: string;
+    phone_number?: string;
     role?: string | number;
+    engineer_kind?: string;
+    license_number?: string;
+    title_name?: string;
+    created_at?: string;
   };
   const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
@@ -43,6 +60,9 @@ export default function WorkshopTable({ workshops }: Props) {
   const [selected, setSelected] = useState<Workshop | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
@@ -81,25 +101,44 @@ export default function WorkshopTable({ workshops }: Props) {
   async function openDrawer(workshop: Workshop) {
     setSelected(workshop);
     setOpen(true);
+    setErrorMsg(null);
     setMembers([]);
-    setLoadingMembers(true);
+    setSelectedMember(null);
+    setLoadingDetail(true);
     try {
-      const res = await fetch(`/api/workshops/admin/${workshop.id}/members`, { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setMembers(Array.isArray(data) ? data : []);
-      } else {
-        setMembers([]);
-      }
-    } catch {
-      setMembers([]);
+      // Fetch full workshop details
+      const dRes = await fetch(`/api/workshops/${workshop.id}`, {
+        credentials: "include",
+      });
+      if (!dRes.ok) throw new Error(await dRes.text() || "No se pudo cargar el taller");
+      const d = await dRes.json();
+      
+      setSelected({
+        ...workshop,
+        ...d,
+      });
+
+      // Fetch members
+      const mRes = await fetch(`/api/workshops/admin/${workshop.id}/members`, {
+        credentials: "include",
+      });
+      if (!mRes.ok) throw new Error(await mRes.text() || "No se pudo cargar el personal");
+      const ms = await mRes.json();
+      setMembers(ms || []);
+    } catch (e: any) {
+      setErrorMsg(e.message || "Error cargando datos");
     } finally {
-      setLoadingMembers(false);
+      setLoadingDetail(false);
     }
   }
   function closeDrawer() {
     setOpen(false);
-    setTimeout(() => setSelected(null), 200);
+    setTimeout(() => {
+      setSelected(null);
+      setSelectedMember(null);
+      setErrorMsg(null);
+      setLoadingDetail(false);
+    }, 200);
   }
 
   useEffect(() => {
@@ -129,6 +168,51 @@ export default function WorkshopTable({ workshops }: Props) {
       </span>
     </div>
   );
+
+  const formatRole = (member: Member) => {
+    const role = String(member.role ?? "-");
+    const isEngineer = role.toLowerCase() === "ingeniero" || 
+                       role.toLowerCase() === "ingeniería" || 
+                       member.role === 2;
+    
+    if (isEngineer && member.engineer_kind) {
+      return `${role} - ${member.engineer_kind}`;
+    }
+    return role;
+  };
+
+  // mapa de "estado/rol" -> tonos
+  const toneFor = (value?: string) => {
+    const v = (value || "").toLowerCase();
+    if (["titular"].some(k => v.includes(k))) return { text: "text-indigo-700", bg: "bg-indigo-50" };
+    if (["ingeniero"].some(k => v.includes(k))) return { text: "text-emerald-700", bg: "bg-emerald-50" };
+    if (["personal de planta"].some(k => v.includes(k))) return { text: "text-sky-700", bg: "bg-sky-50" };
+    if (["administrativo"].some(k => v.includes(k))) return { text: "text-sky-700", bg: "bg-sky-50" };
+    if (["soporte"].some(k => v.includes(k))) return { text: "text-amber-700", bg: "bg-amber-50" };
+    if (["activo", "active"].some(k => v.includes(k))) return { text: "text-green-700", bg: "bg-green-50" };
+    if (["inactivo", "suspendido", "inactive", "suspended"].some(k => v.includes(k))) return { text: "text-rose-700", bg: "bg-rose-50" };
+    return { text: "text-gray-700", bg: "bg-gray-100" };
+  };
+
+  const openMemberDetails = (member: Member) => {
+    setSelectedMember(member);
+  };
+
+  const closeMemberModal = () => {
+    setSelectedMember(null);
+  };
+
+  const DetailRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value?: string }) => {
+    return (
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 shrink-0">{icon}</div>
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium text-gray-500 mb-0.5">{label}</div>
+          <div className="text-sm text-gray-900 break-words">{value || "-"}</div>
+        </div>
+      </div>
+    );
+  };
 
   const workshopOwnerEmail = useMemo(() => {
     if (!members || members.length === 0) return "-";
@@ -335,7 +419,7 @@ export default function WorkshopTable({ workshops }: Props) {
       <aside
         role="dialog"
         aria-modal="true"
-        className={`fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] bg-white shadow-2xl transform transition-transform duration-200 ${
+        className={`fixed right-0 top-0 z-50 h-full w-full sm:w-[800px] bg-white shadow-2xl transform transition-transform duration-200 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -358,32 +442,210 @@ export default function WorkshopTable({ workshops }: Props) {
         <div className="p-4 overflow-y-auto h-[calc(100%-56px)]">
           {selected ? (
             <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[#0040B8]/10 flex items-center justify-center text-[#0040B8] font-semibold">
-                  {selected.name.charAt(0).toUpperCase()}
+              {loadingDetail ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-sm text-gray-500">Cargando información del taller...</div>
                 </div>
-                <div className="min-w-0">
-                  <p className="font-medium">{selected.name}</p>
-                  <p className="text-sm text-gray-600 truncate">{selected.razon_social}</p>
+              ) : errorMsg ? (
+                <div className="text-red-600 text-sm border border-red-200 bg-red-50 rounded-[10px] px-4 py-3">
+                  {errorMsg}
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-[#0040B8]/10 flex items-center justify-center text-[#0040B8] font-semibold">
+                      {selected.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium">{selected.name}</p>
+                      <p className="text-sm text-gray-600 truncate">{selected.razon_social}</p>
+                    </div>
+                  </div>
 
-              <div className="-mx-4 divide-y divide-gray-200">
-                <Row label="Ciudad" value={selected.city} />
-                <Row label="Provincia" value={selected.province} />
-                <Row label="Dirección" value={selected.address} />
-                <Row label="CUIT" value={selected.cuit} />
-                <Row label="Email del taller" value={loadingMembers ? "Cargando..." : workshopOwnerEmail} />
-                <Row label="Teléfono" value={selected.phone} />
-                <Row label="Número de Planta" value={selected.plant_number} />
-                <Row label="Número de Disposición" value={selected.disposition_number} />
-                <Row label="Inspecciones Disponibles" value={selected.available_inspections} />
-              </div>
+                  <div className="-mx-4 divide-y divide-gray-200">
+                    <Row label="Ciudad" value={selected.city} />
+                    <Row label="Provincia" value={selected.province} />
+                    <Row label="Dirección" value={selected.address} />
+                    <Row label="CUIT" value={selected.cuit} />
+                    <Row label="Email del taller" value={loadingDetail ? "Cargando..." : workshopOwnerEmail} />
+                    <Row label="Teléfono" value={selected.phone} />
+                    <Row label="Número de Planta" value={selected.plant_number} />
+                    <Row label="Número de Disposición" value={selected.disposition_number} />
+                    <Row label="Inspecciones Disponibles" value={selected.available_inspections} />
+                  </div>
+
+                  {/* Personal Asignado */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                      <Users size={16} className="text-[#0040B8]" />
+                      Personal Asignado ({members.length})
+                    </h4>
+                    <div className="border border-gray-200 rounded-[10px] overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 text-gray-600">
+                          <tr>
+                            <th className="p-3 text-left font-medium">Nombre</th>
+                            <th className="p-3 text-left font-medium">Email</th>
+                            <th className="p-3 text-left font-medium">DNI</th>
+                            <th className="p-3 text-left font-medium">Rol</th>
+                            <th className="p-3 text-center font-medium">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {members.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="text-center py-8 text-gray-500">
+                                <Users size={32} className="mx-auto mb-2 text-gray-400" />
+                                <p>Sin personal asignado</p>
+                              </td>
+                            </tr>
+                          ) : (
+                            members.map((m) => (
+                              <tr key={m.user_id} className="border-t hover:bg-gray-50 transition-colors">
+                                <td className="p-3 font-medium text-gray-900">
+                                  {(m.first_name || "") + " " + (m.last_name || "")}
+                                </td>
+                                <td className="p-3 text-gray-600">{m.email || "-"}</td>
+                                <td className="p-3 text-gray-600">{m.dni || "-"}</td>
+                                <td className="p-3">
+                                  {(() => {
+                                    const tone = toneFor(String(m.role));
+                                    return (
+                                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${tone.bg} ${tone.text}`}>
+                                        {formatRole(m)}
+                                      </span>
+                                    );
+                                  })()}
+                                </td>
+                                <td className="p-3 text-center">
+                                  <button
+                                    className="inline-flex items-center justify-center p-2 rounded-[4px] border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
+                                    onClick={() => openMemberDetails(m)}
+                                    title="Ver detalles"
+                                  >
+                                    <MoreVertical size={14} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <p className="text-sm text-gray-600">Selecciona un taller para ver sus datos.</p>
           )}
         </div>
+
+        {/* Member side panel */}
+        {selectedMember && (
+          <div className="absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white border-l shadow-xl z-[51] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b bg-white">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-[#F3F6FF]">
+                  <User size={18} className="text-[#0040B8]" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">Información del Usuario</h4>
+                  <p className="text-xs text-gray-600">
+                    {selectedMember.first_name} {selectedMember.last_name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={closeMemberModal}
+                className="p-1.5 rounded-full border hover:bg-gray-50 transition-colors"
+                aria-label="Cerrar panel"
+              >
+                <X size={16} className="text-gray-700" />
+              </button>
+            </div>
+
+            <div className="px-5 py-5 space-y-5 overflow-y-auto flex-1">
+              {/* Información Personal */}
+              <div>
+                <h5 className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <User size={14} className="text-[#0040B8]" />
+                  Información Personal
+                </h5>
+                <div className="bg-gray-50 rounded-[10px] p-4 space-y-3 border border-gray-100">
+                  <DetailRow 
+                    icon={<User size={16} className="text-gray-500" />}
+                    label="Nombre completo" 
+                    value={`${selectedMember.first_name || "-"} ${selectedMember.last_name || ""}`} 
+                  />
+                  <DetailRow 
+                    icon={<CreditCard size={16} className="text-gray-500" />}
+                    label="DNI" 
+                    value={selectedMember.dni || "-"} 
+                  />
+                  <DetailRow 
+                    icon={<Briefcase size={16} className="text-gray-500" />}
+                    label="Rol" 
+                    value={formatRole(selectedMember)} 
+                  />
+                </div>
+              </div>
+
+              {/* Información de Contacto */}
+              <div>
+                <h5 className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <Mail size={14} className="text-[#0040B8]" />
+                  Información de Contacto
+                </h5>
+                <div className="bg-gray-50 rounded-[10px] p-4 space-y-3 border border-gray-100">
+                  <DetailRow 
+                    icon={<Mail size={16} className="text-gray-500" />}
+                    label="Email" 
+                    value={selectedMember.email || "-"} 
+                  />
+                  <DetailRow 
+                    icon={<Phone size={16} className="text-gray-500" />}
+                    label="Teléfono" 
+                    value={selectedMember.phone_number || "-"} 
+                  />
+                </div>
+              </div>
+
+              {/* Información Profesional (solo para Ingenieros) */}
+              {(String(selectedMember.role).toLowerCase() === "ingeniero" || 
+                String(selectedMember.role).toLowerCase() === "ingeniería" ||
+                selectedMember.role === 2) && (
+                <div>
+                  <h5 className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Award size={14} className="text-[#0040B8]" />
+                    Información Profesional
+                  </h5>
+                  <div className="bg-blue-50 rounded-[10px] p-4 space-y-3 border border-blue-100">
+                    <DetailRow 
+                      icon={<Award size={16} className="text-blue-600" />}
+                      label="Número de matrícula" 
+                      value={selectedMember.license_number || "-"} 
+                    />
+                    <DetailRow 
+                      icon={<FileText size={16} className="text-blue-600" />}
+                      label="Título" 
+                      value={selectedMember.title_name || "-"} 
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 px-5 py-3 border-t bg-gray-50">
+              <button
+                onClick={closeMemberModal}
+                className="px-4 py-2 rounded-[4px] text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        )}
       </aside>
     </div>
   );

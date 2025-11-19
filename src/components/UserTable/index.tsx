@@ -22,6 +22,7 @@ type AnyUser = {
   updated_at?: string;
   title_name?: string;
   license_number?: string;
+  engineer_kind?: string;
   last_login?: string;
   [key: string]: any;
 };
@@ -189,6 +190,9 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { id } = useParams();
   const [roleValue, setRoleValue] = useState<string>("");
+  const [engineerKind, setEngineerKind] = useState<string>("");
+  const [licenseNumber, setLicenseNumber] = useState<string>("");
+  const [titleName, setTitleName] = useState<string>("");
   const [savingRole, setSavingRole] = useState(false);
   const [roleError, setRoleError] = useState<string | null>(null);
   const [roleOk, setRoleOk] = useState<string | null>(null);
@@ -231,6 +235,11 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
   function openDrawer(user: AnyUser) {
     setSelected(user);
     setRoleValue(user.role || "");
+    // Inicializar campos de ingeniero si el usuario ya es ingeniero
+    const isEngineer = (user.role || "").toLowerCase().includes("ingeniero");
+    setEngineerKind(isEngineer ? (user.engineer_kind || "") : "");
+    setLicenseNumber(isEngineer ? (user.license_number || "") : "");
+    setTitleName(isEngineer ? (user.title_name || "") : "");
     setRoleError(null);
     setRoleOk(null);
     setOpen(true);
@@ -239,6 +248,10 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
     setOpen(false);
     setTimeout(() => {
       setSelected(null);
+      setRoleValue("");
+      setEngineerKind("");
+      setLicenseNumber("");
+      setTitleName("");
       setRoleError(null);
       setRoleOk(null);
     }, 200);
@@ -312,21 +325,58 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
       setRoleError(null);
       setRoleOk(null);
 
+      // Validar campos requeridos si el rol es Ingeniero
+      const isEngineer = roleValue.toLowerCase() === "ingeniero";
+      if (isEngineer) {
+        if (!engineerKind?.trim()) {
+          setRoleError("El tipo de ingeniero es requerido");
+          setSavingRole(false);
+          return;
+        }
+        if (!licenseNumber?.trim()) {
+          setRoleError("El número de matrícula es requerido");
+          setSavingRole(false);
+          return;
+        }
+        if (!titleName?.trim()) {
+          setRoleError("El título es requerido");
+          setSavingRole(false);
+          return;
+        }
+      }
+
+      const body: any = { role: roleValue };
+      
+      // Incluir campos de ingeniero solo si el rol es Ingeniero
+      if (isEngineer) {
+        body.engineer_kind = engineerKind.trim();
+        body.license_number = licenseNumber.trim();
+        body.title_name = titleName.trim();
+      }
+
       const url = `/api/workshops/${encodeURIComponent(workshopId)}/members/${encodeURIComponent(selected.id)}/role`;
       const res = await fetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ role: roleValue }),
+        body: JSON.stringify(body),
       });
 
-      const body = await res.json().catch(() => ({} as any));
-      if (!res.ok || body?.ok !== true) {
-        throw new Error(body?.error || `Error ${res.status}`);
+      const responseBody = await res.json().catch(() => ({} as any));
+      if (!res.ok || responseBody?.ok !== true) {
+        throw new Error(responseBody?.error || `Error ${res.status}`);
       }
 
       // Optimista: actualizá el seleccionado para reflejar el nuevo tono/rol
-      const updated = { ...selected, role: roleValue };
+      const updated = { 
+        ...selected, 
+        role: roleValue,
+        ...(isEngineer && {
+          engineer_kind: engineerKind.trim(),
+          license_number: licenseNumber.trim(),
+          title_name: titleName.trim(),
+        })
+      };
       setSelected(updated);
       setRoleOk("Rol actualizado");
       // si querés refrescar servidor: router.refresh();
@@ -352,6 +402,25 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
     setTimeout(() => closeBtnRef.current?.focus(), 0);
     return () => { document.body.style.overflow = prev; };
   }, [open]);
+
+  // Limpiar campos de ingeniero si el rol cambia a algo que no sea Ingeniero
+  useEffect(() => {
+    const isEngineer = roleValue.toLowerCase() === "ingeniero";
+    if (!isEngineer) {
+      setEngineerKind("");
+      setLicenseNumber("");
+      setTitleName("");
+    } else {
+      // Si el rol es Ingeniero y los campos están vacíos, restaurar valores originales si el usuario ya era ingeniero
+      const wasEngineer = selected && (selected.role || "").toLowerCase().includes("ingeniero");
+      if (wasEngineer && !engineerKind && !licenseNumber && !titleName) {
+        setEngineerKind(selected.engineer_kind || "");
+        setLicenseNumber(selected.license_number || "");
+        setTitleName(selected.title_name || "");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roleValue]);
 
   const fullName = (u?: AnyUser | null) => [u?.first_name, u?.last_name].filter(Boolean).join(" ") || "Sin nombre";
   const initials = (u?: AnyUser | null) => {
@@ -534,16 +603,91 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                     roles={ROLES}
                     onChange={(v) => setRoleValue(v)}
                   />
-                  <button
-                    type="button"
-                    onClick={() => saveRole(Number(id))}
-                    disabled={savingRole || (roleValue || "") === (selected.role || "")}
-                    className="inline-flex items-center gap-2 px-3 py-3 rounded-[4px] bg-[#0040B8] hover:bg-[#00379f] disabled:opacity-60 text-white text-sm"
-                    title={(roleValue || "") === (selected.role || "") ? "No hay cambios" : undefined}
-                  >
-                    {savingRole ? "Cambiando..." : "Cambiar"}
-                  </button>
+                  {(() => {
+                    const isEngineer = roleValue.toLowerCase() === "ingeniero";
+                    const roleChanged = (roleValue || "") !== (selected.role || "");
+                    const engineerFieldsChanged = isEngineer && (
+                      engineerKind !== (selected.engineer_kind || "") ||
+                      licenseNumber !== (selected.license_number || "") ||
+                      titleName !== (selected.title_name || "")
+                    );
+                    const hasChanges = roleChanged || engineerFieldsChanged;
+                    
+                    const isEngineerWithMissingFields = isEngineer && (
+                      !engineerKind?.trim() ||
+                      !licenseNumber?.trim() ||
+                      !titleName?.trim()
+                    );
+                    
+                    const isDisabled = savingRole || !hasChanges || isEngineerWithMissingFields;
+                    
+                    let disabledTitle = "";
+                    if (!hasChanges) {
+                      disabledTitle = "No hay cambios";
+                    } else if (isEngineerWithMissingFields) {
+                      disabledTitle = "Completa todos los campos requeridos para Ingeniero";
+                    }
+                    
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => saveRole(Number(id))}
+                        disabled={isDisabled}
+                        className="inline-flex items-center gap-2 px-3 py-3 rounded-[4px] bg-[#0040B8] hover:bg-[#00379f] disabled:opacity-60 text-white text-sm"
+                        title={disabledTitle || undefined}
+                      >
+                        {savingRole ? "Cambiando..." : "Cambiar"}
+                      </button>
+                    );
+                  })()}
                 </div>
+
+                {/* Campos condicionales para Ingeniero */}
+                {roleValue.toLowerCase() === "ingeniero" && (
+                  <div className="space-y-3 mt-4 pt-4 border-t border-gray-200">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Título <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={titleName}
+                        onChange={(e) => setTitleName(e.target.value)}
+                        placeholder="Título profesional"
+                        className="w-full px-3 py-2 rounded-[4px] border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent text-sm"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Número de matrícula <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={licenseNumber}
+                        onChange={(e) => setLicenseNumber(e.target.value)}
+                        placeholder="Número de matrícula profesional"
+                        className="w-full px-3 py-2 rounded-[4px] border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent text-sm"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Tipo de ingeniero <span className="text-rose-600">*</span>
+                      </label>
+                      <select
+                        value={engineerKind}
+                        onChange={(e) => setEngineerKind(e.target.value)}
+                        className="w-full px-3 py-2 rounded-[4px] border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent text-sm bg-white"
+                        required
+                      >
+                        <option value="">Seleccionar tipo</option>
+                        <option value="Titular">Titular</option>
+                        <option value="Suplente">Suplente</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
 
                 {roleError && <p className="text-sm text-rose-700">{roleError}</p>}
                 {roleOk && <p className="text-sm text-emerald-700">{roleOk}</p>} */}

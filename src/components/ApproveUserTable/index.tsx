@@ -27,6 +27,7 @@ type Member = {
   dni?: string;
   phone_number?: string;
   role?: string | number;
+  engineer_kind?: string;
   license_number?: string;
   title_name?: string;
   created_at?: string;
@@ -123,7 +124,6 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
       });
       if (!mRes.ok) throw new Error(await mRes.text() || "No se pudo cargar el personal");
       const ms = await mRes.json();
-      console.log(ms)
       setMembers(ms || []); 
     } catch (e: any) {
       setErrorMsg(e.message || "Error cargando datos");
@@ -151,6 +151,18 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
 
   const fmtDate = (d?: string) =>
     d ? new Date(d).toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" }) : "";
+
+  const formatRole = (member: Member) => {
+    const role = String(member.role ?? "-");
+    const isEngineer = role.toLowerCase() === "ingeniero" || 
+                       role.toLowerCase() === "ingeniería" || 
+                       member.role === 2;
+    
+    if (isEngineer && member.engineer_kind) {
+      return `${role} - ${member.engineer_kind}`;
+    }
+    return role;
+  };
 
   const unassignMember = async (user_id: string | number) => {
     if (!selectedWs) return;
@@ -506,7 +518,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                                 <td className="p-3 text-gray-600">{m.dni || "-"}</td>
                                 <td className="p-3">
                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {String(m.role ?? "-")}
+                                    {formatRole(m)}
                                   </span>
                                 </td>
                                 <td className="p-3 text-center">
@@ -585,7 +597,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <DetailRow 
                         icon={<Briefcase size={16} className="text-gray-500" />}
                         label="Rol" 
-                        value={String(selectedMember.role ?? "-")} 
+                        value={formatRole(selectedMember)} 
                       />
                     </div>
                   </div>
