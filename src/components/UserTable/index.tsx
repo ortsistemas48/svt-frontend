@@ -642,7 +642,6 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                   })()}
                 </div>
 
-                {/* Campos condicionales para Ingeniero */}
                 {roleValue.toLowerCase() === "ingeniero" && (
                   <div className="space-y-3 mt-4 pt-4 border-t border-gray-200">
                     <div>
