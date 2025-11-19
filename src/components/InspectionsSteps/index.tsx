@@ -94,6 +94,8 @@ export default function InspectionStepsClient({
   const [inspDocsDeletingId, setInspDocsDeletingId] = useState<number | null>(null);
   const [dzResetTokenTech, setDzResetTokenTech] = useState(0);
   const [dzResetTokenPhotos, setDzResetTokenPhotos] = useState(0);
+  // Selección de foto de frente: puede ser una pendiente (queue) o una existente
+  const [frontPhotoSel, setFrontPhotoSel] = useState<{ kind: "queue"; index: number } | { kind: "existing"; id: number } | null>(null);
 
   const MAX_CHARS = 750;
   const obsCharCount = globalText.length;
@@ -145,6 +147,12 @@ export default function InspectionStepsClient({
         fetchInspectionDocumentsByType("technical_report"),
         fetchInspectionDocumentsByType("vehicle_photo"),
       ]);
+      // Inferir selección inicial desde existentes (si alguno está marcado como frente)
+      setFrontPhotoSel((prev) => {
+        if (prev) return prev;
+        const existingFront = (inspDocsPhotos || []).find((d: any) => (d as any).is_front === true);
+        return existingFront ? { kind: "existing", id: (existingFront as any).id } : null;
+      });
     } catch (e: any) {
       setError(e.message || "Error cargando documentos");
     } finally {
@@ -375,6 +383,12 @@ export default function InspectionStepsClient({
         pendingPhotoFiles.forEach((f) => form.append("files", f));
         form.append("role", "global");
         form.append("type", "vehicle_photo");
+        // Indicar al backend cuál de los archivos nuevos (si aplica) es el frente
+        if (frontPhotoSel?.kind === "queue") {
+          form.append("front_idx", String(frontPhotoSel.index));
+        } else if (frontPhotoSel?.kind === "existing") {
+          form.append("front_existing_id", String(frontPhotoSel.id));
+        }
         const uploadRes = await fetch(
           `${apiBase}/inspections/inspections/${inspectionId}/documents`,
           {
@@ -388,6 +402,19 @@ export default function InspectionStepsClient({
           throw new Error(upData?.error || "No se pudieron subir las fotos del vehículo");
         }
         setPendingPhotoFiles([]);
+        await fetchInspectionDocumentsByType("vehicle_photo");
+      } else if (frontPhotoSel?.kind === "existing") {
+        // No se subieron nuevas fotos, pero el usuario eligió como frente una existente
+        const res = await fetch(`${apiBase}/inspections/inspections/${inspectionId}/documents/set-front`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ doc_id: frontPhotoSel.id }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(j?.error || "No se pudo marcar la foto de frente");
+        }
         await fetchInspectionDocumentsByType("vehicle_photo");
       }
 
@@ -540,6 +567,13 @@ export default function InspectionStepsClient({
     const allMarkedNow = steps.every((s) => Boolean(statusByStep[s.step_id]));
     if (!allMarkedNow) {
       setError("Marcá un estado en todos los pasos antes de generar el certificado");
+      return;
+    }
+
+    // Validación: si hay fotos del vehículo, obligar a elegir frente
+    const totalPhotosNow = (inspDocsPhotos?.length || 0) + (pendingPhotoFiles?.length || 0);
+    if (totalPhotosNow > 0 && !frontPhotoSel) {
+      setError("Seleccioná qué foto es el frente del vehículo");
       return;
     }
 
@@ -757,10 +791,10 @@ export default function InspectionStepsClient({
           <div className={clsx(isCompleted && "opacity-50")}>
             <h5 className="text-sm font-medium text-zinc-800 mb-2">Informes técnicos</h5>
             <Dropzone
+              title=""
               onPendingChange={onPendingTechChange}
               existing={inspDocsTech}
               onDeleteExisting={(docId) => deleteInspectionDocument("technical_report", docId)}
-              title=""
               maxSizeMB={15}
               resetToken={dzResetTokenTech}
             />
@@ -769,12 +803,17 @@ export default function InspectionStepsClient({
           <div className={clsx(isCompleted && "opacity-50")}>
             <h5 className="text-sm font-medium text-zinc-800 mb-2">Fotos del vehículo</h5>
             <Dropzone
+              title=""
               onPendingChange={onPendingPhotosChange}
               existing={inspDocsPhotos}
               onDeleteExisting={(docId) => deleteInspectionDocument("vehicle_photo", docId)}
-              title=""
               maxSizeMB={15}
               resetToken={dzResetTokenPhotos}
+              frontSelection={{
+                selected: frontPhotoSel,
+                onChange: (sel) => setFrontPhotoSel(sel),
+                message: "Seleccioná qué foto es el frente del vehículo",
+              }}
             />
           </div>
         </div>

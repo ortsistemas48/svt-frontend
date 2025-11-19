@@ -103,7 +103,7 @@ export default function InspectionTable() {
         `/api/applications/workshop/${id}/full?${usp.toString()}`,
         { credentials: "include" }
       );
-      if (!res.ok) throw new Error("Error al traer aplicaciones");
+      if (!res.ok) throw new Error("Error al traer revisiones");
       const data = await res.json();
       setItems(data.items ?? []);
       setTotal(data.total ?? 0);
@@ -111,7 +111,7 @@ export default function InspectionTable() {
       console.error(err);
       setItems([]);
       setTotal(0);
-      setErrorMsg("No se pudieron   cargar las aplicaciones");
+      setErrorMsg("No se pudieron cargar las revisiones");
     } finally {
       setLoading(false);
     }
@@ -244,7 +244,7 @@ export default function InspectionTable() {
               headers={headers}
               items={items}
               isLoading={loading}
-              emptyMessage="No hay aplicaciones para mostrar."
+              emptyMessage="No hay revisiones para mostrar."
               rowsPerSkeleton={perPage}
               renderRow={(item) => {
                 const d = new Date(item.date);

@@ -58,7 +58,7 @@ export default function QueueTable() {
         `/api/applications/workshop/${id}/full?${usp.toString()}`,
         { credentials: "include" }
       );
-      if (!res.ok) throw new Error("Error al traer aplicaciones");
+      if (!res.ok) throw new Error("Error al traer revisiones");
       const data = await res.json();
       setItems(data.items ?? []);
       setTotal(data.total ?? 0);
@@ -132,7 +132,7 @@ export default function QueueTable() {
             headers={headers}
             items={items}
             isLoading={loading}
-            emptyMessage="No hay aplicaciones para mostrar."
+            emptyMessage="No hay revisiones para mostrar."
             rowsPerSkeleton={perPage}
             /* 2) Header blanco, 4) líneas a los bordes */
             theadClassName="bg-white"

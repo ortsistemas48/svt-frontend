@@ -161,8 +161,13 @@ function RoleDropdown({
 // mapa de “estado/rol” -> tonos
 function toneFor(value?: string) {
   const v = (value || "").toLowerCase();
-  if (["titular"].some(k => v.includes(k))) return { text: "text-indigo-700", bg: "bg-indigo-50" };
-  if (["ingeniero"].some(k => v.includes(k))) return { text: "text-emerald-700", bg: "bg-emerald-50" };
+  // Específicos primero
+  if (v.includes("titular del taller")) return { text: "text-indigo-700", bg: "bg-indigo-50" };
+  if (v.includes("ingeniero titular")) return { text: "text-emerald-700", bg: "bg-emerald-50" };
+  if (v.includes("ingeniero suplente")) return { text: "text-emerald-700", bg: "bg-emerald-50" };
+  // Generales
+  if (v.includes("titular")) return { text: "text-indigo-700", bg: "bg-indigo-50" };
+  if (v.includes("ingeniero")) return { text: "text-emerald-700", bg: "bg-emerald-50" };
   if (["personal de planta"].some(k => v.includes(k))) return { text: "text-sky-700", bg: "bg-sky-50" };
   if (["administrativo"].some(k => v.includes(k))) return { text: "text-sky-700", bg: "bg-sky-50" };
   if (["soporte"].some(k => v.includes(k))) return { text: "text-amber-700", bg: "bg-amber-50" };
@@ -400,7 +405,6 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                 <th className="p-3 text-center text-xs sm:text-sm font-medium">Nombre</th>
                 <th className="p-3 text-center text-xs sm:text-sm font-medium">Email</th>
                 <th className="p-3 text-center text-xs sm:text-sm font-medium">DNI</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Teléfono</th>
                 <th className="p-3 text-center text-xs sm:text-sm font-medium">Rol</th>
                 <th className="p-3 text-center text-xs sm:text-sm font-medium">Acciones</th>
               </tr>
@@ -414,7 +418,6 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                 </tr>
               ) : (
                 filteredUsers.map((user) => {
-                  const phone = user.phone_number || user.phone || "";
                   const tone = toneFor(user.role);
                   return (
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
@@ -428,13 +431,25 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                         <p className="text-sm sm:text-base font-mono">{user.dni || "-"}</p>
                       </td>
                       <td className="p-3 text-center">
-                        <p className="text-sm sm:text-base">{phone || "-"}</p>
-                      </td>
-                      <td className="p-3 text-center">
                         {/* 1) Pill con texto y fondo del mismo tono, más claro */}
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm ${tone.text} ${tone.bg}`}>
-                          {user.role || "-"}
-                        </span>
+                        {(() => {
+                          const roleLower = (user.role || "").toLowerCase();
+                          const isEngineer = roleLower.includes("ingeniero");
+                          const kind = (user.engineer_kind || "").toLowerCase(); // "Titular" | "Suplente"
+                          let label = user.role || "-";
+                          if (roleLower === "titular") {
+                            label = "Titular del taller";
+                          } else if (isEngineer) {
+                            if (kind === "titular") label = "Ingeniero titular";
+                            else label = "Ingeniero suplente";
+                          }
+                          const tone = toneFor(label);
+                          return (
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm ${tone.text} ${tone.bg}`}>
+                              {label}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="p-0">
                         <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
@@ -513,7 +528,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                   );
                 })()}
 
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   <RoleDropdown
                     value={roleValue || selected.role || ""}
                     roles={ROLES}
@@ -531,7 +546,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                 </div>
 
                 {roleError && <p className="text-sm text-rose-700">{roleError}</p>}
-                {roleOk && <p className="text-sm text-emerald-700">{roleOk}</p>}
+                {roleOk && <p className="text-sm text-emerald-700">{roleOk}</p>} */}
               </div>
 
 

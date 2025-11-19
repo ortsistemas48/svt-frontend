@@ -11,9 +11,11 @@ import {
   Trash2,
   AlertTriangle,
   X,
+  RotateCcw,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect, useRef } from "react";
+import { apiFetch } from "@/utils";
 
 type AnyUser = {
   id: string | number;
@@ -61,6 +63,9 @@ export default function UserTable({ users, onDelete }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"active" | "suspended">("active");
+  const [suspendedUsers, setSuspendedUsers] = useState<AnyUser[]>([]);
+  const [loadingSuspended, setLoadingSuspended] = useState(false);
 
   const router = useRouter();
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -69,10 +74,12 @@ export default function UserTable({ users, onDelete }: Props) {
     setPage(1);
   }, [searchText, pageSize]);
 
+  const sourceUsers = statusFilter === "active" ? users : suspendedUsers;
+
   const filteredUsers = useMemo(() => {
-    if (!searchText?.trim()) return users;
+    if (!searchText?.trim()) return sourceUsers;
     const query = searchText.toLowerCase();
-    return users.filter((user) => {
+    return sourceUsers.filter((user) => {
       return (
         (user.first_name || "").toLowerCase().includes(query) ||
         (user.last_name || "").toLowerCase().includes(query) ||
@@ -81,7 +88,7 @@ export default function UserTable({ users, onDelete }: Props) {
         (user.phone_number || "").toLowerCase().includes(query) 
       );
     });
-  }, [users, searchText]);
+  }, [sourceUsers, searchText]);
 
   const totalItems = filteredUsers.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -93,7 +100,11 @@ export default function UserTable({ users, onDelete }: Props) {
   const goToPage = (p: number) => setPage(Math.min(Math.max(1, p), totalPages));
 
   const handleRefresh = () => {
-    router.refresh();
+    if (statusFilter === "suspended") {
+      loadSuspended();
+    } else {
+      router.refresh();
+    }
   };
 
   function openDrawer(user: AnyUser) {
@@ -106,20 +117,76 @@ export default function UserTable({ users, onDelete }: Props) {
   }
 
   async function handleConfirmDelete() {
-    if (!onDelete || !selected) return;
+    if (!selected) return;
     try {
       setDeleting(true);
       setDeleteError(null);
-      await onDelete(selected);
+      if (statusFilter === "suspended") {
+        // Restaurar usuario
+        const res = await apiFetch(`/api/users/restore/${selected.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          throw new Error(text || "No se pudo reactivar el usuario");
+        }
+      } else {
+        if (onDelete) {
+          await onDelete(selected);
+        } else {
+          const res = await apiFetch(`/api/users/delete/${selected.id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+          });
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(text || "No se pudo suspender el usuario");
+          }
+        }
+      }
       setConfirmOpen(false);
       closeDrawer();
-      router.refresh();
+      if (statusFilter === "suspended") {
+        await loadSuspended();
+      } else {
+        router.refresh();
+      }
     } catch (e: any) {
       setDeleteError(e?.message || "No se pudo completar la acción");
     } finally {
       setDeleting(false);
     }
   }
+
+  async function loadSuspended() {
+    setLoadingSuspended(true);
+    try {
+      const res = await apiFetch(`/api/users/get_users/suspended?limit=200&offset=0`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(t || "No se pudieron cargar los usuarios suspendidos");
+      }
+      const data = await res.json().catch(() => ({}));
+      setSuspendedUsers(Array.isArray(data?.users) ? data.users : []);
+    } catch (e) {
+      console.error(e);
+      setSuspendedUsers([]);
+    } finally {
+      setLoadingSuspended(false);
+    }
+  }
+
+  useEffect(() => {
+    if (statusFilter === "suspended") {
+      loadSuspended();
+    }
+    // reset paginación cuando cambia filtro
+    setPage(1);
+  }, [statusFilter]);
 
   useEffect(() => {
     if (!open) return;
@@ -173,10 +240,18 @@ export default function UserTable({ users, onDelete }: Props) {
         </div>
 
         <div className="flex gap-2 sm:gap-3">
-          <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
-            <SlidersHorizontal size={16} />
-            <span className="hidden sm:inline">Filtrar</span>
-          </button>
+          <div className="bg-white border border-gray-300 rounded-[4px] px-2 py-1 flex items-center h-12">
+            <SlidersHorizontal size={16} className="text-gray-500 mr-2" />
+            <select
+              className="outline-none bg-transparent text-sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as "active" | "suspended")}
+              title="Filtrar por estado"
+            >
+              <option value="active">Activos</option>
+              <option value="suspended">Suspendidos</option>
+            </select>
+          </div>
           <button
             className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
             onClick={handleRefresh}
@@ -224,10 +299,18 @@ export default function UserTable({ users, onDelete }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {pageUsers.length === 0 ? (
+              {loadingSuspended && statusFilter === "suspended" ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12 sm:py-20 text-gray-600">
-                    No hay usuarios en el sistema.
+                    Cargando usuarios suspendidos...
+                  </td>
+                </tr>
+              ) : pageUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 sm:py-20 text-gray-600">
+                    {statusFilter === "suspended"
+                      ? "No hay usuarios suspendidos."
+                      : "No hay usuarios en el sistema."}
                   </td>
                 </tr>
               ) : (
@@ -404,23 +487,25 @@ export default function UserTable({ users, onDelete }: Props) {
                 <Row label="Teléfono" value={(selected.phone_number || selected.phone) as string} />
               </div>
 
-              {/* Acciones peligrosas, solo si hay onDelete */}
-              {onDelete && (
-                <div className="mt-4 p-4">
-                  {deleteError && <p className="text-sm text-rose-700 mb-2">{deleteError}</p>}
-                  <div className="flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setConfirmOpen(true)}
-                      disabled={deleting}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
-                    >
-                      <Trash2 size={16} />
-                      {deleting ? "Procesando..." : "Desvincular usuario"}
-                    </button>
-                  </div>
+              {/* Acciones */}
+              <div className="mt-4 p-4">
+                {deleteError && <p className="text-sm text-rose-700 mb-2">{deleteError}</p>}
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmOpen(true)}
+                    disabled={deleting}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-[4px] ${statusFilter === "suspended" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"} disabled:opacity-60 text-white text-sm`}
+                  >
+                    {statusFilter === "suspended" ? <RotateCcw size={16} /> : <Trash2 size={16} />}
+                    {deleting
+                      ? "Procesando..."
+                      : statusFilter === "suspended"
+                        ? "Reactivar usuario"
+                        : "Suspender usuario"}
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           ) : (
             <p className="text-sm text-gray-600">Selecciona un usuario para ver sus datos.</p>
@@ -448,7 +533,9 @@ export default function UserTable({ users, onDelete }: Props) {
                   Confirmar acción
                 </h3>
                 <p id="confirm-desc" className="mt-1 text-sm text-gray-600">
-                  Vas a desvincular a {selected ? fullName(selected) : "este usuario"} del sistema, esta acción se puede revertir desde administración.
+                  {statusFilter === "suspended"
+                    ? <>Vas a reactivar a {selected ? fullName(selected) : "este usuario"} en el sistema.</>
+                    : <>Vas a suspender a {selected ? fullName(selected) : "este usuario"} del sistema, esta acción se puede revertir desde administración.</>}
                 </p>
               </div>
             </div>
@@ -467,10 +554,10 @@ export default function UserTable({ users, onDelete }: Props) {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-[4px] ${statusFilter === "suspended" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"} disabled:opacity-60 text-white text-sm`}
               >
-                <Trash2 size={16} />
-                {deleting ? "Procesando..." : "Sí, desvincular"}
+                {statusFilter === "suspended" ? <RotateCcw size={16} /> : <Trash2 size={16} />}
+                {deleting ? "Procesando..." : statusFilter === "suspended" ? "Sí, reactivar" : "Sí, suspender"}
               </button>
             </div>
           </div>

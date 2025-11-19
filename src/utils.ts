@@ -276,7 +276,12 @@ export async function fetchAdminUserData({
   if (!res.ok) {
     const text = await res.text();
     console.error("Error al traer los usuarios:", text);
-    return;
+    return {
+      total: 0,
+      limit,
+      offset,
+      users: [],
+    };
   }
 
   return res.json();
