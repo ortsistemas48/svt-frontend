@@ -15,6 +15,10 @@ import {
   Mail,
   Phone,
   Users,
+  Edit,
+  Save,
+  AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -33,11 +37,22 @@ type Workshop = {
   available_inspections: number;
   created_at: string;
   updated_at: string;
+  is_approved?: boolean;
 };
 
 type Props = {
   workshops: Workshop[];
 };
+
+// Role constants
+type Role = { id: number; name: string };
+const FIXED_ROLES: Role[] = [
+  { id: 2, name: "Titular" },
+  { id: 3, name: "Ingeniero" },
+  { id: 4, name: "Administrativo" },
+  { id: 6, name: "Personal de planta" },
+];
+const ENGINEER_ROLE_ID = 3;
 
 export default function WorkshopTable({ workshops }: Props) {
   type Member = {
@@ -63,6 +78,23 @@ export default function WorkshopTable({ workshops }: Props) {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
+  // Role editing states
+  const [isEditingRole, setIsEditingRole] = useState(false);
+  const [editingRoleId, setEditingRoleId] = useState<number | "">("");
+  const [editingTitleName, setEditingTitleName] = useState("");
+  const [editingLicenseNumber, setEditingLicenseNumber] = useState("");
+  const [editingEngineerKind, setEditingEngineerKind] = useState<"" | "Titular" | "Suplente">("");
+  const [savingRole, setSavingRole] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
+  const [roleSuccess, setRoleSuccess] = useState<string | null>(null);
+  
+  // Workshop suspend/activate states
+  const [suspendingWorkshop, setSuspendingWorkshop] = useState(false);
+  const [workshopActionError, setWorkshopActionError] = useState<string | null>(null);
+  const [workshopActionSuccess, setWorkshopActionSuccess] = useState<string | null>(null);
+  const [confirmSuspendOpen, setConfirmSuspendOpen] = useState(false);
+  
   const router = useRouter();
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
@@ -112,7 +144,6 @@ export default function WorkshopTable({ workshops }: Props) {
       });
       if (!dRes.ok) throw new Error(await dRes.text() || "No se pudo cargar el taller");
       const d = await dRes.json();
-      
       setSelected({
         ...workshop,
         ...d,
@@ -138,6 +169,9 @@ export default function WorkshopTable({ workshops }: Props) {
       setSelectedMember(null);
       setErrorMsg(null);
       setLoadingDetail(false);
+      setConfirmSuspendOpen(false);
+      setWorkshopActionError(null);
+      setWorkshopActionSuccess(null);
     }, 200);
   }
 
@@ -169,11 +203,28 @@ export default function WorkshopTable({ workshops }: Props) {
     </div>
   );
 
+  // Helper function to normalize role to user_type_id
+  const getRoleIdFromMember = (member: Member): number | null => {
+    const role = member.role;
+    if (typeof role === "number") {
+      return role;
+    }
+    if (typeof role === "string") {
+      const roleLower = role.toLowerCase();
+      if (roleLower.includes("titular")) return 2;
+      if (roleLower.includes("ingeniero") || roleLower.includes("ingeniería")) return 3;
+      if (roleLower.includes("administrativo")) return 4;
+      if (roleLower.includes("personal de planta") || roleLower.includes("planta")) return 6;
+    }
+    return null;
+  };
+
   const formatRole = (member: Member) => {
     const role = String(member.role ?? "-");
-    const isEngineer = role.toLowerCase() === "ingeniero" || 
-                       role.toLowerCase() === "ingeniería" || 
-                       member.role === 2;
+    const roleId = getRoleIdFromMember(member);
+    const isEngineer = roleId === ENGINEER_ROLE_ID || 
+                       role.toLowerCase() === "ingeniero" || 
+                       role.toLowerCase() === "ingeniería";
     
     if (isEngineer && member.engineer_kind) {
       return `${role} - ${member.engineer_kind}`;
@@ -196,10 +247,249 @@ export default function WorkshopTable({ workshops }: Props) {
 
   const openMemberDetails = (member: Member) => {
     setSelectedMember(member);
+    setIsEditingRole(false);
+    setRoleError(null);
+    setRoleSuccess(null);
+    
+    // Initialize editing states with current member values
+    const currentRoleId = getRoleIdFromMember(member);
+    setEditingRoleId(currentRoleId || "");
+    
+    // If member is engineer, pre-fill engineer fields
+    const isEngineer = currentRoleId === ENGINEER_ROLE_ID;
+    if (isEngineer) {
+      setEditingTitleName(member.title_name || "");
+      setEditingLicenseNumber(member.license_number || "");
+      setEditingEngineerKind((member.engineer_kind as "Titular" | "Suplente") || "");
+    } else {
+      setEditingTitleName("");
+      setEditingLicenseNumber("");
+      setEditingEngineerKind("");
+    }
   };
 
   const closeMemberModal = () => {
     setSelectedMember(null);
+    setIsEditingRole(false);
+    setEditingRoleId("");
+    setEditingTitleName("");
+    setEditingLicenseNumber("");
+    setEditingEngineerKind("");
+    setRoleError(null);
+    setRoleSuccess(null);
+  };
+
+  // Function to refresh members list
+  const refreshMembers = async () => {
+    if (!selected) return;
+    try {
+      const mRes = await fetch(`/api/workshops/admin/${selected.id}/members`, {
+        credentials: "include",
+      });
+      if (!mRes.ok) throw new Error(await mRes.text() || "No se pudo cargar el personal");
+      const ms = await mRes.json();
+      setMembers(ms || []);
+      
+      // Update selectedMember if it exists
+      if (selectedMember) {
+        const updatedMember = ms.find((m: Member) => m.user_id === selectedMember.user_id);
+        if (updatedMember) {
+          setSelectedMember(updatedMember);
+        }
+      }
+    } catch (e: any) {
+      console.error("Error refreshing members:", e);
+    }
+  };
+
+  // Function to refresh workshop details
+  const refreshWorkshopDetails = async () => {
+    if (!selected) return;
+    try {
+      const dRes = await fetch(`/api/workshops/${selected.id}`, {
+        credentials: "include",
+      });
+      if (!dRes.ok) throw new Error(await dRes.text() || "No se pudo cargar el taller");
+      const d = await dRes.json();
+      setSelected({
+        ...selected,
+        ...d,
+      });
+    } catch (e: any) {
+      console.error("Error refreshing workshop:", e);
+    }
+  };
+
+  // Function to suspend workshop
+  const handleSuspendWorkshop = async () => {
+    if (!selected) return;
+    
+    setSuspendingWorkshop(true);
+    setWorkshopActionError(null);
+    setWorkshopActionSuccess(null);
+
+    try {
+      const res = await fetch(`/api/workshops/${selected.id}/suspend`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({}),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Error desconocido" }));
+        throw new Error(errorData.error || "No se pudo suspender el taller");
+      }
+
+      const data = await res.json();
+      
+      if (data.already) {
+        setWorkshopActionSuccess("El taller ya estaba suspendido");
+      } else {
+        setWorkshopActionSuccess("Taller suspendido exitosamente. Se notificó a los propietarios por email.");
+      }
+
+      setConfirmSuspendOpen(false);
+      
+      // Refresh workshop details
+      await refreshWorkshopDetails();
+      await refreshMembers();
+
+      // Close drawer after successful suspension
+      closeDrawer();
+
+      // Clear success message after 5 seconds (if drawer is still open)
+      setTimeout(() => {
+        setWorkshopActionSuccess(null);
+      }, 5000);
+    } catch (e: any) {
+      setWorkshopActionError(e?.message || "No se pudo suspender el taller");
+    } finally {
+      setSuspendingWorkshop(false);
+    }
+  };
+
+  // Function to activate/approve workshop
+  const handleActivateWorkshop = async () => {
+    if (!selected) return;
+    
+    setSuspendingWorkshop(true);
+    setWorkshopActionError(null);
+    setWorkshopActionSuccess(null);
+
+    try {
+      const res = await fetch(`/api/workshops/${selected.id}/approve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Error desconocido" }));
+        throw new Error(errorData.error || "No se pudo activar el taller");
+      }
+
+      setWorkshopActionSuccess("Taller activado exitosamente");
+      
+      // Refresh workshop details
+      await refreshWorkshopDetails();
+      await refreshMembers();
+
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setWorkshopActionSuccess(null);
+      }, 5000);
+    } catch (e: any) {
+      setWorkshopActionError(e?.message || "No se pudo activar el taller");
+    } finally {
+      setSuspendingWorkshop(false);
+    }
+  };
+
+  // Function to save role changes
+  const handleSaveRole = async () => {
+    if (!selected || !selectedMember) return;
+    
+    setSavingRole(true);
+    setRoleError(null);
+    setRoleSuccess(null);
+
+    try {
+      // Validate role is selected
+      if (!editingRoleId) {
+        setRoleError("Debes seleccionar un rol");
+        setSavingRole(false);
+        return;
+      }
+
+      // Validate engineer fields if role is Engineer
+      if (editingRoleId === ENGINEER_ROLE_ID) {
+        if (!editingTitleName.trim()) {
+          setRoleError("El título universitario es requerido para Ingenieros");
+          setSavingRole(false);
+          return;
+        }
+        if (!editingLicenseNumber.trim()) {
+          setRoleError("El número de matrícula es requerido para Ingenieros");
+          setSavingRole(false);
+          return;
+        }
+        if (!editingEngineerKind) {
+          setRoleError("Debes seleccionar el tipo de ingeniero (Titular o Suplente)");
+          setSavingRole(false);
+          return;
+        }
+      }
+
+      // Prepare request body
+      const body: any = {
+        user_type_id: Number(editingRoleId),
+      };
+
+      // Add engineer-specific fields
+      if (editingRoleId === ENGINEER_ROLE_ID) {
+        body.title_name = editingTitleName.trim();
+        body.license_number = editingLicenseNumber.trim();
+        body.engineer_kind = editingEngineerKind;
+      }
+
+      // Make API call
+      const res = await fetch(
+        `/api/workshops/${selected.id}/members/${selectedMember.user_id}/role`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(body),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Error desconocido" }));
+        throw new Error(errorData.error || "No se pudo actualizar el rol");
+      }
+
+      setRoleSuccess("Rol actualizado correctamente");
+      setIsEditingRole(false);
+
+      // Refresh members list
+      await refreshMembers();
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setRoleSuccess(null);
+      }, 3000);
+    } catch (e: any) {
+      setRoleError(e?.message || "No se pudo actualizar el rol");
+    } finally {
+      setSavingRole(false);
+    }
   };
 
   const DetailRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value?: string }) => {
@@ -532,6 +822,41 @@ export default function WorkshopTable({ workshops }: Props) {
                         </tbody>
                       </table>
                     </div>
+                    
+                    {/* Botón para suspender/activar taller */}
+                    <div className="mt-4 flex justify-center">
+                      {selected.is_approved === false ? (
+                        <button
+                          onClick={handleActivateWorkshop}
+                          disabled={suspendingWorkshop}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <CheckCircle size={16} />
+                          {suspendingWorkshop ? "Activando..." : "Activar taller"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmSuspendOpen(true)}
+                          disabled={suspendingWorkshop}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] text-sm font-medium bg-rose-600 text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <AlertTriangle size={16} />
+                          Suspender taller
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Mensajes de error y éxito para acciones del taller */}
+                    {workshopActionError && (
+                      <div className="mt-4 bg-red-50 border border-red-200 rounded-[4px] px-3 py-2 text-sm text-red-700">
+                        {workshopActionError}
+                      </div>
+                    )}
+                    {workshopActionSuccess && (
+                      <div className="mt-4 bg-green-50 border border-green-200 rounded-[4px] px-3 py-2 text-sm text-green-700">
+                        {workshopActionSuccess}
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -568,10 +893,21 @@ export default function WorkshopTable({ workshops }: Props) {
             <div className="px-5 py-5 space-y-5 overflow-y-auto flex-1">
               {/* Información Personal */}
               <div>
-                <h5 className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <User size={14} className="text-[#0040B8]" />
-                  Información Personal
-                </h5>
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="text-xs font-semibold text-gray-700 flex items-center gap-2">
+                    <User size={14} className="text-[#0040B8]" />
+                    Información Personal
+                  </h5>
+                  {!isEditingRole && (
+                    <button
+                      onClick={() => setIsEditingRole(true)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[#0040B8] border border-[#0040B8] rounded-[4px] hover:bg-[#0040B8] hover:text-white transition-colors"
+                    >
+                      <Edit size={12} />
+                      Editar rol
+                    </button>
+                  )}
+                </div>
                 <div className="bg-gray-50 rounded-[14px] p-4 space-y-3 border border-gray-100">
                   <DetailRow 
                     icon={<User size={16} className="text-gray-500" />}
@@ -583,11 +919,90 @@ export default function WorkshopTable({ workshops }: Props) {
                     label="DNI" 
                     value={selectedMember.dni || "-"} 
                   />
-                  <DetailRow 
-                    icon={<Briefcase size={16} className="text-gray-500" />}
-                    label="Rol" 
-                    value={formatRole(selectedMember)} 
-                  />
+                  {isEditingRole ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                          Rol
+                        </label>
+                        <select
+                          className="w-full rounded-[4px] border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                          value={editingRoleId}
+                          onChange={(e) => {
+                            const val = e.target.value ? Number(e.target.value) : "";
+                            setEditingRoleId(val);
+                            // Clear engineer fields if not engineer
+                            if (val !== ENGINEER_ROLE_ID) {
+                              setEditingTitleName("");
+                              setEditingLicenseNumber("");
+                              setEditingEngineerKind("");
+                            }
+                          }}
+                          disabled={savingRole}
+                        >
+                          <option value="">Seleccionar rol</option>
+                          {FIXED_ROLES.map((role) => (
+                            <option key={role.id} value={role.id}>
+                              {role.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Engineer-specific fields */}
+                      {editingRoleId === ENGINEER_ROLE_ID && (
+                        <div className="space-y-3 pt-2 border-t border-gray-200">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                              Título universitario <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              className="w-full rounded-[4px] border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                              value={editingTitleName}
+                              onChange={(e) => setEditingTitleName(e.target.value)}
+                              placeholder="Ej: Ingeniero Mecánico"
+                              disabled={savingRole}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                              Número de matrícula <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              className="w-full rounded-[4px] border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                              value={editingLicenseNumber}
+                              onChange={(e) => setEditingLicenseNumber(e.target.value)}
+                              placeholder="Ej: 12345"
+                              disabled={savingRole}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                              Tipo de ingeniero <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              className="w-full rounded-[4px] border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                              value={editingEngineerKind}
+                              onChange={(e) => setEditingEngineerKind(e.target.value as "Titular" | "Suplente" | "")}
+                              disabled={savingRole}
+                            >
+                              <option value="">Seleccionar tipo</option>
+                              <option value="Titular">Titular</option>
+                              <option value="Suplente">Suplente</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <DetailRow 
+                      icon={<Briefcase size={16} className="text-gray-500" />}
+                      label="Rol" 
+                      value={formatRole(selectedMember)} 
+                    />
+                  )}
                 </div>
               </div>
 
@@ -611,10 +1026,10 @@ export default function WorkshopTable({ workshops }: Props) {
                 </div>
               </div>
 
-              {/* Información Profesional (solo para Ingenieros) */}
-              {(String(selectedMember.role).toLowerCase() === "ingeniero" || 
+              {/* Información Profesional (solo para Ingenieros) - Solo mostrar si no está editando */}
+              {!isEditingRole && (String(selectedMember.role).toLowerCase() === "ingeniero" || 
                 String(selectedMember.role).toLowerCase() === "ingeniería" ||
-                selectedMember.role === 2) && (
+                getRoleIdFromMember(selectedMember) === ENGINEER_ROLE_ID) && (
                 <div>
                   <h5 className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <Award size={14} className="text-[#0040B8]" />
@@ -631,18 +1046,127 @@ export default function WorkshopTable({ workshops }: Props) {
                       label="Título" 
                       value={selectedMember.title_name || "-"} 
                     />
+                    {selectedMember.engineer_kind && (
+                      <DetailRow 
+                        icon={<Briefcase size={16} className="text-blue-600" />}
+                        label="Tipo de ingeniero" 
+                        value={selectedMember.engineer_kind} 
+                      />
+                    )}
                   </div>
+                </div>
+              )}
+
+              {/* Error and success messages */}
+              {roleError && (
+                <div className="bg-red-50 border border-red-200 rounded-[4px] px-3 py-2 text-sm text-red-700">
+                  {roleError}
+                </div>
+              )}
+              {roleSuccess && (
+                <div className="bg-green-50 border border-green-200 rounded-[4px] px-3 py-2 text-sm text-green-700">
+                  {roleSuccess}
                 </div>
               )}
             </div>
 
             <div className="flex items-center justify-end gap-3 px-5 py-3 border-t bg-gray-50">
-              <button
-                onClick={closeMemberModal}
-                className="px-4 py-2 rounded-[4px] text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 transition-colors"
-              >
-                Cerrar
-              </button>
+              {isEditingRole ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setIsEditingRole(false);
+                      setRoleError(null);
+                      setRoleSuccess(null);
+                      // Reset to original values
+                      if (selectedMember) {
+                        const currentRoleId = getRoleIdFromMember(selectedMember);
+                        setEditingRoleId(currentRoleId || "");
+                        if (currentRoleId === ENGINEER_ROLE_ID) {
+                          setEditingTitleName(selectedMember.title_name || "");
+                          setEditingLicenseNumber(selectedMember.license_number || "");
+                          setEditingEngineerKind((selectedMember.engineer_kind as "Titular" | "Suplente") || "");
+                        } else {
+                          setEditingTitleName("");
+                          setEditingLicenseNumber("");
+                          setEditingEngineerKind("");
+                        }
+                      }
+                    }}
+                    disabled={savingRole}
+                    className="px-4 py-2 rounded-[4px] text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSaveRole}
+                    disabled={savingRole}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] text-sm font-medium bg-[#0040B8] text-white hover:bg-[#0030A0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Save size={14} />
+                    {savingRole ? "Guardando..." : "Guardar"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={closeMemberModal}
+                  className="px-4 py-2 rounded-[4px] text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 transition-colors"
+                >
+                  Cerrar
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal de confirmación para suspender taller */}
+        {confirmSuspendOpen && (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center"
+            aria-modal="true"
+            role="dialog"
+            aria-labelledby="suspend-title"
+            aria-describedby="suspend-desc"
+          >
+            <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmSuspendOpen(false)} />
+            <div className="relative bg-white w-[92%] max-w-md rounded-[10px] shadow-xl border border-gray-200 p-5">
+              <div className="flex items-start gap-3">
+                <div className="mt-1">
+                  <AlertTriangle size={20} className="text-amber-600" />
+                </div>
+                <div className="min-w-0">
+                  <h3 id="suspend-title" className="text-base font-semibold">
+                    Confirmar suspensión
+                  </h3>
+                  <p id="suspend-desc" className="mt-1 text-sm text-gray-600">
+                    ¿Estás seguro de que querés suspender el taller "{selected?.name}"?. Esta acción suspenderá el taller y todos sus usuarios. Se enviará una notificación por email a los propietarios del taller.
+                  </p>
+                </div>
+              </div>
+
+              {workshopActionError && (
+                <p className="mt-3 text-sm text-rose-700">{workshopActionError}</p>
+              )}
+
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmSuspendOpen(false)}
+                  disabled={suspendingWorkshop}
+                  className="px-4 py-2 rounded-[4px] border border-gray-300 bg-white text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSuspendWorkshop}
+                  disabled={suspendingWorkshop}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm"
+                >
+                  <AlertTriangle size={16} />
+                  {suspendingWorkshop ? "Suspendiendo..." : "Sí, suspender"}
+                </button>
+              </div>
             </div>
           </div>
         )}
