@@ -209,7 +209,7 @@ export default function AdminTicketChatPage() {
     <div className="py-6 max-w-7xl mx-auto">
       <div className="grid grid-cols-[320px_1fr] gap-4">
         {/* Left: tickets list */}
-        <aside className="bg-white rounded-[10px] border border-gray-200 h-[72vh] flex flex-col">
+        <aside className="bg-white rounded-[14px] border border-gray-200 h-[72vh] flex flex-col">
           <div className="px-4 py-3">
             <button
               onClick={() => router.push(`/admin-dashboard/support`)}
@@ -223,7 +223,7 @@ export default function AdminTicketChatPage() {
           <div className="overflow-auto p-3 space-y-2">
             {ticketsLoading &&
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={`s-${i}`} className="w-full text-left rounded-[10px] border border-gray-200 px-4 py-3 flex items-center gap-3 bg-white">
+                <div key={`s-${i}`} className="w-full text-left rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3 bg-white">
                   <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
                   <div className="flex-1 min-w-0">
                     <div className="h-3 w-20 bg-gray-200 rounded animate-pulse mb-2" />
@@ -244,7 +244,7 @@ export default function AdminTicketChatPage() {
                     setCurrentTicket(null);
                     router.push(`/admin-dashboard/support/${t.id}`);
                   }}
-                  className={`w-full text-left rounded-[10px] border px-4 py-3 flex items-center gap-3 transition-colors ${
+                  className={`w-full text-left rounded-[14px] border px-4 py-3 flex items-center gap-3 transition-colors ${
                     isActive
                       ? "border-[#0040B8] bg-[#0040B8]/5"
                       : isResolved
@@ -269,7 +269,7 @@ export default function AdminTicketChatPage() {
         </aside>
 
         {/* Right: chat */}
-        <section className="bg-white rounded-[10px] border border-gray-200 h-[72vh] flex flex-col">
+        <section className="bg-white rounded-[14px] border border-gray-200 h-[72vh] flex flex-col">
           {/* Header */}
           <div className="px-5 py-4 border-b flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -353,7 +353,7 @@ export default function AdminTicketChatPage() {
 
           {/* Composer */}
           <div className="px-4 py-3 border-t">
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-[10px] px-3 py-2">
+            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-[14px] px-3 py-2">
               <input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -384,7 +384,7 @@ export default function AdminTicketChatPage() {
       {infoOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setInfoOpen(false)} />
-          <div className="relative bg-white w-[92%] max-w-2xl rounded-[10px] shadow-xl border border-gray-200">
+          <div className="relative bg-white w-[92%] max-w-2xl rounded-[14px] shadow-xl border border-gray-200">
             <div className="flex items-center justify-between px-5 py-4 border-b">
               <h3 className="text-base font-semibold">Información del usuario y del taller</h3>
               <button
@@ -398,7 +398,7 @@ export default function AdminTicketChatPage() {
             </div>
             <div className="px-5 py-4 max-h-[70vh] overflow-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border border-gray-200 rounded-[10px]">
+                <div className="border border-gray-200 rounded-[14px]">
                   <div className="px-4 py-3 border-b">
                     <div className="text-sm font-semibold text-gray-900">Persona</div>
                   </div>
@@ -414,7 +414,7 @@ export default function AdminTicketChatPage() {
                   </div>
                 </div>
 
-                <div className="border border-gray-200 rounded-[10px]">
+                <div className="border border-gray-200 rounded-[14px]">
                   <div className="px-4 py-3 border-b flex items-center justify-between">
                     <div className="text-sm font-semibold text-gray-900">Taller</div>
                     {loadingInfo && <div className="text-xs text-gray-500">Cargando...</div>}

@@ -88,7 +88,7 @@ export default function DashboardClientLayout({
               )}
             </div>
 
-            <div className="bg-white min-h-full rounded-[10px] shadow p-8">
+            <div className="bg-white min-h-full rounded-[14px] shadow p-8">
               {children}
             </div>
           </main>

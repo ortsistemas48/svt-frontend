@@ -30,7 +30,7 @@ const renderPerson = (person: PersonType) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {tableData.map((item) => (
-          <div key={item.key} className="bg-gray-50 rounded-[10px] p-4">
+          <div key={item.key} className="bg-gray-50 rounded-[14px] p-4">
             <dt className="text-sm font-medium text-gray-500 mb-1">{item.label}</dt>
             <dd
               className={`text-sm font-semibold text-gray-900 ${

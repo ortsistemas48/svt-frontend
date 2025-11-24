@@ -15,6 +15,10 @@ import {
   fetchStatusBreakdown,
   fetchResultsBreakdown,
   fetchTopModels,
+  fetchTopBrands,
+  fetchUsageTypes,
+  fetchCommonErrors,
+  fetchUpcomingExpirations,
 } from "@/utils";
 
 function fmt(d: Date) {
@@ -27,6 +31,15 @@ function monthRange(date = new Date()) {
   const from = new Date(y, m, 1);
   const to = new Date(y, m + 1, 0);
   return { from: fmt(from), to: fmt(to) };
+}
+
+function prevMonthRangeFrom(fromISO: string) {
+  const d = new Date(fromISO);
+  const y = d.getFullYear();
+  const m = d.getMonth();
+  const prevFrom = new Date(y, m - 1, 1);
+  const prevTo = new Date(y, m, 0);
+  return { from: fmt(prevFrom), to: fmt(prevTo) };
 }
 
 function makeRange(searchParams: any) {
@@ -60,12 +73,19 @@ export default async function Page(props: any) {
 
   const { from, to } = makeRange(sp);
 
-  const [overview, daily, status, results, topModelsRaw] = await Promise.all([
+  const prevRange = prevMonthRangeFrom(from);
+
+  const [overview, overviewPrev, daily, status, results, topModelsRaw, topBrands, usageTypes, commonErrors, expirations] = await Promise.all([
     fetchStatisticsOverview(workshopId, from, to) as Promise<Overview>,
+    fetchStatisticsOverview(workshopId, prevRange.from, prevRange.to) as Promise<Overview>,
     fetchStatisticsDaily(workshopId, from, to) as Promise<Daily>,
     fetchStatusBreakdown(workshopId, from, to) as Promise<StatusBreakdown>,
     fetchResultsBreakdown(workshopId, from, to) as Promise<ResultBreakdown>,
     fetchTopModels(workshopId, from, to, 8) as Promise<any>,
+    fetchTopBrands(workshopId, from, to, 5) as Promise<any>,
+    fetchUsageTypes(workshopId, from, to) as Promise<any>,
+    fetchCommonErrors(workshopId, from, to, 3) as Promise<any>,
+    fetchUpcomingExpirations(workshopId, 20) as Promise<any>,
   ]);
 
   const topModels: TopModels = {
@@ -82,11 +102,16 @@ export default async function Page(props: any) {
       workshopId={workshopId}
       from={from}
       to={to}
+      overviewPrev={overviewPrev as any}
       overview={overview as any}
       daily={daily as any}
       status={status as any}
       results={results as any}
       topModels={topModels}
+      topBrands={topBrands as any}
+      usageTypes={usageTypes as any}
+      commonErrors={commonErrors as any}
+      expirations={expirations as any}
     />
   );
 }

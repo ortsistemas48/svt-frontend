@@ -56,7 +56,7 @@ export default function SideBarMenu({ userType, loading }: Props) {
     return (
       <nav className="flex flex-col gap-2 px-1">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-9 rounded-[10px] bg-gray-200 animate-pulse" />
+          <div key={i} className="h-9 rounded-[14px] bg-gray-200 animate-pulse" />
         ))}
       </nav>
     );

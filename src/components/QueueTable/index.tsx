@@ -126,7 +126,7 @@ export default function QueueTable() {
       {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
       {/* Card con borde propio, header blanco y líneas pegadas a los bordes */}
-      <div className="rounded-[10px] border border-gray-200 overflow-hidden bg-white">
+      <div className="rounded-[14px] border border-gray-200 overflow-hidden bg-white">
         <div className="overflow-x-auto">
           <TableTemplate<Application>
             headers={headers}

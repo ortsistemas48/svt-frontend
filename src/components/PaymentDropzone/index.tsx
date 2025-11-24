@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { compressAnySmart } from "@/utils/image";
 
 export default function PaymentDropzone({
   onPendingChange,
@@ -15,6 +16,7 @@ export default function PaymentDropzone({
   const [queue, setQueue] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const acceptMime = useMemo(
     () => ["image/png", "image/jpeg", "image/webp", "application/pdf"],
@@ -38,8 +40,17 @@ export default function PaymentDropzone({
   const addFiles = (files: FileList | null) => {
     const first = pickFirstValid(files);
     if (!first) return;
-    // single file, reemplaza la cola
-    setQueue([first]);
+    (async () => {
+      try {
+        setIsCompressing(true);
+        const compressed = await compressAnySmart(first);
+        setQueue([compressed]);
+      } catch {
+        setQueue([first]);
+      } finally {
+        setIsCompressing(false);
+      }
+    })();
   };
 
   const remove = () => setQueue([]);
@@ -52,10 +63,15 @@ export default function PaymentDropzone({
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={(e) => { e.preventDefault(); setIsDragging(false); addFiles(e.dataTransfer.files); }}
-        className={`rounded-xl border-2 border-dashed text-center transition-colors ${
+        className={`rounded-xl border-2 border-dashed text-center transition-colors relative ${
           isDragging ? "border-[#0040B8] bg-[#0040B8]/5" : "border-[#D3D3D3]"
         }`}
       >
+        {isCompressing && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 text-sm font-medium">
+            Comprimiendo...
+          </div>
+        )}
         <input
           ref={inputRef}
           type="file"
@@ -89,10 +105,10 @@ export default function PaymentDropzone({
 
       {queue.length === 1 && (
         <ul className="mt-4 grid grid-cols-1 gap-2">
-          <li className="flex items-center justify-between rounded-[10px] border p-2 text-sm">
+          <li className="flex items-center justify-between rounded-[14px] border p-2 text-sm">
             <div className="min-w-0 truncate">
               {queue[0].name}{" "}
-              <span className="text-gray-500">, {(queue[0].size / 1024).toFixed(0)} KB</span>
+              <span className="text-gray-500"> - {(queue[0].size / 1024).toFixed(0)} KB</span>
             </div>
             <button
               onClick={remove}

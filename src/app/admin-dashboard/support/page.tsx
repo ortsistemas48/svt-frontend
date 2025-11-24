@@ -114,11 +114,11 @@ export default function AdminHelpTicketsPage() {
       {/* List */}
       <div className="mt-4 space-y-3">
         {loading && (
-          <div className="bg-white rounded-[10px] border border-gray-200 px-6 py-4 text-sm text-gray-500">Cargando...</div>
+          <div className="bg-white rounded-[14px] border border-gray-200 px-6 py-4 text-sm text-gray-500">Cargando...</div>
         )}
 
         {!loading && filtered.length === 0 && (
-          <div className="bg-white rounded-[10px] border border-gray-200 px-6 py-4 text-sm text-gray-500">
+          <div className="bg-white rounded-[14px] border border-gray-200 px-6 py-4 text-sm text-gray-500">
             No hay tickets abiertos.
           </div>
         )}
@@ -128,7 +128,7 @@ export default function AdminHelpTicketsPage() {
             <div
               key={t.id}
               onClick={() => router.push(`/admin-dashboard/support/${t.id}`)}
-              className="hover:bg-gray-50 transition-colors duration-300 hover:cursor-pointer bg-white rounded-[10px] border border-gray-200 px-6 py-4 flex items-center justify-between gap-4 relative"
+              className="hover:bg-gray-50 transition-colors duration-300 hover:cursor-pointer bg-white rounded-[14px] border border-gray-200 px-6 py-4 flex items-center justify-between gap-4 relative"
             >
               <div className="flex-shrink-0 flex items-center justify-center overflow-hidden">
                 <img src="/images/icons/msgIcon.svg" alt="Ticket" className="w-10 h-10" />
@@ -203,7 +203,7 @@ export default function AdminHelpTicketsPage() {
       </div>
 
       {/* Resueltos (sección inferior) */}
-      <div className="mt-20 bg-white rounded-[10px] border border-gray-200 px-6 py-4 flex items-center justify-between">
+      <div className="mt-20 bg-white rounded-[14px] border border-gray-200 px-6 py-4 flex items-center justify-between">
         <div>
           <div className="text-sm font-semibold text-gray-900">Tickets resueltos</div>
           <div className="text-xs text-gray-500">Todos los tickets resueltos aparecerán aquí</div>

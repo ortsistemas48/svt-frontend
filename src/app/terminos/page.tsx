@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function TermsAndConditionsPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-3xl bg-white rounded-[10px] border border-gray-200 shadow-sm px-4 py-6 sm:px-6 sm:py-10">
+      <div className="w-full max-w-3xl bg-white rounded-[14px] border border-gray-200 shadow-sm px-4 py-6 sm:px-6 sm:py-10">
         {/* Header */}
         <div className="space-y-5">
           <Image

@@ -424,7 +424,7 @@ export default function FileDetailPage() {
     return (
       <div className="min-h-full py-6">
         <div className="max-w-8xl mx-auto px-4">
-          <div className="bg-red-50 border border-red-200 rounded-[10px] p-6 text-center">
+          <div className="bg-red-50 border border-red-200 rounded-[14px] p-6 text-center">
             <p className="text-red-700 mb-4">{error}</p>
             <button
               onClick={() => router.back()}
@@ -461,10 +461,10 @@ export default function FileDetailPage() {
 
           <div className={`grid gap-6 ${showDriver ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}>
             {/* Titular */}
-            <div className="bg-white rounded-[10px] border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-[14px] border border-gray-200 overflow-hidden">
               <div className="bg-gradient-to-r from-green-50 to-green-100 px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-[10px] flex items-center justify-center">
+                  <div className="w-10 h-10 bg-green-100 rounded-[14px] flex items-center justify-center">
                     <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -490,10 +490,10 @@ export default function FileDetailPage() {
 
             {/* Conductor (si es distinto) */}
             {showDriver && (
-              <div className="bg-white rounded-[10px] border border-gray-200 overflow-hidden">
+              <div className="bg-white rounded-[14px] border border-gray-200 overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-gray-200">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-[10px] flex items-center justify-center">
+                    <div className="w-10 h-10 bg-blue-100 rounded-[14px] flex items-center justify-center">
                       <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                       </svg>
@@ -547,10 +547,10 @@ export default function FileDetailPage() {
             </div>
           </article>
 
-          <div className="bg-white rounded-[10px] border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-[14px] border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-[10px] flex items-center justify-center">
+                <div className="w-10 h-10 bg-purple-100 rounded-[14px] flex items-center justify-center">
                   <Car className="w-5 h-5 text-purple-500" size={20} strokeWidth={2} />
                 </div>
                 <div>
@@ -609,10 +609,10 @@ export default function FileDetailPage() {
           </article>
 
           {/* Documentación del vehículo */}
-          <div className="bg-white rounded-[10px] shadow-sm border border-gray-200 overflow-hidden mb-6">
+          <div className="bg-white rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-[10px] flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 rounded-[14px] flex items-center justify-center">
                   <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -629,10 +629,10 @@ export default function FileDetailPage() {
           </div>
 
           {/* Archivos de revisión técnica - ahora dentro de cada ficha técnica */}
-          <div className="bg-white rounded-[10px] shadow-sm border border-gray-200 overflow-hidden mb-6">
+          <div className="bg-white rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-[10px] flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 rounded-[14px] flex items-center justify-center">
                   <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -666,10 +666,10 @@ export default function FileDetailPage() {
           </div>
 
           {/* Certificado Revisión Técnica */}
-          <div className="bg-white rounded-[10px] shadow-sm border border-gray-200 overflow-hidden mb-6">
+          <div className="bg-white rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-[10px] flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 rounded-[14px] flex items-center justify-center">
                   <FileText className="w-4 h-4 text-blue-600" />
                 </div>
                 <h3 className="text-md text-gray-900">Certificado Revisión Técnica</h3>
@@ -773,7 +773,7 @@ export default function FileDetailPage() {
         {/* Main Cards */}
         <div className="space-y-4">
           {/* Dominio buscado */}
-          <div className="bg-white rounded-[10px] border border-gray-200 p-5">
+          <div className="bg-white rounded-[14px] border border-gray-200 p-5">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-md font-bold text-gray-900 mb-1">Dominio buscado:</h2>
@@ -786,7 +786,7 @@ export default function FileDetailPage() {
           </div>
 
           {/* Datos del titular y del conductor */}
-          <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("persons")}>
+          <div className="bg-white rounded-[14px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("persons")}>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-md text-gray-900 mb-1">Datos del titular y del conductor</h2>
@@ -797,7 +797,7 @@ export default function FileDetailPage() {
           </div>
 
           {/* Datos del vehículo */}
-          <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("vehicle")}>
+          <div className="bg-white rounded-[14px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("vehicle")}>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-md text-gray-900 mb-1">Datos del vehículo</h2>
@@ -812,7 +812,7 @@ export default function FileDetailPage() {
             const resultConfig = getResultConfig(result);
             const ResultIcon = resultConfig.icon;
             return (
-          <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection`)}>
+          <div className="bg-white rounded-[14px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection`)}>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-md text-gray-900 mb-1">Ficha técnica primera revisión</h2>
@@ -838,7 +838,7 @@ export default function FileDetailPage() {
             const result2Config = getResultConfig(result2);
             const Result2Icon = result2Config.icon;
             return (
-              <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection?is_second=true`)}>
+              <div className="bg-white rounded-[14px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection?is_second=true`)}>
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-md text-gray-900 mb-1">Ficha técnica segunda revisión</h2>
@@ -860,7 +860,7 @@ export default function FileDetailPage() {
           })()}
 
           {/* Agregar documentos */}
-          <div className="bg-white rounded-[10px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("documents")}>
+          <div className="bg-white rounded-[14px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("documents")}>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-md text-gray-900 mb-1">Ver documentos</h2>

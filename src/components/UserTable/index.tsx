@@ -119,7 +119,7 @@ function RoleDropdown({
           ref={listRef}
           role="listbox"
           tabIndex={-1}
-          className="absolute z-50 mt-2 w-64 rounded-[10px] border border-gray-200 bg-white shadow-lg p-1"
+          className="absolute z-50 mt-2 w-64 rounded-[14px] border border-gray-200 bg-white shadow-lg p-1"
         >
           {roles.map((r, i) => {
             const t = toneFor(r);
@@ -465,7 +465,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
       </div>
 
       {/* Card de la tabla con borde, input y botones quedaron afuera */}
-      <div className="rounded-[10px] border border-gray-200 overflow-hidden bg-white">
+      <div className="rounded-[14px] border border-gray-200 overflow-hidden bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-sm sm:text-base">
             {/* 2) Header con fondo blanco */}
@@ -748,7 +748,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
           />
 
           {/* Modal card */}
-          <div className="relative bg-white w-[92%] max-w-md rounded-[10px] shadow-xl border border-gray-200 p-5">
+          <div className="relative bg-white w-[92%] max-w-md rounded-[14px] shadow-xl border border-gray-200 p-5">
             <div className="flex items-start gap-3">
               <div className="mt-1">
                 <AlertTriangle size={20} className="text-amber-600" />

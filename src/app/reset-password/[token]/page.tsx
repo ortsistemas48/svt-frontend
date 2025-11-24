@@ -11,7 +11,7 @@ import Spinner from "@/components/Spinner";
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="w-full max-w-md bg-white rounded-[10px] border border-[#DEDEDE] px-4 py-10 text-center
+      className="w-full max-w-md bg-white rounded-[14px] border border-[#DEDEDE] px-4 py-10 text-center
                  flex flex-col justify-between
                  max-h-[calc(100dvh-2rem)] overflow-auto"
     >
@@ -176,7 +176,7 @@ export default function ResetPasswordTokenPage() {
               <input
                 type={show ? "text" : "password"}
                 placeholder="Mínimo 8 caracteres"
-                className="w-full border border-[#DEDEDE] rounded-[10px] px-5 py-4 pr-10 text-sm
+                className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-4 pr-10 text-sm
                            focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -200,7 +200,7 @@ export default function ResetPasswordTokenPage() {
               <input
                 type={showConfirm ? "text" : "password"}
                 placeholder="Confirmá la contraseña"
-                className="w-full border border-[#DEDEDE] rounded-[10px] px-5 py-4 pr-10 text-sm
+                className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-4 pr-10 text-sm
                            focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}

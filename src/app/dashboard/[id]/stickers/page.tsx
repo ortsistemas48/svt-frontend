@@ -21,7 +21,7 @@ export default async function BuyObleaPage({
           </div>
         </article>
 
-        <section className="bg-white rounded-[10px] border-gray-300 border p-6 px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
+        <section className="bg-white rounded-[14px] border-gray-300 border p-6 px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
           <div>
             <h2 className="text-[#0040B8] text-base mb-0">Obleas</h2>
             <p className="text-gray-400 text-sm mt-1">Aquí podrás asignar y ver todas tus obleas</p>

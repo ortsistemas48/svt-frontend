@@ -50,9 +50,9 @@ const renderDocument = (name: string, url?: string) => {
     };
 
     return (
-      <div className="group flex items-center bg-white border border-gray-200 rounded-[10px] p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200">
+      <div className="group flex items-center bg-white border border-gray-200 rounded-[14px] p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-10 h-10 bg-blue-50 rounded-[10px] flex items-center justify-center group-hover:bg-blue-100 transition-colors duration-200 flex-shrink-0">
+          <div className="w-10 h-10 bg-blue-50 rounded-[14px] flex items-center justify-center group-hover:bg-blue-100 transition-colors duration-200 flex-shrink-0">
             <span className="text-lg">{getFileIcon(name)}</span>
           </div>
           <div className="flex-1 min-w-0">

@@ -263,7 +263,7 @@ export default function InspectionValidityPage() {
             </div>
           </div>
 
-      <div className="rounded-[10px] border border-slate-200 bg-white p-4">
+      <div className="rounded-[14px] border border-slate-200 bg-white p-4">
         {/* Controles superiores */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-3">
           <div className="flex items-center gap-2 w-full md:w-[460px]">
@@ -415,7 +415,7 @@ export default function InspectionValidityPage() {
             <p className="text-gray-500 text-center">Definí la cantidad de meses aptos por franja etaria del vehículo.</p>
           </div>
 
-          <div className="rounded-[10px] border border-slate-200 p-4 bg-white">
+          <div className="rounded-[14px] border border-slate-200 p-4 bg-white">
             <div className="mb-4 flex flex-col gap-3">
               <p className="text-sm font-medium">Edición por lote</p>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">

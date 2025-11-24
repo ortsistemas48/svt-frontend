@@ -64,7 +64,7 @@ export default function RegisterOwnerForm() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-2xl bg-white rounded-[10px] border border-gray-200 shadow-sm px-4 py-6 sm:px-6 sm:py-10">
+      <div className="w-full max-w-2xl bg-white rounded-[14px] border border-gray-200 shadow-sm px-4 py-6 sm:px-6 sm:py-10">
         <div className="space-y-5">
           <Image
             src="/images/logo.svg"

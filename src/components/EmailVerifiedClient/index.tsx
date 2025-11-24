@@ -88,7 +88,7 @@ export default function EmailVerifiedClient() {
 
   return (
     <main className="min-h-[100dvh] grid place-items-center bg-white px-4">
-      <div className="w-full max-w-md bg-white rounded-[10px] border border-[#DEDEDE] px-4 py-10 text-center flex flex-col justify-between max-h-[calc(100dvh-2rem)] overflow-auto">
+      <div className="w-full max-w-md bg-white rounded-[14px] border border-[#DEDEDE] px-4 py-10 text-center flex flex-col justify-between max-h-[calc(100dvh-2rem)] overflow-auto">
         <div className="space-y-6">
           <Image src="/images/logo.svg" alt="Logo Track Detail" width={170} height={180} className="mx-auto" priority />
           <div className="space-y-2">
@@ -115,7 +115,7 @@ export default function EmailVerifiedClient() {
                       placeholder="Tu email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value.trim())}
-                      className="w-full px-3 py-2.5 rounded-[10px] border border-[#DEDEDE] text-sm"
+                      className="w-full px-3 py-2.5 rounded-[14px] border border-[#DEDEDE] text-sm"
                     />
                   )}
 

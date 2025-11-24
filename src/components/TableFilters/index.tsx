@@ -12,7 +12,7 @@ interface TableFiltersProps {
 export default function TableFilters({ tableFilters, statusFilter, setStatusFilter, setShowFilters, setPage }: TableFiltersProps) {
     return (
         <div className="mb-4 relative">
-          <div className="absolute top-0 left-0 right-0 z-10 bg-white border border-gray-200 rounded-[10px] shadow-lg p-4">
+          <div className="absolute top-0 left-0 right-0 z-10 bg-white border border-gray-200 rounded-[14px] shadow-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-gray-900">Filtros</h3>
               <button

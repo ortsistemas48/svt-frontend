@@ -93,7 +93,7 @@ export function InspectionStepsViewOnlyClient({
             <section
               key={s.step_id}
               className={clsx(
-                "w-full rounded-[10px] bg-white transition-colors border",
+                "w-full rounded-[14px] bg-white transition-colors border",
                 current ? STATUS_UI[current as Status].stepBorder : "border-zinc-200"
               )}
             >
@@ -138,7 +138,7 @@ export function InspectionStepsViewOnlyClient({
           </p>
         </div>
 
-        <div className="rounded-[10px] text-sm border border-zinc-200 bg-white p-4 w-full self-start md:col-span-2">
+        <div className="rounded-[14px] text-sm border border-zinc-200 bg-white p-4 w-full self-start md:col-span-2">
           {initialGlobalObs ? (
             <p className="text-zinc-800 whitespace-pre-wrap">{initialGlobalObs}</p>
           ) : (
@@ -148,7 +148,7 @@ export function InspectionStepsViewOnlyClient({
       </div>
 
       {inspectionDocs.length > 0 && (
-        <section className="rounded-[10px] border border-zinc-200 bg-white p-4 w-full mt-6">
+        <section className="rounded-[14px] border border-zinc-200 bg-white p-4 w-full mt-6">
           <div className="flex items-center justify-between mb-1">
             <h4 className="text-sm font-medium text-zinc-900">Documentos de la revisión</h4>
           </div>
@@ -164,11 +164,11 @@ export function InspectionStepsViewOnlyClient({
                 {inspectionDocs.filter(d => d.type === "technical_report").map((d) => (
                   <div
                     key={d.id}
-                    className="relative rounded-[10px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                    className="relative rounded-[14px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex flex-col items-center text-center space-y-3">
                       <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="w-full group">
-                        <div className="w-16 h-16 mx-auto rounded-[10px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
+                        <div className="w-16 h-16 mx-auto rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
                           {d.mime_type?.startsWith("image/") ? (
                             <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
                           ) : (
@@ -211,11 +211,11 @@ export function InspectionStepsViewOnlyClient({
                 {inspectionDocs.filter(d => d.type === "vehicle_photo").map((d) => (
                   <div
                     key={d.id}
-                    className="relative rounded-[10px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                    className="relative rounded-[14px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex flex-col items-center text-center space-y-3">
                       <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="w-full group">
-                        <div className="w-16 h-16 mx-auto rounded-[10px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
+                        <div className="w-16 h-16 mx-auto rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
                           {d.mime_type?.startsWith("image/") ? (
                             <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
                           ) : (
@@ -260,11 +260,11 @@ export function InspectionStepsViewOnlyClient({
                   .map((d) => (
                   <div
                     key={d.id}
-                    className="relative rounded-[10px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                    className="relative rounded-[14px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex flex-col items-center text-center space-y-3">
                       <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="w-full group">
-                        <div className="w-16 h-16 mx-auto rounded-[10px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
+                        <div className="w-16 h-16 mx-auto rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
                           {d.mime_type?.startsWith("image/") ? (
                             <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
                           ) : (

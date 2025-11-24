@@ -3,6 +3,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { X, Trash2, File as FileIcon, FileImage, FileText, FileArchive, FileAudio, FileVideo, FileCode, FileType } from "lucide-react";
+import { compressManySmart } from "@/utils/image";
 
 export type ExistingDoc = {
   id: number;
@@ -63,6 +64,7 @@ export default function Dropzone({
   const inputRef = useRef<HTMLInputElement>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [viewer, setViewer] = useState<{ url: string; title: string } | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const handleDelete = async (docId: number) => {
     if (!onDeleteExisting) return;
@@ -151,7 +153,18 @@ export default function Dropzone({
       return okType && okSize;
     });
 
-    setQueue(prev => [...prev, ...filtered]);
+    if (filtered.length === 0) return;
+    (async () => {
+      try {
+        setIsCompressing(true);
+        const compressed = await compressManySmart(filtered);
+        setQueue(prev => [...prev, ...compressed]);
+      } catch {
+        setQueue(prev => [...prev, ...filtered]);
+      } finally {
+        setIsCompressing(false);
+      }
+    })();
   };
 
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -212,10 +225,15 @@ export default function Dropzone({
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={onDrop}
-        className={`border-dashed border-2 rounded-xl text-center mt-2 transition-colors ${
+        className={`border-dashed border-2 rounded-xl text-center mt-2 transition-colors relative ${
           isDragging ? "border-[#0040B8] bg-[#0040B8]/5" : "border-[#D3D3D3]"
         }`}
       >
+        {isCompressing && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 text-sm font-medium">
+            Comprimiendo...
+          </div>
+        )}
         <input
           ref={inputRef}
           type="file"
@@ -274,7 +292,7 @@ export default function Dropzone({
               return (
                 <div
                   key={`${isExisting ? "e" : "q"}-${isExisting ? item.id : item.index}-${name}`}
-                  className="relative rounded-[10px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                  className="relative rounded-[14px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
                 >
                   {frontSelection && (
                     <label className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 bg-white/90 border border-[#E6E6E6] rounded px-2 py-1 text-[11px] cursor-pointer select-none">
@@ -321,7 +339,7 @@ export default function Dropzone({
 
                   <div className="flex flex-col items-center text-center space-y-3">
                     <div
-                      className={`w-16 h-16 rounded-[10px] ${bgForMime(mime)} flex items-center justify-center overflow-hidden ${isImage ? "cursor-zoom-in" : ""}`}
+                      className={`w-16 h-16 rounded-[14px] ${bgForMime(mime)} flex items-center justify-center overflow-hidden ${isImage ? "cursor-zoom-in" : ""}`}
                       onClick={() => {
                         if (isImage) setViewer({ url: (previewUrl || (isExisting ? (item as any).file_url : "")) as string, title: name });
                       }}
@@ -366,7 +384,7 @@ export default function Dropzone({
           aria-label="Visor de imagen"
         >
           <div className="absolute inset-0 bg-black/60" onClick={() => setViewer(null)} />
-          <div className="relative bg-white rounded-[10px] shadow-2xl border border-[#E6E6E6] max-w-[90vw] max-h-[90vh] p-2">
+          <div className="relative bg-white rounded-[14px] shadow-2xl border border-[#E6E6E6] max-w-[90vw] max-h-[90vh] p-2">
             <div className="flex items-center justify-between px-2 py-1">
               <p className="text-sm font-medium truncate max-w-[70vw]">{viewer.title}</p>
               <button

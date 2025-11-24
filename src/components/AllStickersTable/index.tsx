@@ -260,7 +260,7 @@ export default function StickerOrdersTable() {
       </div>
 
       {showFilters && (
-        <div className="mb-4 rounded-[10px] border border-gray-200 bg-white p-3 sm:p-4">
+        <div className="mb-4 rounded-[14px] border border-gray-200 bg-white p-3 sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
             {TABLE_FILTERS.map((opt) => {
               const active = statusFilter === opt;
@@ -283,7 +283,7 @@ export default function StickerOrdersTable() {
         </div>
       )}
 
-      <div className="stk-table overflow-hidden rounded-[10px] border border-gray-200 bg-white">
+      <div className="stk-table overflow-hidden rounded-[14px] border border-gray-200 bg-white">
         <div className="overflow-x-auto">
           <div className="min-w-[980px]">
             <TableTemplate<StickerItem>

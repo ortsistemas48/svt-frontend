@@ -215,7 +215,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
   const fullName = `${user?.first_name} ${user?.last_name}`|| "Usuario";
 
   return (
-    <aside className="overflow-hidden relative h-[calc(100vh-102px)] w-[290px] max-[1500px]:w-[256px] bg-white md:shadow rounded-[10px] p-4">
+    <aside className="overflow-hidden relative h-[calc(100vh-102px)] w-[290px] max-[1500px]:w-[256px] bg-white md:shadow rounded-[14px] p-4">
       {/* Botón cerrar (solo mobile) */}
       <div className="mb-4 flex items-center justify-end px-1">
         <button

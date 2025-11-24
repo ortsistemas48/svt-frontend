@@ -398,7 +398,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                   <div className="text-sm text-gray-500">Cargando información del taller...</div>
                 </div>
               ) : errorMsg ? (
-                <div className="text-red-600 text-sm border border-red-200 bg-red-50 rounded-[10px] px-4 py-3">
+                <div className="text-red-600 text-sm border border-red-200 bg-red-50 rounded-[14px] px-4 py-3">
                   {errorMsg}
                 </div>
               ) : wsDetail ? (
@@ -409,7 +409,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <Building2 size={16} className="text-[#0040B8]" />
                       Información General
                     </h4>
-                    <div className="bg-gray-50 rounded-[10px] p-4 space-y-3">
+                    <div className="bg-gray-50 rounded-[14px] p-4 space-y-3">
                       <DetailRow 
                         icon={<Factory size={18} className="text-gray-500" />}
                         label="Nombre del taller" 
@@ -429,7 +429,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <MapPin size={16} className="text-[#0040B8]" />
                       Ubicación
                     </h4>
-                    <div className="bg-gray-50 rounded-[10px] p-4 space-y-3">
+                    <div className="bg-gray-50 rounded-[14px] p-4 space-y-3">
                       <DetailRow 
                         icon={<MapPin size={18} className="text-gray-500" />}
                         label="Provincia" 
@@ -454,7 +454,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <FileText size={16} className="text-[#0040B8]" />
                       Información Legal y Contacto
                     </h4>
-                    <div className="bg-gray-50 rounded-[10px] p-4 space-y-3">
+                    <div className="bg-gray-50 rounded-[14px] p-4 space-y-3">
                       <DetailRow 
                         icon={<FileText size={18} className="text-gray-500" />}
                         label="CUIT" 
@@ -489,7 +489,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <Users size={16} className="text-[#0040B8]" />
                       Personal Asignado ({members.length})
                     </h4>
-                    <div className="border border-gray-200 rounded-[10px] overflow-hidden">
+                    <div className="border border-gray-200 rounded-[14px] overflow-hidden">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 text-gray-600">
                           <tr>
@@ -583,7 +583,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <User size={14} className="text-[#0040B8]" />
                       Información Personal
                     </h5>
-                    <div className="bg-gray-50 rounded-[10px] p-4 space-y-3 border border-gray-100">
+                    <div className="bg-gray-50 rounded-[14px] p-4 space-y-3 border border-gray-100">
                       <DetailRow 
                         icon={<User size={16} className="text-gray-500" />}
                         label="Nombre completo" 
@@ -608,7 +608,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                       <Mail size={14} className="text-[#0040B8]" />
                       Información de Contacto
                     </h5>
-                    <div className="bg-gray-50 rounded-[10px] p-4 space-y-3 border border-gray-100">
+                    <div className="bg-gray-50 rounded-[14px] p-4 space-y-3 border border-gray-100">
                       <DetailRow 
                         icon={<Mail size={16} className="text-gray-500" />}
                         label="Email" 
@@ -631,7 +631,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                         <Award size={14} className="text-[#0040B8]" />
                         Información Profesional
                       </h5>
-                      <div className="bg-blue-50 rounded-[10px] p-4 space-y-3 border border-blue-100">
+                      <div className="bg-blue-50 rounded-[14px] p-4 space-y-3 border border-blue-100">
                         <DetailRow 
                           icon={<Award size={16} className="text-blue-600" />}
                           label="Número de matrícula" 

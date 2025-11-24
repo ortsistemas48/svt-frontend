@@ -127,7 +127,7 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
 
   return (
     <div className="max-w-full">
-      <div className="bg-white rounded-[10px] border border-gray-200 px-8 py-3 mb-4">
+      <div className="bg-white rounded-[14px] border border-gray-200 px-8 py-3 mb-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-0.5">
@@ -152,7 +152,7 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
       </div>
 
       {/* List Section - Contenedor separado */}
-      <div className="bg-white rounded-[10px] border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-[14px] border border-gray-200 overflow-hidden">
         {/* Headers */}
         {!loading && searchHistory.length > 0 && (
           <div className="px-8 py-2 border-b border-gray-200 hidden sm:block">

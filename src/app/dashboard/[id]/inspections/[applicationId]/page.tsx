@@ -259,7 +259,7 @@ export default async function InspectionPage({
       </article>
 
       {isSecondInspection && applicationData.result === "Condicional" && (
-        <div className="mx-4 mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-[10px] shadow-sm">
+        <div className="mx-4 mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-[14px] shadow-sm">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 mt-0.5">
               <svg

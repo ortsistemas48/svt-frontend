@@ -76,11 +76,14 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
             </div>
 
             <div className="bg-purple-50 px-5 py-4 flex items-center gap-3">
-              <div className="w-9 h-9 bg-purple-100 rounded-[10px] flex items-center justify-center">
+              <div className="w-9 h-9 bg-purple-100 rounded-[14px] flex items-center justify-center">
                 <Car className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-[15px] font-semibold text-zinc-900">Datos del vehículo</h2>
+                <h2 className="text-[15px] font-semibold text-zinc-900">
+                  <span className="md:hidden">Vehículo</span>
+                  <span className="hidden md:inline">Datos del vehículo</span>
+                </h2>
                 <p className="text-xs text-zinc-600">Información técnica del vehículo</p>
               </div>
             </div>
@@ -171,7 +174,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
           {/* Datos del taller */}
           <div className="max-w-4xl mx-auto rounded-2xl border border-[#d3d3d3] overflow-hidden">
             <div className="bg-blue-50 px-5 py-4 flex items-center gap-3">
-              <div className="w-9 h-9 bg-blue-100 rounded-[10px] flex items-center justify-center">
+              <div className="w-9 h-9 bg-blue-100 rounded-[14px] flex items-center justify-center">
                 <Wrench className="w-5 h-5 text-blue-600" />
               </div>
               <div>
@@ -218,6 +221,29 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
             <p className="text-sm text-zinc-700 leading-relaxed">
             Por la presente quien suscribe, deja constancia en carácter de declaración jurada que los CNI correspondientes a la presente planchuela, han sido utilizados para la prestación del servicio de RTO a Vehículos de Jurisdicción local en TRT registrado en la ANSV, procediendo en esta instancia, a la correspondiente rendición para la auditoría periódica y permanente del organismo correspondiente.
             </p>
+            <div className="mt-5 flex items-center justify-center gap-8">
+              <img
+                src="/images/other-logos/cfsv-logo.png"
+                alt="CFSV"
+                className="h-10 md:h-12 invert opacity-90 brightness-110 contrast-90"
+                loading="lazy"
+                decoding="async"
+              />
+              <img
+                src="/images/other-logos/ministerio-transporte.png"
+                alt="Ministerio de Transporte"
+                className="h-10 md:h-12 invert opacity-90 brightness-110 contrast-90"
+                loading="lazy"
+                decoding="async"
+              />
+              <img
+                src="/images/other-logos/sv_logo.png"
+                alt="Seguridad Vial"
+                className="h-10 md:h-12 invert opacity-90 brightness-110 contrast-90"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
           </div>
         </div>
       </div>

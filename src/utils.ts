@@ -172,6 +172,75 @@ export async function fetchTopModels(
   }
 }
 
+export async function fetchTopBrands(
+  workshopId: number,
+  from: string,
+  to: string,
+  limit = 5
+): Promise<{ items: { brand: string; count: number }[]; total: number }> {
+  const url = `/api/statistics/workshop/${workshopId}/top-brands${q({ from, to, limit })}`;
+  try {
+    const res = await apiFetch(url, { method: "GET" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
+export async function fetchUsageTypes(
+  workshopId: number,
+  from: string,
+  to: string
+): Promise<{ items: { use_type: string; count: number }[]; total: number }> {
+  const url = `/api/statistics/workshop/${workshopId}/usage-types${q({ from, to })}`;
+  try {
+    const res = await apiFetch(url, { method: "GET" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    // Mapear usage_type del backend a use_type para el frontend
+    return {
+      ...data,
+      items: data.items?.map((item: any) => ({
+        use_type: item.usage_type || item.use_type || "",
+        count: item.count
+      })) || []
+    };
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
+export async function fetchCommonErrors(
+  workshopId: number,
+  from: string,
+  to: string,
+  limit = 3
+): Promise<{ items: { step_name: string; count: number; percentage: number }[]; total: number }> {
+  const url = `/api/statistics/workshop/${workshopId}/common-errors${q({ from, to, limit })}`;
+  try {
+    const res = await apiFetch(url, { method: "GET" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
+export async function fetchUpcomingExpirations(
+  workshopId: number,
+  limit = 3
+): Promise<{ items: { license_plate: string; contact: string; days_until: number; expiration_date: string }[]; total: number }> {
+  const url = `/api/statistics/workshop/${workshopId}/upcoming-expirations${q({ limit })}`;
+  try {
+    const res = await apiFetch(url, { method: "GET" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
 export async function fetchAvailableStickers({
   workshopId,
   currentCarId,

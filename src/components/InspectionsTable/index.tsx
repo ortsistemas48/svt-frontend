@@ -237,7 +237,7 @@ export default function InspectionTable() {
 
       {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
-      <div className="insp-table overflow-hidden rounded-[10px] border border-gray-200 bg-white">
+      <div className="insp-table overflow-hidden rounded-[14px] border border-gray-200 bg-white">
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
             <TableTemplate<Application>

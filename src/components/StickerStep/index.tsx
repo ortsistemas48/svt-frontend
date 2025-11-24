@@ -420,7 +420,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
 
   return (
     <div className="min-h-full flex items-center justify-center px-6">
-      <div className="space-y-6 mb-10 px-8 py-6 mt-12 w-full max-w-2xl bg-white rounded-[10px]">
+      <div className="space-y-6 mb-10 px-8 py-6 mt-12 w-full max-w-2xl bg-white rounded-[14px]">
         <div>
           <h2 className="text-xl font-regular text-[#000000] mb-1">
             Oblea del vehículo
@@ -479,7 +479,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
         </div>
 
         {mode === "result" && (
-          <div className="mt-6 border rounded-[10px] p-4 space-y-4">
+          <div className="mt-6 border rounded-[14px] p-4 space-y-4">
             <h3 className="text-md font-semibold">Resultado</h3>
 
             <div className="grid grid-cols-2 gap-4 text-sm">

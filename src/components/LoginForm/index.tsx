@@ -90,7 +90,7 @@ export default function LoginForm() {
   };
 
   return (
-      <div className="w-full max-w-md bg-white rounded-[10px] border border-[#DEDEDE] px-4 py-10 text-center
+      <div className="w-full max-w-md bg-white rounded-[14px] border border-[#DEDEDE] px-4 py-10 text-center
                       flex flex-col justify-between
                       max-h-[calc(100dvh-2rem)] overflow-auto"> {/*  scroll interno, no en body */}
         <div className="space-y-8">
@@ -108,7 +108,7 @@ export default function LoginForm() {
             <input
               type="text"
               placeholder="Correo electrónico o DNI"
-              className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[10px] px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+              className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[14px] px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
               value={emailOrDni}
               onChange={(e) => setEmailOrDni(e.target.value)}
               disabled={submitting}
@@ -118,7 +118,7 @@ export default function LoginForm() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Contraseña"
-                className="w-full border border-[#DEDEDE] rounded-[10px] px-5 py-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+                className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={submitting}

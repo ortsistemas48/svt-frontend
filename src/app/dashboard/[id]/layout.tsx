@@ -179,7 +179,7 @@ export default function DashboardClientLayout({
         <div className="pl-4 min-h-full pt-4 hidden lg:block">
           {/* Logo encima del sidebar */}
           <div className="mb-3">
-            <div className="bg-white rounded-[10px] shadow px-4 py-4 flex items-center justify-center w-[290px] max-[1500px]:w-[256px]">
+            <div className="bg-white rounded-[14px] shadow px-4 py-4 flex items-center justify-center w-[290px] max-[1500px]:w-[256px]">
               <Link
                 href={`/dashboard/${workshopId ?? ""}`}
                 aria-label="Ir al inicio"
@@ -206,7 +206,7 @@ export default function DashboardClientLayout({
                 <div className="h-full p-4">
                   {/* Logo encima del sidebar (mobile) */}
                   <div className="mb-4">
-                    <div className="bg-white rounded-[10px] shadow p-3 flex items-center justify-center">
+                    <div className="bg-white rounded-[14px] shadow p-3 flex items-center justify-center">
                       <Link
                         href={`/dashboard/${workshopId ?? ""}`}
                         aria-label="Ir al inicio"
@@ -238,7 +238,7 @@ export default function DashboardClientLayout({
               )}
             </div>
 
-            <div className="bg-white min-h-full rounded-[10px] shadow p-8">
+            <div className="bg-white min-h-full rounded-[14px] shadow p-8">
               {children}
             </div>
           </main>

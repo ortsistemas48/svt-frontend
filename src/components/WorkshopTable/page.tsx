@@ -263,7 +263,7 @@ export default function WorkshopTable({ workshops }: Props) {
       </div>
 
       {/* Tabla en card */}
-      <div className="rounded-[10px] border border-gray-200 overflow-hidden bg-white mt-3">
+      <div className="rounded-[14px] border border-gray-200 overflow-hidden bg-white mt-3">
         <div className="overflow-x-auto">
           <table className="w-full text-sm sm:text-base">
             <thead className="bg-white text-gray-600">
@@ -447,7 +447,7 @@ export default function WorkshopTable({ workshops }: Props) {
                   <div className="text-sm text-gray-500">Cargando información del taller...</div>
                 </div>
               ) : errorMsg ? (
-                <div className="text-red-600 text-sm border border-red-200 bg-red-50 rounded-[10px] px-4 py-3">
+                <div className="text-red-600 text-sm border border-red-200 bg-red-50 rounded-[14px] px-4 py-3">
                   {errorMsg}
                 </div>
               ) : (
@@ -480,7 +480,7 @@ export default function WorkshopTable({ workshops }: Props) {
                       <Users size={16} className="text-[#0040B8]" />
                       Personal Asignado ({members.length})
                     </h4>
-                    <div className="border border-gray-200 rounded-[10px] overflow-hidden">
+                    <div className="border border-gray-200 rounded-[14px] overflow-hidden">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 text-gray-600">
                           <tr>
@@ -572,7 +572,7 @@ export default function WorkshopTable({ workshops }: Props) {
                   <User size={14} className="text-[#0040B8]" />
                   Información Personal
                 </h5>
-                <div className="bg-gray-50 rounded-[10px] p-4 space-y-3 border border-gray-100">
+                <div className="bg-gray-50 rounded-[14px] p-4 space-y-3 border border-gray-100">
                   <DetailRow 
                     icon={<User size={16} className="text-gray-500" />}
                     label="Nombre completo" 
@@ -597,7 +597,7 @@ export default function WorkshopTable({ workshops }: Props) {
                   <Mail size={14} className="text-[#0040B8]" />
                   Información de Contacto
                 </h5>
-                <div className="bg-gray-50 rounded-[10px] p-4 space-y-3 border border-gray-100">
+                <div className="bg-gray-50 rounded-[14px] p-4 space-y-3 border border-gray-100">
                   <DetailRow 
                     icon={<Mail size={16} className="text-gray-500" />}
                     label="Email" 
@@ -620,7 +620,7 @@ export default function WorkshopTable({ workshops }: Props) {
                     <Award size={14} className="text-[#0040B8]" />
                     Información Profesional
                   </h5>
-                  <div className="bg-blue-50 rounded-[10px] p-4 space-y-3 border border-blue-100">
+                  <div className="bg-blue-50 rounded-[14px] p-4 space-y-3 border border-blue-100">
                     <DetailRow 
                       icon={<Award size={16} className="text-blue-600" />}
                       label="Número de matrícula" 

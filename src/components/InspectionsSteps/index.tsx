@@ -660,7 +660,7 @@ export default function InspectionStepsClient({
   return (
     <div className="w-full px-4 pb-10">
       {isCompleted && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-[10px]">
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-[14px]">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -690,7 +690,7 @@ export default function InspectionStepsClient({
             <section
               key={s.step_id}
               className={clsx(
-                "w-full rounded-[10px] bg-white transition-colors border",
+                "w-full rounded-[14px] bg-white transition-colors border",
                 current ? STATUS_UI[current as Status].stepBorder : "border-zinc-200"
               )}
             >
@@ -757,7 +757,7 @@ export default function InspectionStepsClient({
           </p>
         </div>
 
-        <div className="rounded-[10px] text-sm border border-zinc-200 bg-white p-4 w-full self-start md:col-span-2">
+        <div className="rounded-[14px] text-sm border border-zinc-200 bg-white p-4 w-full self-start md:col-span-2">
           <textarea
             value={globalText}
             onChange={(e) => {
@@ -778,7 +778,7 @@ export default function InspectionStepsClient({
         </div>
       </div>
       
-      <section className="rounded-[10px] border border-zinc-200 bg-white p-4 w-full mt-6">
+      <section className="rounded-[14px] border border-zinc-200 bg-white p-4 w-full mt-6">
         <div className="flex items-center justify-between mb-1">
           <h4 className="text-sm font-medium text-zinc-900">Subir informes técnicos y fotos del vehículo</h4>
           {inspDocsLoading && <span className="text-xs text-zinc-500">Actualizando...</span>}
@@ -872,7 +872,7 @@ export default function InspectionStepsClient({
       {confirmOpen && overallStatus && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" aria-modal="true" role="dialog">
           <div className="absolute inset-0 bg-black/30" onClick={() => !certLoading && setConfirmOpen(false)} />
-          <div className="relative z-10 w-[min(92vw,520px)] rounded-[10px] border border-zinc-200 bg-white p-5 shadow-xl">
+          <div className="relative z-10 w-[min(92vw,520px)] rounded-[14px] border border-zinc-200 bg-white p-5 shadow-xl">
             <div className="flex items-start justify-between">
               <h3 className="text-base font-semibold text-zinc-900">Confirmar certificado</h3>
               <button

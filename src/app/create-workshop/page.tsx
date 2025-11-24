@@ -877,7 +877,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
             <div className="lg:col-span-2 flex items-end">
               <button
                 type="button" onClick={searchAndAdd} disabled={lookupLoading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-[10px] px-4 py-3 border border-[#E2E8F0]
+                className="w-full inline-flex items-center justify-center gap-2 rounded-[14px] px-4 py-3 border border-[#E2E8F0]
                            hover:bg-[#F8FAFC] active:bg-[#E2E8F0] transition disabled:opacity-60 text-sm sm:text-base"
               >
                 <Search size={16} />
@@ -893,7 +893,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
                 <div>
                   <label className="mb-2 text-sm sm:text-base font-medium text-[#0F172A] block">Rol</label>
                   <select
-                    className="w-full rounded-[10px] border border-[#E2E8F0] px-3.5 py-3 text-sm sm:text-base"
+                    className="w-full rounded-[14px] border border-[#E2E8F0] px-3.5 py-3 text-sm sm:text-base"
                     value={roleId}
                     onChange={(e) => onChangeRole(e.target.value ? Number(e.target.value) : "")}
                   >
@@ -916,7 +916,7 @@ function AddStaffCard({ onAdd }: { onAdd: (m: PendingMember) => { ok: boolean; r
                   <div className="flex flex-col">
                     <label className="block text-sm sm:text-base font-medium text-[#0F172A] mb-2">Tipo Ingeniero</label>
                     <select
-                      className="w-full border border-[#E2E8F0] rounded-[10px] px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8] outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow"
+                      className="w-full border border-[#E2E8F0] rounded-[14px] px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8] outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow"
                       value={engineerKind}
                       onChange={(e) => setEngineerKind(e.target.value as "Titular" | "Suplente" | "")}
                     >
@@ -1022,7 +1022,7 @@ function TeamSummary({ items, onEdit }: { items: PendingMember[]; onEdit: () => 
       ) : (
         <ul className="mt-4 grid grid-cols-1 gap-3">
           {items.map((m) => (
-            <li key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-[#E2E8F0] rounded-[10px] px-3.5 py-3 gap-2">
+            <li key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-[#E2E8F0] rounded-[14px] px-3.5 py-3 gap-2">
               <div className="flex-1 min-w-0">
                 <div className="text-sm sm:text-base text-[#0F172A] font-medium truncate">{m.first_name || "Sin nombre"} {m.last_name || ""}</div>
                 <div className="text-xs sm:text-sm text-[#64748B] truncate">{m.email}{m.existingUserId ? ", existente" : ", nuevo"}</div>
@@ -1056,7 +1056,7 @@ function Field(props: {
       <label htmlFor={id} className="mb-2 text-sm sm:text-base font-medium text-[#0F172A]">{label} {required ? <span className="text-[#EF4444]">*</span> : null}</label>
       <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
         disabled={disabled} inputMode={inputMode}
-        className="w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8]
+        className="w-full rounded-[14px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8]
                    outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow" />
       {help ? <p className="text-xs sm:text-sm text-[#64748B] mt-1">{help}</p> : null}
     </div>
@@ -1072,7 +1072,7 @@ function TextInput({ id, label, value, onChange, placeholder, leftIcon, classNam
       <div className="relative">
         {leftIcon ? <div className="absolute left-3 top-1/2 -translate-y-1/2 opacity-70">{leftIcon}</div> : null}
         <input id={id} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-          className={`w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8] outline-none
+          className={`w-full rounded-[14px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8] outline-none
                       focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow ${leftIcon ? "pl-10" : ""}`} />
       </div>
     </div>
@@ -1085,7 +1085,7 @@ function LabeledInput({ label, value, onChange }: {
   return (
     <div>
       <label className="block text-sm sm:text-base font-medium text-[#0F172A] mb-2">{label}</label>
-      <input className="w-full border border-[#E2E8F0] rounded-[10px] px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8] outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow" value={value} onChange={(e) => onChange(e.target.value)} />
+      <input className="w-full border border-[#E2E8F0] rounded-[14px] px-3.5 py-3 text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8] outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow" value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }
@@ -1097,7 +1097,7 @@ function SelectField({ id, label, value, onChange, options, required, disabled }
     <div className="flex flex-col">
       <label htmlFor={id} className="mb-2 text-sm sm:text-base font-medium text-[#0F172A]">{label} {required ? <span className="text-[#EF4444]">*</span> : null}</label>
       <select id={id} value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
-        className={`w-full rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm sm:text-base text-[#0F172A]
+        className={`w-full rounded-[14px] border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm sm:text-base text-[#0F172A]
                    outline-none focus-visible:ring-4 focus-visible:ring-[#0040B8]/20 focus:border-[#0040B8] transition-shadow
                    ${disabled ? 'opacity-60 cursor-not-allowed bg-gray-50' : ''}`}>
         <option value="">{disabled ? 'Seleccioná una provincia primero' : 'Seleccionar'}</option>
@@ -1121,7 +1121,7 @@ function Alert({ type, message }: { type: "error" | "success"; message: string; 
   const isError = type === "error";
   return (
     <div className={[
-      "flex items-center gap-2 rounded-[10px] px-3.5 py-3 text-sm",
+      "flex items-center gap-2 rounded-[14px] px-3.5 py-3 text-sm",
       isError ? "bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]" :
         "bg-[#F0FDF4] text-[#14532D] border border-[#BBF7D0]"
     ].join(" ")} role="alert">

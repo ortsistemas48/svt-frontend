@@ -214,7 +214,7 @@ export default function AsignarObleasPage() {
         )}
 
         <section className="w-full">
-          <div className="rounded-[10px] border border-[#d3d3d3] bg-white">
+          <div className="rounded-[14px] border border-[#d3d3d3] bg-white">
            <div className="p-5 border-b border-gray-100">
             <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
               <Layers className="h-5 w-5 text-[#0040B8]" />

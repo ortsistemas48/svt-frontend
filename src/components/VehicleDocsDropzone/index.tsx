@@ -3,6 +3,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { X, Trash2, FileImage } from "lucide-react";
+import { compressManySmart } from "@/utils/image";
 
 export type ExistingDoc = {
   id: number;
@@ -24,7 +25,7 @@ type Props = {
 	mode?: "edit" | "view";
 };
 
-const ACCEPT_MIME = ["image/png", "image/jpeg", "image/webp"];
+const ACCEPT_MIME = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
 
 const prettySize = (bytes?: number) => {
   if (bytes == null) return "";
@@ -48,6 +49,7 @@ export default function VehicleDocsDropzone({
 	const [brokenPreview, setBrokenPreview] = useState<Record<number, boolean>>({});
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [isDragging, setIsDragging] = useState(false);
+	const [isCompressing, setIsCompressing] = useState(false);
 
 	// Reset al cambiar token
   useEffect(() => {
@@ -95,7 +97,17 @@ export default function VehicleDocsDropzone({
 			return okType && okSize;
 		});
 		if (arr.length === 0) return;
-		setQueue((prev) => [...prev, ...arr]);
+		(async () => {
+			try {
+				setIsCompressing(true);
+				const compressed = await compressManySmart(arr);
+				setQueue((prev) => [...prev, ...compressed]);
+			} catch {
+				setQueue((prev) => [...prev, ...arr]);
+			} finally {
+				setIsCompressing(false);
+			}
+		})();
 	};
 
 	const removeQueued = (idx: number) => {
@@ -125,7 +137,7 @@ export default function VehicleDocsDropzone({
 						<img src="/images/icons/DropzoneIcon.svg" alt="" className="w-4 h-4" />
 						<h3 className="text-[15px] font-medium text-neutral-800">Documentación del vehículo</h3>
         </div>
-					<p className="text-xs text-neutral-500">Formatos: JPG, PNG, WEBP · hasta 20 MB</p>
+					<p className="text-xs text-neutral-500">Formatos: JPG, PNG, WEBP, PDF · hasta 20 MB</p>
       </div>
 			)}
 
@@ -141,8 +153,13 @@ export default function VehicleDocsDropzone({
 					onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
 					onDragLeave={() => setIsDragging(false)}
                 onDrop={onDrop}
-					className={`border-dashed border-2 rounded-xl text-center mt-2 transition-colors ${isDragging ? "border-[#0040B8] bg-[#0040B8]/5" : "border-[#D3D3D3]"}`}
+					className={`border-dashed border-2 rounded-xl text-center mt-2 transition-colors relative ${isDragging ? "border-[#0040B8] bg-[#0040B8]/5" : "border-[#D3D3D3]"}`}
               >
+                {isCompressing && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 text-sm font-medium">
+                    Comprimiendo...
+                  </div>
+                )}
                 <input
 						ref={inputRef}
 						type="file"
