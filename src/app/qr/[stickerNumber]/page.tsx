@@ -221,21 +221,23 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
             <p className="text-sm text-zinc-700 leading-relaxed">
             Por la presente quien suscribe, deja constancia en carácter de declaración jurada que los CNI correspondientes a la presente planchuela, han sido utilizados para la prestación del servicio de RTO a Vehículos de Jurisdicción local en TRT registrado en la ANSV, procediendo en esta instancia, a la correspondiente rendición para la auditoría periódica y permanente del organismo correspondiente.
             </p>
-            <div className="mt-5 flex items-center justify-center gap-8">
-              <img
-                src="/images/other-logos/cfsv-logo.png"
-                alt="CFSV"
-                className="h-10 md:h-12 invert opacity-90 brightness-110 contrast-90"
-                loading="lazy"
-                decoding="async"
-              />
-              <img
-                src="/images/other-logos/ministerio-transporte.png"
-                alt="Ministerio de Transporte"
-                className="h-10 md:h-12 invert opacity-90 brightness-110 contrast-90"
-                loading="lazy"
-                decoding="async"
-              />
+            <div className="mt-5 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8">
+              <div className="flex items-center justify-center gap-6 lg:gap-8">
+                <img
+                  src="/images/other-logos/cfsv-logo.png"
+                  alt="CFSV"
+                  className="h-10 md:h-12 invert opacity-90 brightness-110 contrast-90"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <img
+                  src="/images/other-logos/ministerio-transporte.png"
+                  alt="Ministerio de Transporte"
+                  className="h-10 md:h-12 invert opacity-90 brightness-110 contrast-90"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
               <img
                 src="/images/other-logos/sv_logo.png"
                 alt="Seguridad Vial"
