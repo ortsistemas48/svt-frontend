@@ -70,7 +70,11 @@ async function fetchApplicationStatus(appId: number) {
   }
 
   const data = await res.json();
-  return { status: data.status as string, result: data.result as string };
+  return { 
+    status: data.status as string, 
+    result: data.result as string,
+    usage_type: data.usage_type as string | undefined
+  };
 }
 
 async function ensureInspection(appId: number) {
@@ -212,14 +216,15 @@ export default async function InspectionPage({
   
   // Detect if it's a second inspection from status
   const isSecondInspection = applicationData.status === "Segunda Inspección";
+  const usageType = applicationData.usage_type;
   
   const inspectionData = await ensureInspection(appId);
   const inspectionId = inspectionData.inspection_id;
 
-  const [steps, detailsResp, inspDocs] = await Promise.all([
+  // Cargar datos críticos primero (sin esperar documentos)
+  const [steps, detailsResp] = await Promise.all([
     fetchSteps(appId),
     fetchDetails(inspectionId),
-    fetchInspectionDocuments(inspectionId),
   ]);
 
   const {
@@ -298,8 +303,9 @@ export default async function InspectionPage({
         initialGlobalObs={isSecondInspection ? "" : globalObs}
         userType={userType}
         isSecondInspection={isSecondInspection}
-        initialInspDocs={inspDocs}
+        initialInspDocs={[]}
         initialIsCompleted={applicationData.status === "Completado"}
+        usageType={usageType}
       />
     
     </div>

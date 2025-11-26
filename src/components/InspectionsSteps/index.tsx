@@ -1,7 +1,7 @@
 // components/inspections/InspectionStepsClient.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import clsx from "clsx";
 import { ChevronRight, X, Plus, Check } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
@@ -47,7 +47,8 @@ export default function InspectionStepsClient({
   userType,
   isSecondInspection,
   initialInspDocs,
-  initialIsCompleted
+  initialIsCompleted,
+  usageType
 }: {
   inspectionId: number;
   appId: number;
@@ -59,6 +60,7 @@ export default function InspectionStepsClient({
   isSecondInspection?: boolean;
   initialInspDocs?: InspDoc[];
   initialIsCompleted?: boolean;
+  usageType?: string;
 }) {
   const { id } = useParams();
   const router = useRouter();
@@ -86,8 +88,16 @@ export default function InspectionStepsClient({
   const [leaves, setLeaves] = useState<ObservationLeaf[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
-  const [inspDocsTech, setInspDocsTech] = useState<InspDoc[]>([]);
-  const [inspDocsPhotos, setInspDocsPhotos] = useState<InspDoc[]>([]);
+  // Inicializar desde props si están disponibles para render inmediato
+  const initialTech = useMemo(() => {
+    return (initialInspDocs || []).filter((d: any) => d.type === "technical_report");
+  }, [initialInspDocs]);
+  const initialPhotos = useMemo(() => {
+    return (initialInspDocs || []).filter((d: any) => d.type === "vehicle_photo");
+  }, [initialInspDocs]);
+  
+  const [inspDocsTech, setInspDocsTech] = useState<InspDoc[]>(initialTech);
+  const [inspDocsPhotos, setInspDocsPhotos] = useState<InspDoc[]>(initialPhotos);
   const [pendingTechFiles, setPendingTechFiles] = useState<File[]>([]);
   const [pendingPhotoFiles, setPendingPhotoFiles] = useState<File[]>([]);
   const [inspDocsLoading, setInspDocsLoading] = useState(false);
@@ -137,22 +147,30 @@ export default function InspectionStepsClient({
     const data: InspDoc[] = await res.json();
     if (typeKey === "technical_report") setInspDocsTech(data);
     if (typeKey === "vehicle_photo") setInspDocsPhotos(data);
+    return data;
   };
 
   const fetchBothTypes = async () => {
     if (!apiBase) return;
     try {
       setInspDocsLoading(true);
-      await Promise.all([
+      const [, photosData] = await Promise.all([
         fetchInspectionDocumentsByType("technical_report"),
         fetchInspectionDocumentsByType("vehicle_photo"),
       ]);
+      
       // Inferir selección inicial desde existentes (si alguno está marcado como frente)
-      setFrontPhotoSel((prev) => {
-        if (prev) return prev;
-        const existingFront = (inspDocsPhotos || []).find((d: any) => (d as any).is_front === true);
-        return existingFront ? { kind: "existing", id: (existingFront as any).id } : null;
-      });
+      // Solo si usageType es "D"
+      const isUsageTypeD = (usageType || "").trim().toUpperCase() === "D";
+      if (isUsageTypeD && photosData) {
+        setFrontPhotoSel((prev) => {
+          if (prev) return prev;
+          const existingFront = photosData.find((d: any) => (d as any).is_front === true);
+          return existingFront ? { kind: "existing", id: (existingFront as any).id } : null;
+        });
+      } else if (!isUsageTypeD) {
+        setFrontPhotoSel(null);
+      }
     } catch (e: any) {
       setError(e.message || "Error cargando documentos");
     } finally {
@@ -160,11 +178,26 @@ export default function InspectionStepsClient({
     }
   };
 
+  // Cargar documentos en segundo plano sin bloquear el render inicial
   useEffect(() => {
     if (!apiBase) return;
-    fetchBothTypes();
+    // Ejecutar después de que el componente se haya renderizado
+    // Esto permite que la página se muestre inmediatamente
+    const timer = setTimeout(() => {
+      fetchBothTypes();
+    }, 100); // Pequeño delay para no bloquear el render inicial
+    
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiBase, inspectionId]);
+
+  // Limpiar selección de foto de frente si usageType no es "D"
+  useEffect(() => {
+    const isUsageTypeD = (usageType || "").trim().toUpperCase() === "D";
+    if (!isUsageTypeD) {
+      setFrontPhotoSel(null);
+    }
+  }, [usageType]);
 
   const onPendingTechChange = (files: File[]) => setPendingTechFiles(files);
   const onPendingPhotosChange = (files: File[]) => setPendingPhotoFiles(files);
@@ -570,9 +603,10 @@ export default function InspectionStepsClient({
       return;
     }
 
-    // Validación: si hay fotos del vehículo, obligar a elegir frente
+    // Validación: si hay fotos del vehículo y usageType es "D", obligar a elegir frente
     const totalPhotosNow = (inspDocsPhotos?.length || 0) + (pendingPhotoFiles?.length || 0);
-    if (totalPhotosNow > 0 && !frontPhotoSel) {
+    const needsFrontPhoto = (usageType || "").trim().toUpperCase() === "D";
+    if (needsFrontPhoto && totalPhotosNow > 0 && !frontPhotoSel) {
       setError("Seleccioná qué foto es el frente del vehículo");
       return;
     }
@@ -809,11 +843,15 @@ export default function InspectionStepsClient({
               onDeleteExisting={(docId) => deleteInspectionDocument("vehicle_photo", docId)}
               maxSizeMB={15}
               resetToken={dzResetTokenPhotos}
-              frontSelection={{
-                selected: frontPhotoSel,
-                onChange: (sel) => setFrontPhotoSel(sel),
-                message: "Seleccioná qué foto es el frente del vehículo",
-              }}
+              frontSelection={
+                (usageType || "").trim().toUpperCase() === "D"
+                  ? {
+                      selected: frontPhotoSel,
+                      onChange: (sel) => setFrontPhotoSel(sel),
+                      message: "Seleccioná qué foto es el frente del vehículo",
+                    }
+                  : undefined
+              }
             />
           </div>
         </div>

@@ -60,7 +60,14 @@ export default function QueueTable() {
       );
       if (!res.ok) throw new Error("Error al traer revisiones");
       const data = await res.json();
-      setItems(data.items ?? []);
+      // Filtrar duplicados por application_id para evitar keys duplicadas
+      const uniqueItems = (data.items ?? []).reduce((acc: Application[], item: Application) => {
+        if (!acc.find(existing => existing.application_id === item.application_id)) {
+          acc.push(item);
+        }
+        return acc;
+      }, []);
+      setItems(uniqueItems);
       setTotal(data.total ?? 0);
     } catch (err) {
       console.error(err);
@@ -137,15 +144,17 @@ export default function QueueTable() {
             /* 2) Header blanco, 4) líneas a los bordes */
             theadClassName="bg-white"
             tableClassName="w-full border-collapse"
-            renderRow={(item) => {
+            renderRow={(item, index) => {
               const d = new Date(item.date);
               const date = d.toLocaleDateString("es-AR");
               const time = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
               const tone = STATUS_TONES[item.status] || DEFAULT_TONE;
               const ownerText = item.owner?.cuit ? item.owner?.razon_social : item.owner?.first_name + " " + item.owner?.last_name;
               const identityText = item.owner?.cuit ? item.owner?.cuit : item.owner?.dni;
+              // Usar key compuesta para garantizar unicidad (application_id + índice + fecha como fallback)
+              const uniqueKey = `${item.application_id}-${index}-${item.date}`;
               return (
-                <tr key={item.application_id} className="hover:bg-gray-50 transition-colors">
+                <tr key={uniqueKey} className="hover:bg-gray-50 transition-colors">
                   <td className="p-3 text-center text-sm sm:text-base font-mono">{item.application_id}</td>
                   <td className="p-3 text-center">
                     <div className="font-medium text-sm sm:text-base">{item.car?.license_plate || "-"}</div>
