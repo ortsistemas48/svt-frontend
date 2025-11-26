@@ -34,11 +34,25 @@ function monthRange(date = new Date()) {
 }
 
 function prevMonthRangeFrom(fromISO: string) {
-  const d = new Date(fromISO);
+  const d = new Date(fromISO + "T00:00:00"); // Asegurar que se parsea correctamente
   const y = d.getFullYear();
-  const m = d.getMonth();
-  const prevFrom = new Date(y, m - 1, 1);
-  const prevTo = new Date(y, m, 0);
+  const m = d.getMonth(); // 0-11 (0 = enero, 11 = diciembre)
+  
+  // Calcular el mes completo anterior
+  // Si estamos en enero (m=0), el mes anterior es diciembre del año anterior
+  let prevYear = y;
+  let prevMonth = m - 1;
+  
+  if (prevMonth < 0) {
+    prevMonth = 11; // Diciembre
+    prevYear = y - 1;
+  }
+  
+  // Primer día del mes anterior
+  const prevFrom = new Date(prevYear, prevMonth, 1);
+  // Último día del mes anterior (día 0 del mes actual)
+  const prevTo = new Date(prevYear, prevMonth + 1, 0);
+  
   return { from: fmt(prevFrom), to: fmt(prevTo) };
 }
 
@@ -75,12 +89,13 @@ export default async function Page(props: any) {
 
   const prevRange = prevMonthRangeFrom(from);
 
-  const [overview, overviewPrev, daily, status, results, topModelsRaw, topBrands, usageTypes, commonErrors, expirations] = await Promise.all([
+  const [overview, overviewPrev, daily, status, results, resultsPrev, topModelsRaw, topBrands, usageTypes, commonErrors, expirations] = await Promise.all([
     fetchStatisticsOverview(workshopId, from, to) as Promise<Overview>,
     fetchStatisticsOverview(workshopId, prevRange.from, prevRange.to) as Promise<Overview>,
     fetchStatisticsDaily(workshopId, from, to) as Promise<Daily>,
     fetchStatusBreakdown(workshopId, from, to) as Promise<StatusBreakdown>,
     fetchResultsBreakdown(workshopId, from, to) as Promise<ResultBreakdown>,
+    fetchResultsBreakdown(workshopId, prevRange.from, prevRange.to) as Promise<ResultBreakdown>,
     fetchTopModels(workshopId, from, to, 8) as Promise<any>,
     fetchTopBrands(workshopId, from, to, 5) as Promise<any>,
     fetchUsageTypes(workshopId, from, to) as Promise<any>,
@@ -107,6 +122,7 @@ export default async function Page(props: any) {
       daily={daily as any}
       status={status as any}
       results={results as any}
+      resultsPrev={resultsPrev as any}
       topModels={topModels}
       topBrands={topBrands as any}
       usageTypes={usageTypes as any}

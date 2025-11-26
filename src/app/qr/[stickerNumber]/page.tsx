@@ -15,12 +15,29 @@ function fmtDate(d?: string | null) {
 
 export default async function QrPage({ params }: { params: Promise<{ stickerNumber: string }> }) {
   const { stickerNumber } = await params;
-  const qrData = await fetchQrData(stickerNumber);
+  
+  let qrData;
+  try {
+    qrData = await fetchQrData(stickerNumber);
+  } catch (error) {
+    // Si hay un error al buscar la oblea, mostrar mensaje de no encontrada
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-zinc-800 mb-2">Oblea no encontrada</p>
+          <p className="text-sm text-zinc-600">No se encontró información para la oblea {stickerNumber}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!qrData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-sm text-zinc-600">
-        No se pudo cargar el dato del QR
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-zinc-800 mb-2">Oblea no encontrada</p>
+          <p className="text-sm text-zinc-600">No se encontró información para la oblea {stickerNumber}</p>
+        </div>
       </div>
     );
   }

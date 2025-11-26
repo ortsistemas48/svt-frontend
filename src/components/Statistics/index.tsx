@@ -394,6 +394,7 @@ export default function Statistics({
   daily,
   status,
   results,
+  resultsPrev,
   topModels,
   topBrands,
   usageTypes,
@@ -408,6 +409,7 @@ export default function Statistics({
   daily: Daily;
   status: StatusBreakdown;
   results: ResultBreakdown;
+  resultsPrev?: ResultBreakdown | null;
   topModels: TopModels;
   topBrands?: TopBrands;
   usageTypes?: UsageTypes;
@@ -422,8 +424,6 @@ export default function Statistics({
     totals: { created: 0, completed: 0, in_queue: 0, approved: 0, approval_rate: 0 },
   } as Overview);
 
-  const approvalPct = Math.round(safeOverview.totals?.approval_rate || 0);
-
   // Deltas vs mes anterior
   const prevOverviewData = overviewPrev ?? null;
   const createdDelta = (() => {
@@ -432,21 +432,81 @@ export default function Statistics({
     if (prevVal <= 0) return 0;
     return ((curVal - prevVal) / prevVal) * 100;
   })();
-  const inQueueDelta = (() => {
-    const prevVal = prevOverviewData?.totals?.in_queue ?? 0;
-    const curVal = safeOverview.totals.in_queue ?? 0;
-    if (prevVal <= 0) return 0;
-    return ((curVal - prevVal) / prevVal) * 100;
+
+  // Calcular tasas de aprobación, rechazo y condicional basadas en results
+  const approvalRate = (() => {
+    if (!results?.items?.length || !results.total || results.total === 0) return 0;
+    // Buscar todas las variantes posibles de aprobado
+    const approved = results.items.find(item => {
+      const result = (item.result || "").toLowerCase().trim();
+      return result === "apto" || result === "aprobadas" || result === "aprobado";
+    });
+    if (!approved) return 0;
+    return Math.round((approved.count / results.total) * 100);
   })();
+
+  const rejectionRate = (() => {
+    if (!results?.items?.length || !results.total || results.total === 0) return 0;
+    // Buscar todas las variantes posibles de rechazado
+    const rejected = results.items.find(item => {
+      const result = (item.result || "").toLowerCase().trim();
+      return result === "rechazado" || result === "rechazadas";
+    });
+    if (!rejected) return 0;
+    return Math.round((rejected.count / results.total) * 100);
+  })();
+
+  const conditionalRate = (() => {
+    if (!results?.items?.length || !results.total || results.total === 0) return 0;
+    const conditional = results.items.find(item => item.result === "Condicional");
+    if (!conditional) return 0;
+    return Math.round((conditional.count / results.total) * 100);
+  })();
+
+  // Calcular tasas previas de aprobación, rechazo y condicional
+  const prevApprovalRate = (() => {
+    if (!resultsPrev?.items?.length || !resultsPrev.total || resultsPrev.total === 0) return null;
+    // Buscar todas las variantes posibles de aprobado
+    const approved = resultsPrev.items.find(item => {
+      const result = (item.result || "").toLowerCase().trim();
+      return result === "apto" || result === "aprobadas" || result === "aprobado";
+    });
+    if (!approved) return 0;
+    return Math.round((approved.count / resultsPrev.total) * 100);
+  })();
+
+  const prevRejectionRate = (() => {
+    if (!resultsPrev?.items?.length || !resultsPrev.total || resultsPrev.total === 0) return null;
+    // Buscar todas las variantes posibles de rechazado
+    const rejected = resultsPrev.items.find(item => {
+      const result = (item.result || "").toLowerCase().trim();
+      return result === "rechazado" || result === "rechazadas";
+    });
+    if (!rejected) return 0;
+    return Math.round((rejected.count / resultsPrev.total) * 100);
+  })();
+
+  const prevConditionalRate = (() => {
+    if (!resultsPrev?.items?.length || !resultsPrev.total || resultsPrev.total === 0) return null;
+    const conditional = resultsPrev.items.find(item => item.result === "Condicional");
+    if (!conditional) return 0;
+    return Math.round((conditional.count / resultsPrev.total) * 100);
+  })();
+
+  // Calcular deltas para todas las tasas
   const approvalDelta = (() => {
-    const prevVal = Math.round(prevOverviewData?.totals?.approval_rate ?? 0);
-    return approvalPct - prevVal;
+    if (prevApprovalRate === null) return 0;
+    return approvalRate - prevApprovalRate;
   })();
-  const activeUsersDelta = (() => {
-    const prevVal = prevOverviewData?.totals?.active_users ?? 0;
-    const curVal = safeOverview.totals.active_users ?? 0;
-    if (prevVal <= 0) return 0;
-    return ((curVal - prevVal) / prevVal) * 100;
+
+  const rejectionDelta = (() => {
+    if (prevRejectionRate === null) return 0;
+    return rejectionRate - prevRejectionRate;
+  })();
+
+  const conditionalDelta = (() => {
+    if (prevConditionalRate === null) return 0;
+    return conditionalRate - prevConditionalRate;
   })();
 
   function Delta({ value, suffix = "%" }: { value: number; suffix?: string }) {
@@ -455,6 +515,23 @@ export default function Statistics({
     const negative = v < 0;
     const Icon = positive ? ArrowUpRight : negative ? ArrowDownRight : ArrowUpRight;
     const color = positive ? "text-emerald-600" : negative ? "text-rose-600" : "text-gray-500";
+    const sign = positive ? "+" : negative ? "" : "";
+    return (
+      <span className={`inline-flex items-center gap-1 ${color}`}>
+        <Icon className="h-3.5 w-3.5" />
+        {sign}{Math.abs(v)}{suffix}
+        <span className="text-gray-500 ml-1">vs mes anterior</span>
+      </span>
+    );
+  }
+
+  function DeltaInverted({ value, suffix = "%" }: { value: number; suffix?: string }) {
+    const v = Math.round(value * 10) / 10;
+    const positive = v > 0;
+    const negative = v < 0;
+    const Icon = positive ? ArrowUpRight : negative ? ArrowDownRight : ArrowUpRight;
+    // Invertido: positivo (aumento) es malo (rojo), negativo (disminución) es bueno (verde)
+    const color = positive ? "text-rose-600" : negative ? "text-emerald-600" : "text-gray-500";
     const sign = positive ? "+" : negative ? "" : "";
     return (
       <span className={`inline-flex items-center gap-1 ${color}`}>
@@ -600,23 +677,10 @@ export default function Statistics({
           <Card>
             <div className="relative p-5">
               <div className="absolute top-3 right-3 h-8 w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
-                <LineChart className="h-4 w-4 text-[#1f63ff]" />
-              </div>
-              <p className="text-xs text-gray-500">En Cola</p>
-              <p className="mt-2 text-2xl text-gray-900">{safeOverview.totals.in_queue ?? 0}</p>
-              <div className="mt-1 text-[11px]">
-                <Delta value={inQueueDelta} />
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="relative p-5">
-              <div className="absolute top-3 right-3 h-8 w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
                 <CheckCircle2 className="h-4 w-4 text-[#1f63ff]" />
               </div>
               <p className="text-xs text-gray-500">Tasa Aprobación</p>
-              <p className="mt-2 text-2xl text-gray-900">{approvalPct}%</p>
+              <p className="mt-2 text-2xl text-gray-900">{approvalRate}%</p>
               <div className="mt-1 text-[11px]">
                 <Delta value={approvalDelta} />
               </div>
@@ -626,12 +690,25 @@ export default function Statistics({
           <Card>
             <div className="relative p-5">
               <div className="absolute top-3 right-3 h-8 w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
-                <Users className="h-4 w-4 text-[#1f63ff]" />
+                <AlertCircle className="h-4 w-4 text-[#1f63ff]" />
               </div>
-              <p className="text-xs text-gray-500">Usuarios activos</p>
-              <p className="mt-2 text-2xl text-gray-900">{safeOverview.totals.active_users ?? 0}</p>
+              <p className="text-xs text-gray-500">Tasa de Rechazo</p>
+              <p className="mt-2 text-2xl text-gray-900">{rejectionRate}%</p>
               <div className="mt-1 text-[11px]">
-                <Delta value={activeUsersDelta} />
+                <DeltaInverted value={rejectionDelta} />
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="relative p-5">
+              <div className="absolute top-3 right-3 h-8 w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
+                <LineChart className="h-4 w-4 text-[#1f63ff]" />
+              </div>
+              <p className="text-xs text-gray-500">Tasa de Condicional</p>
+              <p className="mt-2 text-2xl text-gray-900">{conditionalRate}%</p>
+              <div className="mt-1 text-[11px]">
+                <DeltaInverted value={conditionalDelta} />
               </div>
             </div>
           </Card>
