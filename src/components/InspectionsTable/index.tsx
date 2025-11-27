@@ -105,7 +105,14 @@ export default function InspectionTable() {
       );
       if (!res.ok) throw new Error("Error al traer revisiones");
       const data = await res.json();
-      setItems(data.items ?? []);
+      // Filtrar duplicados por application_id para evitar keys duplicadas
+      const uniqueItems = (data.items ?? []).reduce((acc: Application[], item: Application) => {
+        if (!acc.find(existing => existing.application_id === item.application_id)) {
+          acc.push(item);
+        }
+        return acc;
+      }, []);
+      setItems(uniqueItems);
       setTotal(data.total ?? 0);
     } catch (err) {
       console.error(err);
@@ -226,12 +233,14 @@ export default function InspectionTable() {
               setShowFilters(!showFilters);
               setPage(1);
             }}
-            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+            className="hidden sm:flex bg-[#0040B8] items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
           >
             <SlidersHorizontal size={16} className="text-white" />
             <span className="hidden sm:inline text-white">Filtrar</span>
           </button>
-          <RefreshButton loading={loading} fetchApps={fetchApps} />
+          <div className="hidden sm:flex">
+            <RefreshButton loading={loading} fetchApps={fetchApps} />
+          </div>
         </div>
       </div>
 
@@ -246,15 +255,17 @@ export default function InspectionTable() {
               isLoading={loading}
               emptyMessage="No hay revisiones para mostrar."
               rowsPerSkeleton={perPage}
-              renderRow={(item) => {
+              renderRow={(item, index) => {
                 const d = new Date(item.date);
                 const date = d.toLocaleDateString("es-AR");
                 const time = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
                 const tone = STATUS_TONES[item.status] || DEFAULT_TONE;
                 const ownerText = item.owner?.cuit ? item.owner?.razon_social : item.owner?.first_name + " " + item.owner?.last_name;
                 const identityText = item.owner?.cuit ? item.owner?.cuit : item.owner?.dni;
+                // Usar key compuesta para garantizar unicidad (application_id + índice + fecha como fallback)
+                const uniqueKey = `${item.application_id}-${index}-${item.date}`;
                 return (
-                  <tr key={item.application_id} className="transition-colors hover:bg-gray-50">
+                  <tr key={uniqueKey} className="transition-colors hover:bg-gray-50">
                     <td className="p-3 text-center">
                       <div className="text-sm font-mono font-medium sm:text-base">{item.application_id || "-"}</div>
                     </td>

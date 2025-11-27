@@ -127,7 +127,7 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
 
   return (
     <div className="max-w-full">
-      <div className="bg-white rounded-[14px] border border-gray-200 px-8 py-3 mb-4">
+      <div className="bg-white rounded-lg border border-gray-200 px-3 sm:px-8 py-3 mb-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-0.5">
@@ -152,10 +152,10 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
       </div>
 
       {/* List Section - Contenedor separado */}
-      <div className="bg-white rounded-[14px] border border-gray-200 overflow-hidden">
+      <div className="bg-white sm:rounded-[14px] sm:border sm:border-gray-200 overflow-hidden">
         {/* Headers */}
         {!loading && searchHistory.length > 0 && (
-          <div className="px-8 py-2 border-b border-gray-200 hidden sm:block">
+          <div className="px-1 sm:px-8 py-2 border-b border-gray-200 hidden sm:block">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="w-24 min-w-[80px] text-xs font-medium text-gray-500 text-left">CRT/CNI</div>
               <div className="flex-1 min-w-[100px] text-xs font-medium text-gray-500">Vehículo</div>
@@ -167,14 +167,14 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
           </div>
         )}
         {loading ? (
-          <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
+          <div className="flex flex-col items-center justify-center px-1 sm:px-8 py-16 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0040B8] mb-4"></div>
             <p className="text-sm text-gray-500">Cargando legajos...</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
             {searchHistory.length === 0 ? (
-              <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
+              <div className="flex flex-col items-center justify-center px-1 sm:px-8 py-16 text-center">
                 {/* Icono circular con fondo azul claro */}
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4">
                   <img 
@@ -194,72 +194,144 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
                 </p>
               </div>
             ) : (
-              searchHistory.map((item) => {
-                const resultConfig = getResultConfig(item.result);
-                
-                return (
-                  <div
-                    key={item.id}
-                    className="px-8 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => handleItemClick(item)}
-                  >
-                    <div className="flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
-                      {/* CRT/CNI (application id) */}
-                      <div className="w-24 min-w-[80px] text-sm text-gray-900">{item.applicationId}</div>
+              <>
+                {/* Desktop Table View - Hidden on mobile/tablet */}
+                <div className="hidden xl:block">
+                  {searchHistory.map((item) => {
+                    const resultConfig = getResultConfig(item.result);
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        className="px-8 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => handleItemClick(item)}
+                      >
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          {/* CRT/CNI (application id) */}
+                          <div className="w-24 min-w-[80px] text-sm text-gray-900">{item.applicationId}</div>
 
-                      {/* Vehículo */}
-                      <div className="flex-1 min-w-[100px]">
-                        <p className="font-bold text-gray-900 text-sm mb-0.5">
-                          {item.vehiclePlate}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {item.vehicleModel}
-                        </p>
-                      </div>
+                          {/* Vehículo */}
+                          <div className="flex-1 min-w-[100px]">
+                            <p className="font-bold text-gray-900 text-sm mb-0.5">
+                              {item.vehiclePlate}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {item.vehicleModel}
+                            </p>
+                          </div>
 
-                      {/* Titular */}
-                      <div className="flex-1 min-w-[100px]">
-                        <p className="text-sm font-medium text-gray-900 mb-0.5">
-                          {item.userName}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {item.userIdentity || "-"}
-                        </p>
-                      </div>
+                          {/* Titular */}
+                          <div className="flex-1 min-w-[100px]">
+                            <p className="text-sm font-medium text-gray-900 mb-0.5">
+                              {item.userName}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {item.userIdentity || "-"}
+                            </p>
+                          </div>
 
-                      {/* Fecha */}
-                      <div className="flex-1 min-w-[120px]">
-                        <p className="text-sm text-gray-900">
-                          {item.searchDate}
-                        </p>
-                      </div>
+                          {/* Fecha */}
+                          <div className="flex-1 min-w-[120px]">
+                            <p className="text-sm text-gray-900">
+                              {item.searchDate}
+                            </p>
+                          </div>
 
-                      {/* Resultado */}
-                      <div className="w-40 min-w-[120px] flex justify-center">
-                        <span className={clsx(
-                          "inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
-                          resultConfig.bg,
-                          resultConfig.text
-                        )}>
-                          {item.result || "-"}
-                        </span>
-                      </div>
+                          {/* Resultado */}
+                          <div className="w-40 min-w-[120px] flex justify-center">
+                            <span className={clsx(
+                              "inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
+                              resultConfig.bg,
+                              resultConfig.text
+                            )}>
+                              {item.result || "-"}
+                            </span>
+                          </div>
 
-                      {/* Action Icon */}
-                      <div className="flex items-center justify-end min-w-[24px]">
-                        <ChevronRight size={18} className="text-[#0040B8]" />
+                          {/* Action Icon */}
+                          <div className="flex items-center justify-end min-w-[24px]">
+                            <ChevronRight size={18} className="text-[#0040B8]" />
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    );
+                  })}
+                </div>
+
+                {/* Mobile/Tablet Card View - Hidden on desktop */}
+                <div className="xl:hidden">
+                  <div className="px-1 sm:px-2 md:px-4 py-2 sm:py-3 space-y-3 sm:space-y-4">
+                    {searchHistory.map((item) => {
+                      const resultConfig = getResultConfig(item.result);
+                      
+                      return (
+                        <div
+                          key={item.id}
+                          className="border border-gray-200 rounded-lg p-3 sm:p-4 space-y-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                          onClick={() => handleItemClick(item)}
+                        >
+                          {/* Header: ID y Dominio */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs sm:text-sm text-gray-500 font-medium">CRT:</span>
+                                <span className="text-sm sm:text-base font-semibold text-gray-900">{item.applicationId}</span>
+                              </div>
+                              <p className="font-bold text-base sm:text-lg text-gray-900 mb-0.5">
+                                {item.vehiclePlate}
+                              </p>
+                              <p className="text-xs sm:text-sm text-gray-500 truncate">
+                                {item.vehicleModel}
+                              </p>
+                            </div>
+                            <ChevronRight size={18} className="text-[#0040B8] flex-shrink-0" />
+                          </div>
+
+                          {/* Info Section */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                            <div>
+                              <span className="text-xs text-gray-500 font-medium block mb-1">Razon Social</span>
+                              <p className="text-sm text-gray-900 font-medium mb-0.5">
+                                {item.userName}
+                              </p>
+                              <p className="text-xs sm:text-sm text-gray-500">
+                                {item.userIdentity || "-"}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-xs text-gray-500 font-medium block mb-1">Fecha</span>
+                              <p className="text-xs sm:text-sm text-gray-900">
+                                {item.searchDate}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Resultado */}
+                          <div className="pt-2 border-t border-gray-100">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500 font-medium">Resultado</span>
+                              <span className={clsx(
+                                "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs sm:text-sm font-medium",
+                                resultConfig.bg,
+                                resultConfig.text
+                              )}>
+                                {item.result || "-"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })
+                </div>
+              </>
             )}
           </div>
         )}
         
         {/* Pagination */}
         {!loading && totalPages > 1 && (
-          <div className="px-8 py-4 border-t border-gray-200 flex items-center justify-between">
+          <div className="px-1 sm:px-8 py-4 border-t border-gray-200 flex items-center justify-between">
             <div className="text-sm text-gray-700">
               Página {page} de {totalPages}
             </div>

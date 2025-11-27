@@ -219,29 +219,29 @@ export default function InspectionValidityPage() {
 
   return (
     <div className="min-w-full">
-      <article className="flex items-center justify-between text-lg mb-6 px-4">
+      <article className="flex items-center justify-between text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6 px-1 sm:px-2 md:px-4">
         <div className="flex items-center gap-1">
-          <span>Inicio</span>
-          <ChevronRight size={20} />
+          <span className="text-gray-600">Inicio</span>
+          <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
           <span className="text-[#0040B8]">Validez CRT</span>
         </div>
       </article>
 
       {!selectedProvince && (
-        <section>
-          <div className="flex flex-col items-center gap-2 mb-6">
-            <h2 className="text-3xl text-[#0040B8]">Provincias</h2>
-            <p className="text-gray-500 text-center">Elegí una provincia para configurar la validez por jurisdicción.</p>
+        <section className="px-1 sm:px-2">
+          <div className="flex flex-col items-center gap-1 sm:gap-2 mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl text-[#0040B8] text-center">Provincias</h2>
+            <p className="text-xs sm:text-sm text-gray-500 text-center px-2 sm:px-4">Elegí una provincia para configurar la validez por jurisdicción.</p>
           </div>
-          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
             {provinces.map((p) => (
               <button
                 key={p.key}
-                className="text-left rounded-[4px] border border-slate-200 bg-white hover:bg-gray-50 px-4 py-3 shadow-sm"
+                className="text-left rounded-[4px] border border-slate-200 bg-white hover:bg-gray-50 px-3 sm:px-4 py-2 sm:py-3 shadow-sm"
                 onClick={() => setSelectedProvince(p)}
               >
-                <p className="text-base font-medium">{p.label}</p>
-                <p className="text-xs text-slate-500 mt-1">Configurar localidades</p>
+                <p className="text-sm sm:text-base font-medium">{p.label}</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1">Configurar localidades</p>
               </button>
             ))}
           </div>
@@ -249,131 +249,136 @@ export default function InspectionValidityPage() {
       )}
 
       {selectedProvince && !selectedLocalidad && (
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
+        <section className="px-1 sm:px-2">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               <button
-                className="text-sm text-[#0040B8] hover:underline"
+                className="text-xs sm:text-sm text-[#0040B8] hover:underline"
                 onClick={() => setSelectedProvince(null)}
               >
                 Volver a provincias
               </button>
-              <span className="text-slate-400">/</span>
-              <span className="text-sm text-slate-700">{selectedProvince.label}</span>
+              <span className="text-slate-400 text-xs sm:text-sm">/</span>
+              <span className="text-xs sm:text-sm text-slate-700 truncate">{selectedProvince.label}</span>
             </div>
           </div>
 
-      <div className="rounded-[14px] border border-slate-200 bg-white p-4">
+      <div className="rounded-lg sm:rounded-[14px] border border-slate-200 bg-white p-3 sm:p-4">
         {/* Controles superiores */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-3">
+        <div className="flex flex-col gap-2 sm:gap-3 md:flex-row md:items-center md:justify-between mb-2 sm:mb-3">
           <div className="flex items-center gap-2 w-full md:w-[460px]">
             <div className="relative flex-1">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={14} className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Buscar localidad..."
                 value={locSearch}
                 onChange={(e) => setLocSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-7 sm:pl-8 pr-2 sm:pr-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                 aria-label="Buscar localidad"
               />
             </div>
             <span className="hidden md:inline px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700">{selectedLocCount} seleccionadas de {totalCount}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="md:hidden px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700">{selectedLocCount} de {totalCount}</span>
             <button
-              className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-[4px] border ${allSelected ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-blue-50 border-blue-200 text-blue-700'} hover:bg-blue-100 disabled:opacity-60`}
+              className={`inline-flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-[4px] border ${allSelected ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-blue-50 border-blue-200 text-blue-700'} hover:bg-blue-100 disabled:opacity-60`}
               onClick={() => toggleSelectAllLocalidadesAll(!allSelected)}
               disabled={totalCount === 0}
               aria-label={allSelected ? 'Desmarcar todas las localidades' : 'Marcar todas las localidades'}
               title={allSelected ? 'Desmarcar todas las localidades' : 'Marcar todas las localidades'}
             >
-              <CheckSquare size={14} />
-              {allSelected ? `Desmarcar todas (${totalCount})` : `Marcar todas (${totalCount})`}
+              <CheckSquare size={12} className="sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">{allSelected ? `Desmarcar todas (${totalCount})` : `Marcar todas (${totalCount})`}</span>
+              <span className="sm:hidden">{allSelected ? `Desmarcar` : `Marcar todas`}</span>
             </button>
             <button
-              className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-[4px] border hover:bg-slate-50 disabled:opacity-60"
+              className="inline-flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-[4px] border hover:bg-slate-50 disabled:opacity-60"
               onClick={clearAllSelections}
               disabled={selectedLocCount === 0}
               aria-label="Quitar todas las selecciones"
               title="Quitar todas las selecciones"
             >
-              <XCircle size={14} />
-              Quitar todas
+              <XCircle size={12} className="sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">Quitar todas</span>
+              <span className="sm:hidden">Quitar</span>
             </button>
           </div>
         </div>
 
         {/* Barra compacta de edición por lote */}
-        <div className="mb-3 grid grid-cols-1 md:grid-cols-[minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_auto] gap-3 items-end">
-          <div>
-            <label className="block text-xs text-slate-600 mb-1">Tipo de uso</label>
-            <select
-              value={bulkLocUsage}
-              onChange={(e) => setBulkLocUsage(e.target.value as any)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="ALL">Todos</option>
-              {USAGE_TYPES.map(u => (
-                <option key={u.value} value={u.value}>{u.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-slate-600 mb-1">Hasta 36 meses</label>
-            <input
-              type="number"
-              min={0}
-              max={120}
-              value={bulkLoc.up_to_36 as any}
-              onChange={(e) => setBulkLoc(b => ({ ...b, up_to_36: e.target.value === "" ? "" : Number(e.target.value) }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-slate-600 mb-1">De 3 a 7 años</label>
-            <input
-              type="number"
-              min={0}
-              max={120}
-              value={bulkLoc.from_3_to_7 as any}
-              onChange={(e) => setBulkLoc(b => ({ ...b, from_3_to_7: e.target.value === "" ? "" : Number(e.target.value) }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-slate-600 mb-1">Más de 7 años</label>
-            <input
-              type="number"
-              min={0}
-              max={120}
-              value={bulkLoc.over_7 as any}
-              onChange={(e) => setBulkLoc(b => ({ ...b, over_7: e.target.value === "" ? "" : Number(e.target.value) }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex gap-2 md:justify-end">
-            <button
-              onClick={applyAndSaveBulkToSelectedLocalidades}
-              disabled={selectedLocCount === 0 || saving}
-              className="px-4 py-2 rounded-[4px] bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
-            >
-              {saving ? "Guardando..." : `Aplicar y guardar (${selectedLocCount})`}
-            </button>
-            <button
-              onClick={() => setBulkLoc({ up_to_36: "", from_3_to_7: "", over_7: "" })}
-              className="px-3 py-2 rounded-[4px] border"
-            >
-              Limpiar
-            </button>
+        <div className="mb-2 sm:mb-3 space-y-2 sm:space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_auto] gap-2 sm:gap-3 items-end">
+            <div>
+              <label className="block text-[10px] sm:text-xs text-slate-600 mb-1">Tipo de uso</label>
+              <select
+                value={bulkLocUsage}
+                onChange={(e) => setBulkLocUsage(e.target.value as any)}
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+              >
+                <option value="ALL">Todos</option>
+                {USAGE_TYPES.map(u => (
+                  <option key={u.value} value={u.value}>{u.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] sm:text-xs text-slate-600 mb-1">Hasta 36 meses</label>
+              <input
+                type="number"
+                min={0}
+                max={120}
+                value={bulkLoc.up_to_36 as any}
+                onChange={(e) => setBulkLoc(b => ({ ...b, up_to_36: e.target.value === "" ? "" : Number(e.target.value) }))}
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] sm:text-xs text-slate-600 mb-1">De 3 a 7 años</label>
+              <input
+                type="number"
+                min={0}
+                max={120}
+                value={bulkLoc.from_3_to_7 as any}
+                onChange={(e) => setBulkLoc(b => ({ ...b, from_3_to_7: e.target.value === "" ? "" : Number(e.target.value) }))}
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] sm:text-xs text-slate-600 mb-1">Más de 7 años</label>
+              <input
+                type="number"
+                min={0}
+                max={120}
+                value={bulkLoc.over_7 as any}
+                onChange={(e) => setBulkLoc(b => ({ ...b, over_7: e.target.value === "" ? "" : Number(e.target.value) }))}
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 md:justify-end sm:col-span-2 md:col-span-1">
+              <button
+                onClick={applyAndSaveBulkToSelectedLocalidades}
+                disabled={selectedLocCount === 0 || saving}
+                className="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 rounded-[4px] bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 text-xs sm:text-sm"
+              >
+                {saving ? "Guardando..." : `Aplicar y guardar (${selectedLocCount})`}
+              </button>
+              <button
+                onClick={() => setBulkLoc({ up_to_36: "", from_3_to_7: "", over_7: "" })}
+                className="w-full sm:w-auto px-3 py-1.5 sm:py-2 rounded-[4px] border text-xs sm:text-sm"
+              >
+                Limpiar
+              </button>
+            </div>
           </div>
         </div>
         {savedMsg && (
-          <div className="mb-3 text-sm text-green-600">{savedMsg}</div>
+          <div className="mb-2 sm:mb-3 text-xs sm:text-sm text-green-600">{savedMsg}</div>
         )}
 
         {/* Lista de localidades */}
-        <div className="max-h-[60vh] overflow-auto divide-y">
+        <div className="max-h-[50vh] sm:max-h-[60vh] overflow-auto divide-y">
           {filteredLocalidades.map((l) => (
             <LocalidadRow
               key={l.key}
@@ -389,79 +394,79 @@ export default function InspectionValidityPage() {
       )}
 
       {selectedProvince && selectedLocalidad && (
-        <section className="space-y-6">
+        <section className="space-y-4 sm:space-y-5 md:space-y-6 px-1 sm:px-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               <button
-                className="text-sm text-[#0040B8] hover:underline"
+                className="text-xs sm:text-sm text-[#0040B8] hover:underline"
                 onClick={() => setSelectedLocalidad(null)}
               >
                 Volver a localidades
               </button>
-              <span className="text-slate-400">/</span>
+              <span className="text-slate-400 text-xs sm:text-sm">/</span>
               <button
-                className="text-sm text-[#0040B8] hover:underline"
+                className="text-xs sm:text-sm text-[#0040B8] hover:underline"
                 onClick={() => setSelectedProvince(null)}
               >
                 Provincias
               </button>
-              <span className="text-slate-400">/</span>
-              <span className="text-sm text-slate-700">{selectedProvince.label} / {selectedLocalidad.label}</span>
+              <span className="text-slate-400 text-xs sm:text-sm">/</span>
+              <span className="text-xs sm:text-sm text-slate-700 truncate">{selectedProvince.label} / {selectedLocalidad.label}</span>
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-2">
-            <h2 className="text-3xl text-[#0040B8]">Validez por tipo de uso</h2>
-            <p className="text-gray-500 text-center">Definí la cantidad de meses aptos por franja etaria del vehículo.</p>
+          <div className="flex flex-col items-center gap-1 sm:gap-2">
+            <h2 className="text-xl sm:text-2xl md:text-3xl text-[#0040B8] text-center">Validez por tipo de uso</h2>
+            <p className="text-xs sm:text-sm text-gray-500 text-center px-2 sm:px-4">Definí la cantidad de meses aptos por franja etaria del vehículo.</p>
           </div>
 
-          <div className="rounded-[14px] border border-slate-200 p-4 bg-white">
-            <div className="mb-4 flex flex-col gap-3">
-              <p className="text-sm font-medium">Edición por lote</p>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+          <div className="rounded-lg sm:rounded-[14px] border border-slate-200 p-3 sm:p-4 bg-white">
+            <div className="mb-3 sm:mb-4 flex flex-col gap-2 sm:gap-3">
+              <p className="text-xs sm:text-sm font-medium">Edición por lote</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 items-end">
                 <div>
-                  <label className="block text-xs text-slate-600 mb-1">Hasta 36 meses</label>
+                  <label className="block text-[10px] sm:text-xs text-slate-600 mb-1">Hasta 36 meses</label>
                   <input
                     type="number"
                     min={0}
                     max={120}
                     value={bulk.up_to_36 as any}
                     onChange={(e) => setBulk(b => ({ ...b, up_to_36: e.target.value === "" ? "" : Number(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-600 mb-1">De 3 a 7 años</label>
+                  <label className="block text-[10px] sm:text-xs text-slate-600 mb-1">De 3 a 7 años</label>
                   <input
                     type="number"
                     min={0}
                     max={120}
                     value={bulk.from_3_to_7 as any}
                     onChange={(e) => setBulk(b => ({ ...b, from_3_to_7: e.target.value === "" ? "" : Number(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-600 mb-1">Más de 7 años</label>
+                  <label className="block text-[10px] sm:text-xs text-slate-600 mb-1">Más de 7 años</label>
                   <input
                     type="number"
                     min={0}
                     max={120}
                     value={bulk.over_7 as any}
                     onChange={(e) => setBulk(b => ({ ...b, over_7: e.target.value === "" ? "" : Number(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 sm:col-span-2 md:col-span-1">
                   <button
                     onClick={applyBulkToAll}
-                    className="px-4 py-2 rounded-[4px] bg-blue-600 text-white hover:bg-blue-700"
+                    className="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 rounded-[4px] bg-blue-600 text-white hover:bg-blue-700 text-xs sm:text-sm"
                   >
                     Aplicar a todos
                   </button>
                   <button
                     onClick={() => setBulk({ up_to_36: "", from_3_to_7: "", over_7: "" })}
-                    className="px-3 py-2 rounded-[4px] border"
+                    className="w-full sm:w-auto px-3 py-1.5 sm:py-2 rounded-[4px] border text-xs sm:text-sm"
                   >
                     Limpiar
                   </button>
@@ -470,69 +475,121 @@ export default function InspectionValidityPage() {
             </div>
 
             <div className="overflow-auto">
-              <table className="min-w-full border border-slate-200 rounded-[4px] overflow-hidden">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="text-left text-sm font-medium text-slate-700 px-3 py-2 border-b">Tipo de uso</th>
-                    <th className="text-left text-sm font-medium text-slate-700 px-3 py-2 border-b">Hasta 36 meses</th>
-                    <th className="text-left text-sm font-medium text-slate-700 px-3 py-2 border-b">De 3 a 7 años</th>
-                    <th className="text-left text-sm font-medium text-slate-700 px-3 py-2 border-b">Más de 7 años</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {USAGE_TYPES.map(({ value, label }) => {
-                    const row = validity[value] ?? { up_to_36: "", from_3_to_7: "", over_7: "" };
-                    return (
-                      <tr key={value} className="odd:bg-white even:bg-slate-50/50">
-                        <td className="px-3 py-2 border-b align-middle">
-                          <span className="text-sm">{label}</span>
-                        </td>
-                        <td className="px-3 py-2 border-b">
+              {/* Tabla desktop */}
+              <div className="hidden md:block">
+                <table className="min-w-full border border-slate-200 rounded-[4px] overflow-hidden">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="text-left text-xs sm:text-sm font-medium text-slate-700 px-2 sm:px-3 py-1.5 sm:py-2 border-b">Tipo de uso</th>
+                      <th className="text-left text-xs sm:text-sm font-medium text-slate-700 px-2 sm:px-3 py-1.5 sm:py-2 border-b">Hasta 36 meses</th>
+                      <th className="text-left text-xs sm:text-sm font-medium text-slate-700 px-2 sm:px-3 py-1.5 sm:py-2 border-b">De 3 a 7 años</th>
+                      <th className="text-left text-xs sm:text-sm font-medium text-slate-700 px-2 sm:px-3 py-1.5 sm:py-2 border-b">Más de 7 años</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {USAGE_TYPES.map(({ value, label }) => {
+                      const row = validity[value] ?? { up_to_36: "", from_3_to_7: "", over_7: "" };
+                      return (
+                        <tr key={value} className="odd:bg-white even:bg-slate-50/50">
+                          <td className="px-2 sm:px-3 py-1.5 sm:py-2 border-b align-middle">
+                            <span className="text-xs sm:text-sm">{label}</span>
+                          </td>
+                          <td className="px-2 sm:px-3 py-1.5 sm:py-2 border-b">
+                            <input
+                              type="number"
+                              min={0}
+                              max={120}
+                              value={row.up_to_36 as any}
+                              onChange={(e) => handleChange(value, "up_to_36", e.target.value)}
+                              className="w-24 sm:w-28 px-2 py-1 sm:py-1.5 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+                            />
+                          </td>
+                          <td className="px-2 sm:px-3 py-1.5 sm:py-2 border-b">
+                            <input
+                              type="number"
+                              min={0}
+                              max={120}
+                              value={row.from_3_to_7 as any}
+                              onChange={(e) => handleChange(value, "from_3_to_7", e.target.value)}
+                              className="w-24 sm:w-28 px-2 py-1 sm:py-1.5 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+                            />
+                          </td>
+                          <td className="px-2 sm:px-3 py-1.5 sm:py-2 border-b">
+                            <input
+                              type="number"
+                              min={0}
+                              max={120}
+                              value={row.over_7 as any}
+                              onChange={(e) => handleChange(value, "over_7", e.target.value)}
+                              className="w-24 sm:w-28 px-2 py-1 sm:py-1.5 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Cards mobile/tablet */}
+              <div className="md:hidden space-y-3">
+                {USAGE_TYPES.map(({ value, label }) => {
+                  const row = validity[value] ?? { up_to_36: "", from_3_to_7: "", over_7: "" };
+                  return (
+                    <div key={value} className="border border-slate-200 rounded-lg p-3 space-y-3">
+                      <div className="font-medium text-xs sm:text-sm text-slate-700 pb-2 border-b border-slate-200">
+                        {label}
+                      </div>
+                      <div className="grid grid-cols-1 gap-2">
+                        <div>
+                          <label className="block text-[10px] sm:text-xs text-slate-600 mb-1">Hasta 36 meses</label>
                           <input
                             type="number"
                             min={0}
                             max={120}
                             value={row.up_to_36 as any}
                             onChange={(e) => handleChange(value, "up_to_36", e.target.value)}
-                            className="w-28 px-2 py-1.5 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                           />
-                        </td>
-                        <td className="px-3 py-2 border-b">
+                        </div>
+                        <div>
+                          <label className="block text-[10px] sm:text-xs text-slate-600 mb-1">De 3 a 7 años</label>
                           <input
                             type="number"
                             min={0}
                             max={120}
                             value={row.from_3_to_7 as any}
                             onChange={(e) => handleChange(value, "from_3_to_7", e.target.value)}
-                            className="w-28 px-2 py-1.5 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                           />
-                        </td>
-                        <td className="px-3 py-2 border-b">
+                        </div>
+                        <div>
+                          <label className="block text-[10px] sm:text-xs text-slate-600 mb-1">Más de 7 años</label>
                           <input
                             type="number"
                             min={0}
                             max={120}
                             value={row.over_7 as any}
                             onChange={(e) => handleChange(value, "over_7", e.target.value)}
-                            className="w-28 px-2 py-1.5 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                           />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="mt-4 flex items-center gap-3">
+            <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <button
                 disabled={!canSave || saving}
                 onClick={handleSave}
-                className="px-5 py-2 rounded-[4px] bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                className="w-full sm:w-auto px-4 sm:px-5 py-2 rounded-[4px] bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 text-xs sm:text-sm"
               >
                 {saving ? "Guardando..." : "Guardar"}
               </button>
-              {savedMsg && <span className="text-sm text-green-600">{savedMsg}</span>}
+              {savedMsg && <span className="text-xs sm:text-sm text-green-600">{savedMsg}</span>}
             </div>
           </div>
         </section>
@@ -550,23 +607,25 @@ type LocalidadRowProps = {
 
 const LocalidadRow = React.memo(function LocalidadRow({ option, selected, onToggle, onEdit }: LocalidadRowProps) {
   return (
-    <div className="flex items-center justify-between gap-3 px-1 py-2">
-      <label className="flex items-center gap-3 min-w-0">
+    <div className="flex items-center justify-between gap-2 sm:gap-3 px-1 py-1.5 sm:py-2">
+      <label className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <input
           type="checkbox"
           checked={selected}
           onChange={(e) => onToggle(option.key, e.target.checked)}
+          className="w-4 h-4 sm:w-5 sm:h-5"
         />
-        <span className="text-sm truncate">{option.label}</span>
+        <span className="text-xs sm:text-sm truncate">{option.label}</span>
       </label>
       <button
-        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-[4px] border border-slate-300 hover:bg-slate-50"
+        className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs md:text-sm rounded-[4px] border border-slate-300 hover:bg-slate-50 flex-shrink-0"
         onClick={() => onEdit(option)}
         aria-label={`Editar esta localidad: ${option.label}`}
         title={`Editar esta localidad`}
       >
-        <Pencil size={14} className="text-slate-600" />
-        <span>Editar esta localidad</span>
+        <Pencil size={12} className="sm:w-3.5 sm:h-3.5 text-slate-600" />
+        <span className="hidden sm:inline">Editar esta localidad</span>
+        <span className="sm:hidden">Editar</span>
       </button>
     </div>
   );

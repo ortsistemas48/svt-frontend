@@ -40,6 +40,7 @@ export default function AdminTicketChatPage() {
 
   const [resolving, setResolving] = useState(false);
   const [resolveError, setResolveError] = useState<string | null>(null);
+  const [showChat, setShowChat] = useState(false); // Para mobile/tablet: controla si mostrar lista o chat
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -81,8 +82,18 @@ export default function AdminTicketChatPage() {
 
   // Load current ticket + messages
   useEffect(() => {
-    if (!ticketId || Number.isNaN(ticketId)) return;
+    if (!ticketId || Number.isNaN(ticketId)) {
+      // Si no hay ticketId válido en mobile, mostrar la lista
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+        setShowChat(false);
+      }
+      return;
+    }
     setLoading(true);
+    // En mobile/tablet, mostrar el chat cuando hay un ticketId en la URL
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setShowChat(true);
+    }
     (async () => {
       try {
         const [ticketRes, msgsRes] = await Promise.all([
@@ -206,28 +217,29 @@ export default function AdminTicketChatPage() {
   const selectedId = ticketId;
 
   return (
-    <div className="py-6 max-w-7xl mx-auto">
-      <div className="grid grid-cols-[320px_1fr] gap-4">
+    <div className="py-3 sm:py-4 md:py-6 max-w-7xl mx-auto px-1 sm:px-2 md:px-4 lg:px-6">
+      {/* Desktop: side-by-side layout */}
+      <div className="hidden lg:grid lg:grid-cols-[320px_1fr] gap-4">
         {/* Left: tickets list */}
-        <aside className="bg-white rounded-[14px] border border-gray-200 h-[72vh] flex flex-col">
-          <div className="px-4 py-3">
+        <aside className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 h-[72vh] flex flex-col">
+          <div className="px-3 sm:px-4 py-2 sm:py-3">
             <button
               onClick={() => router.push(`/admin-dashboard/support`)}
-              className="w-full inline-flex items-center gap-2 justify-start text-sm text-[#0040B8] font-medium border border-[#0040B8] rounded-[4px] px-4 py-2 hover:bg-[#0040B8]/5 focus:outline-none focus:ring-2 focus:ring-[#0040B8]/30"
+              className="w-full inline-flex items-center gap-2 justify-start text-xs sm:text-sm text-[#0040B8] font-medium border border-[#0040B8] rounded-[4px] px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#0040B8]/5 focus:outline-none focus:ring-2 focus:ring-[#0040B8]/30"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               Volver a tickets
             </button>
           </div>
 
-          <div className="overflow-auto p-3 space-y-2">
+          <div className="overflow-auto p-2 sm:p-3 space-y-2">
             {ticketsLoading &&
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={`s-${i}`} className="w-full text-left rounded-[14px] border border-gray-200 px-4 py-3 flex items-center gap-3 bg-white">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+                <div key={`s-${i}`} className="w-full text-left rounded-lg sm:rounded-[14px] border border-gray-200 px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 bg-white">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-200 animate-pulse" />
                   <div className="flex-1 min-w-0">
-                    <div className="h-3 w-20 bg-gray-200 rounded animate-pulse mb-2" />
-                    <div className="h-4 w-48 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-3 w-16 sm:w-20 bg-gray-200 rounded animate-pulse mb-1.5 sm:mb-2" />
+                    <div className="h-3 sm:h-4 w-32 sm:w-48 bg-gray-200 rounded animate-pulse" />
                   </div>
                 </div>
               ))}
@@ -244,7 +256,7 @@ export default function AdminTicketChatPage() {
                     setCurrentTicket(null);
                     router.push(`/admin-dashboard/support/${t.id}`);
                   }}
-                  className={`w-full text-left rounded-[14px] border px-4 py-3 flex items-center gap-3 transition-colors ${
+                  className={`w-full text-left rounded-lg sm:rounded-[14px] border px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 transition-colors ${
                     isActive
                       ? "border-[#0040B8] bg-[#0040B8]/5"
                       : isResolved
@@ -252,13 +264,13 @@ export default function AdminTicketChatPage() {
                         : "border-gray-200 bg-white hover:bg-gray-50"
                   }`}
                 >
-                  <img src="/images/icons/msgIcon.svg" alt="" className="w-8 h-8" />
-                  <div className="min-w-0">
-                    <div className="text-xs text-gray-500">Asunto:</div>
-                    <div className="text-sm font-medium text-gray-900 truncate">{t.subject}</div>
+                  <img src="/images/icons/msgIcon.svg" alt="" className="w-7 h-7 sm:w-8 sm:h-8" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] sm:text-xs text-gray-500">Asunto:</div>
+                    <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{t.subject}</div>
                   </div>
                   {isResolved && (
-                    <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                    <span className="ml-auto inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200 flex-shrink-0">
                       Resuelto
                     </span>
                   )}
@@ -269,35 +281,35 @@ export default function AdminTicketChatPage() {
         </aside>
 
         {/* Right: chat */}
-        <section className="bg-white rounded-[14px] border border-gray-200 h-[72vh] flex flex-col">
+        <section className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 h-[72vh] flex flex-col">
           {/* Header */}
-          <div className="px-5 py-4 border-b flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                  <span className="text-sm font-semibold">U</span>
+          <div className="px-3 sm:px-4 md:px-5 py-2 sm:py-3 md:py-4 border-b flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="relative flex-shrink-0">
+                <div className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                  <span className="text-xs sm:text-sm font-semibold">U</span>
                 </div>
               </div>
-              <div>
-                <div className="text-sm font-semibold text-gray-900">{currentTicket?.full_name || "Cargando..."}</div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{currentTicket?.full_name || "Cargando..."}</div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
               <button
                 type="button"
                 onClick={openInfoModal}
-                className="inline-flex items-center gap-2 rounded-[4px] border border-gray-300 text-gray-700 text-sm px-3 py-2 hover:bg-gray-50"
+                className="inline-flex items-center gap-1 sm:gap-2 rounded-[4px] border border-gray-300 text-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-gray-50"
                 title="Ver información de la persona y taller"
               >
-                <Info className="w-4 h-4" />
-                Info
+                <Info className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Info</span>
               </button>
               {(currentTicket?.status || "").toLowerCase() !== "resuelto" && (
                 <button
                   type="button"
                   onClick={markAsResolved}
                   disabled={resolving}
-                  className="inline-flex items-center gap-2 rounded-[4px] border border-[#0040B8] text-[#0040B8] text-sm px-3 py-2 hover:bg-[#0040B8]/5 disabled:opacity-60"
+                  className="inline-flex items-center gap-1 sm:gap-2 rounded-[4px] border border-[#0040B8] text-[#0040B8] text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-[#0040B8]/5 disabled:opacity-60"
                   title="Marcar ticket como resuelto"
                 >
                   {resolving ? "Marcando..." : "Resuelto"}
@@ -307,11 +319,11 @@ export default function AdminTicketChatPage() {
           </div>
 
           {resolveError && (
-            <div className="px-5 py-2 text-xs text-rose-700">{resolveError}</div>
+            <div className="px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 text-[10px] sm:text-xs text-rose-700">{resolveError}</div>
           )}
 
           {/* Messages */}
-          <div className="flex-1 overflow-auto px-5 py-4 space-y-3">
+          <div className="flex-1 overflow-auto px-2 sm:px-3 md:px-5 py-2 sm:py-3 md:py-4 space-y-2 sm:space-y-3">
             {loading && (
               <div className="space-y-3">
                 {[1, 2, 3, 4].map((i) => (
@@ -339,7 +351,7 @@ export default function AdminTicketChatPage() {
                     const mine = (m.sender_role || "") === "admin";
                     return (
                       <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm ${mine ? "bg-[#0040B8] text-white" : "bg-gray-100 text-gray-900"}`}>
+                        <div className={`max-w-[85%] sm:max-w-[70%] rounded-xl sm:rounded-2xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm ${mine ? "bg-[#0040B8] text-white" : "bg-gray-100 text-gray-900"}`}>
                           {m.content}
                         </div>
                       </div>
@@ -352,8 +364,8 @@ export default function AdminTicketChatPage() {
           </div>
 
           {/* Composer */}
-          <div className="px-4 py-3 border-t">
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-[14px] px-3 py-2">
+          <div className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 border-t">
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-[14px] px-2 sm:px-3 py-1.5 sm:py-2">
               <input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -363,32 +375,222 @@ export default function AdminTicketChatPage() {
                     handleSend();
                   }
                 }}
-                placeholder="Escribí tu mensaje para el usuario..."
-                className="flex-1 bg-transparent outline-none text-sm py-1"
+                placeholder="Escribí tu mensaje..."
+                className="flex-1 bg-transparent outline-none text-xs sm:text-sm py-0.5 sm:py-1"
               />
               <button
                 onClick={handleSend}
                 disabled={sending || !text.trim()}
-                className="p-2 rounded-full text-white bg-[#0040B8] hover:bg-[#0035a0] disabled:opacity-60"
+                className="p-1.5 sm:p-2 rounded-full text-white bg-[#0040B8] hover:bg-[#0035a0] disabled:opacity-60 flex-shrink-0"
                 title="Enviar"
                 type="button"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             </div>
           </div>
         </section>
       </div>
 
+      {/* Mobile/Tablet: Lista primero, luego chat */}
+      <div className="lg:hidden">
+        {!showChat ? (
+          /* Lista de tickets - Mobile/Tablet */
+          <aside className="bg-white rounded-lg border border-gray-200 min-h-[calc(100vh-8rem)] sm:min-h-[calc(100vh-10rem)] flex flex-col">
+            <div className="px-3 sm:px-4 py-2 sm:py-3 border-b">
+              <button
+                onClick={() => router.push(`/admin-dashboard/support`)}
+                className="w-full inline-flex items-center gap-2 justify-start text-xs sm:text-sm text-[#0040B8] font-medium border border-[#0040B8] rounded-[4px] px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#0040B8]/5"
+              >
+                <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+                Volver a tickets
+              </button>
+            </div>
+
+            <div className="overflow-auto p-2 sm:p-3 space-y-2">
+              {ticketsLoading &&
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={`s-${i}`} className="w-full text-left rounded-lg border border-gray-200 px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 bg-white">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-200 animate-pulse" />
+                    <div className="flex-1 min-w-0">
+                      <div className="h-3 w-16 sm:w-20 bg-gray-200 rounded animate-pulse mb-1.5 sm:mb-2" />
+                      <div className="h-3 sm:h-4 w-32 sm:w-48 bg-gray-200 rounded animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+
+              {!ticketsLoading && tickets.map((t) => {
+                const isActive = t.id === selectedId;
+                const isResolved = (t.status || "").toLowerCase() === "resuelto";
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setLoading(true);
+                      setMessages([]);
+                      setCurrentTicket(null);
+                      router.push(`/admin-dashboard/support/${t.id}`);
+                      setShowChat(true);
+                    }}
+                    className={`w-full text-left rounded-lg border px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 transition-colors ${
+                      isActive
+                        ? "border-[#0040B8] bg-[#0040B8]/5"
+                        : isResolved
+                          ? "border-emerald-500 bg-emerald-50"
+                          : "border-gray-200 bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <img src="/images/icons/msgIcon.svg" alt="" className="w-7 h-7 sm:w-8 sm:h-8" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[10px] sm:text-xs text-gray-500">Asunto:</div>
+                      <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{t.subject}</div>
+                    </div>
+                    {isResolved && (
+                      <span className="ml-auto inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200 flex-shrink-0">
+                        Resuelto
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+        ) : (
+          /* Chat - Mobile/Tablet */
+          <section className="bg-white rounded-lg border border-gray-200 min-h-[calc(100vh-8rem)] sm:min-h-[calc(100vh-10rem)] flex flex-col">
+            {/* Header con botón volver */}
+            <div className="px-3 sm:px-4 py-2 sm:py-3 border-b flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setShowChat(false);
+                  setCurrentTicket(null);
+                  setMessages([]);
+                  router.push(`/admin-dashboard/support`);
+                }}
+                className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-[#0040B8] font-medium hover:underline"
+              >
+                <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Volver a tickets</span>
+                <span className="sm:hidden">Volver</span>
+              </button>
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={openInfoModal}
+                  className="inline-flex items-center gap-1 sm:gap-2 rounded-[4px] border border-gray-300 text-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-gray-50"
+                  title="Ver información de la persona y taller"
+                >
+                  <Info className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Info</span>
+                </button>
+                {(currentTicket?.status || "").toLowerCase() !== "resuelto" && (
+                  <button
+                    type="button"
+                    onClick={markAsResolved}
+                    disabled={resolving}
+                    className="inline-flex items-center gap-1 sm:gap-2 rounded-[4px] border border-[#0040B8] text-[#0040B8] text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-[#0040B8]/5 disabled:opacity-60"
+                    title="Marcar ticket como resuelto"
+                  >
+                    {resolving ? "Marcando..." : "Resuelto"}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Nombre del usuario */}
+            <div className="px-3 sm:px-4 py-2 border-b flex items-center gap-2">
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 flex-shrink-0">
+                <span className="text-xs sm:text-sm font-semibold">U</span>
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{currentTicket?.full_name || "Cargando..."}</div>
+              </div>
+            </div>
+
+            {resolveError && (
+              <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs text-rose-700">{resolveError}</div>
+            )}
+
+            {/* Messages */}
+            <div className="flex-1 overflow-auto px-2 sm:px-3 py-2 sm:py-3 space-y-2 sm:space-y-3">
+              {loading && (
+                <div className="space-y-2 sm:space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[85%] sm:max-w-[70%] rounded-xl sm:rounded-2xl p-2 sm:p-3 ${i % 2 === 0 ? "bg-[#0040B8]/20" : "bg-gray-200/60"}`}>
+                        <div className="w-32 sm:w-56 h-3 sm:h-4 bg-white/40 animate-pulse rounded mb-1.5 sm:mb-2" />
+                        <div className="w-24 sm:w-40 h-3 sm:h-4 bg-white/30 animate-pulse rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {!loading && (
+                <>
+                  {(() => {
+                    const desc = (currentTicket?.description || "").trim();
+                    const hasInitial = Boolean(desc) && messages.some((m) => (m.content || "").trim() === desc);
+                    const initial: TicketMessage | null =
+                      currentTicket && desc && !hasInitial
+                        ? { id: -1, ticket_id: currentTicket.id, sender_user_id: String(currentTicket.created_by_user_id || ""), sender_role: "user", content: desc, created_at: currentTicket.created_at || undefined }
+                        : null;
+                    const toRender = initial ? [initial, ...messages] : messages;
+
+                    return toRender.map((m) => {
+                      const mine = (m.sender_role || "") === "admin";
+                      return (
+                        <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                          <div className={`max-w-[85%] sm:max-w-[70%] rounded-xl sm:rounded-2xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm ${mine ? "bg-[#0040B8] text-white" : "bg-gray-100 text-gray-900"}`}>
+                            {m.content}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </>
+              )}
+              <div ref={bottomRef} />
+            </div>
+
+            {/* Composer */}
+            <div className="px-2 sm:px-3 py-2 sm:py-3 border-t">
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-[14px] px-2 sm:px-3 py-1.5 sm:py-2">
+                <input
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Escribí tu mensaje..."
+                  className="flex-1 bg-transparent outline-none text-xs sm:text-sm py-0.5 sm:py-1"
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={sending || !text.trim()}
+                  className="p-1.5 sm:p-2 rounded-full text-white bg-[#0040B8] hover:bg-[#0035a0] disabled:opacity-60 flex-shrink-0"
+                  title="Enviar"
+                  type="button"
+                >
+                  <Send className="w-3 h-3 sm:w-4 sm:h-4" />
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
+
       {/* Info Modal */}
       {infoOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setInfoOpen(false)} />
-          <div className="relative bg-white w-[92%] max-w-2xl rounded-[14px] shadow-xl border border-gray-200">
-            <div className="flex items-center justify-between px-5 py-4 border-b">
-              <h3 className="text-base font-semibold">Información del usuario y del taller</h3>
+          <div className="relative bg-white w-full max-w-2xl rounded-lg sm:rounded-[14px] shadow-xl border border-gray-200 max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-3 sm:px-4 md:px-5 py-2 sm:py-3 md:py-4 border-b">
+              <h3 className="text-sm sm:text-base font-semibold">Información del usuario y del taller</h3>
               <button
-                className="p-2 rounded hover:bg-gray-100"
+                className="p-1.5 sm:p-2 rounded hover:bg-gray-100"
                 onClick={() => setInfoOpen(false)}
                 aria-label="Cerrar"
                 title="Cerrar"
@@ -396,58 +598,58 @@ export default function AdminTicketChatPage() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="px-5 py-4 max-h-[70vh] overflow-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border border-gray-200 rounded-[14px]">
-                  <div className="px-4 py-3 border-b">
-                    <div className="text-sm font-semibold text-gray-900">Persona</div>
+            <div className="px-3 sm:px-4 md:px-5 py-3 sm:py-4 overflow-auto flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                <div className="border border-gray-200 rounded-lg sm:rounded-[14px]">
+                  <div className="px-3 sm:px-4 py-2 sm:py-3 border-b">
+                    <div className="text-xs sm:text-sm font-semibold text-gray-900">Persona</div>
                   </div>
                   <div className="divide-y">
-                    <div className="flex items-center justify-between px-4 py-2 text-sm">
+                    <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
                       <span className="text-gray-500">Nombre</span>
-                      <span className="text-gray-900">{currentTicket?.full_name || "-"}</span>
+                      <span className="text-gray-900 text-right break-words">{currentTicket?.full_name || "-"}</span>
                     </div>
-                    <div className="flex items-center justify-between px-4 py-2 text-sm">
+                    <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
                       <span className="text-gray-500">Teléfono</span>
                       <span className="text-gray-900">{currentTicket?.phone || "-"}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="border border-gray-200 rounded-[14px]">
-                  <div className="px-4 py-3 border-b flex items-center justify-between">
-                    <div className="text-sm font-semibold text-gray-900">Taller</div>
-                    {loadingInfo && <div className="text-xs text-gray-500">Cargando...</div>}
+                <div className="border border-gray-200 rounded-lg sm:rounded-[14px]">
+                  <div className="px-3 sm:px-4 py-2 sm:py-3 border-b flex items-center justify-between">
+                    <div className="text-xs sm:text-sm font-semibold text-gray-900">Taller</div>
+                    {loadingInfo && <div className="text-[10px] sm:text-xs text-gray-500">Cargando...</div>}
                   </div>
                   {infoError ? (
-                    <div className="px-4 py-3 text-sm text-rose-700">{infoError}</div>
+                    <div className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-rose-700">{infoError}</div>
                   ) : (
                     <div className="divide-y">
-                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                      <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
                         <span className="text-gray-500">Nombre</span>
-                        <span className="text-gray-900">{workshopDetail?.name || "-"}</span>
+                        <span className="text-gray-900 text-right break-words">{workshopDetail?.name || "-"}</span>
                       </div>
-                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                      <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
                         <span className="text-gray-500">Razón social</span>
-                        <span className="text-gray-900">{workshopDetail?.razon_social || "-"}</span>
+                        <span className="text-gray-900 text-right break-words">{workshopDetail?.razon_social || "-"}</span>
                       </div>
-                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                      <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
                         <span className="text-gray-500">Ciudad</span>
                         <span className="text-gray-900">{workshopDetail?.city || "-"}</span>
                       </div>
-                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                      <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
                         <span className="text-gray-500">Provincia</span>
                         <span className="text-gray-900">{workshopDetail?.province || "-"}</span>
                       </div>
-                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                      <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
                         <span className="text-gray-500">Dirección</span>
-                        <span className="text-gray-900">{workshopDetail?.address || "-"}</span>
+                        <span className="text-gray-900 text-right break-words">{workshopDetail?.address || "-"}</span>
                       </div>
-                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                      <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
                         <span className="text-gray-500">CUIT</span>
                         <span className="text-gray-900">{workshopDetail?.cuit || "-"}</span>
                       </div>
-                      <div className="flex items-center justify-between px-4 py-2 text-sm">
+                      <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
                         <span className="text-gray-500">Teléfono</span>
                         <span className="text-gray-900">{workshopDetail?.phone || "-"}</span>
                       </div>
@@ -456,11 +658,11 @@ export default function AdminTicketChatPage() {
                 </div>
               </div>
             </div>
-            <div className="px-5 py-3 border-t flex items-center justify-end bg-gray-50 rounded-b-[10px]">
+            <div className="px-3 sm:px-4 md:px-5 py-2 sm:py-3 border-t flex items-center justify-end bg-gray-50 rounded-b-lg sm:rounded-b-[10px]">
               <button
                 type="button"
                 onClick={() => setInfoOpen(false)}
-                className="px-4 py-2 rounded-[4px] border border-gray-300 bg-white text-sm hover:bg-gray-50"
+                className="w-full sm:w-auto px-4 py-2 rounded-[4px] border border-gray-300 bg-white text-xs sm:text-sm hover:bg-gray-50"
               >
                 Cerrar
               </button>

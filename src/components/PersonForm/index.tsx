@@ -138,8 +138,8 @@ export default function PersonForm({
 
       {/* Resumen de errores */}
       {showAnyErrors && (
-        <div className="mx-4 mb-6 border border-red-300 bg-red-50 text-red-700 text-sm rounded-[4px] px-4 py-3">
-          <p className="font-medium mb-1 text-lg">Revisá estos campos:</p>
+        <div className="mx-1 sm:mx-2 md:mx-4 mb-4 sm:mb-6 border border-red-300 bg-red-50 text-red-700 text-xs sm:text-sm rounded-[4px] px-3 sm:px-4 py-2 sm:py-3">
+          <p className="font-medium mb-1 text-sm sm:text-base md:text-lg">Revisá estos campos:</p>
 
           {ownerErrorsList.length > 0 && (
             <>
@@ -169,9 +169,12 @@ export default function PersonForm({
         </div>
       )}
 
-      <p className="px-4 mb-4 text-sm text-gray-600">
-        Los campos marcados con <span className="text-red-600">*</span> son obligatorios.
-      </p>
+      {/* Mostrar el texto de campos obligatorios solo cuando los campos están visibles */}
+      {!isIdle && (
+        <p className="px-1 sm:px-2 md:px-4 mb-3 sm:mb-4 text-xs sm:text-sm text-gray-600">
+          Los campos marcados con <span className="text-red-600">*</span> son obligatorios.
+        </p>
+      )}
 
       <div
         className={`grid ${!isSamePerson ? "grid-cols-[1fr_1px_1fr]" : "px-4 grid-cols-1"

@@ -114,6 +114,7 @@ function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; th
     to: to ? new Date(to) : undefined,
   });
   const [selectingTo, setSelectingTo] = useState(true); // true = seleccionando "to", false = seleccionando "from"
+  const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -127,6 +128,15 @@ function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; th
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const formatDate = (date: Date | undefined) => {
     if (!date) return "";
@@ -178,7 +188,7 @@ function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; th
             setSelectingTo(true);
           }
         }}
-        className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 shadow-sm hover:border-gray-300 transition-colors text-sm"
+        className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 sm:px-4 py-2 shadow-sm hover:border-gray-300 transition-colors text-xs sm:text-sm w-full sm:w-auto"
       >
         <Calendar className="w-4 h-4 text-gray-600" />
         <span className="text-gray-700 font-medium">
@@ -187,7 +197,7 @@ function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; th
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
+        <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] p-3 sm:p-4 w-[calc(100vw-2rem)] sm:w-auto sm:max-w-none max-w-[calc(100vw-2rem)] overflow-auto max-h-[90vh]">
           <DayPicker
             mode="single"
             selected={selectingTo ? range?.to : range?.from}
@@ -242,11 +252,11 @@ function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; th
               range_start: "bg-[#0040B8] text-white rounded-l-md",
               range_end: "bg-[#0040B8] text-white rounded-r-md",
             }}
-            numberOfMonths={2}
+            numberOfMonths={isMobile ? 1 : 2}
             className="rounded-lg"
             classNames={{
-              months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-              month: "space-y-4",
+              months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 w-full",
+              month: "space-y-4 w-full",
               caption: "flex justify-center pt-1 relative items-center",
               caption_label: "text-sm font-medium text-gray-900",
               nav: "space-x-1 flex items-center",
@@ -267,12 +277,12 @@ function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; th
               day_hidden: "invisible",
             }}
           />
-          <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-gray-200">
-            <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 mt-4 pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={handleThisMonth}
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm"
+                className="rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-xs sm:text-sm w-full sm:w-auto"
               >
                 Este mes
               </button>
@@ -280,17 +290,17 @@ function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; th
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm"
+                  className="rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-xs sm:text-sm w-full sm:w-auto"
                 >
                   Limpiar
                 </button>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm"
+                className="rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-xs sm:text-sm w-full sm:w-auto"
               >
                 Cancelar
               </button>
@@ -298,7 +308,7 @@ function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; th
                 type="button"
                 onClick={handleApply}
                 disabled={!range?.from || !range?.to}
-                className="rounded-lg border border-[#0040B8] bg-[#0040B8] px-4 py-2 text-white font-medium hover:bg-[#0030a0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="rounded-lg border border-[#0040B8] bg-[#0040B8] px-3 sm:px-4 py-2 text-white font-medium hover:bg-[#0030a0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm w-full sm:w-auto"
               >
                 Aplicar
               </button>
@@ -329,14 +339,14 @@ function WeeklyChart({ data, yAxisTicks, maxTick }: { data: Array<{ label: strin
   return (
     <div className="relative">
       {/* Y-axis labels */}
-      <div className="absolute left-0 top-0 bottom-10 flex flex-col justify-between text-xs text-gray-500 pr-2" style={{ width: "35px" }}>
+      <div className="absolute left-0 top-0 bottom-10 flex flex-col justify-between text-[10px] sm:text-xs text-gray-500 pr-2" style={{ width: "30px" }}>
         {reversedTicks.map((tick, idx) => (
           <span key={`y-axis-${tick}-${idx}`} className="text-right">{tick}</span>
         ))}
       </div>
       
       {/* Chart area */}
-      <div className="ml-10 relative" style={{ height: "240px" }}>
+      <div className="ml-8 sm:ml-10 relative" style={{ height: "200px", maxHeight: "240px" }}>
         {/* Grid lines horizontales */}
         <div className="absolute inset-0 flex flex-col justify-between">
           {reversedTicks.map((tick, idx) => (
@@ -371,7 +381,7 @@ function WeeklyChart({ data, yAxisTicks, maxTick }: { data: Array<{ label: strin
                     )}
                   </div>
                 </div>
-                <span className="text-xs text-gray-600 font-medium">{week.label}</span>
+                <span className="text-[10px] sm:text-xs text-gray-600 font-medium">{week.label}</span>
               </div>
             );
           })}
@@ -622,28 +632,28 @@ export default function Statistics({
 
   return (
     <div className="bg-white">
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
+      <div className="max-w-8xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-6">
+        <article className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 text-xs sm:text-sm md:text-base lg:text-lg mb-2 sm:mb-4 md:mb-6 px-1 sm:px-0">
           <div className="flex items-center gap-1">
             <span className="text-gray-600">Inicio</span>
-            <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+            <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
             <span className="text-[#0040B8] font-medium">Estadísticas</span>
           </div>
 
-          <div className="ml-auto">
+          <div className="w-full sm:w-auto sm:ml-auto">
             <DateRangePicker from={safeOverview.date_from} to={safeOverview.date_to} thisMonth={thisMonth} />
           </div>
         </article>
 
         {/* Info de rango sin datos */}
         {!hasAnyData && (
-          <Card className="mb-6 sm:mb-8">
+          <Card className="mb-4 sm:mb-6 md:mb-8 mx-1 sm:mx-0">
             <EmptyState
               title="No hay datos para este rango"
               subtitle="Proba cambiar el mes o ajustar el filtro de fechas"
               icon={CalendarRange}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2">
                 <Link
                   href={`?month=${thisMonth}`}
                   className="rounded-[4px] border border-[#0040B8]/30 bg-[#0040B8]/5 px-3 py-1.5 text-[#0040B8] text-xs">
@@ -660,54 +670,54 @@ export default function Statistics({
         )}
 
         {/* KPIs estilo tarjeta con icono */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8 px-1 sm:px-0">
           <Card>
-            <div className="relative p-5">
-              <div className="absolute top-3 right-3 h-8 w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
-                <ClipboardList className="h-4 w-4 text-[#1f63ff]" />
+            <div className="relative p-4 sm:p-5">
+              <div className="absolute top-3 right-3 h-7 w-7 sm:h-8 sm:w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
+                <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4 text-[#1f63ff]" />
               </div>
-              <p className="text-xs text-gray-500">Revisiones creadas</p>
-              <p className="mt-2 text-2xl text-gray-900">{safeOverview.totals.created ?? 0}</p>
-              <div className="mt-1 text-[11px]">
+              <p className="text-[10px] sm:text-xs text-gray-500">Revisiones creadas</p>
+              <p className="mt-2 text-xl sm:text-2xl text-gray-900">{safeOverview.totals.created ?? 0}</p>
+              <div className="mt-1 text-[10px] sm:text-[11px]">
                 <Delta value={createdDelta} />
               </div>
             </div>
           </Card>
 
           <Card>
-            <div className="relative p-5">
-              <div className="absolute top-3 right-3 h-8 w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
-                <CheckCircle2 className="h-4 w-4 text-[#1f63ff]" />
+            <div className="relative p-4 sm:p-5">
+              <div className="absolute top-3 right-3 h-7 w-7 sm:h-8 sm:w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
+                <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-[#1f63ff]" />
               </div>
-              <p className="text-xs text-gray-500">Tasa Aprobación</p>
-              <p className="mt-2 text-2xl text-gray-900">{approvalRate}%</p>
-              <div className="mt-1 text-[11px]">
+              <p className="text-[10px] sm:text-xs text-gray-500">Tasa Aprobación</p>
+              <p className="mt-2 text-xl sm:text-2xl text-gray-900">{approvalRate}%</p>
+              <div className="mt-1 text-[10px] sm:text-[11px]">
                 <Delta value={approvalDelta} />
               </div>
             </div>
           </Card>
 
           <Card>
-            <div className="relative p-5">
-              <div className="absolute top-3 right-3 h-8 w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
-                <AlertCircle className="h-4 w-4 text-[#1f63ff]" />
+            <div className="relative p-4 sm:p-5">
+              <div className="absolute top-3 right-3 h-7 w-7 sm:h-8 sm:w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
+                <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-[#1f63ff]" />
               </div>
-              <p className="text-xs text-gray-500">Tasa de Rechazo</p>
-              <p className="mt-2 text-2xl text-gray-900">{rejectionRate}%</p>
-              <div className="mt-1 text-[11px]">
+              <p className="text-[10px] sm:text-xs text-gray-500">Tasa de Rechazo</p>
+              <p className="mt-2 text-xl sm:text-2xl text-gray-900">{rejectionRate}%</p>
+              <div className="mt-1 text-[10px] sm:text-[11px]">
                 <DeltaInverted value={rejectionDelta} />
               </div>
             </div>
           </Card>
 
           <Card>
-            <div className="relative p-5">
-              <div className="absolute top-3 right-3 h-8 w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
-                <LineChart className="h-4 w-4 text-[#1f63ff]" />
+            <div className="relative p-4 sm:p-5">
+              <div className="absolute top-3 right-3 h-7 w-7 sm:h-8 sm:w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
+                <LineChart className="h-3 w-3 sm:h-4 sm:w-4 text-[#1f63ff]" />
               </div>
-              <p className="text-xs text-gray-500">Tasa de Condicional</p>
-              <p className="mt-2 text-2xl text-gray-900">{conditionalRate}%</p>
-              <div className="mt-1 text-[11px]">
+              <p className="text-[10px] sm:text-xs text-gray-500">Tasa de Condicional</p>
+              <p className="mt-2 text-xl sm:text-2xl text-gray-900">{conditionalRate}%</p>
+              <div className="mt-1 text-[10px] sm:text-[11px]">
                 <DeltaInverted value={conditionalDelta} />
               </div>
             </div>
@@ -715,15 +725,15 @@ export default function Statistics({
         </div>
 
         {/* Gráficos: Revisiones Semanales/Mensuales y Estado de Revisiones */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8 px-1 sm:px-0">
           {/* Revisiones Semanales/Mensuales - Gráfico de barras */}
           <Card>
-            <div className="p-5 border-b border-gray-100">
-              <h3 className="text-base sm:text-lg text-gray-900">
+            <div className="p-3 sm:p-4 md:p-5 border-b border-gray-100">
+              <h3 className="text-sm sm:text-base md:text-lg text-gray-900">
                 {chartData.isMonthly ? "Revisiones Mensuales" : "Revisiones Semanales"}
               </h3>
             </div>
-            <div className="p-5">
+            <div className="p-3 sm:p-4 md:p-5">
               {chartData.data.length > 0 ? (
                 <WeeklyChart data={chartData.data} yAxisTicks={yAxisTicks} maxTick={maxTick} />
               ) : (
@@ -738,14 +748,14 @@ export default function Statistics({
 
           {/* Estado de Revisiones - Gráfico de donut */}
           <Card>
-            <div className="p-5 border-b border-gray-100">
-              <h3 className="text-base sm:text-lg text-gray-900">Estado de Revisiones</h3>
+            <div className="p-3 sm:p-4 md:p-5 border-b border-gray-100">
+              <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Estado de Revisiones</h3>
             </div>
-            <div className="p-5">
+            <div className="p-3 sm:p-4 md:p-5">
               {results?.items?.length ? (
                 <div className="flex flex-col items-center">
                   {/* Donut chart */}
-                  <div className="relative w-48 h-48 mb-4">
+                  <div className="relative w-40 h-40 sm:w-48 sm:h-48 mb-3 sm:mb-4">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                       {(() => {
                         const total = results.total || 1;
@@ -819,13 +829,13 @@ export default function Statistics({
         </div>
 
         {/* Secciones inferiores: Marcas, Tipos de Uso, Errores, Vencimientos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 px-1 sm:px-0">
           {/* Marcas Más Inspeccionadas */}
           <Card>
-            <div className="p-5 border-b border-gray-100">
-              <h3 className="text-base sm:text-lg text-gray-900">Marcas Más Inspeccionadas</h3>
+            <div className="p-3 sm:p-4 md:p-5 border-b border-gray-100">
+              <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Marcas Más Inspeccionadas</h3>
             </div>
-            <div className="p-5">
+            <div className="p-3 sm:p-4 md:p-5">
               {topBrands?.items?.length ? (
                 <div className="space-y-3">
                   {topBrands.items.slice(0, 5).map((item, i) => (
@@ -850,10 +860,10 @@ export default function Statistics({
 
           {/* Tipos de Uso */}
           <Card>
-            <div className="p-5 border-b border-gray-100">
-              <h3 className="text-base sm:text-lg text-gray-900">Tipos de Uso</h3>
+            <div className="p-3 sm:p-4 md:p-5 border-b border-gray-100">
+              <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Tipos de Uso</h3>
             </div>
-            <div className="p-5">
+            <div className="p-3 sm:p-4 md:p-5">
               {usageTypes?.items?.length ? (
                 <div className="space-y-3">
                   {usageTypes.items.map((item, i) => {
@@ -880,10 +890,10 @@ export default function Statistics({
 
           {/* Errores Más Comunes */}
           <Card>
-            <div className="p-5 border-b border-gray-100">
-              <h3 className="text-base sm:text-lg text-gray-900">Errores Más Comunes</h3>
+            <div className="p-3 sm:p-4 md:p-5 border-b border-gray-100">
+              <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Errores Más Comunes</h3>
             </div>
-            <div className="p-5">
+            <div className="p-3 sm:p-4 md:p-5">
               {commonErrors?.items?.length ? (
                 <div className="space-y-3">
                   {commonErrors.items.map((item, i) => {
@@ -911,10 +921,10 @@ export default function Statistics({
 
           {/* Últimos Vencimientos */}
           <Card>
-            <div className="p-5 border-b border-gray-100">
-              <h3 className="text-base sm:text-lg text-gray-900">Próximos Vencimientos</h3>
+            <div className="p-3 sm:p-4 md:p-5 border-b border-gray-100">
+              <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Próximos Vencimientos</h3>
             </div>
-            <div className="p-5">
+            <div className="p-3 sm:p-4 md:p-5">
               {expirations?.items?.length ? (
                 <div className="max-h-[280px] overflow-y-auto pr-2 space-y-3">
                   {expirations.items.map((item, i) => {

@@ -253,22 +253,22 @@ export default async function InspectionPage({
   
   return (
     <div className="min-w-full">
-      <article className="flex items-center justify-between text-lg mb-6 px-4">
+      <article className="flex items-center justify-between text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6 px-1 sm:px-2 md:px-4">
         <div className="flex items-center gap-1 flex-wrap">
-          <span>Inicio</span>
-          <ChevronRight size={20} />
+          <span className="text-gray-600">Inicio</span>
+          <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
           <span className="text-[#0040B8]">Revisión técnica</span>
-          <ChevronRight size={20} />
+          <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
           <span className="text-[#0040B8]">{plateLabel}</span>
         </div>
       </article>
 
       {isSecondInspection && applicationData.result === "Condicional" && (
-        <div className="mx-4 mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-[14px] shadow-sm">
-          <div className="flex items-start gap-3">
+        <div className="mx-1 sm:mx-2 md:mx-4 mb-4 sm:mb-5 md:mb-6 p-3 sm:p-4 bg-amber-50 border-l-4 border-amber-500 rounded-lg sm:rounded-[14px] shadow-sm">
+          <div className="flex items-start gap-2 sm:gap-3">
             <div className="flex-shrink-0 mt-0.5">
               <svg
-                className="w-6 h-6 text-amber-600"
+                className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -281,11 +281,11 @@ export default async function InspectionPage({
                 />
               </svg>
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-amber-900 mb-1">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-amber-900 mb-1">
                 Segunda Inspección - Resultado Condicional
               </h3>
-              <p className="text-sm text-amber-800">
+              <p className="text-xs sm:text-sm text-amber-800">
                 Esta es una segunda inspección para un vehículo que obtuvo resultado "Condicional" en la primera revisión. 
                 Por favor, verifique cuidadosamente todos los puntos que fueron marcados como condicionales anteriormente.
               </p>

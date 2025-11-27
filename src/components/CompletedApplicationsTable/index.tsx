@@ -41,11 +41,11 @@ type DropdownState = {
   left: number;
 };
 
-export default function CompletedApplicationsTable() {
+export default function CompletedApplicationsTable({ externalSearchQuery = "" }: { externalSearchQuery?: string }) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [q, setQ] = useState(""); // Displayed search value
-  const [searchQuery, setSearchQuery] = useState(""); // Actual search query used for API
+  const [searchQuery, setSearchQuery] = useState(externalSearchQuery || ""); // Actual search query used for API
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<PaginationData | null>(null);
   const itemsPerPage = 5;
@@ -180,6 +180,15 @@ export default function CompletedApplicationsTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, page, searchQuery, resultFilter]);
 
+  // Sincronizar searchQuery externo
+  useEffect(() => {
+    if (externalSearchQuery !== undefined && externalSearchQuery !== searchQuery) {
+      setSearchQuery(externalSearchQuery);
+      setQ(externalSearchQuery);
+      setPage(1);
+    }
+  }, [externalSearchQuery]);
+
   const DROPDOWN_HEIGHT = 128;
   const DROPDOWN_WIDTH = 208;
   const DROPDOWN_MARGIN = 8;
@@ -286,9 +295,9 @@ export default function CompletedApplicationsTable() {
   ];
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-0 sm:p-4 md:p-6">
       {/* Search and filters section */}
-      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 gap-3">
           <input
             disabled={isLoading}
@@ -332,8 +341,189 @@ export default function CompletedApplicationsTable() {
       {/* Filter overlay */}
       {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={resultFilter} setStatusFilter={setResultFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
-      {/* Card de tabla con borde propio */}
-      <div className="rounded-[14px] border border-gray-200 overflow-visible bg-white">
+      {/* Vista de tarjetas para mobile/tablet */}
+      <div className="xl:hidden px-1 sm:px-0">
+        {isLoading ? (
+          <div className="space-y-3 sm:space-y-4">
+            {[...Array(itemsPerPage)].map((_, i) => (
+              <div key={i} className="border border-gray-200 rounded-lg p-3 sm:p-4 animate-pulse">
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : applications.length === 0 ? (
+          <div className="border border-gray-200 rounded-lg p-6 sm:p-8 text-center">
+            <p className="text-xs sm:text-sm text-gray-500">No hay aplicaciones completadas para mostrar.</p>
+          </div>
+        ) : (
+          <div className="space-y-3 sm:space-y-4">
+            {applications.map((item: Application) => {
+              const tone = STATUS_TONES[item.result as string] || DEFAULT_TONE;
+              const ownerText = item.owner?.cuit ? item.owner?.razon_social : item.owner?.first_name + " " + item.owner?.last_name;
+              const identityText = item.owner?.cuit ? item.owner?.cuit : item.owner?.dni;
+              
+              return (
+                <div
+                  key={item.application_id}
+                  className="border border-gray-200 rounded-lg px-3 py-4 sm:p-4 space-y-3 sm:space-y-4"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-2">
+                      <div>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-1">CRT</p>
+                        <p className="text-sm sm:text-base font-mono font-medium text-gray-900">{item.application_id}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Vehículo</p>
+                        <p className="text-sm sm:text-base font-medium text-gray-900">{item.car?.license_plate || "-"}</p>
+                        <p className="text-xs sm:text-sm text-gray-600">{item.car?.brand} {item.car?.model}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Titular</p>
+                        <p className="text-sm sm:text-base font-medium text-gray-900">{ownerText || "-"}</p>
+                        <p className="text-xs sm:text-sm text-gray-600">{identityText || "-"}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div>
+                          <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Resultado</p>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${tone.text} ${tone.bg}`}>
+                            {item.result}
+                          </span>
+                        </div>
+                        {item.result_2 && (
+                          <div>
+                            <p className="text-[10px] sm:text-xs text-gray-500 mb-1">2do Resultado</p>
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${STATUS_TONES[item.result_2]?.text || DEFAULT_TONE.text} ${STATUS_TONES[item.result_2]?.bg || DEFAULT_TONE.bg}`}>
+                              {item.result_2}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 flex-shrink-0">
+                      {/* View certificate */}
+                      {item.result_2 ? (
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={(event) => toggleViewDropdown(item.application_id, event)}
+                            className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1.5 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+                            title="Ver certificado"
+                          >
+                            <Eye size={16} />
+                            <ChevronDown size={12} />
+                          </button>
+                          {viewDropdownState?.id === item.application_id &&
+                            createPortal(
+                              <div
+                                ref={(node) => {
+                                  viewDropdownRef.current = node;
+                                }}
+                                className="z-[60] w-52 overflow-hidden rounded-[14px] border border-gray-200 bg-white shadow-lg"
+                                style={{
+                                  position: "fixed",
+                                  top: viewDropdownState.top,
+                                  left: viewDropdownState.left,
+                                }}
+                              >
+                                <button
+                                  onClick={() => handleView(item.application_id, 1)}
+                                  className="flex w-full items-center gap-2 px-4 py-2 text-xs sm:text-sm transition-colors hover:bg-gray-50"
+                                >
+                                  <Eye size={14} />
+                                  <span>1ra Inspección</span>
+                                </button>
+                                <button
+                                  onClick={() => handleView(item.application_id, 2)}
+                                  className="flex w-full items-center gap-2 border-t border-gray-100 px-4 py-2 text-xs sm:text-sm transition-colors hover:bg-gray-50"
+                                >
+                                  <Eye size={14} />
+                                  <span>2da Inspección</span>
+                                </button>
+                              </div>,
+                              document.body
+                            )}
+                        </div>
+                      ) : (
+                        <Link 
+                          href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${item.application_id}/certificado.pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1.5 rounded hover:bg-blue-50 transition-colors"
+                          title="Ver certificado"
+                        >
+                          <Eye size={16} />
+                        </Link>
+                      )}
+                      
+                      {/* Download certificate */}
+                      {item.result_2 ? (
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={(event) => toggleDownloadDropdown(item.application_id, event)}
+                            className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1.5 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+                            title="Descargar certificado"
+                          >
+                            <Download size={16} />
+                            <ChevronDown size={12} />
+                          </button>
+                          {downloadDropdownState?.id === item.application_id &&
+                            createPortal(
+                              <div
+                                ref={(node) => {
+                                  downloadDropdownRef.current = node;
+                                }}
+                                className="z-[60] w-52 overflow-hidden rounded-[14px] border border-gray-200 bg-white shadow-lg"
+                                style={{
+                                  position: "fixed",
+                                  top: downloadDropdownState.top,
+                                  left: downloadDropdownState.left,
+                                }}
+                              >
+                                <button
+                                  onClick={() => handleDownload(item.application_id, 1)}
+                                  className="flex w-full items-center gap-2 px-4 py-2 text-xs sm:text-sm transition-colors hover:bg-gray-50"
+                                >
+                                  <Download size={14} />
+                                  <span>1ra Inspección</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDownload(item.application_id, 2)}
+                                  className="flex w-full items-center gap-2 border-t border-gray-100 px-4 py-2 text-xs sm:text-sm transition-colors hover:bg-gray-50"
+                                >
+                                  <Download size={14} />
+                                  <span>2da Inspección</span>
+                                </button>
+                              </div>,
+                              document.body
+                            )}
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(item.application_id, 1)}
+                          className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1.5 rounded hover:bg-blue-50 transition-colors"
+                          title="Descargar certificado"
+                        >
+                          <Download size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Vista de tabla para desktop */}
+      <div className="hidden xl:block rounded-[14px] border border-gray-200 overflow-visible bg-white">
         <div className="overflow-x-auto">
           <TableTemplate
             headers={headers}
@@ -520,11 +710,11 @@ export default function CompletedApplicationsTable() {
       </div>
 
       {/* Pagination and refresh button section */}
-      <div className="mt-6 flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
-        {pagination && pagination.total_pages > 1 && !searchQuery && (
+      <div className="mt-4 sm:mt-6 flex flex-col items-center justify-between gap-3 text-xs sm:text-sm px-1 sm:px-0">
+        {pagination && pagination.total_pages > 1 && (
           <div className="flex items-center gap-2">
             <button
-              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-[4px] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
+              className="px-2 sm:px-3 md:px-4 py-2 border border-gray-300 rounded-[4px] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
               onClick={() => {
                 const newPage = page - 1;
                 setPage(newPage);
@@ -539,7 +729,7 @@ export default function CompletedApplicationsTable() {
               Página {pagination.page} de {pagination.total_pages}
             </span>
             <button
-              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-[4px] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
+              className="px-2 sm:px-3 md:px-4 py-2 border border-gray-300 rounded-[4px] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
               onClick={() => {
                 const newPage = page + 1;
                 setPage(newPage);

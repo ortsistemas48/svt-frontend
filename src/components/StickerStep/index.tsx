@@ -419,13 +419,13 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
   const disableSearch = isSearching || Boolean(plateErr);
 
   return (
-    <div className="min-h-full flex items-center justify-center px-6">
-      <div className="space-y-6 mb-10 px-8 py-6 mt-12 w-full max-w-2xl bg-white rounded-[14px]">
+    <div className="min-h-full flex items-center justify-center px-1 sm:px-4 md:px-6">
+      <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-10 px-3 sm:px-6 md:px-8 py-4 sm:py-6 mt-4 sm:mt-8 md:mt-12 w-full max-w-2xl bg-white rounded-lg sm:rounded-[14px]">
         <div>
-          <h2 className="text-xl font-regular text-[#000000] mb-1">
+          <h2 className="text-base sm:text-lg md:text-xl font-regular text-[#000000] mb-1">
             Oblea del vehículo
           </h2>
-          <p className="text-md font-regular text-[#00000080]">
+          <p className="text-xs sm:text-sm md:text-base font-regular text-[#00000080]">
             Ingresá el dominio, luego elegí autoasignar la primera disponible
             del taller, o asignar una oblea manualmente escribiendo su número.
           </p>
@@ -434,16 +434,16 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
         <div className="w-full">
           <label
             htmlFor="plate"
-            className="block text-sm text-gray-700 mb-1"
+            className="block text-xs sm:text-sm text-gray-700 mb-1"
           >
             Dominio
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               id="plate"
               type="text"
               placeholder="Ej: ABC123, o AB123CD"
-              className={`flex-1 border rounded-[4px] px-4 py-3 text-base focus:outline-none focus:ring-2 uppercase ${
+              className={`flex-1 border rounded-[4px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 uppercase ${
                 plateErr
                   ? "border-red-400 focus:ring-red-500"
                   : "border-[#DEDEDE] focus:ring-[#0040B8]"
@@ -462,7 +462,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
               type="button"
               onClick={fetchVehicleByPlate}
               disabled={disableSearch}
-              className={`px-6 rounded-[4px] text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${
+              className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-[4px] text-xs sm:text-sm md:text-base text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${
                 disableSearch ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
@@ -471,18 +471,18 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
           </div>
 
           {plateErr && (
-            <p className="text-sm text-red-600 mt-3">{plateErr}</p>
+            <p className="text-xs sm:text-sm text-red-600 mt-2 sm:mt-3">{plateErr}</p>
           )}
           {!plateErr && searchError && (
-            <p className="text-sm text-red-600 mt-3">{searchError}</p>
+            <p className="text-xs sm:text-sm text-red-600 mt-2 sm:mt-3">{searchError}</p>
           )}
         </div>
 
         {mode === "result" && (
-          <div className="mt-6 border rounded-[14px] p-4 space-y-4">
-            <h3 className="text-md font-semibold">Resultado</h3>
+          <div className="mt-4 sm:mt-6 border rounded-lg sm:rounded-[14px] p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <h3 className="text-sm sm:text-base md:text-lg font-semibold">Resultado</h3>
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
               <div>
                 <span className="text-gray-500">Dominio: </span>
                 <span className="font-medium">
@@ -512,16 +512,16 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
             <div className="pt-2">
               <label
                 htmlFor="oblea"
-                className="block text-sm text-gray-700 mb-1"
+                className="block text-xs sm:text-sm text-gray-700 mb-1"
               >
                 Oblea actual
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2">
                 <input
                   id="oblea"
                   type="text"
                   placeholder="Ej: ABC123456"
-                  className="flex-1 min-w-[180px] border border-[#DEDEDE] rounded-[4px] px-4 py-3 text-base bg-gray-50 text-gray-700 cursor-not-allowed"
+                  className="flex-1 w-full sm:min-w-[180px] border border-[#DEDEDE] rounded-[4px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-gray-50 text-gray-700 cursor-not-allowed"
                   value={obleaValue}
                   onChange={(e) => setObleaValue(e.target.value)}
                   readOnly
@@ -533,7 +533,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                     type="button"
                     onClick={handleAutoAssign}
                     disabled={isAssigning}
-                    className="px-3 py-2 rounded-[4px] text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
+                    className="w-full sm:w-auto px-3 py-2 rounded-[4px] text-xs sm:text-sm text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
                   >
                     {isAssigning ? "Asignando..." : "Autoasignar"}
                   </button>
@@ -544,7 +544,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                     type="button"
                     onClick={handleUnassign}
                     disabled={isAssigning}
-                    className="px-3 py-2 rounded-[4px] text-[#d91e1e] transition duration-150 border border-[#d91e1e] hover:bg-[#d91e1e] hover:text-white disabled:opacity-60"
+                    className="w-full sm:w-auto px-3 py-2 rounded-[4px] text-xs sm:text-sm text-[#d91e1e] transition duration-150 border border-[#d91e1e] hover:bg-[#d91e1e] hover:text-white disabled:opacity-60"
                   >
                     Quitar
                   </button>
@@ -552,26 +552,26 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
               </div>
 
               {availableHint && !car?.sticker_id && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
                   Se asignará la primera oblea disponible: {availableHint}
                 </p>
               )}
 
               {assignError && (
-                <p className="text-xs text-red-600 mt-1">{assignError}</p>
+                <p className="text-[10px] sm:text-xs text-red-600 mt-1">{assignError}</p>
               )}
 
               {errors?.car_sticker_id && (
-                <p className="text-sm text-red-600 mt-1 font-medium">
+                <p className="text-xs sm:text-sm text-red-600 mt-1 font-medium">
                   {errors.car_sticker_id}
                 </p>
               )}
 
-              <div className="mt-5 border-t pt-4 w-full">
+              <div className="mt-4 sm:mt-5 border-t pt-3 sm:pt-4 w-full">
                 <button
                   type="button"
                   onClick={() => setManualOpen((v) => !v)}
-                  className="text-sm text-[#0040B8] hover:underline"
+                  className="text-xs sm:text-sm text-[#0040B8] hover:underline"
                 >
                   {manualOpen
                     ? "Ocultar asignación manual"
@@ -580,11 +580,11 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
 
                 {manualOpen && (
                   <div className="mt-3 space-y-3 w-full">
-                    <label className="block text-sm text-gray-700">
+                    <label className="block text-xs sm:text-sm text-gray-700">
                       Número de oblea
                     </label>
 
-                    <div className="text-xs text-gray-500 leading-snug">
+                    <div className="text-[10px] sm:text-xs text-gray-500 leading-snug">
                       Vista previa:{" "}
                       <span className="font-mono text-gray-800">
                         {sanitizeStickerPart(manualPrefix) +
@@ -594,9 +594,9 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                     </div>
 
 
-                    <div className="grid grid-cols-3 gap-3 ">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="flex flex-col">
-                        <span className="text-xs text-gray-500 mb-1">
+                        <span className="text-[10px] sm:text-xs text-gray-500 mb-1">
                           Prefijo (opcional)
                         </span>
                         <input
@@ -605,13 +605,13 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                           onChange={(e) =>
                             setManualPrefix(e.target.value.toUpperCase())
                           }
-                          className="border rounded-[4px] px-3 py-2 text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]"
+                          className="border rounded-[4px] px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]"
                           placeholder="ABC"
                         />
                       </div>
 
                       <div className="flex flex-col">
-                        <span className="text-xs text-gray-500 mb-1">
+                        <span className="text-[10px] sm:text-xs text-gray-500 mb-1">
                           Código
                         </span>
                         <input
@@ -620,7 +620,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                           onChange={(e) =>
                             setManualCode(e.target.value.replace(/\D/g, ""))
                           }
-                          className={`border rounded-[4px] px-3 py-2 text-base focus:outline-none focus:ring-2 ${
+                          className={`border rounded-[4px] px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 ${
                             manualError
                               ? "border-red-400 focus:ring-red-500"
                               : "border-[#DEDEDE] focus:ring-[#0040B8]"
@@ -630,7 +630,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                       </div>
 
                       <div className="flex flex-col">
-                        <span className="text-xs text-gray-500 mb-1">
+                        <span className="text-[10px] sm:text-xs text-gray-500 mb-1">
                           Sufijo (opcional)
                         </span>
                         <input
@@ -639,7 +639,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                           onChange={(e) =>
                             setManualSuffix(e.target.value.toUpperCase())
                           }
-                          className="border rounded-[4px] px-3 py-2 text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]"
+                          className="border rounded-[4px] px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]"
                           placeholder="Q"
                         />
                       </div>
@@ -650,7 +650,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                         type="button"
                         onClick={handleManualAssign}
                         disabled={isAssigningManual}
-                        className="px-3 py-2.5 rounded-[4px] my-4 text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
+                        className="w-full sm:w-auto px-3 py-2.5 rounded-[4px] my-3 sm:my-4 text-xs sm:text-sm text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
                       >
                         {isAssigningManual
                           ? "Asignando oblea..."
@@ -662,13 +662,13 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                     </div>
 
                     {manualError && (
-                      <p className="text-xs text-red-600">
+                      <p className="text-[10px] sm:text-xs text-red-600">
                         {manualError}
                       </p>
                     )}
 
                     {!manualError && (
-                      <p className="text-[14px] text-gray-500">
+                      <p className="text-[10px] sm:text-xs md:text-sm text-gray-500">
                         Prefijo y sufijo pueden ir vacíos. El código tiene que
                         tener al menos un número.
                       </p>

@@ -324,7 +324,7 @@ export default function CreateOrAttachUserPage() {
               Ingrese los datos de la persona a la que quieras registrar.
             </p>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm mb-2">Nombres</label>
                 <input
@@ -463,21 +463,21 @@ export default function CreateOrAttachUserPage() {
               </div>
             )}
 
-            <div className="flex gap-6 justify-center mt-10">
-              <button
-                onClick={()=>router.back()}
-                className="border text-[#0040B8] hover:bg-[#0040B8] duration-150 hover:text-white border-[#0040B8] px-5 py-3 rounded"
-                disabled={submitting}
-              >
-                Volver
-              </button>
-              <button onClick={submit} disabled={submitting} className="bg-[#0040B8] text-white px-6 py-3 rounded disabled:opacity-60">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mt-10">
+              <button onClick={submit} disabled={submitting} className="bg-[#0040B8] text-white px-6 py-3 rounded disabled:opacity-60 w-full sm:w-auto">
                 {submitting ? (
                   <span className="inline-flex items-center gap-2">
                     <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
                     {isExisting ? "Asociando..." : "Creando..."}
                   </span>
                 ) : ctaLabel}
+              </button>
+              <button
+                onClick={()=>router.back()}
+                className="border text-[#0040B8] hover:bg-[#0040B8] duration-150 hover:text-white border-[#0040B8] px-5 py-3 rounded w-full sm:w-auto"
+                disabled={submitting}
+              >
+                Volver
               </button>
             </div>
           </div>

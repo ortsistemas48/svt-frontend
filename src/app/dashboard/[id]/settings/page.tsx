@@ -375,26 +375,26 @@ export default function WorkshopSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen px-4 md:px-10 py-8">
+    <div className="min-h-screen px-0 sm:px-4 md:px-6 lg:px-10 py-3 sm:py-6 md:py-8">
       {/* Breadcrumb */}
-      <article className="flex items-center justify-between text-lg mb-6">
+      <article className="flex items-center justify-between text-xs sm:text-sm md:text-base lg:text-lg mb-2 sm:mb-4 md:mb-6 px-1 sm:px-0">
         <div className="flex items-center gap-1">
-          <span>Inicio</span>
-          <ChevronRight size={20} />
-          <span className="text-[#0040B8]">Configuración</span>
+          <span className="text-gray-600">Inicio</span>
+          <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
+          <span className="text-[#0040B8] font-medium">Configuración</span>
         </div>
       </article>
 
-      {err && <p className="mb-4 text-sm text-red-600">{err}</p>}
+      {err && <p className="mb-3 sm:mb-4 text-xs sm:text-sm text-red-600 px-1 sm:px-0">{err}</p>}
 
       {/* Sección 1, información */}
-      <section className="mb-10 mt-14">
-        <h2 className="text-[#0040B8] text-lg">Información del taller</h2>
-        <p className="text-sm text-[#00000080] mb-4">
+      <section className="mb-6 sm:mb-8 md:mb-10 mt-6 sm:mt-10 md:mt-14 px-1 sm:px-0">
+        <h2 className="text-[#0040B8] text-base sm:text-lg mb-2">Información del taller</h2>
+        <p className="text-xs sm:text-sm text-[#00000080] mb-4">
           Solo puedes actualizar el número de teléfono. El resto de la información es de solo lectura.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           <Field
             label="Nombre"
             value={ws?.name ?? ""}
@@ -424,23 +424,23 @@ export default function WorkshopSettingsPage() {
           <Field label="Nº de planta" value={ws?.plant_number?.toString() ?? ""} readOnly />
         </div>
 
-        <div className="mt-10">
+        <div className="mt-6 sm:mt-8 md:mt-10">
           <button
             onClick={savePhone}
             disabled={savingPhone}
-            className="inline-flex items-center gap-2 rounded-[4px] bg-[#0040B8] duration-150 text-white px-5 py-3 hover:bg-[#0A4DCC] disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-[4px] bg-[#0040B8] duration-150 text-white px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm hover:bg-[#0A4DCC] disabled:opacity-60 w-full sm:w-auto"
           >
-            {savingPhone && <Loader2 className="animate-spin" size={16} />} Guardar teléfono
+            {savingPhone && <Loader2 className="animate-spin w-3.5 h-3.5 sm:w-4 sm:h-4" />} Guardar teléfono
           </button>
         </div>
       </section>
 
-      <hr className="my-8" />
+      <hr className="my-6 sm:my-8 mx-1 sm:mx-0" />
 
       {/* Sección 2, ordenar pasos */}
-      <section>
-        <h2 className="text-[#0040B8] text-lg mb-1">Ordena los pasos para la inspección técnica</h2>
-        <p className="text-sm text-[#00000080] mb-10">
+      <section className="px-1 sm:px-0">
+        <h2 className="text-[#0040B8] text-base sm:text-lg mb-1">Ordena los pasos para la inspección técnica</h2>
+        <p className="text-xs sm:text-sm text-[#00000080] mb-6 sm:mb-8 md:mb-10">
           Mantené presionado el ícono de arrastre para reordenar, tocá el engranaje para configurar las observaciones del paso.
         </p>
 
@@ -484,44 +484,44 @@ export default function WorkshopSettingsPage() {
                           ? { type: "spring", stiffness: 350, damping: 26, mass: 0.6 }
                           : undefined
                       }
-                      className="flex items-center gap-3 rounded-[4px] border border-gray-200 bg-white p-3 cursor-grab active:cursor-grabbing"
+                      className="flex items-center gap-2 sm:gap-3 rounded-[4px] border border-gray-200 bg-white p-2 sm:p-3 cursor-grab active:cursor-grabbing"
                       draggable
                       onDragStart={onDragStartIdx(globalIdx)}
                       onDragOver={onDragOverIdx(globalIdx)}
                       onDragEnd={onDragEnd}
                     >
-                      <div className="w-6 text-xs text-gray-500">{globalIdx + 1}</div>
+                      <div className="w-5 sm:w-6 text-[10px] sm:text-xs text-gray-500">{globalIdx + 1}</div>
 
-                      <button className="p-1 rounded-[4px] hover:bg-gray-100" title="Arrastrar">
-                        <GripVertical size={18} />
+                      <button className="p-0.5 sm:p-1 rounded-[4px] hover:bg-gray-100 flex-shrink-0" title="Arrastrar">
+                        <GripVertical size={14} className="sm:w-[18px] sm:h-[18px]" />
                       </button>
 
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">{s.name}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs sm:text-sm font-medium truncate">{s.name}</div>
                         {/* sin descripción */}
                       </div>
 
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                         <button
                           onClick={() => move(globalIdx, -1)}
-                          className="p-1 rounded-[4px] border hover:bg-gray-50"
+                          className="p-0.5 sm:p-1 rounded-[4px] border hover:bg-gray-50"
                           title="Subir"
                         >
-                          <ChevronUp size={16} />
+                          <ChevronUp size={12} className="sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={() => move(globalIdx, +1)}
-                          className="p-1 rounded-[4px] border hover:bg-gray-50"
+                          className="p-0.5 sm:p-1 rounded-[4px] border hover:bg-gray-50"
                           title="Bajar"
                         >
-                          <ChevronDown size={16} />
+                          <ChevronDown size={12} className="sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={() => openObs(s)}
-                          className="ml-2 p-1.5 rounded-[4px] border hover:bg-gray-50"
+                          className="ml-1 sm:ml-2 p-1 sm:p-1.5 rounded-[4px] border hover:bg-gray-50"
                           title="Configurar observaciones"
                         >
-                          <Settings size={16} />
+                          <Settings size={12} className="sm:w-4 sm:h-4" />
                         </button>
                       </div>
                     </motion.div>
@@ -545,43 +545,43 @@ export default function WorkshopSettingsPage() {
                           ? { type: "spring", stiffness: 350, damping: 26, mass: 0.6 }
                           : undefined
                       }
-                      className="flex items-center gap-3 rounded-[4px] border border-gray-200 bg-white p-3 cursor-grab active:cursor-grabbing"
+                      className="flex items-center gap-2 sm:gap-3 rounded-[4px] border border-gray-200 bg-white p-2 sm:p-3 cursor-grab active:cursor-grabbing"
                       draggable
                       onDragStart={onDragStartIdx(globalIdx)}
                       onDragOver={onDragOverIdx(globalIdx)}
                       onDragEnd={onDragEnd}
                     >
-                      <div className="w-6 text-xs text-gray-500">{globalIdx + 1}</div>
+                      <div className="w-5 sm:w-6 text-[10px] sm:text-xs text-gray-500">{globalIdx + 1}</div>
 
-                      <button className="p-1 rounded-[4px] hover:bg-gray-100" title="Arrastrar">
-                        <GripVertical size={18} />
+                      <button className="p-0.5 sm:p-1 rounded-[4px] hover:bg-gray-100 flex-shrink-0" title="Arrastrar">
+                        <GripVertical size={14} className="sm:w-[18px] sm:h-[18px]" />
                       </button>
 
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">{s.name}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs sm:text-sm font-medium truncate">{s.name}</div>
                       </div>
 
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                         <button
                           onClick={() => move(globalIdx, -1)}
-                          className="p-1 rounded-[4px] border hover:bg-gray-50"
+                          className="p-0.5 sm:p-1 rounded-[4px] border hover:bg-gray-50"
                           title="Subir"
                         >
-                          <ChevronUp size={16} />
+                          <ChevronUp size={12} className="sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={() => move(globalIdx, +1)}
-                          className="p-1 rounded-[4px] border hover:bg-gray-50"
+                          className="p-0.5 sm:p-1 rounded-[4px] border hover:bg-gray-50"
                           title="Bajar"
                         >
-                          <ChevronDown size={16} />
+                          <ChevronDown size={12} className="sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={() => openObs(s)}
-                          className="ml-2 p-1.5 rounded-[4px] border hover:bg-gray-50"
+                          className="ml-1 sm:ml-2 p-1 sm:p-1.5 rounded-[4px] border hover:bg-gray-50"
                           title="Configurar observaciones"
                         >
-                          <Settings size={16} />
+                          <Settings size={12} className="sm:w-4 sm:h-4" />
                         </button>
                       </div>
                     </motion.div>
@@ -593,17 +593,17 @@ export default function WorkshopSettingsPage() {
         )}
 
         {/* Botones centrados */}
-        <div className="mt-14 flex items-center justify-center gap-3">
+        <div className="mt-8 sm:mt-10 md:mt-14 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-center gap-3">
           <button
             onClick={() => window.history.back()}
-            className="rounded-[4px] border border-[#0A4DCC] text-[#0A4DCC] px-6 py-3 hover:bg-[#0A4DCC] hover:text-white"
+            className="rounded-[4px] border border-[#0A4DCC] text-[#0A4DCC] px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm hover:bg-[#0A4DCC] hover:text-white w-full sm:w-auto"
           >
             Cancelar
           </button>
           <button
             onClick={saveOrder}
             disabled={savingOrder}
-            className="rounded-[4px] bg-[#0A4DCC] text-white px-6 py-3 hover:bg-[#0843B2] disabled:opacity-60"
+            className="rounded-[4px] bg-[#0A4DCC] text-white px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm hover:bg-[#0843B2] disabled:opacity-60 w-full sm:w-auto"
           >
             {savingOrder ? "Guardando…" : "Guardar"}
           </button>
@@ -612,7 +612,7 @@ export default function WorkshopSettingsPage() {
 
       {/* Modal Observaciones (categorías → ítems) */}
       {obsOpen && obsStep && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => {
@@ -620,30 +620,30 @@ export default function WorkshopSettingsPage() {
               cancelEditOrAdd();
             }}
           />
-          <div className="relative w-full max-w-2xl rounded-[8px] bg-white p-6 shadow-xl">
+          <div className="relative w-full max-w-2xl rounded-[8px] bg-white p-4 sm:p-5 md:p-6 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between">
               <div>
                 {obsView === "categories" ? (
                   <>
-                    <h3 className="text-base font-semibold">Observaciones — {obsStep.title}</h3>
+                    <h3 className="text-sm sm:text-base font-semibold">Observaciones — {obsStep.title}</h3>
                     {obsStep.description && (
-                      <p className="text-xs text-gray-500 mt-1">{obsStep.description}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{obsStep.description}</p>
                     )}
                   </>
                 ) : (
                   <>
                     <button
-                      className="text-[#0040B8] text-xs font-medium flex items-center gap-1 mb-1"
+                      className="text-[#0040B8] text-[10px] sm:text-xs font-medium flex items-center gap-1 mb-1"
                       onClick={() => {
                         setObsView("categories");
                         setSelectedCategory(null);
                         setObs([]);
                       }}
                     >
-                      <ChevronRight size={14} className="rotate-180" /> Volver a categorías
+                      <ChevronRight size={12} className="sm:w-3 sm:h-3 rotate-180" /> Volver a categorías
                     </button>
-                    <h3 className="text-base font-semibold">{selectedCategory?.name || "Categoría"}</h3>
-                    <p className="text-xs text-gray-500 mt-1">Gestioná las observaciones de esta categoría</p>
+                    <h3 className="text-sm sm:text-base font-semibold">{selectedCategory?.name || "Categoría"}</h3>
+                    <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Gestioná las observaciones de esta categoría</p>
                   </>
                 )}
               </div>
@@ -652,14 +652,14 @@ export default function WorkshopSettingsPage() {
             <div className="h-px bg-gray-200 my-4" />
 
             {obsLoading ? (
-              <p className="text-sm text-gray-600">Cargando…</p>
+              <p className="text-xs sm:text-sm text-gray-600">Cargando…</p>
             ) : obsView === "categories" ? (
               <div>
                 <div className="space-y-2">
                   {categories.map((c) => (
                     <div key={c.category_id} className="flex items-center gap-2">
                       <button
-                        className="flex-1 text-left px-3 py-2 rounded-[4px] border hover:bg-gray-50"
+                        className="flex-1 text-left px-2 sm:px-3 py-2 rounded-[4px] border hover:bg-gray-50 text-xs sm:text-sm"
                         onClick={() => goToItems(c)}
                         title="Abrir"
                       >
@@ -667,24 +667,24 @@ export default function WorkshopSettingsPage() {
                       </button>
                       <button
                         onClick={() => startEditCategory(c)}
-                        className="p-2 rounded-[4px] border hover:bg-gray-50"
+                        className="p-1.5 sm:p-2 rounded-[4px] border hover:bg-gray-50 flex-shrink-0"
                         title="Renombrar categoría"
                       >
-                        <Pencil size={16} />
+                        <Pencil size={14} className="sm:w-4 sm:h-4" />
                       </button>
                       <button
                         onClick={() => removeCategory(c.category_id)}
-                        className="p-2 rounded-[4px] border hover:bg-gray-50"
+                        className="p-1.5 sm:p-2 rounded-[4px] border hover:bg-gray-50 flex-shrink-0"
                         title="Eliminar categoría"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} className="sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   ))}
                   {categories.length === 0 && (
-                    <div className="text-center py-6">
-                      <p className="text-sm text-gray-600">No hay categorías configuradas</p>
-                      <p className="text-xs text-gray-500 mt-1">Agregá una categoría para este paso.</p>
+                    <div className="text-center py-4 sm:py-6">
+                      <p className="text-xs sm:text-sm text-gray-600">No hay categorías configuradas</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Agregá una categoría para este paso.</p>
                     </div>
                   )}
                 </div>
@@ -693,7 +693,7 @@ export default function WorkshopSettingsPage() {
                   <div className="mt-3 flex items-center gap-2">
                     <input
                       autoFocus
-                      className="flex-1 rounded-[4px] border px-3 py-2 text-sm"
+                      className="flex-1 rounded-[4px] border px-2 sm:px-3 py-2 text-xs sm:text-sm"
                       placeholder={editingCatId ? "Renombrar categoría" : "Nombre de la categoría"}
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
@@ -702,17 +702,17 @@ export default function WorkshopSettingsPage() {
                       <>
                         <button
                           onClick={saveEdit}
-                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-emerald-600 text-white hover:bg-emerald-700"
+                          className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-[4px] bg-emerald-600 text-white hover:bg-emerald-700 flex-shrink-0"
                           title="Guardar"
                         >
-                          <Check size={16} />
+                          <Check size={14} className="sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={cancelEditOrAdd}
-                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-gray-200 hover:bg-gray-300"
+                          className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-[4px] bg-gray-200 hover:bg-gray-300 flex-shrink-0"
                           title="Cancelar"
                         >
-                          <X size={16} />
+                          <X size={14} className="sm:w-4 sm:h-4" />
                         </button>
                       </>
                     ) : (
@@ -720,17 +720,17 @@ export default function WorkshopSettingsPage() {
                         <button
                           onClick={createCategory}
                           disabled={!inputValue.trim()}
-                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+                          className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-[4px] bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 flex-shrink-0"
                           title="Agregar"
                         >
-                          <Check size={16} />
+                          <Check size={14} className="sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={cancelEditOrAdd}
-                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-gray-200 hover:bg-gray-300"
+                          className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-[4px] bg-gray-200 hover:bg-gray-300 flex-shrink-0"
                           title="Cancelar"
                         >
-                          <X size={16} />
+                          <X size={14} className="sm:w-4 sm:h-4" />
                         </button>
                       </>
                     )}
@@ -745,9 +745,9 @@ export default function WorkshopSettingsPage() {
                       setEditingId(null);
                       setInputValue("");
                     }}
-                    className="mt-6 w-full flex items-center justify-center gap-2 rounded-[4px] bg-[#EDF2FF] text-[#0040B8] py-3 hover:bg-[#E3EAFF]"
+                    className="mt-4 sm:mt-6 w-full flex items-center justify-center gap-2 rounded-[4px] bg-[#EDF2FF] text-[#0040B8] py-2.5 sm:py-3 text-xs sm:text-sm hover:bg-[#E3EAFF]"
                   >
-                    <Plus size={18} /> Agregar categoría
+                    <Plus size={16} className="sm:w-[18px] sm:h-[18px]" /> Agregar categoría
                   </button>
                 )}
               </div>
@@ -757,30 +757,30 @@ export default function WorkshopSettingsPage() {
                   {obs.map((o) => (
                     <div key={o.id} className="flex items-center gap-2">
                       <input
-                        className="flex-1 rounded-[4px] border px-3 py-2 text-sm bg-gray-50"
+                        className="flex-1 rounded-[4px] border px-2 sm:px-3 py-2 text-xs sm:text-sm bg-gray-50"
                         value={o.description}
                         readOnly
                       />
                       <button
                         onClick={() => startEdit(o)}
-                        className="p-2 rounded-[4px] border hover:bg-gray-50"
+                        className="p-1.5 sm:p-2 rounded-[4px] border hover:bg-gray-50 flex-shrink-0"
                         title="Editar"
                       >
-                        <Pencil size={16} />
+                        <Pencil size={14} className="sm:w-4 sm:h-4" />
                       </button>
                       <button
                         onClick={() => removeObs(o.id)}
-                        className="p-2 rounded-[4px] border hover:bg-gray-50"
+                        className="p-1.5 sm:p-2 rounded-[4px] border hover:bg-gray-50 flex-shrink-0"
                         title="Eliminar"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} className="sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   ))}
                   {obs.length === 0 && !composerOpen && (
-                    <div className="text-center py-6">
-                      <p className="text-sm text-gray-600">No tienes ninguna observación</p>
-                      <p className="text-xs text-gray-500 mt-1">Agrega observaciones tocando el botón de abajo.</p>
+                    <div className="text-center py-4 sm:py-6">
+                      <p className="text-xs sm:text-sm text-gray-600">No tienes ninguna observación</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Agrega observaciones tocando el botón de abajo.</p>
                     </div>
                   )}
                 </div>
@@ -789,7 +789,7 @@ export default function WorkshopSettingsPage() {
                   <div className="mt-3 flex items-center gap-2">
                     <input
                       autoFocus
-                      className="flex-1 rounded-[4px] border px-3 py-2 text-sm"
+                      className="flex-1 rounded-[4px] border px-2 sm:px-3 py-2 text-xs sm:text-sm"
                       placeholder="Escribe la observación"
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
@@ -798,17 +798,17 @@ export default function WorkshopSettingsPage() {
                       <>
                         <button
                           onClick={saveEdit}
-                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-emerald-600 text-white hover:bg-emerald-700"
+                          className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-[4px] bg-emerald-600 text-white hover:bg-emerald-700 flex-shrink-0"
                           title="Guardar"
                         >
-                          <Check size={16} />
+                          <Check size={14} className="sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={cancelEditOrAdd}
-                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-gray-200 hover:bg-gray-300"
+                          className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-[4px] bg-gray-200 hover:bg-gray-300 flex-shrink-0"
                           title="Cancelar"
                         >
-                          <X size={16} />
+                          <X size={14} className="sm:w-4 sm:h-4" />
                         </button>
                       </>
                     ) : (
@@ -816,17 +816,17 @@ export default function WorkshopSettingsPage() {
                         <button
                           onClick={createObs}
                           disabled={!inputValue.trim()}
-                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+                          className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-[4px] bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 flex-shrink-0"
                           title="Agregar"
                         >
-                          <Check size={16} />
+                          <Check size={14} className="sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={cancelEditOrAdd}
-                          className="h-9 w-9 flex items-center justify-center rounded-[4px] bg-gray-200 hover:bg-gray-300"
+                          className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-[4px] bg-gray-200 hover:bg-gray-300 flex-shrink-0"
                           title="Cancelar"
                         >
-                          <X size={16} />
+                          <X size={14} className="sm:w-4 sm:h-4" />
                         </button>
                       </>
                     )}
@@ -840,21 +840,21 @@ export default function WorkshopSettingsPage() {
                       setEditingId(null);
                       setInputValue("");
                     }}
-                    className="mt-6 w-full flex items-center justify-center gap-2 rounded-[4px] bg-[#EDF2FF] text-[#0040B8] py-3 hover:bg-[#E3EAFF]"
+                    className="mt-4 sm:mt-6 w-full flex items-center justify-center gap-2 rounded-[4px] bg-[#EDF2FF] text-[#0040B8] py-2.5 sm:py-3 text-xs sm:text-sm hover:bg-[#E3EAFF]"
                   >
-                    <Plus size={18} /> Agregar nueva observación
+                    <Plus size={16} className="sm:w-[18px] sm:h-[18px]" /> Agregar nueva observación
                   </button>
                 )}
               </div>
             )}
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-4 sm:mt-6 flex justify-end">
               <button
                 onClick={() => {
                   setObsOpen(false);
                   cancelEditOrAdd();
                 }}
-                className="rounded-[4px] border border-gray-300 px-4 py-2 hover:bg-gray-50"
+                className="rounded-[4px] border border-gray-300 px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-gray-50"
               >
                 Cerrar
               </button>
@@ -881,12 +881,12 @@ function Field({
   readOnly?: boolean;
 }) {
   return (
-    <label className="block text-sm">
+    <label className="block text-xs sm:text-sm">
       <span className="text-black">{label}</span>
       <input
-        className={`mt-1 w-full rounded-[4px] border px-4 py-3 ${
-          readOnly ? "bg-gray-100 text-gray-700 border-gray-200" : "border-gray-300"
-        }`}
+                      className={`mt-1 w-full rounded-[4px] border px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm ${
+                        readOnly ? "bg-gray-100 text-gray-700 border-gray-200" : "border-gray-300"
+                      }`}
         value={value}
         readOnly={!!readOnly}
         onChange={(e) => onChange?.(e.target.value)}

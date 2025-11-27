@@ -130,20 +130,20 @@ export default function VehicleDocsDropzone({
 	};
 
   return (
-    <section className="mt-10">
+    <section className="mt-4 sm:mt-6 md:mt-10">
 			{mode === "edit" && (
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3">
         <div className="flex items-center gap-2">
-						<img src="/images/icons/DropzoneIcon.svg" alt="" className="w-4 h-4" />
-						<h3 className="text-[15px] font-medium text-neutral-800">Documentación del vehículo</h3>
+						<img src="/images/icons/DropzoneIcon.svg" alt="" className="w-3 h-3 sm:w-4 sm:h-4" />
+						<h3 className="text-sm sm:text-[15px] font-medium text-neutral-800">Documentación del vehículo</h3>
         </div>
-					<p className="text-xs text-neutral-500">Formatos: JPG, PNG, WEBP, PDF · hasta 20 MB</p>
+					<p className="text-[10px] sm:text-xs text-neutral-500">Formatos: JPG, PNG, WEBP, PDF · hasta 20 MB</p>
       </div>
 			)}
 
 			{/* Alerta requerida */}
 			{mode === "edit" && (
-				<div className="mb-4 rounded-[4px] border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+				<div className="mb-3 sm:mb-4 rounded-[4px] border border-amber-300 bg-amber-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-amber-800">
 					<strong className="font-medium">Importante:</strong> Obligatorio subir frente y dorso de la cédula verde, licencia de conducir y de la póliza de seguro.
 				</div>
 			)}
@@ -153,10 +153,10 @@ export default function VehicleDocsDropzone({
 					onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
 					onDragLeave={() => setIsDragging(false)}
                 onDrop={onDrop}
-					className={`border-dashed border-2 rounded-xl text-center mt-2 transition-colors relative ${isDragging ? "border-[#0040B8] bg-[#0040B8]/5" : "border-[#D3D3D3]"}`}
+					className={`border-dashed border-2 rounded-lg sm:rounded-xl text-center mt-2 transition-colors relative ${isDragging ? "border-[#0040B8] bg-[#0040B8]/5" : "border-[#D3D3D3]"}`}
               >
                 {isCompressing && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 text-sm font-medium">
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 text-xs sm:text-sm font-medium">
                     Comprimiendo...
                   </div>
                 )}
@@ -172,8 +172,8 @@ export default function VehicleDocsDropzone({
 						}}
 						accept={ACCEPT_MIME.join(",")}
 					/>
-					<div className="py-8">
-						<img src="/images/icons/DropzoneIcon.svg" alt="" className="mx-auto mb-3 h-12 w-12" />
+					<div className="py-6 sm:py-8">
+						<img src="/images/icons/DropzoneIcon.svg" alt="" className="mx-auto mb-2 sm:mb-3 h-10 w-10 sm:h-12 sm:w-12" />
 						<button
 							type="button"
 							onClick={() => {
@@ -181,41 +181,41 @@ export default function VehicleDocsDropzone({
 								if (inputRef.current) inputRef.current.value = "";
 								inputRef.current?.click();
 							}}
-							className="rounded-[4px] border border-[#0040B8] px-4 py-2 text-sm text-[#0040B8] duration-150 hover:bg-[#0040B8] hover:text-white"
+							className="rounded-[4px] border border-[#0040B8] px-3 sm:px-4 py-2 text-xs sm:text-sm text-[#0040B8] duration-150 hover:bg-[#0040B8] hover:text-white"
 						>
 							Elegí archivos
 						</button>
-						<p className="mt-2 text-sm text-[#00000080]">o arrastralos hasta aquí.</p>
+						<p className="mt-2 text-xs sm:text-sm text-[#00000080]">o arrastralos hasta aquí.</p>
 					</div>
 				</div>
 			)}
 
 			{/* Documentos */}
-			<div className="mt-6">
+			<div className="mt-4 sm:mt-6">
 				{(mode === "view" || existing.length > 0 || queue.length > 0) && (
-					<p className="text-sm text-[#5c5c5c] mb-2">Documentos</p>
+					<p className="text-xs sm:text-sm text-[#5c5c5c] mb-2">Documentos</p>
 				)}
 				{mode === "view" && existing.length === 0 && (
-					<div className="flex items-center justify-center rounded-[4px] border border-dashed border-[#D3D3D3] bg-white py-10">
+					<div className="flex items-center justify-center rounded-[4px] border border-dashed border-[#D3D3D3] bg-white py-8 sm:py-10">
 						<div className="text-center px-4">
-							<img src="/images/icons/empty-file.svg" alt="" className="mx-auto mb-3 h-10 w-10 opacity-70" />
-							<p className="text-sm text-neutral-500">No hay documentos disponibles</p>
+							<img src="/images/icons/empty-file.svg" alt="" className="mx-auto mb-2 sm:mb-3 h-8 w-8 sm:h-10 sm:w-10 opacity-70" />
+							<p className="text-xs sm:text-sm text-neutral-500">No hay documentos disponibles</p>
                 </div>
                   </div>
 				)}
-				<div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-2">
+				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 gap-2">
 					{mode === "edit" && queue.map((f, i) => (
 						<div key={`q-${i}-${f.name}`} className="relative rounded-[4px] bg-white ring-1 ring-[#d3d3d3]">
                     <button
                       type="button"
 								onClick={() => removeQueued(i)}
-								className="absolute top-1 right-1 rounded-full bg-white/80 ring-1 ring-[#E6E6E6] p-1 hover:bg-white"
+								className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 rounded-full bg-white/80 ring-1 ring-[#E6E6E6] p-0.5 sm:p-1 hover:bg-white"
 								aria-label="Quitar"
 								title="Quitar"
 							>
-								<X size={14} />
+								<X size={12} className="sm:w-[14px] sm:h-[14px]" />
                     </button>
-							<div className="w-full h-[84px] bg-neutral-50 flex items-center justify-center overflow-hidden rounded-t-[4px]">
+							<div className="w-full h-[70px] sm:h-[84px] bg-neutral-50 flex items-center justify-center overflow-hidden rounded-t-[4px]">
 								{previews[i] && !brokenPreview[i] ? (
 									<img
 										src={previews[i] as string}
@@ -224,12 +224,12 @@ export default function VehicleDocsDropzone({
 										onError={() => setBrokenPreview((prev) => ({ ...prev, [i]: true }))}
 									/>
 								) : (
-									<FileImage className="w-6 h-6 text-neutral-500" />
+									<FileImage className="w-5 h-5 sm:w-6 sm:h-6 text-neutral-500" />
 								)}
 							</div>
-							<div className="px-2 py-1">
-								<p className="text-[11px] font-medium text-neutral-800 truncate" title={f.name}>{f.name}</p>
-								<p className="text-[11px] text-neutral-500">{f.type || "imagen"} · {prettySize(f.size)}</p>
+							<div className="px-1.5 sm:px-2 py-1">
+								<p className="text-[10px] sm:text-[11px] font-medium text-neutral-800 truncate" title={f.name}>{f.name}</p>
+								<p className="text-[10px] sm:text-[11px] text-neutral-500">{f.type || "imagen"} · {prettySize(f.size)}</p>
 							</div>
 						</div>
 					))}
@@ -239,22 +239,22 @@ export default function VehicleDocsDropzone({
                     <button
                       type="button"
 									onClick={() => onDeleteExisting(d.id)}
-									className="absolute top-1 right-1 rounded-full bg-white/90 p-1 ring-1 ring-neutral-200 hover:bg-white"
+									className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 rounded-full bg-white/90 p-0.5 sm:p-1 ring-1 ring-neutral-200 hover:bg-white"
 									title="Borrar"
                     >
-                      <Trash2 className="w-4 h-4 text-neutral-600" />
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-neutral-600" />
                     </button>
                   )}
-							<div className="w-full h-[84px] bg-neutral-50 flex items-center justify-center overflow-hidden rounded-t-[4px]">
+							<div className="w-full h-[70px] sm:h-[84px] bg-neutral-50 flex items-center justify-center overflow-hidden rounded-t-[4px]">
 								{d.mime_type?.startsWith("image/") ? (
 									<img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
 								) : (
-									<div className="text-[11px] text-neutral-500 px-2 text-center truncate">{d.file_name}</div>
+									<div className="text-[10px] sm:text-[11px] text-neutral-500 px-2 text-center truncate">{d.file_name}</div>
 								)}
 							</div>
-							<div className="px-2 py-1">
-								<p className="text-[11px] font-medium text-neutral-800 truncate" title={d.file_name}>{d.file_name}</p>
-								<p className="text-[11px] text-neutral-500">{d.mime_type || "archivo"} · {prettySize(d.size_bytes)}</p>
+							<div className="px-1.5 sm:px-2 py-1">
+								<p className="text-[10px] sm:text-[11px] font-medium text-neutral-800 truncate" title={d.file_name}>{d.file_name}</p>
+								<p className="text-[10px] sm:text-[11px] text-neutral-500">{d.mime_type || "archivo"} · {prettySize(d.size_bytes)}</p>
                 </div>
               </div>
 					))}

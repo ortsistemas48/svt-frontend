@@ -692,12 +692,12 @@ export default function InspectionStepsClient({
   }
 
   return (
-    <div className="w-full px-4 pb-10">
+    <div className="w-full px-1 sm:px-2 md:px-4 pb-6 sm:pb-8 md:pb-10">
       {isCompleted && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-[14px]">
+        <div className="mb-4 sm:mb-5 md:mb-6 p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-lg sm:rounded-[14px] mx-1 sm:mx-0">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
@@ -705,9 +705,9 @@ export default function InspectionStepsClient({
                 />
               </svg>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">Revisión Completada</h3>
-              <div className="mt-2 text-sm text-yellow-700">
+            <div className="ml-2 sm:ml-3">
+              <h3 className="text-xs sm:text-sm font-medium text-yellow-800">Revisión Completada</h3>
+              <div className="mt-1 sm:mt-2 text-xs sm:text-sm text-yellow-700">
                 <p>Esta revisión ya fue completada, no se pueden realizar modificaciones.</p>
               </div>
             </div>
@@ -715,7 +715,7 @@ export default function InspectionStepsClient({
         </div>
       )}
 
-      <div className="w-full space-y-4">
+      <div className="w-full space-y-3 sm:space-y-4">
         {steps.map((s) => {
           const current = statusByStep[s.step_id];
           const isNonApto = current === "Condicional" || current === "Rechazado";
@@ -724,19 +724,19 @@ export default function InspectionStepsClient({
             <section
               key={s.step_id}
               className={clsx(
-                "w-full rounded-[14px] bg-white transition-colors border",
+                "w-full rounded-lg sm:rounded-[14px] bg-white transition-colors border",
                 current ? STATUS_UI[current as Status].stepBorder : "border-zinc-200"
               )}
             >
-              <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3 p-4">
+              <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3 p-3 sm:p-4">
                 <div className="min-w-0">
-                  <h3 className="font-medium text-zinc-900">{s.name}</h3>
-                  <p className="hidden min-[1300px]:block text-sm md:max-w-[400px] text-zinc-500">
+                  <h3 className="text-sm sm:text-base font-medium text-zinc-900">{s.name}</h3>
+                  <p className="hidden min-[1300px]:block text-xs sm:text-sm md:max-w-[400px] text-zinc-500">
                     {s.description}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-5 flex-wrap">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 lg:gap-5 flex-wrap">
                   {options.map((opt) => {
                     const selected = current === opt;
                     return (
@@ -751,7 +751,7 @@ export default function InspectionStepsClient({
                           }))
                         }
                         className={clsx(
-                          "w-[140px] px-4 py-2.5 rounded-[4px] border text-sm transition",
+                          "w-full sm:w-[140px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-[4px] border text-xs sm:text-sm transition",
                           selected ? STATUS_UI[opt].btn : "border-zinc-200 text-zinc-700 hover:bg-zinc-50",
                           isCompleted && "opacity-50 cursor-not-allowed"
                         )}
@@ -766,14 +766,14 @@ export default function InspectionStepsClient({
                       type="button"
                       disabled={isCompleted}
                       className={clsx(
-                        "ml-2 px-4 py-2.5 rounded-[4px] border text-sm flex items-center gap-2",
+                        "w-full sm:w-auto sm:ml-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[4px] border text-xs sm:text-sm flex items-center justify-center gap-2",
                         "border-[#0040B8] text-[#0040B8] hover:bg-zinc-50",
                         isCompleted && "opacity-50 cursor-not-allowed"
                       )}
                       onClick={() => openObsModalForStep(s.step_id)}
                     >
                       <span>Observaciones</span>
-                      <ChevronRight size={16} />
+                      <ChevronRight size={14} className="sm:w-4 sm:h-4" />
                     </button>
                   )}
                 </div>
@@ -783,15 +783,15 @@ export default function InspectionStepsClient({
         })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4 mt-8 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-3 sm:gap-4 mt-6 sm:mt-8 w-full">
         <div className="md:col-span-2">
-          <h4 className="text-sm font-medium text-zinc-900">Observaciones generales</h4>
-          <p className="text-xs text-zinc-500 mt-1">
+          <h4 className="text-xs sm:text-sm font-medium text-zinc-900">Observaciones generales</h4>
+          <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
             Escribí las observaciones del vehículo, se guardan cuando confirmás la revisión. Máximo {MAX_CHARS} caracteres.
           </p>
         </div>
 
-        <div className="rounded-[14px] text-sm border border-zinc-200 bg-white p-4 w-full self-start md:col-span-2">
+        <div className="rounded-lg sm:rounded-[14px] text-xs sm:text-sm border border-zinc-200 bg-white p-3 sm:p-4 w-full self-start md:col-span-2">
           <textarea
             value={globalText}
             onChange={(e) => {
@@ -801,29 +801,29 @@ export default function InspectionStepsClient({
             disabled={isCompleted}
             placeholder="Ingresá tus observaciones."
             className={clsx(
-              "w-full h-40 outline-none resize-none",
+              "w-full h-32 sm:h-40 outline-none resize-none text-xs sm:text-sm",
               isCompleted && "opacity-50 cursor-not-allowed"
             )}
             maxLength={MAX_CHARS}
           />
-          <div className="mt-2 text-right text-xs text-zinc-400">
+          <div className="mt-2 text-right text-[10px] sm:text-xs text-zinc-400">
             {obsCharCount}/{MAX_CHARS}
           </div>
         </div>
       </div>
       
-      <section className="rounded-[14px] border border-zinc-200 bg-white p-4 w-full mt-6">
+      <section className="rounded-lg sm:rounded-[14px] border border-zinc-200 bg-white p-3 sm:p-4 w-full mt-4 sm:mt-6">
         <div className="flex items-center justify-between mb-1">
-          <h4 className="text-sm font-medium text-zinc-900">Subir informes técnicos y fotos del vehículo</h4>
-          {inspDocsLoading && <span className="text-xs text-zinc-500">Actualizando...</span>}
+          <h4 className="text-xs sm:text-sm font-medium text-zinc-900">Subir informes técnicos y fotos del vehículo</h4>
+          {inspDocsLoading && <span className="text-[10px] sm:text-xs text-zinc-500">Actualizando...</span>}
         </div>
-        <p className="text-xs text-zinc-500 mb-4">
+        <p className="text-[10px] sm:text-xs text-zinc-500 mb-3 sm:mb-4">
           Los archivos que agregues quedan pendientes y se suben cuando guardás la revisión.
         </p>
 
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6">
           <div className={clsx(isCompleted && "opacity-50")}>
-            <h5 className="text-sm font-medium text-zinc-800 mb-2">Informes técnicos</h5>
+            <h5 className="text-xs sm:text-sm font-medium text-zinc-800 mb-2">Informes técnicos</h5>
             <Dropzone
               title=""
               onPendingChange={onPendingTechChange}
@@ -835,7 +835,7 @@ export default function InspectionStepsClient({
           </div>
 
           <div className={clsx(isCompleted && "opacity-50")}>
-            <h5 className="text-sm font-medium text-zinc-800 mb-2">Fotos del vehículo</h5>
+            <h5 className="text-xs sm:text-sm font-medium text-zinc-800 mb-2">Fotos del vehículo</h5>
             <Dropzone
               title=""
               onPendingChange={onPendingPhotosChange}
@@ -859,10 +859,10 @@ export default function InspectionStepsClient({
 
 
 
-      <div className="flex items-center justify-center gap-5 mt-10 w-full">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 md:gap-5 mt-6 sm:mt-8 md:mt-10 w-full">
         <button
           type="button"
-          className="px-5 py-2.5 rounded-[4px] border border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+          className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-[4px] border border-zinc-300 text-xs sm:text-sm text-zinc-700 hover:bg-zinc-50"
           onClick={() => router.back()}
         >
           Cancelar
@@ -881,7 +881,7 @@ export default function InspectionStepsClient({
                 setConfirmOpen(true);
               }}
               className={clsx(
-                "px-5 py-2.5 rounded-[4px] border text-[#0040B8]",
+                "w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-[4px] border text-xs sm:text-sm text-[#0040B8]",
                 certLoading ? "bg-blue-100 border-blue-200" : "border-[#0040B8] hover:bg-zinc-50",
                 isCompleted && "opacity-50 cursor-not-allowed"
               )}
@@ -898,7 +898,7 @@ export default function InspectionStepsClient({
           disabled={saving || isCompleted}
           onClick={saveAll}
           className={clsx(
-            "px-5 py-2.5 rounded-[4px] text-white",
+            "w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-[4px] text-xs sm:text-sm text-white",
             saving ? "bg-blue-300" : "bg-[#0040B8] hover:opacity-95",
             isCompleted && "opacity-50 cursor-not-allowed"
           )}
@@ -908,25 +908,25 @@ export default function InspectionStepsClient({
       </div>
 
       {confirmOpen && overallStatus && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" aria-modal="true" role="dialog">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4" aria-modal="true" role="dialog">
           <div className="absolute inset-0 bg-black/30" onClick={() => !certLoading && setConfirmOpen(false)} />
-          <div className="relative z-10 w-[min(92vw,520px)] rounded-[14px] border border-zinc-200 bg-white p-5 shadow-xl">
+          <div className="relative z-10 w-full max-w-[92vw] sm:max-w-[520px] rounded-lg sm:rounded-[14px] border border-zinc-200 bg-white p-4 sm:p-5 shadow-xl">
             <div className="flex items-start justify-between">
-              <h3 className="text-base font-semibold text-zinc-900">Confirmar certificado</h3>
+              <h3 className="text-sm sm:text-base font-semibold text-zinc-900">Confirmar certificado</h3>
               <button
                 className="p-1 rounded hover:bg-zinc-100"
                 onClick={() => !certLoading && setConfirmOpen(false)}
                 aria-label="Cerrar"
               >
-                <X size={18} />
+                <X size={16} className="sm:w-[18px] sm:h-[18px]" />
               </button>
             </div>
 
-            <p className="mt-6 mb-2 text-md text-zinc-600">
+            <p className="mt-4 sm:mt-6 mb-2 text-sm sm:text-md text-zinc-600">
               Se generará el certificado con condición{" "}
               <span
                 className={clsx(
-                  "ml-2 px-2 py-0.5 rounded border text-sm",
+                  "ml-2 px-2 py-0.5 rounded border text-xs sm:text-sm",
                   overallStatus === "Apto"
                     ? "border-[#0040B8] text-[#0040B8]"
                     : overallStatus === "Condicional"
@@ -938,11 +938,11 @@ export default function InspectionStepsClient({
               </span>
             </p>
 
-            <div className="mt-10 flex items-center justify-center gap-4">
+            <div className="mt-6 sm:mt-10 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
               <button
                 type="button"
                 disabled={certLoading}
-                className="px-4 py-2 rounded-[4px] border border-zinc-300 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+                className="w-full sm:w-auto px-4 py-2 rounded-[4px] border border-zinc-300 text-xs sm:text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
                 onClick={() => setConfirmOpen(false)}
               >
                 Cancelar
@@ -950,7 +950,7 @@ export default function InspectionStepsClient({
               <button
                 type="button"
                 disabled={certLoading}
-                className="px-4 py-2 rounded-[4px] bg-[#0040B8] text-white text-sm hover:opacity-95 disabled:opacity-60"
+                className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-[4px] bg-[#0040B8] text-white text-xs sm:text-sm hover:opacity-90 disabled:opacity-60"
                 onClick={() => generateCertificate(overallStatus)}
               >
                 {certLoading ? "Generando..." : "Confirmar"}

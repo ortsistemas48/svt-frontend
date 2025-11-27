@@ -518,33 +518,33 @@ export default function WorkshopTable({ workshops }: Props) {
   }, [members]);
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-1 sm:p-2 md:p-4 lg:p-6">
       {/* Filtros y acciones, fuera del card de tabla */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
-        <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
-          <Search size={18} className="text-gray-500 mr-2 flex-shrink-0" />
+      <div className="flex flex-row gap-2 sm:gap-3 mb-3 sm:mb-4 md:mb-6">
+        <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-2 sm:px-3 py-1.5 sm:py-2 md:py-3 h-9 sm:h-10 md:h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
+          <Search size={14} className="sm:w-[16px] sm:h-[16px] md:w-[18px] md:h-[18px] text-gray-500 mr-1 sm:mr-2 flex-shrink-0" />
           <input
             type="text"
             onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Busca talleres por nombre, razón social, ciudad, provincia, CUIT o teléfono"
-            className="w-full text-sm sm:text-base focus:outline-none bg-transparent"
+            placeholder="Buscar talleres..."
+            className="w-full text-xs sm:text-sm md:text-base focus:outline-none bg-transparent"
           />
         </div>
 
-        <div className="flex gap-2 sm:gap-3">
+        <div className="flex gap-2 sm:gap-3 flex-shrink-0">
           <button
-            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
+            className="hidden sm:flex bg-white border border-[#0040B8] text-[#0040B8] px-3 md:px-4 py-2 sm:py-3 rounded-[4px] items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm h-10 md:h-12"
             onClick={handleRefresh}
           >
-            <RefreshCcw size={16} />
-            <span className="hidden sm:inline">Actualizar</span>
+            <RefreshCcw size={16} className="w-4 h-4" />
+            <span>Actualizar</span>
           </button>
         </div>
       </div>
 
       {/* Controles de paginación superiores */}
-      <div className="mt-1 w-full flex items-center justify-between">
-        <div className="text-sm text-gray-600">
+      <div className="mt-1 w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="text-xs sm:text-sm text-gray-600">
           Mostrando{" "}
           <strong>{totalItems === 0 ? 0 : start + 1}-{Math.min(end, totalItems)}</strong>{" "}
           de <strong>{totalItems}</strong> talleres
@@ -552,24 +552,24 @@ export default function WorkshopTable({ workshops }: Props) {
         
       </div>
 
-      {/* Tabla en card */}
-      <div className="rounded-[14px] border border-gray-200 overflow-hidden bg-white mt-3">
+      {/* Tabla en card - vista desktop */}
+      <div className="hidden xl:block rounded-lg sm:rounded-[14px] border border-gray-200 overflow-hidden bg-white mt-2 sm:mt-3">
         <div className="overflow-x-auto">
           <table className="w-full text-sm sm:text-base">
             <thead className="bg-white text-gray-600">
               <tr className="border-b border-gray-200">
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Nombre</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Razón Social</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Ciudad</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Provincia</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">CUIT</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Acciones</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">Nombre</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">Razón Social</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">Ciudad</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">Provincia</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">CUIT</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {pageWorkshops.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 sm:py-20 text-gray-600">
+                  <td colSpan={6} className="text-center py-8 sm:py-12 md:py-20 text-xs sm:text-sm text-gray-600">
                     No hay talleres en el sistema.
                   </td>
                 </tr>
@@ -577,21 +577,21 @@ export default function WorkshopTable({ workshops }: Props) {
                 pageWorkshops.map((workshop) => {
                   return (
                     <tr key={workshop.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-3 text-center">
-                        <p className="font-medium">{workshop.name}</p>
+                      <td className="p-2 sm:p-3 text-center">
+                        <p className="text-xs sm:text-sm font-medium">{workshop.name}</p>
                       </td>
-                      <td className="p-3 text-center">
+                      <td className="p-2 sm:p-3 text-center">
                         <p className="text-xs sm:text-sm text-gray-600 break-all max-w-[200px] mx-auto truncate">
                           {workshop.razon_social}
                         </p>
                       </td>
-                      <td className="p-3 text-center">
+                      <td className="p-2 sm:p-3 text-center">
                         <p className="text-xs sm:text-sm">{workshop.city || "-"}</p>
                       </td>
-                      <td className="p-3 text-center">
+                      <td className="p-2 sm:p-3 text-center">
                         <p className="text-xs sm:text-sm">{workshop.province || "-"}</p>
                       </td>
-                      <td className="p-3 text-center">
+                      <td className="p-2 sm:p-3 text-center">
                         <p className="font-mono text-xs sm:text-sm">{workshop.cuit || "-"}</p>
                       </td>
                       <td className="p-0">
@@ -602,7 +602,7 @@ export default function WorkshopTable({ workshops }: Props) {
                             title="Ver detalles"
                             onClick={() => openDrawer(workshop)}
                           >
-                            <EllipsisVertical size={16} />
+                            <EllipsisVertical size={14} className="sm:w-4 sm:h-4" />
                           </button>
                         </div>
                       </td>
@@ -615,19 +615,74 @@ export default function WorkshopTable({ workshops }: Props) {
         </div>
       </div>
 
+      {/* Vista de cards para mobile/tablet */}
+      <div className="xl:hidden mt-2 sm:mt-3 space-y-2 sm:space-y-3">
+        {pageWorkshops.length === 0 ? (
+          <div className="text-center py-8 sm:py-12 text-xs sm:text-sm text-gray-600 bg-white rounded-lg border border-gray-200 p-4">
+            No hay talleres en el sistema.
+          </div>
+        ) : (
+          pageWorkshops.map((workshop) => {
+            return (
+              <div
+                key={workshop.id}
+                className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
+                      {workshop.name}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1.5 rounded hover:bg-blue-50 transition-colors flex-shrink-0 ml-2"
+                    title="Ver detalles"
+                    onClick={() => openDrawer(workshop)}
+                  >
+                    <EllipsisVertical size={18} className="sm:w-5 sm:h-5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:gap-3 text-xs sm:text-sm">
+                  <div>
+                    <div className="text-gray-500 mb-0.5">Razón Social</div>
+                    <div className="text-gray-900 break-all">{workshop.razon_social || "-"}</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <div>
+                      <div className="text-gray-500 mb-0.5">Ciudad</div>
+                      <div className="text-gray-900">{workshop.city || "-"}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 mb-0.5">Provincia</div>
+                      <div className="text-gray-900">{workshop.province || "-"}</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 mb-0.5">CUIT</div>
+                    <div className="text-gray-900 font-mono">{workshop.cuit || "-"}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
       {/* Controles de paginación inferiores */}
-      <div className="w-full flex items-center justify-between mt-4">
+      <div className="w-full flex items-center justify-between gap-2 sm:gap-3 mt-3 sm:mt-4">
         <button
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage <= 1}
-          className={`px-3 py-2 rounded border text-sm ${
+          className={`px-2 py-1 rounded border text-xs ${
             currentPage <= 1 ? "text-gray-400 border-gray-200" : "text-[#0040B8] border-[#0040B8]"
           }`}
         >
           Anterior
         </button>
 
-        <div className="flex items-center gap-1 text-sm">
+        <div className="flex items-center gap-1 text-xs sm:text-sm flex-wrap justify-center">
           {totalPages <= 7 ? (
             Array.from({ length: totalPages }).map((_, i) => {
               const n = i + 1;
@@ -653,7 +708,7 @@ export default function WorkshopTable({ workshops }: Props) {
               >
                 1
               </button>
-              {currentPage > 3 && <span className="px-2">...</span>}
+              {currentPage > 3 && <span className="px-1 sm:px-2">...</span>}
               {[
                 Math.max(2, currentPage - 1),
                 currentPage,
@@ -672,7 +727,7 @@ export default function WorkshopTable({ workshops }: Props) {
                     {n}
                   </button>
                 ))}
-              {currentPage < totalPages - 2 && <span className="px-2">...</span>}
+              {currentPage < totalPages - 2 && <span className="px-1 sm:px-2">...</span>}
               <button
                 onClick={() => goToPage(totalPages)}
                 className={`px-2 py-1 rounded border ${
@@ -688,7 +743,7 @@ export default function WorkshopTable({ workshops }: Props) {
         <button
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className={`px-3 py-2 rounded border text-sm ${
+          className={`px-2 py-1 rounded border text-xs ${
             currentPage >= totalPages ? "text-gray-400 border-gray-200" : "text-[#0040B8] border-[#0040B8]"
           }`}
         >
@@ -714,41 +769,41 @@ export default function WorkshopTable({ workshops }: Props) {
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b">
-          <h2 className="text-base sm:text-lg font-semibold truncate">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b">
+          <h2 className="text-sm sm:text-base md:text-lg font-semibold truncate">
             {selected ? selected.name : "Detalle de taller"}
           </h2>
           <button
             ref={closeBtnRef}
             onClick={closeDrawer}
-            className="p-2 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+            className="p-1.5 sm:p-2 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
             aria-label="Cerrar panel"
             title="Cerrar"
           >
-            <X size={18} />
+            <X size={16} className="sm:w-[18px] sm:h-[18px]" />
           </button>
         </div>
 
-        <div className="p-4 overflow-y-auto h-[calc(100%-56px)]">
+        <div className="p-3 sm:p-4 overflow-y-auto h-[calc(100%-56px)]">
           {selected ? (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {loadingDetail ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-sm text-gray-500">Cargando información del taller...</div>
+                <div className="flex items-center justify-center py-8 sm:py-12">
+                  <div className="text-xs sm:text-sm text-gray-500">Cargando información del taller...</div>
                 </div>
               ) : errorMsg ? (
-                <div className="text-red-600 text-sm border border-red-200 bg-red-50 rounded-[14px] px-4 py-3">
+                <div className="text-red-600 text-xs sm:text-sm border border-red-200 bg-red-50 rounded-lg sm:rounded-[14px] px-3 sm:px-4 py-2 sm:py-3">
                   {errorMsg}
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-[#0040B8]/10 flex items-center justify-center text-[#0040B8] font-semibold">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#0040B8]/10 flex items-center justify-center text-[#0040B8] font-semibold text-sm sm:text-base">
                       {selected.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-medium">{selected.name}</p>
-                      <p className="text-sm text-gray-600 truncate">{selected.razon_social}</p>
+                      <p className="text-sm sm:text-base font-medium">{selected.name}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 truncate">{selected.razon_social}</p>
                     </div>
                   </div>
 
@@ -766,8 +821,8 @@ export default function WorkshopTable({ workshops }: Props) {
 
                   {/* Personal Asignado */}
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                      <Users size={16} className="text-[#0040B8]" />
+                    <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-3 sm:mb-4 flex items-center gap-2">
+                      <Users size={14} className="sm:w-4 sm:h-4 text-[#0040B8]" />
                       Personal Asignado ({members.length})
                     </h4>
                     <div className="border border-gray-200 rounded-[14px] overflow-hidden">

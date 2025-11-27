@@ -21,7 +21,7 @@ type StickerOrder = {
 
 const TABLE_FILTERS = ["Todos", "Con disponibles", "Sin disponibles"];
 
-export default function StickerOrdersTable() {
+export default function StickerOrdersTable({ externalSearchQuery = "" }: { externalSearchQuery?: string }) {
   const { id } = useParams(); // workshop id desde la ruta /dashboard/[id]
   const router = useRouter();
 
@@ -32,7 +32,7 @@ export default function StickerOrdersTable() {
 
   // búsqueda y paginación en cliente
   const [q, setQ] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(externalSearchQuery || "");
   const [statusFilter, setStatusFilter] = useState<string>("Todos");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -105,6 +105,15 @@ export default function StickerOrdersTable() {
     return filtered.slice(start, start + perPage);
   }, [filtered, page, perPage]);
 
+  // Sincronizar searchQuery externo
+  useEffect(() => {
+    if (externalSearchQuery !== undefined && externalSearchQuery !== searchQuery) {
+      setSearchQuery(externalSearchQuery);
+      setQ(externalSearchQuery);
+      setPage(1);
+    }
+  }, [externalSearchQuery]);
+
   // reseteo de página si cambian filtros o búsqueda
   useEffect(() => {
     setPage(1);
@@ -128,7 +137,7 @@ export default function StickerOrdersTable() {
   };
 
   return (
-    <div>
+    <div className="px-0 sm:px-0">
       {/* Mensajes */}
       {errorMsg && (
         <div className="mb-3 rounded-[4px] border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -142,7 +151,7 @@ export default function StickerOrdersTable() {
       )}
     
       {/* Search y filtros */}
-      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 gap-3 px-[1.5px] pt-1">
           <input
             disabled={loading}
@@ -179,8 +188,6 @@ export default function StickerOrdersTable() {
             <SlidersHorizontal size={16} className="text-white" />
             <span className="hidden sm:inline text-white">Filtrar</span>
           </button>
-            <RefreshButton loading={loading} fetchApps={fetchOrders} />
-          
         </div>
       </div>
 
@@ -210,78 +217,145 @@ export default function StickerOrdersTable() {
       )}
 
       {/* Tabla */}
-      <div className="stk-table overflow-hidden rounded-[14px] border border-gray-200 bg-white">
-        <div className="overflow-x-auto">
-          <div className="min-w-[720px]">
-            <TableTemplate<StickerOrder>
-              headers={headers}
-              items={pageItems}
-              isLoading={loading}
-              emptyMessage="No hay packs de obleas para mostrar"
-              rowsPerSkeleton={perPage}
-              renderRow={(item) => {
-                const created = item.created_at ? new Date(item.created_at) : null;
-                const date = created ? created.toLocaleDateString("es-AR") : "-";
-                const time = created
-                  ? created.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
-                  : "-";
-                const tone = toneForAvailable(item.available_count ?? 0);
-
-                return (
-                  <tr key={item.id} className="transition-colors hover:bg-gray-50">
-                    <td className="p-3 text-center">
-                      <div className="mx-auto max-w-[200px] truncate text-sm font-medium sm:text-base">
-                        {item.name || "-"}
-                      </div>
-                    </td>
-                    <td className="p-3 text-center">
-                      <div className="text-sm sm:text-base">{date}</div>
-                      <div className="text-xs text-gray-600 sm:text-sm">{time}</div>
-                    </td>
-                    <td className="p-3 text-center">
-                      <span
-                        className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm ${tone.text} ${tone.bg}`}
-                      >
-                        {item.available_count ?? 0}
-                      </span>
-                    </td>
-                    <td className="p-3 text-center">
-                      <span
-                        className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm text-gray-800 bg-[#f3f3f3]`}
-                      >
-                        {item.amount ?? 0}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              }}
-              renderSkeletonRow={(cols, i) => (
-                <tr key={`sk-row-${i}`} className="min-h-[60px] animate-pulse">
-                  <td className="p-3 text-center">
-                    <Sk className="mx-auto h-4 w-8" />
-                  </td>
-                  <td className="p-3 text-center">
-                    <Sk className="mx-auto h-4 w-32" />
-                  </td>
-                  <td className="p-3 text-center">
-                    <div className="flex flex-col items-center gap-1">
-                      <Sk className="h-4 w-24" />
-                      <Sk className="h-3 w-20" />
-                    </div>
-                  </td>
-                  <td className="p-3 text-center">
-                    <Sk className="mx-auto h-5 w-10 rounded-full" />
-                  </td>
-                  <td className="p-0">
-                    <div className="flex h-full min-h-[48px] items-center justify-center gap-3 px-3">
-                      <Sk className="h-5 w-5 rounded" />
-                    </div>
-                  </td>
-                </tr>
-              )}
-            />
+      <div className="stk-table overflow-hidden sm:rounded-[14px] sm:border sm:border-gray-200 bg-white">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center px-1 sm:px-8 py-16 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0040B8] mb-4"></div>
+            <p className="text-sm text-gray-500">Cargando packs de obleas...</p>
           </div>
-        </div>
+        ) : pageItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-1 sm:px-8 py-16 text-center">
+            <p className="text-sm sm:text-base text-gray-600">No hay packs de obleas para mostrar</p>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table View - Hidden on mobile/tablet */}
+            <div className="hidden xl:block overflow-x-auto">
+              <div className="min-w-[720px]">
+                <TableTemplate<StickerOrder>
+                  headers={headers}
+                  items={pageItems}
+                  isLoading={loading}
+                  emptyMessage="No hay packs de obleas para mostrar"
+                  rowsPerSkeleton={perPage}
+                  renderRow={(item) => {
+                    const created = item.created_at ? new Date(item.created_at) : null;
+                    const date = created ? created.toLocaleDateString("es-AR") : "-";
+                    const time = created
+                      ? created.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
+                      : "-";
+                    const tone = toneForAvailable(item.available_count ?? 0);
+
+                    return (
+                      <tr key={item.id} className="transition-colors hover:bg-gray-50">
+                        <td className="p-3 text-center">
+                          <div className="mx-auto max-w-[200px] truncate text-sm font-medium sm:text-base">
+                            {item.name || "-"}
+                          </div>
+                        </td>
+                        <td className="p-3 text-center">
+                          <div className="text-sm sm:text-base">{date}</div>
+                          <div className="text-xs text-gray-600 sm:text-sm">{time}</div>
+                        </td>
+                        <td className="p-3 text-center">
+                          <span
+                            className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm ${tone.text} ${tone.bg}`}
+                          >
+                            {item.available_count ?? 0}
+                          </span>
+                        </td>
+                        <td className="p-3 text-center">
+                          <span
+                            className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm text-gray-800 bg-[#f3f3f3]`}
+                          >
+                            {item.amount ?? 0}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  }}
+                  renderSkeletonRow={(cols, i) => (
+                    <tr key={`sk-row-${i}`} className="min-h-[60px] animate-pulse">
+                      <td className="p-3 text-center">
+                        <Sk className="mx-auto h-4 w-8" />
+                      </td>
+                      <td className="p-3 text-center">
+                        <Sk className="mx-auto h-4 w-32" />
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <Sk className="h-4 w-24" />
+                          <Sk className="h-3 w-20" />
+                        </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <Sk className="mx-auto h-5 w-10 rounded-full" />
+                      </td>
+                      <td className="p-0">
+                        <div className="flex h-full min-h-[48px] items-center justify-center gap-3 px-3">
+                          <Sk className="h-5 w-5 rounded" />
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Mobile/Tablet Card View - Hidden on desktop */}
+            <div className="xl:hidden">
+              <div className="px-1 sm:px-2 md:px-4 py-2 sm:py-3 space-y-3 sm:space-y-4">
+                {pageItems.map((item) => {
+                  const created = item.created_at ? new Date(item.created_at) : null;
+                  const date = created ? created.toLocaleDateString("es-AR") : "-";
+                  const time = created
+                    ? created.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
+                    : "-";
+                  const tone = toneForAvailable(item.available_count ?? 0);
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="border border-gray-200 rounded-lg p-3 sm:p-4 space-y-3"
+                    >
+                      {/* Header: Nombre */}
+                      <div>
+                        <h3 className="font-semibold text-base sm:text-lg text-gray-900 mb-1">
+                          {item.name || "-"}
+                        </h3>
+                      </div>
+
+                      {/* Info Section */}
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                        <div>
+                          <span className="text-xs text-gray-500 font-medium block mb-1">Creación</span>
+                          <p className="text-sm text-gray-900">{date}</p>
+                          <p className="text-xs text-gray-600">{time}</p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-500 font-medium block mb-1">Cantidad Inicial</span>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm text-gray-800 bg-[#f3f3f3]`}>
+                            {item.amount ?? 0}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Disponibles */}
+                      <div className="pt-2 border-t border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500 font-medium">Disponibles</span>
+                          <span className={`inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${tone.text} ${tone.bg}`}>
+                            {item.available_count ?? 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Paginación y refresco */}

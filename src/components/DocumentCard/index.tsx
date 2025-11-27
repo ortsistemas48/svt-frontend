@@ -50,40 +50,40 @@ const renderDocument = (name: string, url?: string) => {
     };
 
     return (
-      <div className="group flex items-center bg-white border border-gray-200 rounded-[14px] p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-10 h-10 bg-blue-50 rounded-[14px] flex items-center justify-center group-hover:bg-blue-100 transition-colors duration-200 flex-shrink-0">
-            <span className="text-lg">{getFileIcon(name)}</span>
+      <div className="group flex items-center bg-white border border-gray-200 rounded-lg sm:rounded-[14px] p-3 sm:p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-lg sm:rounded-[14px] flex items-center justify-center group-hover:bg-blue-100 transition-colors duration-200 flex-shrink-0">
+            <span className="text-base sm:text-lg">{getFileIcon(name)}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+            <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{name}</p>
+            <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
+              <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium bg-gray-100 text-gray-600">
                 {getFileType(name)}
               </span>
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 ml-2 sm:ml-3">
           {url && (
             <a
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-[4px] transition-colors duration-200"
+              className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-[4px] transition-colors duration-200"
               title="Ver documento"
             >
-              <Eye size={16} />
+              <Eye size={14} className="sm:w-4 sm:h-4" />
             </a>
           )}
           {url && (
             <button
               onClick={() => handleDownload(url, name)}
-              className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-[4px] transition-colors duration-200"
+              className="p-1.5 sm:p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-[4px] transition-colors duration-200"
               title="Descargar documento"
             >
-              <Download size={16} />
+              <Download size={14} className="sm:w-4 sm:h-4" />
             </button>
           )}
         </div>

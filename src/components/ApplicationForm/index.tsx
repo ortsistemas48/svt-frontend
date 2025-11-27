@@ -544,7 +544,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
   if (isInitializing) {
     return (
-      <div className="p-6">
+      <div className="p-3 sm:p-4 md:p-6">
         <ApplicationSkeleton />
       </div>
     );
@@ -552,27 +552,27 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
   return (
     <>
-      <article className="flex max-md:flex-col gap-y-2 items-center justify-between text-lg mb-6 px-4">
-        <div className="flex items-center gap-1">
-          <span>Inicio</span>
-          <ChevronRight size={20} />
+      <article className="flex flex-col sm:flex-row gap-y-2 sm:gap-y-0 items-start sm:items-center justify-between text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6 px-1 sm:px-2 md:px-4">
+        <div className="flex items-center gap-1 flex-wrap">
+          <span className="text-gray-600">Inicio</span>
+          <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
           <span className="text-[#0040B8]">Revisiones</span>
-          <ChevronRight size={20} />
+          <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
           <span className="font-bold">{applicationId}</span>
         </div>
-        <span className="text-md mr-4  text-black">Paso {step}/4</span>
+        <span className="text-xs sm:text-sm md:text-base text-black">Paso {step}/4</span>
       </article>
 
       <div>{renderStepContent}</div>
 
-      <div className="flex gap-x-3 justify-center px-4 pt-8 pb-10">
+      <div className="flex flex-col sm:flex-row gap-3 justify-center px-1 sm:px-2 md:px-4 pt-6 sm:pt-8 pb-6 sm:pb-10">
         {step !== 1 && (
           <button
             onClick={handlePrev}
             disabled={loading}
-            className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5"
+            className="w-full sm:w-auto hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-xs sm:text-sm text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2 sm:py-2.5 px-4 sm:px-5"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={14} className="sm:w-4 sm:h-4" />
             Volver
           </button>
         )}
@@ -580,7 +580,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           <button
             onClick={handleNext}
             disabled={loading || hasBlockingErrors || (step === 3 && vehicleDocsCount < 1)}
-            className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5 disabled:opacity-60"
+            className="w-full sm:w-auto hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-xs sm:text-sm text-white bg-[#0040B8] flex items-center justify-center py-2 sm:py-2.5 px-4 sm:px-5 disabled:opacity-60"
           >
             {loading ? "Guardando..." : "Continuar"}
           </button>
@@ -593,7 +593,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
                 setConfirmAction("queue");
                 setShowConfirmModal(true);
               }}
-              className="hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-white bg-[#0040B8] flex items-center justify-center py-2.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto hover:bg-[#004DDD] hover:border-[#004DDD] border border-[#0040B8] duration-150 rounded-[4px] text-xs sm:text-sm text-white bg-[#0040B8] flex items-center justify-center py-2 sm:py-2.5 px-4 sm:px-5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Enviar a cola
             </button>
@@ -603,7 +603,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
                 setConfirmAction("inspect");
                 setShowConfirmModal(true);
               }}
-              className="hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto hover:bg-[#0040B8] hover:text-white duration-150 rounded-[4px] text-xs sm:text-sm text-[#0040B8] border border-[#0040B8] bg-white flex items-center justify-center gap-2 py-2 sm:py-2.5 px-4 sm:px-5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Guardando..." : "Inspeccionar"}
             </button>
@@ -612,14 +612,14 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
       </div>
 
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-[14px] max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-lg sm:rounded-[14px] max-w-md w-full p-4 sm:p-5 md:p-6 max-h-[90vh] overflow-y-auto">
             {/* Título y cuerpo del modal según acción */}
-            <h2 className="text-lg font-semibold mb-3">
+            <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
               {confirmAction === "confirm_car" ? "¿Estás seguro?" : "¿Estás seguro?"}
             </h2>
 
-            <p className="mb-4">
+            <p className="text-sm sm:text-base mb-3 sm:mb-4">
               {confirmAction === "confirm_car"
                 ? "Estás por confirmar los datos de tu vehículo. ¿Deseás continuar?"
                 : "Vas a confirmar el trámite. ¿Deseás continuar?"}
@@ -627,12 +627,12 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             {
               (confirmAction === "queue") &&
               (
-                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-[14px]">
+                <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-amber-50 border border-amber-200 rounded-lg sm:rounded-[14px]">
                   <div className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
-                    <p className="text-amber-700 text-sm font-medium">Una vez enviado a la cola, no se podrán realizar cambios.</p>
+                    <p className="text-amber-700 text-xs sm:text-sm font-medium">Una vez enviado a la cola, no se podrán realizar cambios.</p>
                   </div>
                 </div>
               )
@@ -641,39 +641,39 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             {
               (confirmAction === "inspect") &&
               (
-                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-[14px]">
+                <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-amber-50 border border-amber-200 rounded-lg sm:rounded-[14px]">
                   <div className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
-                    <p className="text-amber-700 text-sm font-medium">Una vez iniciada la revisión, no se podrán realizar cambios.</p>
+                    <p className="text-amber-700 text-xs sm:text-sm font-medium">Una vez iniciada la revisión, no se podrán realizar cambios.</p>
                   </div>
                 </div>
               )
             }
 
             {processingAction && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-[14px]">
+              <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg sm:rounded-[14px]">
                 <div className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4 text-[#0040B8]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-3 w-3 sm:h-4 sm:w-4 text-[#0040B8]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <p className="text-[#0040B8] text-sm font-medium">
+                  <p className="text-[#0040B8] text-xs sm:text-sm font-medium">
                     {confirmAction === "queue" ? "Enviando a cola..." : confirmAction === "inspect" ? "Procesando..." : "Guardando..."}
                   </p>
                 </div>
               </div>
             )}
 
-            <div className="flex justify-center gap-5 mt-5">
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-5 mt-4 sm:mt-5">
               <button
                 onClick={() => {
                   setShowConfirmModal(false);
                   setProcessingAction(false);
                 }}
                 disabled={processingAction}
-                className="bg-white border border-[#d91e1e] text-[#d91e1e] duration-150 px-4 py-2 rounded-[4px] hover:text-white hover:bg-[#d91e1e] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto bg-white border border-[#d91e1e] text-[#d91e1e] duration-150 text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-[4px] hover:text-white hover:bg-[#d91e1e] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>
@@ -723,7 +723,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
                   }
                 }}
                 disabled={processingAction}
-                className="bg-[#0040B8] text-white px-4 py-2 rounded-[4px] hover:bg-[#0032a0] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto bg-[#0040B8] text-white text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-[4px] hover:bg-[#0032a0] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processingAction ? "Procesando..." : "Confirmar"}
               </button>

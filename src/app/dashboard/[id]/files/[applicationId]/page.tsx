@@ -411,10 +411,10 @@ export default function FileDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0040B8] mx-auto mb-4"></div>
-          <p className="text-gray-500">Cargando información del legajo...</p>
+          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-[#0040B8] mx-auto mb-3 sm:mb-4"></div>
+          <p className="text-xs sm:text-sm text-gray-500">Cargando información del legajo...</p>
         </div>
       </div>
     );
@@ -422,13 +422,13 @@ export default function FileDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-full py-6">
-        <div className="max-w-8xl mx-auto px-4">
-          <div className="bg-red-50 border border-red-200 rounded-[14px] p-6 text-center">
-            <p className="text-red-700 mb-4">{error}</p>
+      <div className="min-h-full py-3 sm:py-6">
+        <div className="max-w-8xl mx-auto px-1 sm:px-2 md:px-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg sm:rounded-[14px] p-4 sm:p-6 text-center">
+            <p className="text-xs sm:text-sm text-red-700 mb-3 sm:mb-4">{error}</p>
             <button
               onClick={() => router.back()}
-              className="px-4 py-2 bg-[#0040B8] text-white rounded-[4px] hover:bg-[#0035A0]"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#0040B8] text-white text-xs sm:text-sm rounded-[4px] hover:bg-[#0035A0]"
             >
               Volver
             </button>
@@ -440,42 +440,42 @@ export default function FileDetailPage() {
 
   if (view === "persons") {
     return (
-      <div className="min-h-full py-6">
-        <div className="max-w-8xl mx-auto px-4">
+      <div className="min-h-full py-3 sm:py-4 md:py-6">
+        <div className="max-w-8xl mx-auto px-1 sm:px-2 md:px-4">
           {/* Breadcrumb */}
-          <article className="flex items-center text-sm sm:text-base lg:text-lg mb-6">
-            <div className="flex items-center gap-1">
+          <article className="flex items-center text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6">
+            <div className="flex items-center gap-1 flex-wrap">
               <span className="text-gray-600">Inicio</span>
-              <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="text-[#0040B8] cursor-pointer" onClick={() => router.push(`/dashboard/${id}/files`)}>
                 Legajos
               </span>
-              <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="text-[#0040B8] cursor-pointer" onClick={() => setView("main")}>
                 Detalle
               </span>
-              <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="text-[#0040B8] font-medium">Datos del titular y conductor</span>
             </div>
           </article>
 
-          <div className={`grid gap-6 ${showDriver ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}>
+          <div className={`grid gap-3 sm:gap-4 md:gap-6 ${showDriver ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}>
             {/* Titular */}
-            <div className="bg-white rounded-[14px] border border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-green-50 to-green-100 px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-[14px] flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-green-50 to-green-100 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg sm:rounded-[14px] flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-md text-gray-900">Datos del titular</h2>
-                    <p className="text-sm text-gray-600">Información del titular del vehículo</p>
+                    <h2 className="text-sm sm:text-base md:text-md text-gray-900">Datos del titular</h2>
+                    <p className="text-xs sm:text-sm text-gray-600">Información del titular del vehículo</p>
                   </div>
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-3 sm:p-4 md:p-6">
                 {owner ? (
                   renderPerson(owner)
                 ) : (
@@ -490,21 +490,21 @@ export default function FileDetailPage() {
 
             {/* Conductor (si es distinto) */}
             {showDriver && (
-              <div className="bg-white rounded-[14px] border border-gray-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-[14px] flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-200">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg sm:rounded-[14px] flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-md text-gray-900">Datos del conductor</h2>
-                      <p className="text-sm text-gray-600">Información del conductor del vehículo</p>
+                      <h2 className="text-sm sm:text-base md:text-md text-gray-900">Datos del conductor</h2>
+                      <p className="text-xs sm:text-sm text-gray-600">Información del conductor del vehículo</p>
                     </div>
                   </div>
                 </div>
-                <div className="p-6">
+                <div className="p-3 sm:p-4 md:p-6">
                   {renderPerson(driver!)} 
                 </div>
               </div>
@@ -512,12 +512,12 @@ export default function FileDetailPage() {
           </div>
 
           {/* Bottom Navigation */}
-          <div className="mt-6 flex justify-center">
+          <div className="mt-4 sm:mt-6 flex justify-center">
           <button
               onClick={() => setView("main")}
-              className="px-4 py-2.5 border border-[#0040B8] rounded-[4px] text-[#0040B8] hover:bg-blue-50 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-4 py-2 sm:py-2.5 border border-[#0040B8] rounded-[4px] text-xs sm:text-sm text-[#0040B8] hover:bg-blue-50 flex items-center justify-center gap-2"
           >
-            <ChevronRight size={16} className="rotate-180" />
+            <ChevronRight size={14} className="sm:w-4 sm:h-4 rotate-180" />
             Volver
           </button>
         </div>
@@ -528,38 +528,38 @@ export default function FileDetailPage() {
 
   if (view === "vehicle") {
     return (
-      <div className="min-h-full py-6">
-        <div className="max-w-8xl mx-auto px-4">
+      <div className="min-h-full py-3 sm:py-4 md:py-6">
+        <div className="max-w-8xl mx-auto px-1 sm:px-2 md:px-4">
           {/* Breadcrumb */}
-          <article className="flex items-center text-sm sm:text-base lg:text-lg mb-6">
-            <div className="flex items-center gap-1">
+          <article className="flex items-center text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6">
+            <div className="flex items-center gap-1 flex-wrap">
               <span className="text-gray-600">Inicio</span>
-              <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="text-[#0040B8] cursor-pointer" onClick={() => router.push(`/dashboard/${id}/files`)}>
                 Legajos
               </span>
-              <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="text-[#0040B8] cursor-pointer" onClick={() => setView("main")}>
                 Detalle
               </span>
-              <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="text-[#0040B8] font-medium">Datos del vehículo</span>
             </div>
           </article>
 
-          <div className="bg-white rounded-[14px] border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-[14px] flex items-center justify-center">
-                  <Car className="w-5 h-5 text-purple-500" size={20} strokeWidth={2} />
+          <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg sm:rounded-[14px] flex items-center justify-center flex-shrink-0">
+                  <Car className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" size={20} strokeWidth={2} />
                 </div>
                 <div>
-                  <h2 className="text-md text-gray-900">Datos del vehículo</h2>
-                  <p className="text-sm text-gray-600">Información técnica del vehículo</p>
+                  <h2 className="text-sm sm:text-base md:text-md text-gray-900">Datos del vehículo</h2>
+                  <p className="text-xs sm:text-sm text-gray-600">Información técnica del vehículo</p>
                 </div>
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-3 sm:p-4 md:p-6">
               {car ? (
                 renderVehicle(car, carDocs)
               ) : (
@@ -573,12 +573,12 @@ export default function FileDetailPage() {
           </div>
 
           {/* Bottom Navigation */}
-          <div className="mt-6 flex justify-center">
+          <div className="mt-4 sm:mt-6 flex justify-center">
           <button
               onClick={() => setView("main")}
-              className="px-4 py-2.5 border border-[#0040B8] rounded-[4px] text-[#0040B8] hover:bg-blue-50 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-4 py-2 sm:py-2.5 border border-[#0040B8] rounded-[4px] text-xs sm:text-sm text-[#0040B8] hover:bg-blue-50 flex items-center justify-center gap-2"
           >
-            <ChevronRight size={16} className="rotate-180" />
+            <ChevronRight size={14} className="sm:w-4 sm:h-4 rotate-180" />
             Volver
           </button>
         </div>
@@ -589,38 +589,38 @@ export default function FileDetailPage() {
 
   if (view === "documents") {
     return (
-      <div className="min-h-full py-6">
-        <div className="max-w-8xl mx-auto px-4">
+      <div className="min-h-full py-3 sm:py-4 md:py-6">
+        <div className="max-w-8xl mx-auto px-1 sm:px-2 md:px-4">
           {/* Breadcrumb */}
-          <article className="flex items-center text-sm sm:text-base lg:text-lg mb-6">
-            <div className="flex items-center gap-1">
+          <article className="flex items-center text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6">
+            <div className="flex items-center gap-1 flex-wrap">
               <span className="text-gray-600">Inicio</span>
-              <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="text-[#0040B8] cursor-pointer" onClick={() => router.push(`/dashboard/${id}/files`)}>
                 Legajos
               </span>
-              <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="text-[#0040B8] cursor-pointer" onClick={() => setView("main")}>
                 Detalle
               </span>
-              <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="text-[#0040B8] font-medium">Documentos</span>
             </div>
           </article>
 
           {/* Documentación del vehículo */}
-          <div className="bg-white rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-6">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-[14px] flex items-center justify-center">
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white rounded-lg sm:rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-4 sm:mb-6">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-lg sm:rounded-[14px] flex items-center justify-center flex-shrink-0">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-md text-gray-900">Documentación del vehículo</h3>
+                <h3 className="text-sm sm:text-base md:text-md text-gray-900">Documentación del vehículo</h3>
               </div>
             </div>
-            <div className="px-6 pb-6">
+            <div className="px-3 sm:px-4 md:px-6 pb-4 sm:pb-6">
               <VehicleDocsDropzone
                 existing={carDocsForDropzone}
                 mode="view"
@@ -629,22 +629,22 @@ export default function FileDetailPage() {
           </div>
 
           {/* Archivos de revisión técnica - ahora dentro de cada ficha técnica */}
-          <div className="bg-white rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-6">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-[14px] flex items-center justify-center">
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white rounded-lg sm:rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-4 sm:mb-6">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-lg sm:rounded-[14px] flex items-center justify-center flex-shrink-0">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-md text-gray-900">Archivos de revisión técnica</h3>
+                <h3 className="text-sm sm:text-base md:text-md text-gray-900">Archivos de revisión técnica</h3>
               </div>
             </div>
-            <div className="p-6 space-y-2">
-              <p className="text-sm text-gray-700">
+            <div className="p-3 sm:p-4 md:p-6 space-y-2">
+              <p className="text-xs sm:text-sm text-gray-700">
                 Los documentos de revisión técnica se encuentran dentro de cada ficha técnica.
               </p>
-              <div className="text-sm">
+              <div className="text-xs sm:text-sm">
                 <a
                   className="text-[#0040B8] hover:underline"
                   href={`/dashboard/${id}/files/${applicationId}/inspection`}
@@ -653,7 +653,7 @@ export default function FileDetailPage() {
                 </a>
               </div>
               {result2 && (
-                <div className="text-sm">
+                <div className="text-xs sm:text-sm">
                   <a
                     className="text-[#0040B8] hover:underline"
                     href={`/dashboard/${id}/files/${applicationId}/inspection?is_second=true`}
@@ -666,36 +666,36 @@ export default function FileDetailPage() {
           </div>
 
           {/* Certificado Revisión Técnica */}
-          <div className="bg-white rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-6">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-[14px] flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-blue-600" />
+          <div className="bg-white rounded-lg sm:rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-4 sm:mb-6">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-lg sm:rounded-[14px] flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
                 </div>
-                <h3 className="text-md text-gray-900">Certificado Revisión Técnica</h3>
+                <h3 className="text-sm sm:text-base md:text-md text-gray-900">Certificado Revisión Técnica</h3>
               </div>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-700">Descargá el certificado de la primera revisión</p>
+            <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                <p className="text-xs sm:text-sm text-gray-700">Descargá el certificado de la primera revisión</p>
                 <a
                   href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/certificado.pdf`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-[#0040B8] text-white rounded hover:bg-[#0035A0]"
+                  className="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 bg-[#0040B8] text-white text-xs sm:text-sm rounded hover:bg-[#0035A0] text-center"
                 >
                   Descargar CRT 1ra revisión
                 </a>
               </div>
 
               {result2 && (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-700">Descargá el certificado de la segunda revisión</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                  <p className="text-xs sm:text-sm text-gray-700">Descargá el certificado de la segunda revisión</p>
                   <a
                     href={`https://uedevplogwlaueyuofft.supabase.co/storage/v1/object/public/certificados/certificados/${applicationId}/certificado_2.pdf`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-[#0040B8] text-white rounded hover:bg-[#0035A0]"
+                    className="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 bg-[#0040B8] text-white text-xs sm:text-sm rounded hover:bg-[#0035A0] text-center"
                   >
                     Descargar CRT 2da revisión
                   </a>
@@ -706,24 +706,24 @@ export default function FileDetailPage() {
 
           {/* Mensajes de estado */}
           {uploadMessage && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-[4px] text-green-700 text-sm text-center">
+            <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-green-50 border border-green-200 rounded-[4px] text-green-700 text-xs sm:text-sm text-center">
               {uploadMessage}
             </div>
           )}
           {error && view === "documents" && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-[4px] text-red-700 text-sm text-center">
+            <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-red-50 border border-red-200 rounded-[4px] text-red-700 text-xs sm:text-sm text-center">
               {error}
             </div>
           )}
 
           {/* Botón de subir */}
           {(pendingCarDocs.length > 0 || pendingTechDocs.length > 0) && (
-            <div className="mb-6 flex justify-center">
+            <div className="mb-4 sm:mb-6 flex justify-center">
               <button
                 onClick={uploadDocuments}
                 disabled={uploading}
                 className={clsx(
-                  "px-6 py-3 rounded-[4px] font-medium transition-colors",
+                  "w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 rounded-[4px] text-xs sm:text-sm font-medium transition-colors",
                   uploading
                     ? "bg-blue-300 text-white cursor-not-allowed"
                     : "bg-[#0040B8] text-white hover:bg-[#0035A0]"
@@ -735,12 +735,12 @@ export default function FileDetailPage() {
           )}
 
           {/* Bottom Navigation */}
-          <div className="mt-6 flex justify-center">
+          <div className="mt-4 sm:mt-6 flex justify-center">
           <button
               onClick={() => setView("main")}
-              className="px-4 py-2.5 border border-[#0040B8] rounded-[4px] text-[#0040B8] hover:bg-blue-50 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-4 py-2 sm:py-2.5 border border-[#0040B8] rounded-[4px] text-xs sm:text-sm text-[#0040B8] hover:bg-blue-50 flex items-center justify-center gap-2"
           >
-            <ChevronRight size={16} className="rotate-180" />
+            <ChevronRight size={14} className="sm:w-4 sm:h-4 rotate-180" />
             Volver
           </button>
         </div>
@@ -755,55 +755,55 @@ export default function FileDetailPage() {
   const StatusIcon = statusConfig.icon;
 
   return (
-    <div className="min-h-full py-6">
-      <div className="max-w-8xl mx-auto px-4">
+    <div className="min-h-full py-3 sm:py-4 md:py-6">
+      <div className="max-w-8xl mx-auto px-1 sm:px-2 md:px-4">
         {/* Breadcrumb */}
-        <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-6">
-          <div className="flex items-center gap-1">
+        <article className="flex items-center justify-between text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6">
+          <div className="flex items-center gap-1 flex-wrap">
             <span className="text-gray-600">Inicio</span>
-            <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+            <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
             <span className="text-[#0040B8] cursor-pointer" onClick={() => router.push(`/dashboard/${id}/files`)}>
               Legajos
             </span>
-            <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+            <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
             <span className="text-[#0040B8] font-medium">Detalle</span>
           </div>
         </article>
 
         {/* Main Cards */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Dominio buscado */}
-          <div className="bg-white rounded-[14px] border border-gray-200 p-5">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 p-3 sm:p-4 md:p-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
               <div>
-                <h2 className="text-md font-bold text-gray-900 mb-1">Dominio buscado:</h2>
-                <p className="text-sm text-gray-500">Aquí aparece el historial del legajo buscado</p>
+                <h2 className="text-sm sm:text-base md:text-md font-bold text-gray-900 mb-1">Dominio buscado:</h2>
+                <p className="text-xs sm:text-sm text-gray-500">Aquí aparece el historial del legajo buscado</p>
               </div>
-              <div className="border border-gray-300 rounded px-6 py-2 bg-gray-50">
-                <span className="text-md font-bold text-gray-900">{car?.license_plate || "-"}</span>
+              <div className="border border-gray-300 rounded px-4 sm:px-6 py-1.5 sm:py-2 bg-gray-50 w-full sm:w-auto text-center sm:text-left">
+                <span className="text-sm sm:text-base md:text-md font-bold text-gray-900">{car?.license_plate || "-"}</span>
               </div>
             </div>
           </div>
 
           {/* Datos del titular y del conductor */}
-          <div className="bg-white rounded-[14px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("persons")}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-md text-gray-900 mb-1">Datos del titular y del conductor</h2>
-                <p className="text-sm text-gray-500">Datos no modificable, solo visualización</p>
+          <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 p-3 sm:p-4 md:p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("persons")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm sm:text-base md:text-md text-gray-900 mb-1">Datos del titular y del conductor</h2>
+                <p className="text-xs sm:text-sm text-gray-500">Datos no modificable, solo visualización</p>
               </div>
-              <ChevronRight size={24} className="text-gray-400" />
+              <ChevronRight size={20} className="sm:w-6 sm:h-6 text-gray-400 flex-shrink-0" />
             </div>
           </div>
 
           {/* Datos del vehículo */}
-          <div className="bg-white rounded-[14px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("vehicle")}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-md text-gray-900 mb-1">Datos del vehículo</h2>
-                <p className="text-sm text-gray-500">Datos no modificable, solo visualización</p>
+          <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 p-3 sm:p-4 md:p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("vehicle")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm sm:text-base md:text-md text-gray-900 mb-1">Datos del vehículo</h2>
+                <p className="text-xs sm:text-sm text-gray-500">Datos no modificable, solo visualización</p>
               </div>
-              <ChevronRight size={24} className="text-gray-400" />
+              <ChevronRight size={20} className="sm:w-6 sm:h-6 text-gray-400 flex-shrink-0" />
             </div>
           </div>
 
@@ -812,21 +812,21 @@ export default function FileDetailPage() {
             const resultConfig = getResultConfig(result);
             const ResultIcon = resultConfig.icon;
             return (
-          <div className="bg-white rounded-[14px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection`)}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-md text-gray-900 mb-1">Ficha técnica primera revisión</h2>
-                <p className="text-sm text-gray-500">Ficha técnica no modificable, solo visualización</p>
+          <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 p-3 sm:p-4 md:p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection`)}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm sm:text-base md:text-md text-gray-900 mb-1">Ficha técnica primera revisión</h2>
+                <p className="text-xs sm:text-sm text-gray-500">Ficha técnica no modificable, solo visualización</p>
               </div>
-              <div className="flex items-center gap-4 justify-between w-[50%]">
-                <div className="text-left">
-                      <p className="text-sm text-gray-600">Fecha de creación:<br/>{inspection1Date || "-"}</p>
+              <div className="flex items-center gap-2 sm:gap-4 justify-between sm:justify-end w-full sm:w-auto">
+                <div className="text-left sm:text-right">
+                      <p className="text-xs sm:text-sm text-gray-600">Fecha de creación:<br/>{inspection1Date || "-"}</p>
                     </div>
-                    <span className={clsx("inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium", resultConfig.bg, resultConfig.text)}>
-                      <ResultIcon size={16} className={resultConfig.iconColor} />
+                    <span className={clsx("inline-flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium", resultConfig.bg, resultConfig.text)}>
+                      <ResultIcon size={14} className={clsx("sm:w-4 sm:h-4", resultConfig.iconColor)} />
                       {resultConfig.label}
                     </span>
-                    <ChevronRight size={24} className="text-gray-400" />
+                    <ChevronRight size={20} className="sm:w-6 sm:h-6 text-gray-400 flex-shrink-0" />
                   </div>
                 </div>
               </div>
@@ -838,21 +838,21 @@ export default function FileDetailPage() {
             const result2Config = getResultConfig(result2);
             const Result2Icon = result2Config.icon;
             return (
-              <div className="bg-white rounded-[14px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection?is_second=true`)}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-md text-gray-900 mb-1">Ficha técnica segunda revisión</h2>
-                    <p className="text-sm text-gray-500">Ficha técnica de segunda revisión, solo visualización</p>
+              <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 p-3 sm:p-4 md:p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`/dashboard/${id}/files/${applicationId}/inspection?is_second=true`)}>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-sm sm:text-base md:text-md text-gray-900 mb-1">Ficha técnica segunda revisión</h2>
+                    <p className="text-xs sm:text-sm text-gray-500">Ficha técnica de segunda revisión, solo visualización</p>
                   </div>
-                  <div className="flex items-center gap-4 justify-between w-[50%]">
-                    <div className="text-left">
-                      <p className="text-sm text-gray-600">Fecha de creación:<br/>{inspection2Date || "-"}</p>
+                  <div className="flex items-center gap-2 sm:gap-4 justify-between sm:justify-end w-full sm:w-auto">
+                    <div className="text-left sm:text-right">
+                      <p className="text-xs sm:text-sm text-gray-600">Fecha de creación:<br/>{inspection2Date || "-"}</p>
                 </div>
-                    <span className={clsx("inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium", result2Config.bg, result2Config.text)}>
-                      <Result2Icon size={16} className={result2Config.iconColor} />
+                    <span className={clsx("inline-flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium", result2Config.bg, result2Config.text)}>
+                      <Result2Icon size={14} className={clsx("sm:w-4 sm:h-4", result2Config.iconColor)} />
                       {result2Config.label}
                 </span>
-                <ChevronRight size={24} className="text-gray-400" />
+                <ChevronRight size={20} className="sm:w-6 sm:h-6 text-gray-400 flex-shrink-0" />
               </div>
             </div>
           </div>
@@ -860,24 +860,24 @@ export default function FileDetailPage() {
           })()}
 
           {/* Agregar documentos */}
-          <div className="bg-white rounded-[14px] border border-gray-200 p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("documents")}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-md text-gray-900 mb-1">Ver documentos</h2>
-                <p className="text-sm text-gray-500">Aquí podrás ver los documentos adjuntos al legajo</p>
+          <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 p-3 sm:p-4 md:p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("documents")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm sm:text-base md:text-md text-gray-900 mb-1">Ver documentos</h2>
+                <p className="text-xs sm:text-sm text-gray-500">Aquí podrás ver los documentos adjuntos al legajo</p>
               </div>
-              <ChevronRight size={24} className="text-gray-400" />
+              <ChevronRight size={20} className="sm:w-6 sm:h-6 text-gray-400 flex-shrink-0" />
               </div>
           </div>
         </div>
 
         {/* Bottom Navigation */}
-        <div className="mt-6 flex justify-center">
+        <div className="mt-4 sm:mt-6 flex justify-center">
           <button
             onClick={() => router.push(`/dashboard/${id}/files`)}
-            className="px-4 py-2.5 border border-[#0040B8] rounded-[4px] text-[#0040B8] hover:bg-blue-50 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-4 py-2 sm:py-2.5 border border-[#0040B8] rounded-[4px] text-xs sm:text-sm text-[#0040B8] hover:bg-blue-50 flex items-center justify-center gap-2"
           >
-            <ChevronRight size={16} className="rotate-180" />
+            <ChevronRight size={14} className="sm:w-4 sm:h-4 rotate-180" />
             Volver
           </button>
         </div>

@@ -208,18 +208,18 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
     <div>
       {/* Mensajes */}
       {errorMsg && (
-        <div className="mb-3 rounded-[4px] border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+        <div className="mb-3 rounded-[4px] border border-rose-300 bg-rose-50 px-3 py-2 text-xs sm:text-sm text-rose-700">
           {errorMsg}
         </div>
       )}
       {successMsg && (
-        <div className="mb-3 rounded-[4px] border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <div className="mb-3 rounded-[4px] border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs sm:text-sm text-emerald-700">
           {successMsg}
         </div>
       )}
 
       {/* Search y filtros compactos, look minimal */}
-      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 gap-3 px-[1.5px] pt-1">
           <div className="relative flex-1">
             <input
@@ -256,7 +256,7 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
 
       {/* Panel de filtros, estilo chips */}
       {showFilters && (
-        <div className="mb-4 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+        <div className="hidden sm:block mb-4 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
             {TABLE_FILTERS.map((opt) => {
               const active = statusFilter === opt;
@@ -279,8 +279,108 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
         </div>
       )}
 
-      {/* Tabla */}
-      <div className="pay-table overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      {/* Vista de cards para mobile/tablet */}
+      <div className="xl:hidden space-y-3 sm:space-y-4">
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: perPage }).map((_, i) => (
+              <div key={i} className="border border-gray-200 rounded-lg p-3 sm:p-4 animate-pulse bg-gray-50">
+                <Sk className="h-4 w-20 mb-2" />
+                <Sk className="h-3 w-full mb-2" />
+                <Sk className="h-3 w-3/4" />
+              </div>
+            ))}
+          </div>
+        ) : pageItems.length === 0 ? (
+          <div className="p-8 text-center text-sm sm:text-base text-gray-500">
+            No hay órdenes para mostrar
+          </div>
+        ) : (
+          pageItems.map((item) => {
+            const created = item.created_at ? new Date(item.created_at) : null;
+            const date = created ? created.toLocaleDateString("es-AR") : "-";
+            const time = created
+              ? created.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
+              : "-";
+
+            return (
+              <div key={item.id} className="border border-gray-200 rounded-lg p-3 sm:p-4 space-y-3 bg-white">
+                <div className="flex items-center justify-between">
+                  <div className="rounded-[4px] bg-gray-100 px-2 py-1 text-xs font-medium">
+                    Orden #{item.id}
+                  </div>
+                  <span className="inline-block rounded-full bg-[#F3F6FF] px-2 py-1 text-xs font-medium text-[#0040B8]">
+                    {item.zone}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
+                  <div>
+                    <div className="text-gray-600 mb-1">Creación</div>
+                    <div className="font-medium">{date}</div>
+                    <div className="text-gray-500">{time}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600 mb-1">Revisiones</div>
+                    <div className="font-medium">{item.quantity.toLocaleString("es-AR")}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600 mb-1">Unitario</div>
+                    <div className="font-medium">{formatARS(item.unit_price)}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600 mb-1">Total</div>
+                    <div className="font-semibold text-[#0040B8]">{formatARS(item.amount)}</div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs sm:text-sm text-gray-600">Estado</div>
+                    {item.status === "PENDING" && isExpired(item) ? (
+                      <span className="inline-block rounded-full bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700">
+                        Vencido
+                      </span>
+                    ) : (
+                      <span
+                        className={clsx(
+                          "inline-block rounded-full px-2 py-1 text-xs font-medium",
+                          toneForStatus(item.status)
+                        )}
+                      >
+                        {translateStatus(item.status)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="text-xs sm:text-sm text-gray-600">Acciones</div>
+                  {item.status === "PENDING" && !item.receipt_url && !isExpired(item) ? (
+                    <button
+                      onClick={() => openUploadModal(item)}
+                      className="mt-1 w-full inline-flex items-center justify-center gap-1 rounded-[4px] border border-[#0040B8] bg-[#0040B8] px-3 py-2 text-xs text-white hover:bg-[#00379f]"
+                    >
+                      Subir comprobante
+                    </button>
+                  ) : item.status === "PENDING" && !item.receipt_url && isExpired(item) ? (
+                    <span className="mt-1 inline-flex items-center gap-1 text-xs text-rose-700">
+                      Vencido
+                    </span>
+                  ) : item.receipt_url ? (
+                    <span className="mt-1 inline-flex items-center gap-1 text-xs text-green-600">
+                      <span>✓</span> Comprobante subido
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400">—</span>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Tabla para desktop */}
+      <div className="hidden xl:block pay-table overflow-hidden rounded-xl sm:rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <div className="min-w-[820px]">
             <TableTemplate<PaymentOrder>
@@ -390,11 +490,11 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
       </div>
 
       {/* Paginación y refresco */}
-      <div className="mt-6 flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
+      <div className="mt-4 sm:mt-6 flex flex-col items-center justify-center gap-3 text-xs sm:text-sm px-1 sm:px-0">
         {total > perPage && (
           <div className="flex items-center gap-2">
             <button
-              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-2 sm:px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
@@ -405,7 +505,7 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
               Página {page} de {totalPages}
             </span>
             <button
-              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-2 sm:px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
             >
@@ -419,10 +519,10 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
       {/* Modal para subir comprobante */}
       {showUploadModal && selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4 overflow-y-auto">
-          <div className="w-full max-w-xs sm:max-w-lg max-h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl my-4 flex flex-col">
+          <div className="w-full max-w-[90vw] sm:max-w-lg max-h-[calc(100vh-2rem)] overflow-hidden rounded-xl sm:rounded-2xl border border-gray-200 bg-white shadow-xl my-4 flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between border-b p-3 sm:p-4 flex-shrink-0">
-              <h3 className="text-base sm:text-lg font-semibold">
+              <h3 className="text-sm sm:text-base md:text-lg font-semibold">
                 Subir comprobante - Orden #{selectedOrder.id}
               </h3>
               <button
@@ -435,9 +535,9 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
             </div>
 
             {/* Body */}
-            <div className="p-3 sm:p-5 overflow-y-auto flex-1">
+            <div className="p-3 sm:p-4 md:p-5 overflow-y-auto flex-1">
               <section className="rounded-[4px] border bg-white/60 p-3 sm:p-4">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2">
                   Seleccioná el comprobante de pago
                 </h4>
                 <PaymentDropzone
@@ -448,11 +548,11 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 sm:gap-3 border-t bg-white p-3 sm:p-4 flex-shrink-0">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 border-t bg-white p-3 sm:p-4 flex-shrink-0">
               <button
                 onClick={closeUploadModal}
                 disabled={uploading}
-                className="rounded-[4px] border px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="rounded-[4px] border px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 w-full sm:w-auto"
                 type="button"
               >
                 Cancelar
@@ -461,7 +561,7 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
                 onClick={handleUploadReceipt}
                 disabled={uploading || !pendingFile}
                 className={clsx(
-                  "rounded-[4px] px-3 sm:px-4 py-2 text-xs sm:text-sm text-white",
+                  "rounded-[4px] px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm text-white w-full sm:w-auto",
                   uploading || !pendingFile
                     ? "bg-[#0040B8]/60 cursor-not-allowed"
                     : "bg-[#0040B8] hover:bg-[#00379f]"

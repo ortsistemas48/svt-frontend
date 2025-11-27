@@ -498,18 +498,18 @@ export default function VehicleForm({
   }, [errors]);
 
   return (
-    <div className="space-y-6 mb-10 px-4 mt-12">
-      <div className="flex items-start justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-10 px-1 sm:px-2 md:px-4 mt-4 sm:mt-8 md:mt-12">
+      <div className="flex items-start justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-xl font-regular text-[#000000] mb-1">Datos del vehículo</h2>
-          <p className="text-sm text-[#00000080]">Completá los datos del vehículo.</p>
+          <h2 className="text-base sm:text-lg md:text-xl font-regular text-[#000000] mb-1">Datos del vehículo</h2>
+          <p className="text-xs sm:text-sm text-[#00000080]">Completá los datos del vehículo.</p>
         </div>
       </div>
 
       {carErrorsList.length > 0 && (
-        <div className="border border-red-300 bg-red-50 text-red-700 text-sm rounded-[4px] px-4 py-3">
-          <p className="font-medium mb-1">Revisá estos campos:</p>
-          <ul className="list-disc pl-5 space-y-1">
+        <div className="border border-red-300 bg-red-50 text-red-700 text-xs sm:text-sm rounded-[4px] px-3 sm:px-4 py-2 sm:py-3">
+          <p className="font-medium mb-1 text-sm sm:text-base">Revisá estos campos:</p>
+          <ul className="list-disc pl-4 sm:pl-5 space-y-1">
             {carErrorsList.map(({ field, label, msg }) => (
               <li key={field}>
                 <span className="font-medium">{label}:</span> {msg}
@@ -520,15 +520,15 @@ export default function VehicleForm({
       )}
 
       <fieldset>
-        <div className="grid grid-cols-[1fr_1px_1fr] max-[1420px]:grid-cols-1 gap-10 items-start">
+        <div className="grid grid-cols-[1fr_1px_1fr] max-[1420px]:grid-cols-1 gap-6 sm:gap-8 md:gap-10 items-start">
           {/* Columna izquierda */}
-          <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8 self-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4 sm:gap-y-6 md:gap-y-8 self-start">
             {formData1.map((field, index) => {
               if (field.name === "model") {
                 return (
-                  <div key={index} className="col-span-2">
-                    <div className="grid grid-cols-4 max-md:grid-cols-1 gap-x-6 gap-y-8">
-                      <div className="col-span-2 max-md:col-span-1">
+                  <div key={index} className="col-span-1 md:col-span-2">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-4 sm:gap-y-6 md:gap-y-8">
+                      <div className="col-span-1 md:col-span-2">
                         <FormField
                           label={field.label}
                           placeholder={field.placeholder ?? ""}
@@ -543,7 +543,7 @@ export default function VehicleForm({
                           isRequired={field.isRequired}
                         />
                       </div>
-                      <div className="col-span-1 max-md:col-span-1">
+                      <div className="col-span-1">
                         <FormField
                           label="Fabricación"
                           placeholder="Ej: 2025"
@@ -557,7 +557,7 @@ export default function VehicleForm({
                           error={getCarError("manufacture_year")}
                         />
                       </div>
-                      <div className="col-span-1 max-md:col-span-1">
+                      <div className="col-span-1">
                         <FormField
                           label="Patentamiento"
                           placeholder="MM/AAAA"
@@ -627,9 +627,9 @@ export default function VehicleForm({
             })}
           </div>
 
-          <div className="bg-[#dedede] w-px h-full max-xl:hidden" />
+          <div className="bg-[#dedede] w-full h-px md:w-px md:h-full max-xl:block max-xl:h-px hidden md:block" />
 
-          <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4 sm:gap-y-6 md:gap-y-8">
             {formData2.map((field, index) => {
               const commonProps = {
                 label: field.label,
@@ -679,7 +679,7 @@ export default function VehicleForm({
         </div>
       </fieldset>
 
-      <div className="mt-10">
+      <div className="mt-6 sm:mt-8 md:mt-10">
           <VehicleDocsDropzone
             existing={existingCarDocs as CarExistingDoc[]}
             onDeleteExisting={onDeleteCarDoc}

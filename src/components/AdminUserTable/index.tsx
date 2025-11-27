@@ -217,62 +217,75 @@ export default function UserTable({ users, onDelete }: Props) {
   };
 
   const Row = ({ label, value }: { label: string; value?: string | number | null }) => (
-    <div className="flex items-start justify-between py-2 px-4">
-      <span className="text-sm text-gray-500">{label}</span>
-      <span className="text-sm text-gray-900 max-w-[60%] text-right break-words">
+    <div className="flex items-start justify-between py-2 px-3 sm:px-4">
+      <span className="text-xs sm:text-sm text-gray-500">{label}</span>
+      <span className="text-xs sm:text-sm text-gray-900 max-w-[60%] text-right break-words">
         {value || "-"}
       </span>
     </div>
   );
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-1 sm:p-2 md:p-4 lg:p-6">
       {/* Filtros y acciones, fuera del card de tabla */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
-        <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
-          <Search size={18} className="text-gray-500 mr-2 flex-shrink-0" />
+      <div className="flex flex-row gap-2 sm:gap-3 mb-3 sm:mb-4 md:mb-6">
+        <div className="flex-1 sm:flex-1 flex items-center border border-gray-300 rounded-[4px] px-2 sm:px-3 py-1.5 sm:py-2 md:py-3 h-9 sm:h-10 md:h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white max-w-[calc(100%-44px)] sm:max-w-none">
+          <Search size={14} className="sm:w-[16px] sm:h-[16px] md:w-[18px] md:h-[18px] text-gray-500 mr-1 sm:mr-2 flex-shrink-0" />
           <input
             type="text"
             onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Busca usuarios por nombre, email, DNI o teléfono"
-            className="w-full text-sm sm:text-base focus:outline-none bg-transparent"
+            placeholder="Buscar usuarios..."
+            className="w-full text-xs sm:text-sm md:text-base focus:outline-none bg-transparent"
           />
         </div>
 
-        <div className="flex gap-2 sm:gap-3">
-          <div className="bg-white border border-gray-300 rounded-[4px] px-2 py-1 flex items-center h-12">
-            <SlidersHorizontal size={16} className="text-gray-500 mr-2" />
+        <div className="flex gap-2 sm:gap-3 flex-shrink-0">
+          {/* Filtro - solo icono en mobile, select completo en desktop */}
+          <div className="relative bg-white border border-gray-300 rounded-[4px] h-9 sm:h-10 md:h-12 min-w-[36px] sm:min-w-[120px] flex items-center">
+            {/* Mobile: icono visible */}
+            <SlidersHorizontal size={16} className="sm:hidden text-gray-500 mx-auto" />
+            {/* Desktop: select visible */}
             <select
-              className="outline-none bg-transparent text-sm"
+              className="hidden sm:block w-full outline-none bg-transparent text-xs sm:text-sm px-3 py-1 cursor-pointer h-full"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as "active" | "suspended")}
-              title="Filtrar por estado"
+              title={statusFilter === "active" ? "Activos" : "Suspendidos"}
+            >
+              <option value="active">Activos</option>
+              <option value="suspended">Suspendidos</option>
+            </select>
+            {/* Mobile: select invisible pero funcional */}
+            <select
+              className="sm:hidden absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as "active" | "suspended")}
+              title={statusFilter === "active" ? "Activos" : "Suspendidos"}
             >
               <option value="active">Activos</option>
               <option value="suspended">Suspendidos</option>
             </select>
           </div>
           <button
-            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
+            className="hidden sm:flex bg-white border border-[#0040B8] text-[#0040B8] px-3 md:px-4 py-2 sm:py-3 rounded-[4px] items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm h-12"
             onClick={handleRefresh}
           >
-            <RefreshCcw size={16} />
-            <span className="hidden sm:inline">Actualizar</span>
+            <RefreshCcw size={16} className="w-4 h-4" />
+            <span>Actualizar</span>
           </button>
         </div>
       </div>
 
       {/* Controles de paginación superiores */}
-      <div className="mt-1 w-full flex items-center justify-between">
-        <div className="text-sm text-gray-600">
+      <div className="mt-1 w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="text-xs sm:text-sm text-gray-600">
           Mostrando{" "}
           <strong>{totalItems === 0 ? 0 : start + 1}-{Math.min(end, totalItems)}</strong>{" "}
           de <strong>{totalItems}</strong> usuarios
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Por página</label>
+          <label className="text-xs sm:text-sm text-gray-600">Por página</label>
           <select
-            className="border border-gray-300 rounded px-2 py-1 text-sm"
+            className="border border-gray-300 rounded px-1.5 sm:px-2 py-1 text-xs sm:text-sm"
             value={pageSize}
             onChange={(e) => setPageSize(Number(e.target.value))}
           >
@@ -285,29 +298,29 @@ export default function UserTable({ users, onDelete }: Props) {
         </div>
       </div>
 
-      {/* Tabla en card */}
-      <div className="rounded-[14px] border border-gray-200 overflow-hidden bg-white mt-3">
+      {/* Tabla en card - vista desktop */}
+      <div className="hidden xl:block rounded-lg sm:rounded-[14px] border border-gray-200 overflow-hidden bg-white mt-2 sm:mt-3">
         <div className="overflow-x-auto">
           <table className="w-full text-sm sm:text-base">
             <thead className="bg-white text-gray-600">
               <tr className="border-b border-gray-200">
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Nombre</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Email</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">DNI</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Teléfono</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Acciones</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">Nombre</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">Email</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">DNI</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">Teléfono</th>
+                <th className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {loadingSuspended && statusFilter === "suspended" ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 sm:py-20 text-gray-600">
+                  <td colSpan={5} className="text-center py-8 sm:py-12 md:py-20 text-xs sm:text-sm text-gray-600">
                     Cargando usuarios suspendidos...
                   </td>
                 </tr>
               ) : pageUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 sm:py-20 text-gray-600">
+                  <td colSpan={5} className="text-center py-8 sm:py-12 md:py-20 text-xs sm:text-sm text-gray-600">
                     {statusFilter === "suspended"
                       ? "No hay usuarios suspendidos."
                       : "No hay usuarios en el sistema."}
@@ -318,18 +331,18 @@ export default function UserTable({ users, onDelete }: Props) {
                   const phone = user.phone_number || user.phone || "";
                   return (
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-3 text-center">
-                        <p className="font-medium">{fullName(user)}</p>
+                      <td className="p-2 sm:p-3 text-center">
+                        <p className="text-xs sm:text-sm font-medium">{fullName(user)}</p>
                       </td>
-                      <td className="p-3 text-center">
+                      <td className="p-2 sm:p-3 text-center">
                         <p className="text-xs sm:text-sm text-gray-600 break-all max-w-[200px] mx-auto truncate">
                           {user.email}
                         </p>
                       </td>
-                      <td className="p-3 text-center">
-                        <p className="font-mono">{user.dni || "-"}</p>
+                      <td className="p-2 sm:p-3 text-center">
+                        <p className="text-xs sm:text-sm font-mono">{user.dni || "-"}</p>
                       </td>
-                      <td className="p-3 text-center">{phone || "-"}</td>
+                      <td className="p-2 sm:p-3 text-center text-xs sm:text-sm">{phone || "-"}</td>
                       <td className="p-0">
                         <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
                           <button
@@ -338,7 +351,7 @@ export default function UserTable({ users, onDelete }: Props) {
                             title="Ver detalles"
                             onClick={() => openDrawer(user)}
                           >
-                            <EllipsisVertical size={16} />
+                            <EllipsisVertical size={14} className="sm:w-4 sm:h-4" />
                           </button>
                         </div>
                       </td>
@@ -351,19 +364,77 @@ export default function UserTable({ users, onDelete }: Props) {
         </div>
       </div>
 
+      {/* Vista de cards para mobile/tablet */}
+      <div className="xl:hidden mt-2 sm:mt-3 space-y-2 sm:space-y-3">
+        {loadingSuspended && statusFilter === "suspended" ? (
+          <div className="text-center py-8 sm:py-12 text-xs sm:text-sm text-gray-600 bg-white rounded-lg border border-gray-200 p-4">
+            Cargando usuarios suspendidos...
+          </div>
+        ) : pageUsers.length === 0 ? (
+          <div className="text-center py-8 sm:py-12 text-xs sm:text-sm text-gray-600 bg-white rounded-lg border border-gray-200 p-4">
+            {statusFilter === "suspended"
+              ? "No hay usuarios suspendidos."
+              : "No hay usuarios en el sistema."}
+          </div>
+        ) : (
+          pageUsers.map((user) => {
+            const phone = user.phone_number || user.phone || "";
+            return (
+              <div
+                key={user.id}
+                className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
+                      {fullName(user)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1.5 rounded hover:bg-blue-50 transition-colors flex-shrink-0 ml-2"
+                    title="Ver detalles"
+                    onClick={() => openDrawer(user)}
+                  >
+                    <EllipsisVertical size={18} className="sm:w-5 sm:h-5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:gap-3 text-xs sm:text-sm">
+                  <div>
+                    <div className="text-gray-500 mb-0.5">Email</div>
+                    <div className="text-gray-900 break-all">{user.email || "-"}</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <div>
+                      <div className="text-gray-500 mb-0.5">DNI</div>
+                      <div className="text-gray-900 font-mono">{user.dni || "-"}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 mb-0.5">Teléfono</div>
+                      <div className="text-gray-900">{phone || "-"}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
       {/* Controles de paginación inferiores */}
-      <div className="w-full flex items-center justify-between mt-4">
+      <div className="w-full flex items-center justify-between gap-2 sm:gap-3 mt-3 sm:mt-4">
         <button
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage <= 1}
-          className={`px-3 py-2 rounded border text-sm ${
+          className={`px-2 py-1 rounded border text-xs ${
             currentPage <= 1 ? "text-gray-400 border-gray-200" : "text-[#0040B8] border-[#0040B8]"
           }`}
         >
           Anterior
         </button>
 
-        <div className="flex items-center gap-1 text-sm">
+        <div className="flex items-center gap-1 text-xs sm:text-sm flex-wrap justify-center">
           {totalPages <= 7 ? (
             Array.from({ length: totalPages }).map((_, i) => {
               const n = i + 1;
@@ -389,7 +460,7 @@ export default function UserTable({ users, onDelete }: Props) {
               >
                 1
               </button>
-              {currentPage > 3 && <span className="px-2">...</span>}
+              {currentPage > 3 && <span className="px-1 sm:px-2">...</span>}
               {[
                 Math.max(2, currentPage - 1),
                 currentPage,
@@ -408,7 +479,7 @@ export default function UserTable({ users, onDelete }: Props) {
                     {n}
                   </button>
                 ))}
-              {currentPage < totalPages - 2 && <span className="px-2">...</span>}
+              {currentPage < totalPages - 2 && <span className="px-1 sm:px-2">...</span>}
               <button
                 onClick={() => goToPage(totalPages)}
                 className={`px-2 py-1 rounded border ${
@@ -424,7 +495,7 @@ export default function UserTable({ users, onDelete }: Props) {
         <button
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className={`px-3 py-2 rounded border text-sm ${
+          className={`px-2 py-1 rounded border text-xs ${
             currentPage >= totalPages ? "text-gray-400 border-gray-200" : "text-[#0040B8] border-[#0040B8]"
           }`}
         >
@@ -450,54 +521,54 @@ export default function UserTable({ users, onDelete }: Props) {
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b">
-          <h2 className="text-base sm:text-lg font-semibold truncate">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b">
+          <h2 className="text-sm sm:text-base md:text-lg font-semibold truncate">
             {selected ? fullName(selected) : "Detalle de usuario"}
           </h2>
           <button
             ref={closeBtnRef}
             onClick={closeDrawer}
-            className="p-2 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+            className="p-1.5 sm:p-2 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
             aria-label="Cerrar panel"
             title="Cerrar"
           >
-            <X size={18} />
+            <X size={16} className="sm:w-[18px] sm:h-[18px]" />
           </button>
         </div>
 
-        <div className="p-4 overflow-y-auto h-[calc(100%-56px)]">
+        <div className="p-3 sm:p-4 overflow-y-auto h-[calc(100%-56px)]">
           {selected ? (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[#0040B8]/10 flex items-center justify-center text-[#0040B8] font-semibold">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#0040B8]/10 flex items-center justify-center text-[#0040B8] font-semibold text-sm sm:text-base">
                   {initials(selected)}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium">{fullName(selected)}</p>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Mail size={14} />
+                  <p className="text-sm sm:text-base font-medium">{fullName(selected)}</p>
+                  <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                    <Mail size={12} className="sm:w-3.5 sm:h-3.5" />
                     <span className="truncate">{selected.email || "-"}</span>
                   </div>
                 </div>
               </div>
 
 
-              <div className="-mx-4 divide-y divide-gray-200">
+              <div className="-mx-3 sm:-mx-4 divide-y divide-gray-200">
                 <Row label="DNI" value={selected.dni as string} />
                 <Row label="Teléfono" value={(selected.phone_number || selected.phone) as string} />
               </div>
 
               {/* Acciones */}
-              <div className="mt-4 p-4">
-                {deleteError && <p className="text-sm text-rose-700 mb-2">{deleteError}</p>}
+              <div className="mt-3 sm:mt-4 p-3 sm:p-4">
+                {deleteError && <p className="text-xs sm:text-sm text-rose-700 mb-2">{deleteError}</p>}
                 <div className="flex justify-center">
                   <button
                     type="button"
                     onClick={() => setConfirmOpen(true)}
                     disabled={deleting}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-[4px] ${statusFilter === "suspended" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"} disabled:opacity-60 text-white text-sm`}
+                    className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[4px] ${statusFilter === "suspended" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"} disabled:opacity-60 text-white text-xs sm:text-sm`}
                   >
-                    {statusFilter === "suspended" ? <RotateCcw size={16} /> : <Trash2 size={16} />}
+                    {statusFilter === "suspended" ? <RotateCcw size={14} className="sm:w-4 sm:h-4" /> : <Trash2 size={14} className="sm:w-4 sm:h-4" />}
                     {deleting
                       ? "Procesando..."
                       : statusFilter === "suspended"
@@ -508,7 +579,7 @@ export default function UserTable({ users, onDelete }: Props) {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-gray-600">Selecciona un usuario para ver sus datos.</p>
+            <p className="text-xs sm:text-sm text-gray-600">Selecciona un usuario para ver sus datos.</p>
           )}
         </div>
       </aside>
@@ -523,16 +594,16 @@ export default function UserTable({ users, onDelete }: Props) {
           aria-describedby="confirm-desc"
         >
           <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmOpen(false)} />
-          <div className="relative bg-white w-[92%] max-w-md rounded-[14px] shadow-xl border border-gray-200 p-5">
-            <div className="flex items-start gap-3">
-              <div className="mt-1">
-                <AlertTriangle size={20} className="text-amber-600" />
+          <div className="relative bg-white w-[92%] max-w-md rounded-lg sm:rounded-[14px] shadow-xl border border-gray-200 p-4 sm:p-5">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div className="mt-0.5 sm:mt-1">
+                <AlertTriangle size={18} className="sm:w-5 sm:h-5 text-amber-600" />
               </div>
               <div className="min-w-0">
-                <h3 id="confirm-title" className="text-base font-semibold">
+                <h3 id="confirm-title" className="text-sm sm:text-base font-semibold">
                   Confirmar acción
                 </h3>
-                <p id="confirm-desc" className="mt-1 text-sm text-gray-600">
+                <p id="confirm-desc" className="mt-1 text-xs sm:text-sm text-gray-600">
                   {statusFilter === "suspended"
                     ? <>Vas a reactivar a {selected ? fullName(selected) : "este usuario"} en el sistema.</>
                     : <>Vas a suspender a {selected ? fullName(selected) : "este usuario"} del sistema, esta acción se puede revertir desde administración.</>}
@@ -540,13 +611,13 @@ export default function UserTable({ users, onDelete }: Props) {
               </div>
             </div>
 
-            {deleteError && <p className="mt-3 text-sm text-rose-700">{deleteError}</p>}
+            {deleteError && <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-rose-700">{deleteError}</p>}
 
-            <div className="mt-5 flex items-center justify-end gap-2">
+            <div className="mt-4 sm:mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setConfirmOpen(false)}
-                className="px-4 py-2 rounded-[4px] border border-gray-300 bg-white text-sm hover:bg-gray-50"
+                className="w-full sm:w-auto px-4 py-2 rounded-[4px] border border-gray-300 bg-white text-xs sm:text-sm hover:bg-gray-50"
               >
                 Cancelar
               </button>
@@ -554,9 +625,9 @@ export default function UserTable({ users, onDelete }: Props) {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-[4px] ${statusFilter === "suspended" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"} disabled:opacity-60 text-white text-sm`}
+                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[4px] ${statusFilter === "suspended" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"} disabled:opacity-60 text-white text-xs sm:text-sm`}
               >
-                {statusFilter === "suspended" ? <RotateCcw size={16} /> : <Trash2 size={16} />}
+                {statusFilter === "suspended" ? <RotateCcw size={14} className="sm:w-4 sm:h-4" /> : <Trash2 size={14} className="sm:w-4 sm:h-4" />}
                 {deleting ? "Procesando..." : statusFilter === "suspended" ? "Sí, reactivar" : "Sí, suspender"}
               </button>
             </div>

@@ -42,11 +42,11 @@ export default function QuickActions({ workshopId, availableInspections }: Quick
         <Card className="h-full transition-colors duration-200 group-hover:bg-[#f1f6ff99] group-hover:border-[#0040B899] group-focus:ring-2 group-focus:ring-offset-2 group-focus:ring-[#0040B8]">
           <div className="px-4 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-[50px] bg-[#E6ECF8] text-[#0040B8] flex items-center justify-center">
+              <div className="h-9 w-9 rounded-[50px] bg-[#E6ECF8] text-[#0040B8] flex items-center justify-center hidden sm:flex">
                 <CircleFadingPlus className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="text-md ml-2">Nueva revisión</h4>
+                <h4 className="text-md ml-0 sm:ml-2">Nueva revisión</h4>
               </div>
             </div>
             {creating ? (
@@ -62,11 +62,11 @@ export default function QuickActions({ workshopId, availableInspections }: Quick
         <Card className="h-full transition-colors duration-200 group-hover:bg-[#f1f6ff99] group-hover:border-[#0040B899] group-focus:ring-2 group-focus:ring-offset-2 group-focus:ring-[#0040B8]">
           <div className="px-4 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-[50px] bg-[#E6ECF8] text-[#0040B8] flex items-center justify-center">
+              <div className="h-9 w-9 rounded-[50px] bg-[#E6ECF8] text-[#0040B8] flex items-center justify-center hidden sm:flex">
                 <ClipboardList className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="text-md ml-2">Continuar revisión</h4>
+                <h4 className="text-md ml-0 sm:ml-2">Continuar revisión</h4>
               </div>
             </div>
             <ChevronRight className="h-5 w-5 group-hover:text-[#0040B8] transition-colors duration-200" />
@@ -78,11 +78,11 @@ export default function QuickActions({ workshopId, availableInspections }: Quick
         <Card className="h-full transition-colors duration-200 group-hover:bg-[#f1f6ff99] group-hover:border-[#0040B899] group-focus:ring-2 group-focus:ring-offset-2 group-focus:ring-[#0040B8]">
           <div className="px-4 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-[50px] bg-[#E6ECF8] text-[#0040B8] flex items-center justify-center">
+              <div className="h-9 w-9 rounded-[50px] bg-[#E6ECF8] text-[#0040B8] flex items-center justify-center hidden sm:flex">
                 <RefreshCw className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="text-md ml-2">Cola de revisiones</h4>
+                <h4 className="text-md ml-0 sm:ml-2">Cola de revisiones</h4>
               </div>
             </div>
             <ChevronRight className="h-5 w-5 group-hover:text-[#0040B8] transition-colors duration-200" />

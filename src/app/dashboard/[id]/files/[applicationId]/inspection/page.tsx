@@ -243,23 +243,23 @@ export default async function FichaTecnicaPage({
       // o mostrar un mensaje de error más amigable
       return (
         <div className="min-w-full">
-          <article className="flex items-center justify-between text-lg mb-6 px-4">
+          <article className="flex items-center justify-between text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6 px-1 sm:px-2 md:px-4">
             <div className="flex items-center gap-1 flex-wrap">
-              <span>Inicio</span>
-              <ChevronRight size={20} />
+              <span className="text-gray-600">Inicio</span>
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <a href={`/dashboard/${workshopId}/files`} className="text-[#0040B8] hover:underline">
                 Legajos
               </a>
-              <ChevronRight size={20} />
+              <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="text-[#0040B8]">Ficha técnica segunda revisión</span>
             </div>
           </article>
-          <div className="px-4 py-8">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-[14px] p-6 text-center">
-              <p className="text-yellow-800 mb-4">La segunda inspección aún no ha sido creada.</p>
+          <div className="px-1 sm:px-2 md:px-4 py-4 sm:py-6 md:py-8">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg sm:rounded-[14px] p-4 sm:p-5 md:p-6 text-center">
+              <p className="text-xs sm:text-sm md:text-base text-yellow-800 mb-3 sm:mb-4">La segunda inspección aún no ha sido creada.</p>
               <a
                 href={`/dashboard/${workshopId}/files/${applicationId}`}
-                className="px-4 py-2 bg-[#0040B8] text-white rounded hover:bg-[#0035A0] inline-block"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#0040B8] text-white text-xs sm:text-sm rounded hover:bg-[#0035A0] inline-block"
               >
                 Volver al detalle
               </a>
@@ -301,24 +301,24 @@ export default async function FichaTecnicaPage({
 
   return (
     <div className="min-w-full">
-      <article className="flex items-center justify-between text-lg mb-6 px-4">
+      <article className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6 px-1 sm:px-2 md:px-4 gap-2 sm:gap-0">
         <div className="flex items-center gap-1 flex-wrap">
-          <span>Inicio</span>
-          <ChevronRight size={20} />
+          <span className="text-gray-600">Inicio</span>
+          <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
           <a href={`/dashboard/${workshopId}/files`} className="text-[#0040B8] hover:underline">
             Legajos
           </a>
-          <ChevronRight size={20} />
+          <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
           <span className="text-[#0040B8]">{pageTitle}</span>
-          <ChevronRight size={20} />
+          <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
           <span className="text-[#0040B8]">{plateLabel}</span>
         </div>
         <div>
           <a
             href={`/dashboard/${workshopId}/files/${applicationId}`}
-            className="inline-flex items-center gap-1 text-[#0040B8] hover:underline hover:text-[#0035A0] font-medium"
+            className="inline-flex items-center gap-1 text-xs sm:text-sm text-[#0040B8] hover:underline hover:text-[#0035A0] font-medium"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={14} className="sm:w-4 sm:h-4" />
             Volver al detalle
           </a>
         </div>

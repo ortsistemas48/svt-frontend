@@ -13,14 +13,14 @@ export default function SearchFileBar({ workshopId, onSearch }: { workshopId: nu
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto w-full justify-center">
+    <div className="flex flex-row gap-3 w-full sm:max-w-2xl sm:mx-auto justify-center">
       {/* Wrapper del input más grande y con grow */}
-      <div className="flex-1 w-full flex items-center border border-gray-300 rounded-[4px] px-4 h-14 sm:h-14 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent">
-        <Search size={20} className="text-gray-500 mr-3 flex-shrink-0" />
+      <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-3 sm:px-4 h-12 sm:h-14 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent">
+        <Search size={18} className="text-gray-500 mr-2 flex-shrink-0 sm:w-5 sm:h-5" />
         <input
           type="text"
-          placeholder="Ingrese el dominio que desea buscar"
-          className="w-full text-base sm:text-md focus:outline-none bg-transparent placeholder:text-gray-400"
+          placeholder="Ingrese el dominio"
+          className="w-full text-sm sm:text-base focus:outline-none bg-transparent placeholder:text-gray-400 placeholder:text-sm sm:placeholder:text-base"
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -30,9 +30,10 @@ export default function SearchFileBar({ workshopId, onSearch }: { workshopId: nu
 
       <button
         onClick={handleSearch}
-        className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-5 py-3 rounded-[4px] flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-base min-h-[56px]"
+        className="bg-[#0040B8] hover:bg-[#0035A0] active:bg-[#002F8F] text-white px-3 sm:px-5 py-3 rounded-[4px] flex items-center justify-center transition-colors duration-200 font-medium text-sm sm:text-base h-12 sm:h-14 flex-shrink-0 min-w-[80px] sm:min-w-[56px]"
       >
-        <ArrowRight size={22} strokeWidth={2.5} />
+        <span className="sm:hidden">Buscar</span>
+        <ArrowRight size={18} strokeWidth={2.5} className="hidden sm:block sm:w-[22px] sm:h-[22px]" />
       </button>
     </div>
   );

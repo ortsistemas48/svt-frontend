@@ -18,13 +18,13 @@ const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> 
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
 const TABLE_FILTERS = ["Todos", "En curso", "A Inspeccionar", "Segunda Inspección", "Emitir CRT"];
-export default function QueueTable() {
+export default function QueueTable({ externalSearchQuery = "" }: { externalSearchQuery?: string }) {
   const { id } = useParams();
   const router = useRouter();
   const [items, setItems] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState(""); // Displayed search value
-  const [searchQuery, setSearchQuery] = useState(""); // Actual search query used for API
+  const [searchQuery, setSearchQuery] = useState(externalSearchQuery || ""); // Actual search query used for API
   const [page, setPage] = useState(1);
   const perPage = 5;
   const [total, setTotal] = useState(0);
@@ -83,12 +83,21 @@ export default function QueueTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, page, searchQuery, statusFilter]);
 
+  // Sincronizar searchQuery externo
+  useEffect(() => {
+    if (externalSearchQuery !== undefined && externalSearchQuery !== searchQuery) {
+      setSearchQuery(externalSearchQuery);
+      setQ(externalSearchQuery);
+      setPage(1);
+    }
+  }, [externalSearchQuery]);
+
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-0 sm:p-4 md:p-6">
       {/* Search and filters section */}
-      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 gap-3">
           <input
             disabled={loading}
@@ -130,10 +139,79 @@ export default function QueueTable() {
       </div>
 
       {/* Filter overlay */}
-      {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
+      {showFilters && <div className="hidden sm:block"><TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} /></div>}
 
-      {/* Card con borde propio, header blanco y líneas pegadas a los bordes */}
-      <div className="rounded-[14px] border border-gray-200 overflow-hidden bg-white">
+      {/* Vista de cards para mobile/tablet */}
+      <div className="xl:hidden space-y-3 sm:space-y-4 px-1 sm:px-0">
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: perPage }).map((_, i) => (
+              <div key={i} className="border border-gray-200 rounded-lg p-3 sm:p-4 animate-pulse bg-gray-50">
+                <Sk className="h-4 w-20 mb-2" />
+                <Sk className="h-3 w-full mb-2" />
+                <Sk className="h-3 w-3/4" />
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="p-8 text-center text-sm sm:text-base text-gray-500">
+            No hay revisiones para mostrar.
+          </div>
+        ) : (
+          items.map((item, index) => {
+            const d = new Date(item.date);
+            const date = d.toLocaleDateString("es-AR");
+            const time = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+            const tone = STATUS_TONES[item.status] || DEFAULT_TONE;
+            const ownerText = item.owner?.cuit ? item.owner?.razon_social : item.owner?.first_name + " " + item.owner?.last_name;
+            const identityText = item.owner?.cuit ? item.owner?.cuit : item.owner?.dni;
+            const uniqueKey = `${item.application_id}-${index}-${item.date}`;
+
+            return (
+              <div key={uniqueKey} className="border border-gray-200 rounded-lg p-3 sm:p-4 space-y-3 bg-white">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs sm:text-sm font-mono text-gray-600">CRT: <span className="font-semibold text-gray-900">{item.application_id}</span></div>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${tone.text} ${tone.bg}`}>
+                    {item.status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 text-xs sm:text-sm">
+                  <div>
+                    <div className="text-gray-600 mb-1">Vehículo</div>
+                    <div className="font-medium">{item.car?.license_plate || "-"}</div>
+                    <div className="text-gray-500">{item.car?.brand} {item.car?.model}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600 mb-1">Titular</div>
+                    <div className="font-medium">{ownerText}</div>
+                    <div className="text-gray-500">{identityText || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600 mb-1">Fecha de creación</div>
+                    <div className="font-medium">{date}</div>
+                    <div className="text-gray-500">{time}</div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-gray-100">
+                  <button
+                    type="button"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] bg-[#0040B8] px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-[#00379f] transition-colors"
+                    onClick={() => router.push(`/dashboard/${id}/inspections/${item.application_id}`)}
+                  >
+                    <Play size={14} />
+                    Abrir inspección
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Tabla para desktop */}
+      <div className="hidden xl:block rounded-xl sm:rounded-[14px] border border-gray-200 overflow-hidden bg-white">
         <div className="overflow-x-auto">
           <TableTemplate<Application>
             headers={headers}
@@ -231,11 +309,11 @@ export default function QueueTable() {
       </div>
 
       {/* Pagination and refresh button section */}
-      <div className="mt-6 flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
+      <div className="mt-4 sm:mt-6 flex flex-col items-center justify-center gap-3 text-xs sm:text-sm px-1 sm:px-0">
         {!loading && total > perPage && (
           <div className="flex items-center gap-2">
             <button
-              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-[4px] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
+              className="px-2 sm:px-3 md:px-4 py-2 border border-gray-300 rounded-[4px] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
@@ -246,7 +324,7 @@ export default function QueueTable() {
               Página {page} de {totalPages}
             </span>
             <button
-              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-[4px] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
+              className="px-2 sm:px-3 md:px-4 py-2 border border-gray-300 rounded-[4px] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
             >

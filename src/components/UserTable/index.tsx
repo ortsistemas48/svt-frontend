@@ -436,109 +436,200 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
   );
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="px-0 py-3 sm:p-4 md:p-6">
       {/* 3) Input y botones fuera del borde, por eso están fuera del card de la tabla */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
-        <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-3 py-2 sm:py-3 h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
-          <Search size={18} className="text-gray-500 mr-2 flex-shrink-0" />
+      <div className="hidden sm:flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3 sm:mb-4 md:mb-6">
+        <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-2 sm:px-3 py-2 h-10 sm:h-12 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent bg-white">
+          <Search size={16} className="text-gray-500 mr-2 flex-shrink-0 sm:w-[18px] sm:h-[18px]" />
           <input
             type="text"
             onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Busca tus usuarios por nombre, email, DNI, rol o teléfono"
-            className="w-full text-sm sm:text-base focus:outline-none bg-transparent"
+            placeholder=""
+            className="w-full text-xs sm:text-sm md:text-base focus:outline-none bg-transparent placeholder:text-gray-400"
           />
         </div>
 
-        <div className="flex gap-2 sm:gap-3">
-          {/* <button className="bg-[#0040B8] hover:bg-[#0035A0] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 transition-colors duration-200 font-medium text-sm">
-            <SlidersHorizontal size={16} />
-            <span className="hidden sm:inline">Filtrar</span>
-          </button> */}
+        <div className="flex gap-2">
           <button
-            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 sm:px-4 py-2 sm:py-3 rounded-[4px] flex items-center justify-center gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-sm"
+            className="bg-white border border-[#0040B8] text-[#0040B8] px-3 py-2 sm:px-4 sm:py-2 md:py-3 rounded-[4px] flex items-center justify-center gap-1 sm:gap-2 hover:bg-[#0040B8] hover:text-white transition-colors duration-200 font-medium text-xs sm:text-sm"
             onClick={handleRefresh}
           >
-            <RefreshCcw size={16} />
+            <RefreshCcw size={14} className="sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Actualizar</span>
           </button>
         </div>
       </div>
 
       {/* Card de la tabla con borde, input y botones quedaron afuera */}
-      <div className="rounded-[14px] border border-gray-200 overflow-hidden bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm sm:text-base">
-            {/* 2) Header con fondo blanco */}
-            <thead className="bg-white text-gray-600">
-              <tr className="border-b border-gray-200">
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Nombre</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Email</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">DNI</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Rol</th>
-                <th className="p-3 text-center text-xs sm:text-sm font-medium">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 sm:py-20 text-gray-600 text-sm sm:text-base">
-                    No hay usuarios en este taller.
-                  </td>
-                </tr>
-              ) : (
-                filteredUsers.map((user) => {
-                  const tone = toneFor(user.role);
+      <div className="sm:rounded-[14px] sm:border sm:border-gray-200 overflow-hidden sm:bg-white">
+        {filteredUsers.length === 0 ? (
+          <div className="text-center py-8 sm:py-12 md:py-20 text-gray-600 text-xs sm:text-sm md:text-base px-4">
+            No hay usuarios en este taller.
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table View - Hidden on mobile/tablet */}
+            <div className="hidden xl:block overflow-x-auto">
+              <table className="w-full text-sm sm:text-base">
+                <thead className="bg-white text-gray-600">
+                  <tr className="border-b border-gray-200">
+                    <th className="p-3 text-center text-xs sm:text-sm font-medium">Nombre</th>
+                    <th className="p-3 text-center text-xs sm:text-sm font-medium">Email</th>
+                    <th className="p-3 text-center text-xs sm:text-sm font-medium">DNI</th>
+                    <th className="p-3 text-center text-xs sm:text-sm font-medium">Rol</th>
+                    <th className="p-3 text-center text-xs sm:text-sm font-medium">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredUsers.map((user) => {
+                    const roleLower = (user.role || "").toLowerCase();
+                    const isEngineer = roleLower.includes("ingeniero");
+                    const kind = (user.engineer_kind || "").toLowerCase();
+                    let label = user.role || "-";
+                    if (roleLower === "titular") {
+                      label = "Titular del taller";
+                    } else if (isEngineer) {
+                      if (kind === "titular") label = "Ingeniero titular";
+                      else label = "Ingeniero suplente";
+                    }
+                    const tone = toneFor(label);
+                    return (
+                      <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="p-3 text-center">
+                          <p className="font-medium text-sm sm:text-base">{fullName(user)}</p>
+                        </td>
+                        <td className="p-3 text-center">
+                          <p className="text-xs sm:text-sm text-gray-600 break-all max-w-[200px] mx-auto truncate">{user.email}</p>
+                        </td>
+                        <td className="p-3 text-center">
+                          <p className="text-sm sm:text-base font-mono">{user.dni || "-"}</p>
+                        </td>
+                        <td className="p-3 text-center">
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm ${tone.text} ${tone.bg}`}>
+                            {label}
+                          </span>
+                        </td>
+                        <td className="p-0">
+                          <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
+                            <button
+                              type="button"
+                              className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                              title="Ver detalles"
+                              onClick={() => openDrawer(user)}
+                            >
+                              <EllipsisVertical size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile/Tablet Card View - Hidden on desktop */}
+            <div className="xl:hidden">
+              {/* Mobile View - More compact */}
+              <div className="sm:hidden px-0 py-3 space-y-3">
+                {filteredUsers.map((user) => {
+                  const roleLower = (user.role || "").toLowerCase();
+                  const isEngineer = roleLower.includes("ingeniero");
+                  const kind = (user.engineer_kind || "").toLowerCase();
+                  let label = user.role || "-";
+                  if (roleLower === "titular") {
+                    label = "Titular del taller";
+                  } else if (isEngineer) {
+                    if (kind === "titular") label = "Ingeniero titular";
+                    else label = "Ingeniero suplente";
+                  }
+                  const tone = toneFor(label);
                   return (
-                    <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-3 text-center">
-                        <p className="font-medium text-sm sm:text-base">{fullName(user)}</p>
-                      </td>
-                      <td className="p-3 text-center">
-                        <p className="text-xs sm:text-sm text-gray-600 break-all max-w-[200px] mx-auto truncate">{user.email}</p>
-                      </td>
-                      <td className="p-3 text-center">
-                        <p className="text-sm sm:text-base font-mono">{user.dni || "-"}</p>
-                      </td>
-                      <td className="p-3 text-center">
-                        {/* 1) Pill con texto y fondo del mismo tono, más claro */}
-                        {(() => {
-                          const roleLower = (user.role || "").toLowerCase();
-                          const isEngineer = roleLower.includes("ingeniero");
-                          const kind = (user.engineer_kind || "").toLowerCase(); // "Titular" | "Suplente"
-                          let label = user.role || "-";
-                          if (roleLower === "titular") {
-                            label = "Titular del taller";
-                          } else if (isEngineer) {
-                            if (kind === "titular") label = "Ingeniero titular";
-                            else label = "Ingeniero suplente";
-                          }
-                          const tone = toneFor(label);
-                          return (
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm ${tone.text} ${tone.bg}`}>
-                              {label}
-                            </span>
-                          );
-                        })()}
-                      </td>
-                      <td className="p-0">
-                        <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
-                          <button
-                            type="button"
-                            className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
-                            title="Ver detalles"
-                            onClick={() => openDrawer(user)}
-                          >
-                            <EllipsisVertical size={16} />
-                          </button>
+                    <div key={user.id} className="border border-gray-200 rounded-lg pl-3 pr-1 py-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base text-gray-900 mb-1">
+                            {fullName(user)}
+                          </h3>
+                          <p className="text-sm text-gray-600 truncate">{user.email}</p>
                         </div>
-                      </td>
-                    </tr>
+                        <button
+                          type="button"
+                          className="cursor-pointer text-[#0040B8] hover:opacity-80 p-2 rounded hover:bg-blue-50 transition-colors flex-shrink-0"
+                          title="Ver detalles"
+                          onClick={() => openDrawer(user)}
+                        >
+                          <EllipsisVertical size={18} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+                        <div>
+                          <span className="text-xs text-gray-500 font-medium block mb-1">DNI</span>
+                          <span className="text-sm font-mono text-gray-900">{user.dni || "-"}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-500 font-medium block mb-1">Rol</span>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs ${tone.text} ${tone.bg}`}>
+                            {label}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+              </div>
+              
+              {/* Tablet View - More spacious */}
+              <div className="hidden sm:block p-3 md:p-4 space-y-3 md:space-y-4">
+                {filteredUsers.map((user) => {
+                  const roleLower = (user.role || "").toLowerCase();
+                  const isEngineer = roleLower.includes("ingeniero");
+                  const kind = (user.engineer_kind || "").toLowerCase();
+                  let label = user.role || "-";
+                  if (roleLower === "titular") {
+                    label = "Titular del taller";
+                  } else if (isEngineer) {
+                    if (kind === "titular") label = "Ingeniero titular";
+                    else label = "Ingeniero suplente";
+                  }
+                  const tone = toneFor(label);
+                  return (
+                    <div key={user.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-1">
+                            {fullName(user)}
+                          </h3>
+                          <p className="text-xs md:text-sm text-gray-600 truncate">{user.email}</p>
+                        </div>
+                        <button
+                          type="button"
+                          className="cursor-pointer text-[#0040B8] hover:opacity-80 p-2 rounded hover:bg-blue-50 transition-colors flex-shrink-0"
+                          title="Ver detalles"
+                          onClick={() => openDrawer(user)}
+                        >
+                          <EllipsisVertical size={18} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                        <div>
+                          <span className="text-xs text-gray-500 font-medium block mb-1">DNI</span>
+                          <span className="text-xs md:text-sm font-mono text-gray-900">{user.dni || "-"}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-500 font-medium block mb-1">Rol</span>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs ${tone.text} ${tone.bg}`}>
+                            {label}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Overlay y Drawer */}
@@ -555,7 +646,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b">
           <h2 className="text-base sm:text-lg font-semibold truncate">
             {selected ? fullName(selected) : "Detalle de usuario"}
           </h2>
@@ -570,7 +661,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
           </button>
         </div>
 
-        <div className="p-4 overflow-y-auto h-[calc(100%-56px)]">
+        <div className="p-4 sm:p-6 overflow-y-auto h-[calc(100%-56px)]">
           {selected ? (
             <div className="space-y-6">
               <div className="flex items-center gap-3">

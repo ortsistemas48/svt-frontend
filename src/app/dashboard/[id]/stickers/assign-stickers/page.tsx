@@ -181,77 +181,77 @@ export default function AsignarObleasPage() {
 
   return (
     <div className="bg-white">
-      <div className="w-full px-6 py-6">
-        <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
+      <div className="w-full px-0 sm:px-4 md:px-6 py-3 sm:py-6">
+        <article className="flex items-center justify-between text-xs sm:text-sm md:text-base lg:text-lg mb-2 sm:mb-4 md:mb-6 px-1 sm:px-0">
           <div className="flex items-center gap-1">
             <span className="text-gray-600">Inicio</span>
-            <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+            <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
             <span className="text-[#0040B8] font-medium">Obleas</span>
           </div>
         </article>
 
-        <div className="text-center mb-8 sm:mb-10">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl text-[#0040B8] mb-2 sm:mb-3">
+        <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:mb-10 px-1 sm:px-0">
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-[#0040B8] mb-2 sm:mb-3">
             Asignar obleas al taller
           </h2>
-          <p className="text-sm sm:text-base text-gray-500 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm md:text-base text-gray-500 max-w-2xl mx-auto leading-relaxed">
             Creá packs de obleas, generá las obleas que necesitás y guardalas para usarlas.
           </p>
         </div>
         {(errMsg || okMsg) && (
-          <div className="mb-4">
+          <div className="mb-4 mx-1 sm:mx-0">
             {errMsg && (
-              <div className="rounded-[4px] border border-rose-300 bg-rose-50 text-rose-700 px-3 py-2 text-sm">
+              <div className="rounded-[4px] border border-rose-300 bg-rose-50 text-rose-700 px-3 py-2 text-xs sm:text-sm">
                 {errMsg}
               </div>
             )}
             {okMsg && (
-              <div className="rounded-[4px] border border-emerald-300 bg-emerald-50 text-emerald-700 px-3 py-2 text-sm">
+              <div className="rounded-[4px] border border-emerald-300 bg-emerald-50 text-emerald-700 px-3 py-2 text-xs sm:text-sm">
                 {okMsg}
               </div>
             )}
           </div>
         )}
 
-        <section className="w-full">
-          <div className="rounded-[14px] border border-[#d3d3d3] bg-white">
-           <div className="p-5 border-b border-gray-100">
-            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <Layers className="h-5 w-5 text-[#0040B8]" />
+        <section className="w-full mx-1 sm:mx-0">
+          <div className="rounded-lg sm:rounded-[14px] border border-[#d3d3d3] bg-white">
+           <div className="p-3 sm:p-4 md:p-5 border-b border-gray-100">
+            <h2 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2">
+              <Layers className="h-4 w-4 sm:h-5 sm:w-5 text-[#0040B8]" />
               Nuevo pack de obleas
             </h2>
 
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Nombre del pack (opcional)</label>
+                <label className="block text-xs sm:text-sm text-gray-700 mb-1">Nombre del pack (opcional)</label>
                 <input
                   type="text"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
                   placeholder="Ej: Obleas Septiembre 2025"
-                  className="w-full rounded-[4px] border border-gray-300 px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                  className="w-full rounded-[4px] border border-gray-300 px-3 py-2.5 sm:py-3 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
                 />
               </div>
             </div>
           </div>
 
-            <div className="p-5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <SquareStack className="h-4 w-4 text-[#0040B8]" />
+            <div className="p-3 sm:p-4 md:p-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                <h3 className="text-xs sm:text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  <SquareStack className="h-3 w-3 sm:h-4 sm:w-4 text-[#0040B8]" />
                   Rangos del pack de obleas
                 </h3>
                 <button
                   onClick={addRange}
-                  className="inline-flex items-center gap-2 rounded-[4px] border border-[#0040B8] text-[#0040B8] px-3 py-1.5 text-xs font-medium hover:bg-[#0040B8]/5"
+                  className="inline-flex items-center gap-2 rounded-[4px] border border-[#0040B8] text-[#0040B8] px-3 py-1.5 text-xs font-medium hover:bg-[#0040B8]/5 w-full sm:w-auto"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                   Agregar rango
                 </button>
               </div>
 
               {/* Lista de rangos */}
-              <div className="mt-4 space-y-3">
+              <div className="mt-3 sm:mt-4 space-y-3">
                 {ranges.map((r, idx) => (
                   <div key={r.id} className="rounded-[4px] border border-gray-200 p-3">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -260,7 +260,7 @@ export default function AsignarObleasPage() {
                         <input
                           value={r.lead}
                           onChange={(e) => updateRange(r.id, { lead: e.target.value })}
-                          className="w-full rounded-[4px] border border-gray-300 px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                          className="w-full rounded-[4px] border border-gray-300 px-2 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
                           placeholder="RA"
                         />
                       </div>
@@ -270,12 +270,12 @@ export default function AsignarObleasPage() {
                         <input
                           value={r.start}
                           onChange={(e) => updateRange(r.id, { start: e.target.value })}
-                          className="w-full rounded-[4px] border border-gray-300 px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                          className="w-full rounded-[4px] border border-gray-300 px-2 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
                           placeholder="0001"
                           inputMode="numeric"
                           pattern="[0-9]*"
                         />
-                        <p className="mt-1 text-[11px] text-gray-500">Podés usar ceros, por ejemplo 0001</p>
+                        <p className="mt-1 text-[10px] sm:text-[11px] text-gray-500">Podés usar ceros, por ejemplo 0001</p>
                       </div>
 
                       <div className="sm:col-span-1">
@@ -283,7 +283,7 @@ export default function AsignarObleasPage() {
                         <input
                           value={r.end}
                           onChange={(e) => updateRange(r.id, { end: e.target.value })}
-                          className="w-full rounded-[4px] border border-gray-300 px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                          className="w-full rounded-[4px] border border-gray-300 px-2 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
                           placeholder="0050"
                           inputMode="numeric"
                           pattern="[0-9]*"
@@ -292,13 +292,13 @@ export default function AsignarObleasPage() {
                     </div>
 
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="text-xs text-gray-500">Rango {idx + 1}</span>
+                      <span className="text-[10px] sm:text-xs text-gray-500">Rango {idx + 1}</span>
                       {ranges.length > 1 && (
                         <button
                           onClick={() => removeRange(r.id)}
-                          className="inline-flex items-center gap-1 text-rose-600 hover:text-rose-700 text-xs"
+                          className="inline-flex items-center gap-1 text-rose-600 hover:text-rose-700 text-[10px] sm:text-xs"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                           Quitar rango
                         </button>
                       )}
@@ -308,23 +308,23 @@ export default function AsignarObleasPage() {
               </div>
 
               {/* Resumen y vista previa */}
-              <div className="mt-4 rounded-[4px] border border-gray-200 p-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="text-sm">
+              <div className="mt-3 sm:mt-4 rounded-[4px] border border-gray-200 p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2 sm:gap-3">
+                  <div className="text-xs sm:text-sm">
                     <span className="text-gray-700 font-medium">Cantidad de obleas a asignar:</span>{" "}
                     <span className="text-gray-900 font-semibold">{calculatedQty}</span>
                   </div>
 
                   {preview.dupCount > 0 && (
-                    <div className="inline-flex items-center gap-2 text-xs rounded-[4px] border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800">
-                      <AlertTriangle className="h-4 w-4" />
+                    <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs rounded-[4px] border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800">
+                      <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
                       {preview.dupCount} repetidas, no se guardan
                     </div>
                   )}
 
                   {preview.error && (
-                    <div className="w-full md:w-auto inline-flex items-center gap-2 text-xs rounded-[4px] border border-rose-300 bg-rose-50 px-2 py-1 text-rose-700">
-                      <AlertTriangle className="h-4 w-4" />
+                    <div className="w-full sm:w-auto inline-flex items-center gap-2 text-[10px] sm:text-xs rounded-[4px] border border-rose-300 bg-rose-50 px-2 py-1 text-rose-700">
+                      <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
                       {preview.error}
                     </div>
                   )}
@@ -333,24 +333,24 @@ export default function AsignarObleasPage() {
                 {/* Vista previa removida */}
               </div>
 
-              <div className="mt-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
-                <button
-                  onClick={resetForm}
-                  disabled={isSaving}
-                  className="inline-flex items-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-60"
-                >
-                  Limpiar
-                </button>
+              <div className="mt-4 sm:mt-5 flex flex-col-reverse sm:flex-row gap-3 sm:items-center sm:justify-end">
                 <button
                   onClick={saveGroup}
                   disabled={!canSave || isSaving}
                   className={clsx(
-                    "inline-flex items-center gap-2 rounded-[4px] px-4 py-2 text-sm text-white",
+                    "inline-flex items-center justify-center gap-2 rounded-[4px] px-4 py-2.5 sm:py-2 text-xs sm:text-sm text-white w-full sm:w-auto",
                     canSave && !isSaving ? "bg-[#0040B8] hover:bg-[#00379f]" : "bg-[#0040B8]/50 cursor-not-allowed"
                   )}
                 >
-                  <Save className="h-4 w-4" />
+                  <Save className="h-3 w-3 sm:h-4 sm:w-4" />
                   {isSaving ? "Guardando..." : "Guardar pack"}
+                </button>
+                <button
+                  onClick={resetForm}
+                  disabled={isSaving}
+                  className="inline-flex items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2.5 sm:py-2 text-xs sm:text-sm hover:bg-gray-50 disabled:opacity-60 w-full sm:w-auto"
+                >
+                  Limpiar
                 </button>
               </div>
             </div>
@@ -358,11 +358,11 @@ export default function AsignarObleasPage() {
         </section>
 
         {groups.length > 0 && (
-          <div className="mt-8">
-            <h3 className="text-base font-semibold text-gray-900 mb-2">Últimos packs de obleas creados</h3>
+          <div className="mt-6 sm:mt-8 mx-1 sm:mx-0">
+            <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2">Últimos packs de obleas creados</h3>
             <ul className="space-y-2">
               {groups.map((g) => (
-                <li key={g.id} className="rounded border border-gray-200 p-3 text-sm">
+                <li key={g.id} className="rounded border border-gray-200 p-3 text-xs sm:text-sm">
                   <div className="font-medium">{g.name}</div>
                   <div className="text-gray-500">{g.obleas.length} obleas</div>
                 </li>
@@ -371,12 +371,12 @@ export default function AsignarObleasPage() {
           </div>
         )}
 
-        <div className="mt-8 flex justify-start">
+        <div className="mt-6 sm:mt-8 flex justify-center px-1 sm:px-0">
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full sm:w-auto min-w-[120px] sm:min-w-[140px]"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             Volver
           </button>
         </div>

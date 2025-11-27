@@ -122,38 +122,38 @@ export default function HelpTicketsPage() {
         ? XCircle
         : Clock;
     return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${color}`}>
-        <Icon className="w-4 h-4" />
+      <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${color}`}>
+        <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
         <span>{status}</span>
       </span>
     );
   }
 
   return (
-    <div className="py-10 max-w-5xl mx-auto">
-      <div className="bg-white rounded-[14px] border border-gray-200 px-6 py-5">
-        <div className="flex items-center justify-between">
+    <div className="py-3 sm:py-6 md:py-10 max-w-5xl mx-auto px-1 sm:px-2 md:px-4">
+      <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <div className="text-md font-semibold text-gray-800">Tus tickets</div>
-            <div className="text-sm text-gray-500">Aquí aparecen los tickets que has abierto recientemente</div>
+            <div className="text-sm sm:text-base md:text-md font-semibold text-gray-800">Tus tickets</div>
+            <div className="text-xs sm:text-sm text-gray-500">Aquí aparecen los tickets que has abierto recientemente</div>
           </div>
           <button
             onClick={() => setOpen(true)}
-            className="inline-flex items-center gap-2 rounded-[4px] bg-blue-700 text-white text-sm font-medium px-4 py-3 hover:bg-blue-800"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-[4px] bg-blue-700 text-white text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 sm:py-3 hover:bg-blue-800"
           >
-            <PlusCircle className="w-4 h-4" />
+            <PlusCircle className="w-3 h-3 sm:w-4 sm:h-4" />
             Abrir nuevo ticket
           </button>
         </div>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3">
         {loading && (
-          <div className="bg-white rounded-[14px] border border-gray-200 px-6 py-4 text-sm text-gray-500">Cargando...</div>
+          <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500">Cargando...</div>
         )}
 
         {!loading && tickets.length === 0 && (
-          <div className="bg-white rounded-[14px] border border-gray-200 px-6 py-4 text-sm text-gray-500">
+          <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500">
             No tenés tickets creados.
           </div>
         )}
@@ -163,32 +163,36 @@ export default function HelpTicketsPage() {
           <div
             key={t.id}
             onClick={() => router.push(`/dashboard/${workshopId}/help/${t.id}`)}
-            className="hover:bg-gray-50 transition-colors duration-300 hover:cursor-pointer bg-white rounded-[14px] border border-gray-200 px-6 py-4 flex items-center justify-between gap-4 relative"
+            className="hover:bg-gray-50 transition-colors duration-300 hover:cursor-pointer bg-white rounded-lg sm:rounded-[14px] border border-gray-200 px-3 sm:px-4 md:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 relative"
           >
-              <div className="flex-shrink-0 flex items-center justify-center overflow-hidden">
-                <img src="/images/icons/msgIcon.svg" alt="Ticket" className="w-10 h-10" />
-              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="flex-shrink-0 flex items-center justify-center overflow-hidden">
+                  <img src="/images/icons/msgIcon.svg" alt="Ticket" className="w-8 h-8 sm:w-10 sm:h-10" />
+                </div>
 
-              <div className="min-w-0 w-[40%] flex flex-col gap-1 pl-1">
-                <div className="text-sm text-gray-500 leading-none mb-1">Asunto:</div>
-                <div className="text-sm text-gray-900 font-medium truncate">{t.subject}</div>
-              </div>
-
-              <div className="flex flex-col items-center text-center gap-1 mx-2 md:absolute md:left-1/2 md:-translate-x-1/2 md:w-[260px]">
-                <div className="text-sm text-gray-500 leading-none">Fecha de creación</div>
-                <div className="text-sm text-gray-800">
-                  {t.created_at ? new Date(t.created_at).toLocaleString() : "-"}
+                <div className="min-w-0 flex-1 sm:flex-none sm:w-[40%] flex flex-col gap-1">
+                  <div className="text-xs sm:text-sm text-gray-500 leading-none mb-1">Asunto:</div>
+                  <div className="text-xs sm:text-sm text-gray-900 font-medium truncate">{t.subject}</div>
                 </div>
               </div>
 
-              <div className="flex flex-col items-center text-center gap-1 mx-2 ">
-                <StatusPill status={t.status} />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 w-full sm:w-auto sm:mx-2 md:absolute md:left-1/2 md:-translate-x-1/2 md:w-[260px]">
+                <div className="flex flex-col gap-1">
+                  <div className="text-xs sm:text-sm text-gray-500 leading-none">Fecha de creación</div>
+                  <div className="text-xs sm:text-sm text-gray-800">
+                    {t.created_at ? new Date(t.created_at).toLocaleString() : "-"}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 sm:flex-col sm:items-center sm:text-center sm:gap-1">
+                  <StatusPill status={t.status} />
+                </div>
               </div>
 
               <button
                 title="Ver"
                 onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/${workshopId}/help/${t.id}`)}}
-                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-gray-500"
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-gray-500 self-end sm:self-auto"
               >
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -197,17 +201,18 @@ export default function HelpTicketsPage() {
 
         {/* Paginación */}
         {!loading && tickets.length > PAGE_SIZE && (
-          <div className="flex items-center justify-between pt-2">
-            <div className="text-xs text-gray-500">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 pt-2">
+            <div className="text-[10px] sm:text-xs text-gray-500">
               Mostrando {startIdx + 1}-{endIdx} de {tickets.length}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-wrap justify-center">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 text-sm rounded-[4px] border border-gray-300 disabled:opacity-50"
+                className="px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-[4px] border border-gray-300 disabled:opacity-50"
               >
-                Anterior
+                <span className="hidden sm:inline">Anterior</span>
+                <span className="sm:hidden">‹</span>
               </button>
               {Array.from({ length: totalPages }).map((_, i) => {
                 const p = i + 1;
@@ -216,7 +221,7 @@ export default function HelpTicketsPage() {
                   <button
                     key={p}
                     onClick={() => setPage(p)}
-                    className={`w-8 h-8 text-sm rounded-[4px] border ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 text-xs sm:text-sm rounded-[4px] border ${
                       active ? "bg-blue-600 text-white border-blue-600" : "border-gray-300 text-gray-700"
                     }`}
                   >
@@ -227,9 +232,10 @@ export default function HelpTicketsPage() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1 text-sm rounded-[4px] border border-gray-300 disabled:opacity-50"
+                className="px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-[4px] border border-gray-300 disabled:opacity-50"
               >
-                Siguiente
+                <span className="hidden sm:inline">Siguiente</span>
+                <span className="sm:hidden">›</span>
               </button>
             </div>
           </div>
@@ -243,25 +249,25 @@ export default function HelpTicketsPage() {
             onClick={() => (!submitting ? setOpen(false) : null)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 right-0 w-full sm:w-[420px] bg-white shadow-xl z-50 transform transition-transform duration-300 ease-out translate-x-0">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-              <div className="text-base font-semibold text-[#0040B8]">Abrir ticket</div>
+          <div className="absolute inset-y-0 right-0 w-full sm:w-[420px] bg-white shadow-xl z-50 transform transition-transform duration-300 ease-out translate-x-0 overflow-y-auto">
+            <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-200">
+              <div className="text-sm sm:text-base font-semibold text-[#0040B8]">Abrir ticket</div>
               <button
                 onClick={() => (!submitting ? setOpen(false) : null)}
-                className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500"
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500"
                 aria-label="Cerrar"
               >
                 ✕
               </button>
             </div>
-            <form onSubmit={handleCreateTicket} className="p-5 space-y-4">
+            <form onSubmit={handleCreateTicket} className="p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div>
                 <label className="block text-xs text-[#808080] mb-1">Nombre completo</label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full border border-[#DEDEDE] rounded-[4px] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full border border-[#DEDEDE] rounded-[4px] px-3 py-2.5 sm:py-3 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Tu nombre y apellido"
                 />
               </div>
@@ -271,7 +277,7 @@ export default function HelpTicketsPage() {
                   type="text"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full border border-[#DEDEDE] rounded-[4px] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full border border-[#DEDEDE] rounded-[4px] px-3 py-2.5 sm:py-3 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Ej: 11 1234 5678"
                 />
               </div>
@@ -282,7 +288,7 @@ export default function HelpTicketsPage() {
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full border border-[#DEDEDE] rounded-[4px] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full border border-[#DEDEDE] rounded-[4px] px-3 py-2.5 sm:py-3 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Contanos el tema del ticket"
                 />
               </div>
@@ -293,22 +299,22 @@ export default function HelpTicketsPage() {
                   rows={5}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full border border-[#DEDEDE] rounded-[4px] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-600 resize-none"
+                  className="w-full border border-[#DEDEDE] rounded-[4px] px-3 py-2.5 sm:py-3 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-blue-600 resize-none"
                   placeholder="Brindá el mayor detalle posible"
                 />
               </div>
-              <div className="space-y-3 pt-2">
+              <div className="space-y-2 sm:space-y-3 pt-2">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full rounded-[4px] bg-blue-700 text-white text-sm font-medium px-4 py-3 hover:bg-blue-800 disabled:opacity-60"
+                  className="w-full rounded-[4px] bg-blue-700 text-white text-xs sm:text-sm font-medium px-4 py-2.5 sm:py-3 hover:bg-blue-800 disabled:opacity-60"
                 >
                   {submitting ? "Creando..." : "Abrir nuevo ticket"}
                 </button>
                 <button
                   type="button"
                   onClick={() => (!submitting ? setOpen(false) : null)}
-                  className="w-full rounded-[4px] border border-red-300 text-red-600 text-sm font-medium px-4 py-3 hover:bg-red-50"
+                  className="w-full rounded-[4px] border border-red-300 text-red-600 text-xs sm:text-sm font-medium px-4 py-2.5 sm:py-3 hover:bg-red-50"
                 >
                   Cancelar
                 </button>

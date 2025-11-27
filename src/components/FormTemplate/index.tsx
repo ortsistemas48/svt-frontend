@@ -214,30 +214,30 @@ export default function FormTemplate({
     const disableSearch = isSearching;
 
     return (
-      <section className="space-y-6 mb-10 py-6 mt-6 w-full max-w-2xl bg-white rounded-[14px]">
+      <section className="space-y-4 sm:space-y-6 mb-6 sm:mb-10 py-4 sm:py-6 mt-4 sm:mt-6 w-full max-w-2xl bg-white rounded-lg sm:rounded-[14px] px-3 sm:px-6">
         {(searchConfig.titleIdle || searchConfig.descIdle) && (
-          <header className="mb-2">
+          <header className="mb-2 sm:mb-2">
             {searchConfig.titleIdle && (
-              <h2 className="text-xl font-regular text-[#000000] mb-1">
+              <h2 className="text-base sm:text-lg md:text-xl font-regular text-[#000000] mb-1">
                 {searchConfig.titleIdle}
               </h2>
             )}
             {searchConfig.descIdle && (
-              <p className="text-sm text-[#00000080]">{searchConfig.descIdle}</p>
+              <p className="text-xs sm:text-sm text-[#00000080]">{searchConfig.descIdle}</p>
             )}
           </header>
         )}
 
         <div className="w-full max-w-2xl">
-          <label htmlFor="search-input" className="block text-sm text-gray-700 mb-1">
+          <label htmlFor="search-input" className="block text-xs sm:text-sm text-gray-700 mb-1 sm:mb-1.5">
             {searchConfig.fieldLabel}
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               id="search-input"
               type={searchConfig.inputType ?? "text"}
               placeholder={searchConfig.placeholder ?? ""}
-              className={`flex-1 border rounded-[4px] px-4 py-3 text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]`}
+              className={`flex-1 border rounded-[4px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]`}
               value={query}
               onChange={(e) => {
                 const raw = e.target.value;
@@ -258,7 +258,7 @@ export default function FormTemplate({
               type="button"
               onClick={doSearch}
               disabled={disableSearch}
-              className={`px-6 rounded-[4px] text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${
+              className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-[4px] text-xs sm:text-sm md:text-base text-white bg-[#0040B8] hover:bg-[#0038a6] transition ${
                 disableSearch ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
@@ -266,9 +266,9 @@ export default function FormTemplate({
             </button>
           </div>
 
-          {searchError && <p className="text-sm text-red-600 mt-3">{searchError}</p>}
+          {searchError && <p className="text-xs sm:text-sm text-red-600 mt-2 sm:mt-3">{searchError}</p>}
 
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-[10px] sm:text-xs text-gray-500 mt-2">
             Si no se encuentra, podrás cargar los datos manualmente.
           </p>
         </div>
@@ -278,19 +278,18 @@ export default function FormTemplate({
 
   // ----- FORMULARIO PRINCIPAL (view/edit) -----
   return (
-    <section className="space-y-6 mb-10 px-4 mt-2">
-      <div className="flex items-start justify-between gap-4 mb-1">
+    <section className="space-y-4 sm:space-y-6 mb-6 sm:mb-10 px-1 sm:px-2 md:px-4 mt-2">
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4 mb-1">
         <div>
-          {title && <h2 className="text-xl font-regular text-[#000000] mb-1">{title}</h2>}
-          {description && <p className="text-sm text-[#00000080]">{description}</p>}
+          {title && <h2 className="text-base sm:text-lg md:text-xl font-regular text-[#000000] mb-1">{title}</h2>}
+          {description && <p className="text-xs sm:text-sm text-[#00000080]">{description}</p>}
         </div>
 
         {searchConfig?.enabled && (
-          <div className="flex gap-2">
-            
+          <div className="flex gap-2 w-full sm:w-auto">
             <button
               type="button"
-              className="text-[#0040B8] border border-[#0040B8] rounded-[4px] px-3 py-2 text-sm hover:bg-[#0040B8] hover:text-white transition shrink-0"
+              className="w-full sm:w-auto text-[#0040B8] border border-[#0040B8] rounded-[4px] px-3 py-2 text-xs sm:text-sm hover:bg-[#0040B8] hover:text-white transition shrink-0"
               onClick={resetSearch}
             >
               {searchConfig.resetButtonLabel ?? `Buscar otro ${searchConfig.fieldLabel}`}
@@ -299,7 +298,7 @@ export default function FormTemplate({
         )}
       </div>
 
-      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-x-6 gap-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4 sm:gap-y-6 md:gap-y-8">
         {formData.map((f) => {
           const valueRaw = data?.[f.name] ?? "";
           const value =
@@ -311,7 +310,7 @@ export default function FormTemplate({
           if (f.options && Array.isArray(f.options)) {
             return (
               <div key={f.name} className={f.className ?? ""}>
-                <label className="block text-sm text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm text-gray-700 mb-1">
                   {f.label}
                   {f.isRequired && (
                     <span className="ml-1">
@@ -320,7 +319,7 @@ export default function FormTemplate({
                     )}
                 </label>
                 <select
-                  className={`w-full border rounded-[4px] px-4 py-3 text-base focus:outline-none focus:ring-2 ${
+                  className={`w-full border rounded-[4px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 ${
                     error ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
                   } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   name={f.name}
@@ -338,7 +337,7 @@ export default function FormTemplate({
                     </option>
                   ))}
                 </select>
-                {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
+                {error && <p className="text-xs sm:text-sm text-red-600 mt-1">{error}</p>}
               </div>
             );
           }
@@ -346,7 +345,7 @@ export default function FormTemplate({
           // INPUT
           return (
             <div key={f.name} className={f.className ?? ""}>
-              <label className="block text-sm text-gray-700 mb-1">
+              <label className="block text-xs sm:text-sm text-gray-700 mb-1">
                 {f.label}
                 {f.isRequired && (
                     <span className="ml-1">
@@ -357,7 +356,7 @@ export default function FormTemplate({
               <input
                 type={f.type ?? "text"}
                 placeholder={f.placeholder ?? ""}
-                className={`w-full border rounded-[4px] px-4 py-3 text-base focus:outline-none focus:ring-2 ${
+                className={`w-full border rounded-[4px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 ${
                   error ? "border-red-400 focus:ring-red-500" : "border-[#DEDEDE] focus:ring-[#0040B8]"
                 } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 name={f.name}
@@ -366,7 +365,7 @@ export default function FormTemplate({
                 onBlur={() => handleBlur(f.name)}
                 disabled={disabled}
               />
-              {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
+              {error && <p className="text-xs sm:text-sm text-red-600 mt-1">{error}</p>}
             </div>
           );
         })}

@@ -68,7 +68,7 @@ export default function SelectApplicationType() {
   const options = [
     {
       key: "new",
-      icon: <CircleFadingPlus size={42} strokeWidth={2.5} className="text-[#0040B8]" />,
+      iconComponent: CircleFadingPlus,
       title: "Nueva Revisión",
       description:
         available === 0
@@ -79,7 +79,7 @@ export default function SelectApplicationType() {
     },
     {
       key: "continue",
-      icon: <RefreshCw size={42} strokeWidth={2.5} className="text-[#0040B8]" />,
+      iconComponent: RefreshCw,
       title: "Continuar Revisión",
       description: "Continuar con una revisión existente",
       disabled: false,
@@ -90,22 +90,22 @@ export default function SelectApplicationType() {
   ];
 
   return (
-    <div className="space-y-4 sm:space-y-6 my-6 sm:my-8">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6 my-4 sm:my-6 md:my-8">
       <div className="text-center sm:text-left">
-        <h3 className="text-lg sm:text-xl lg:text-2xl font-medium text-gray-900 mb-2">
+        <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-medium text-gray-900 mb-1 sm:mb-2">
           Seleccione el tipo de revisión
         </h3>
-        <p className="text-sm sm:text-base text-gray-500 max-w-2xl mx-auto sm:mx-0">
+        <p className="text-xs sm:text-sm md:text-base text-gray-500 max-w-2xl mx-auto sm:mx-0">
           Elija si desea iniciar una nueva revisión o continuar con una existente.
         </p>
         {!wsLoading && wsError && (
-          <p className="mt-3 text-sm text-rose-700">
+          <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-rose-700">
             {wsError}
           </p>
         )}
 
       {!wsLoading && available !== null && (
-        <div className="mt-3 text-sm">
+        <div className="mt-2 sm:mt-3 text-xs sm:text-sm">
           <p className="text-gray-600">
             Inspecciones disponibles: <strong>{available}</strong>
           </p>
@@ -129,37 +129,40 @@ export default function SelectApplicationType() {
       )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mx-auto sm:mx-0">
-        {options.map((option) => (
-          <button
-            key={option.key}
-            onClick={option.handleOnClick}
-            disabled={option.disabled}
-            className={[
-              "flex flex-col cursor-pointer items-center justify-center border rounded-[4px] p-4 sm:p-6 lg:p-8 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-opacity-50 min-h-[140px] sm:min-h-[160px]",
-              option.disabled
-                ? "opacity-50 cursor-not-allowed border-gray-200"
-                : "hover:border-[#0040B8] border-[#0040B8]/50 hover:shadow-lg",
-            ].join(" ")}
-            title={
-              option.key === "new" && available === 0
-                ? "No tenés inspecciones disponibles para crear una nueva revisión"
-                : undefined
-            }
-          >
-            <div className="mb-3 sm:mb-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
-                {option.icon}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mx-auto sm:mx-0">
+        {options.map((option) => {
+          const IconComponent = option.iconComponent;
+          return (
+            <button
+              key={option.key}
+              onClick={option.handleOnClick}
+              disabled={option.disabled}
+              className={[
+                "flex flex-col cursor-pointer items-center justify-center border rounded-[4px] p-3 sm:p-4 md:p-6 lg:p-8 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-opacity-50 min-h-[120px] sm:min-h-[140px] md:min-h-[160px]",
+                option.disabled
+                  ? "opacity-50 cursor-not-allowed border-gray-200"
+                  : "hover:border-[#0040B8] border-[#0040B8]/50 hover:shadow-lg",
+              ].join(" ")}
+              title={
+                option.key === "new" && available === 0
+                  ? "No tenés inspecciones disponibles para crear una nueva revisión"
+                  : undefined
+              }
+            >
+              <div className="mb-2 sm:mb-3 md:mb-4">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center text-[#0040B8]">
+                  <IconComponent className="w-full h-full" strokeWidth={2.5} />
+                </div>
               </div>
-            </div>
-            <h4 className="text-sm sm:text-base lg:text-lg font-medium text-gray-900 mb-1 sm:mb-2">
-              {option.title}
-            </h4>
-            <p className="text-xs sm:text-sm text-gray-500 text-center leading-relaxed px-2">
-              {option.description}
-            </p>
-          </button>
-        ))}
+              <h4 className="text-xs sm:text-sm md:text-base lg:text-lg font-medium text-gray-900 mb-1 sm:mb-2">
+                {option.title}
+              </h4>
+              <p className="text-[10px] sm:text-xs md:text-sm text-gray-500 text-center leading-relaxed px-1 sm:px-2">
+                {option.description}
+              </p>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

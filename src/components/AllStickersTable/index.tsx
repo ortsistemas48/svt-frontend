@@ -63,7 +63,7 @@ const apiToUi = (api?: string | null): UiState => {
 };
 
 /* ===================== Componente principal ===================== */
-export default function StickerOrdersTable() {
+export default function StickerOrdersTable({ externalSearchQuery = "" }: { externalSearchQuery?: string }) {
   const { id } = useParams();
 
   const [rows, setRows] = useState<StickerItem[]>([]);
@@ -72,7 +72,7 @@ export default function StickerOrdersTable() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [q, setQ] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(externalSearchQuery || "");
   const [statusFilter, setStatusFilter] = useState<UiState>("Todos");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -146,6 +146,15 @@ export default function StickerOrdersTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, page]);
 
+  // Sincronizar searchQuery externo
+  useEffect(() => {
+    if (externalSearchQuery !== undefined && externalSearchQuery !== searchQuery) {
+      setSearchQuery(externalSearchQuery);
+      setQ(externalSearchQuery);
+      setPage(1);
+    }
+  }, [externalSearchQuery]);
+
   const filtered = useMemo(() => {
     let list = rows;
 
@@ -213,19 +222,19 @@ export default function StickerOrdersTable() {
   };
 
   return (
-    <div>
+    <div className="px-0 sm:px-0">
       {errorMsg && (
-        <div className="mb-3 rounded-[4px] border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-3 rounded-[4px] border border-red-300 bg-red-50 px-3 py-2 text-xs sm:text-sm text-red-700 mx-1 sm:mx-0">
           {errorMsg}
         </div>
       )}
       {successMsg && (
-        <div className="mb-3 rounded-[4px] border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+        <div className="mb-3 rounded-[4px] border border-green-300 bg-green-50 px-3 py-2 text-xs sm:text-sm text-green-700 mx-1 sm:mx-0">
           {successMsg}
         </div>
       )}
 
-      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 gap-3 px-[1.5px] pt-1">
           <input
             disabled={loading}
@@ -260,7 +269,7 @@ export default function StickerOrdersTable() {
       </div>
 
       {showFilters && (
-        <div className="mb-4 rounded-[14px] border border-gray-200 bg-white p-3 sm:p-4">
+        <div className="mb-4 rounded-[14px] border border-gray-200 bg-white p-3 sm:p-4 hidden sm:block">
           <div className="flex flex-wrap items-center gap-2">
             {TABLE_FILTERS.map((opt) => {
               const active = statusFilter === opt;
@@ -283,7 +292,105 @@ export default function StickerOrdersTable() {
         </div>
       )}
 
-      <div className="stk-table overflow-hidden rounded-[14px] border border-gray-200 bg-white">
+      {/* Vista de tarjetas para mobile/tablet */}
+      <div className="xl:hidden px-1 sm:px-0">
+        {loading ? (
+          <div className="space-y-3 sm:space-y-4">
+            {[...Array(perPage)].map((_, i) => (
+              <div key={i} className="border border-gray-200 rounded-lg p-3 sm:p-4 animate-pulse">
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="border border-gray-200 rounded-lg p-4 sm:p-6 md:p-8 text-center">
+            <p className="text-xs sm:text-sm md:text-base text-gray-500">No hay obleas para mostrar</p>
+          </div>
+        ) : (
+          <div className="space-y-3 sm:space-y-4">
+            {filtered.map((item) => {
+              const ui = apiToUi(item.status);
+              const tone = statusTone(ui);
+              const isUpdating = updatingId === item.id;
+              const isMenuOpen = openMenuId === item.id;
+
+              return (
+                <div
+                  key={item.id}
+                  className="border border-gray-200 rounded-lg px-3 py-4 sm:p-4 space-y-3 sm:space-y-4 relative"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-2">
+                      <div>
+                        <p className="text-xs sm:text-sm text-gray-500 mb-1">Número</p>
+                        <p className="text-sm sm:text-base font-medium text-gray-900">
+                          {item.sticker_number || "-"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div>
+                          <p className="text-xs sm:text-sm text-gray-500 mb-1">Estado</p>
+                          <span
+                            className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm ${tone.text} ${tone.bg}`}
+                          >
+                            {ui}
+                          </span>
+                        </div>
+                        {item.license_plate && (
+                          <div>
+                            <p className="text-xs sm:text-sm text-gray-500 mb-1">Patente</p>
+                            <span className="inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm text-gray-800 bg-gray-100">
+                              {item.license_plate}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      {item.issued_at && (
+                        <div>
+                          <p className="text-xs sm:text-sm text-gray-500 mb-1">Emitida</p>
+                          <p className="text-xs sm:text-sm text-gray-900">{fmtDate(item.issued_at)}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <button
+                        aria-haspopup="menu"
+                        aria-expanded={isMenuOpen}
+                        onClick={() => setOpenMenuId((cur) => (cur === item.id ? null : item.id))}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-[4px] text-gray-700 hover:bg-gray-100"
+                      >
+                        <EllipsisVertical size={18} />
+                        <span className="sr-only">Abrir acciones</span>
+                      </button>
+                      <RowActionsMenu
+                        isOpen={isMenuOpen}
+                        onClose={() => setOpenMenuId(null)}
+                        disabled={isUpdating}
+                        onDisponible={() => updateStatus(item, "Disponible")}
+                        onEnUso={() => updateStatus(item, "En Uso")}
+                        onNoDisponible={() => updateStatus(item, "No Disponible")}
+                      />
+                    </div>
+                  </div>
+                  {isUpdating && (
+                    <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t border-gray-100">
+                      <Loader2 size={14} className="animate-spin" />
+                      Actualizando...
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Vista de tabla para desktop */}
+      <div className="hidden xl:block stk-table overflow-hidden rounded-[14px] border border-gray-200 bg-white">
         <div className="overflow-x-auto">
           <div className="min-w-[980px]">
             <TableTemplate<StickerItem>
@@ -373,11 +480,11 @@ export default function StickerOrdersTable() {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
+      <div className="mt-4 sm:mt-6 flex flex-col items-center justify-start gap-3 text-xs sm:text-sm px-1 sm:px-0">
         {meta.total > meta.per_page && (
           <div className="flex items-center gap-2">
             <button
-              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-2 sm:px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={!meta.has_prev}
             >
@@ -388,7 +495,7 @@ export default function StickerOrdersTable() {
               Página {meta.page} de {meta.total_pages}
             </span>
             <button
-              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-2 sm:px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
               onClick={() => setPage((p) => p + 1)}
               disabled={!meta.has_next}
             >

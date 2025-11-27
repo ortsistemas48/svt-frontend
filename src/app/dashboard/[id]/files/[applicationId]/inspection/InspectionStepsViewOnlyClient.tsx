@@ -44,10 +44,10 @@ const prettySize = (bytes?: number) => {
 
 const iconForMime = (mime?: string) => {
   const m = (mime || "").toLowerCase();
-  if (m.startsWith("image/")) return <FileImage className="w-7 h-7" />;
-  if (m === "application/pdf") return <FileText className="w-7 h-7" />;
-  if (m.includes("zip") || m.includes("compressed")) return <FileArchive className="w-7 h-7" />;
-  return <FileIcon className="w-7 h-7" />;
+  if (m.startsWith("image/")) return <FileImage className="w-5 h-5 sm:w-7 sm:h-7" />;
+  if (m === "application/pdf") return <FileText className="w-5 h-5 sm:w-7 sm:h-7" />;
+  if (m.includes("zip") || m.includes("compressed")) return <FileArchive className="w-5 h-5 sm:w-7 sm:h-7" />;
+  return <FileIcon className="w-5 h-5 sm:w-7 sm:h-7" />;
 };
 
 export function InspectionStepsViewOnlyClient({
@@ -85,31 +85,31 @@ export function InspectionStepsViewOnlyClient({
   }, [steps, statusByStep]);
 
   return (
-    <div className="w-full">
-      <div className="w-full space-y-4">
+    <div className="w-full px-1 sm:px-2 md:px-4 pb-6 sm:pb-8 md:pb-10">
+      <div className="w-full space-y-3 sm:space-y-4">
         {steps.map((s) => {
           const current = statusByStep[s.step_id];
           return (
             <section
               key={s.step_id}
               className={clsx(
-                "w-full rounded-[14px] bg-white transition-colors border",
+                "w-full rounded-lg sm:rounded-[14px] bg-white transition-colors border",
                 current ? STATUS_UI[current as Status].stepBorder : "border-zinc-200"
               )}
             >
-              <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3 p-4">
+              <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3 p-3 sm:p-4">
                 <div className="min-w-0">
-                  <h3 className="font-medium text-zinc-900">{s.name}</h3>
-                  <p className="hidden min-[1300px]:block text-sm md:max-w-[400px] text-zinc-500">
+                  <h3 className="text-sm sm:text-base font-medium text-zinc-900">{s.name}</h3>
+                  <p className="hidden min-[1300px]:block text-xs sm:text-sm md:max-w-[400px] text-zinc-500">
                     {s.description}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-5 flex-wrap">
+                <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
                   {current && (
                     <span
                       className={clsx(
-                        "w-[140px] px-4 py-2.5 rounded-[4px] border text-sm text-center",
+                        "w-full sm:w-[140px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-[4px] border text-xs sm:text-sm text-center",
                         STATUS_UI[current].stepBorder,
                         STATUS_UI[current].text,
                         "bg-white"
@@ -119,7 +119,7 @@ export function InspectionStepsViewOnlyClient({
                     </span>
                   )}
                   {!current && (
-                    <span className="w-[140px] px-4 py-2.5 rounded-[4px] border border-zinc-200 text-zinc-400 text-sm text-center">
+                    <span className="w-full sm:w-[140px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-[4px] border border-zinc-200 text-zinc-400 text-xs sm:text-sm text-center">
                       Sin estado
                     </span>
                   )}
@@ -130,15 +130,15 @@ export function InspectionStepsViewOnlyClient({
         })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4 mt-8 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-3 sm:gap-4 mt-6 sm:mt-8 w-full">
         <div className="md:col-span-2">
-          <h4 className="text-sm font-medium text-zinc-900">Observaciones generales</h4>
-          <p className="text-xs text-zinc-500 mt-1">
+          <h4 className="text-xs sm:text-sm font-medium text-zinc-900">Observaciones generales</h4>
+          <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
             Observaciones del vehículo registradas en la revisión.
           </p>
         </div>
 
-        <div className="rounded-[14px] text-sm border border-zinc-200 bg-white p-4 w-full self-start md:col-span-2">
+        <div className="rounded-lg sm:rounded-[14px] text-xs sm:text-sm border border-zinc-200 bg-white p-3 sm:p-4 w-full self-start md:col-span-2">
           {initialGlobalObs ? (
             <p className="text-zinc-800 whitespace-pre-wrap">{initialGlobalObs}</p>
           ) : (
@@ -148,27 +148,27 @@ export function InspectionStepsViewOnlyClient({
       </div>
 
       {inspectionDocs.length > 0 && (
-        <section className="rounded-[14px] border border-zinc-200 bg-white p-4 w-full mt-6">
+        <section className="rounded-lg sm:rounded-[14px] border border-zinc-200 bg-white p-3 sm:p-4 w-full mt-4 sm:mt-6">
           <div className="flex items-center justify-between mb-1">
-            <h4 className="text-sm font-medium text-zinc-900">Documentos de la revisión</h4>
+            <h4 className="text-xs sm:text-sm font-medium text-zinc-900">Documentos de la revisión</h4>
           </div>
-          <p className="text-xs text-zinc-500 mb-3">
+          <p className="text-[10px] sm:text-xs text-zinc-500 mb-2 sm:mb-3">
             Documentos adjuntos a esta revisión técnica, agrupados por tipo.
           </p>
 
           {/* Informes técnicos */}
           {inspectionDocs.filter(d => d.type === "technical_report").length > 0 && (
             <div className="mt-2">
-              <h5 className="text-sm font-medium text-zinc-800">Informes técnicos</h5>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-3">
+              <h5 className="text-xs sm:text-sm font-medium text-zinc-800">Informes técnicos</h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mt-2 sm:mt-3">
                 {inspectionDocs.filter(d => d.type === "technical_report").map((d) => (
                   <div
                     key={d.id}
-                    className="relative rounded-[14px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                    className="relative rounded-lg sm:rounded-[14px] border border-[#E6E6E6] bg-white p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
-                    <div className="flex flex-col items-center text-center space-y-3">
+                    <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
                       <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="w-full group">
-                        <div className="w-16 h-16 mx-auto rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-lg sm:rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
                           {d.mime_type?.startsWith("image/") ? (
                             <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
                           ) : (
@@ -177,11 +177,11 @@ export function InspectionStepsViewOnlyClient({
                             </div>
                           )}
                         </div>
-                        <div className="w-full mt-2">
-                          <p className="text-sm font-medium text-gray-900 truncate group-hover:underline" title={d.file_name}>
+                        <div className="w-full mt-1.5 sm:mt-2">
+                          <p className="text-xs sm:text-sm font-medium text-gray-900 truncate group-hover:underline" title={d.file_name}>
                             {d.file_name}
                           </p>
-                          <p className="text-xs text-[#7a7a7a] mt-1">
+                          <p className="text-[10px] sm:text-xs text-[#7a7a7a] mt-0.5 sm:mt-1">
                             {d.mime_type || "archivo"} · {prettySize(d.size_bytes)}
                           </p>
                         </div>
@@ -191,7 +191,7 @@ export function InspectionStepsViewOnlyClient({
                           href={d.file_url}
                           target="_blank"
                           download={d.file_name}
-                          className="text-xs text-[#0040B8] hover:underline"
+                          className="text-[10px] sm:text-xs text-[#0040B8] hover:underline"
                         >
                           Ver Documento
                         </a>
@@ -205,17 +205,17 @@ export function InspectionStepsViewOnlyClient({
 
           {/* Fotos del vehículo */}
           {inspectionDocs.filter(d => d.type === "vehicle_photo").length > 0 && (
-            <div className="mt-5">
-              <h5 className="text-sm font-medium text-zinc-800">Fotos del vehículo</h5>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-3">
+            <div className="mt-4 sm:mt-5">
+              <h5 className="text-xs sm:text-sm font-medium text-zinc-800">Fotos del vehículo</h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mt-2 sm:mt-3">
                 {inspectionDocs.filter(d => d.type === "vehicle_photo").map((d) => (
                   <div
                     key={d.id}
-                    className="relative rounded-[14px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                    className="relative rounded-lg sm:rounded-[14px] border border-[#E6E6E6] bg-white p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
-                    <div className="flex flex-col items-center text-center space-y-3">
+                    <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
                       <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="w-full group">
-                        <div className="w-16 h-16 mx-auto rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-lg sm:rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
                           {d.mime_type?.startsWith("image/") ? (
                             <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
                           ) : (
@@ -224,11 +224,11 @@ export function InspectionStepsViewOnlyClient({
                             </div>
                           )}
                         </div>
-                        <div className="w-full mt-2">
-                          <p className="text-sm font-medium text-gray-900 truncate group-hover:underline" title={d.file_name}>
+                        <div className="w-full mt-1.5 sm:mt-2">
+                          <p className="text-xs sm:text-sm font-medium text-gray-900 truncate group-hover:underline" title={d.file_name}>
                             {d.file_name}
                           </p>
-                          <p className="text-xs text-[#7a7a7a] mt-1">
+                          <p className="text-[10px] sm:text-xs text-[#7a7a7a] mt-0.5 sm:mt-1">
                             {d.mime_type || "archivo"} · {prettySize(d.size_bytes)}
                           </p>
                         </div>
@@ -238,7 +238,7 @@ export function InspectionStepsViewOnlyClient({
                           href={d.file_url}
                           target="_blank"
                           download={d.file_name}
-                          className="text-xs text-[#0040B8] hover:underline"
+                          className="text-[10px] sm:text-xs text-[#0040B8] hover:underline"
                         >
                           Ver Documento
                         </a>
@@ -252,19 +252,19 @@ export function InspectionStepsViewOnlyClient({
 
           {/* Otros documentos sin tipo conocido */}
           {inspectionDocs.filter(d => !d.type || (d.type !== "technical_report" && d.type !== "vehicle_photo")).length > 0 && (
-            <div className="mt-5">
-              <h5 className="text-sm font-medium text-zinc-800">Otros</h5>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-3">
+            <div className="mt-4 sm:mt-5">
+              <h5 className="text-xs sm:text-sm font-medium text-zinc-800">Otros</h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mt-2 sm:mt-3">
                 {inspectionDocs
                   .filter(d => !d.type || (d.type !== "technical_report" && d.type !== "vehicle_photo"))
                   .map((d) => (
                   <div
                     key={d.id}
-                    className="relative rounded-[14px] border border-[#E6E6E6] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                    className="relative rounded-lg sm:rounded-[14px] border border-[#E6E6E6] bg-white p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
-                    <div className="flex flex-col items-center text-center space-y-3">
+                    <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
                       <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="w-full group">
-                        <div className="w-16 h-16 mx-auto rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-lg sm:rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
                           {d.mime_type?.startsWith("image/") ? (
                             <img src={d.file_url} alt={d.file_name} className="w-full h-full object-cover" />
                           ) : (
@@ -273,11 +273,11 @@ export function InspectionStepsViewOnlyClient({
                             </div>
                           )}
                         </div>
-                        <div className="w-full mt-2">
-                          <p className="text-sm font-medium text-gray-900 truncate group-hover:underline" title={d.file_name}>
+                        <div className="w-full mt-1.5 sm:mt-2">
+                          <p className="text-xs sm:text-sm font-medium text-gray-900 truncate group-hover:underline" title={d.file_name}>
                             {d.file_name}
                           </p>
-                          <p className="text-xs text-[#7a7a7a] mt-1">
+                          <p className="text-[10px] sm:text-xs text-[#7a7a7a] mt-0.5 sm:mt-1">
                             {d.mime_type || "archivo"} · {prettySize(d.size_bytes)}
                           </p>
                         </div>
@@ -287,7 +287,7 @@ export function InspectionStepsViewOnlyClient({
                           href={d.file_url}
                           target="_blank"
                           download={d.file_name}
-                          className="text-xs text-[#0040B8] hover:underline"
+                          className="text-[10px] sm:text-xs text-[#0040B8] hover:underline"
                         >
                           Ver Documento
                         </a>
@@ -302,12 +302,12 @@ export function InspectionStepsViewOnlyClient({
       )}
 
       {showBackButton && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-4 sm:mt-6 flex justify-center">
           <button
             onClick={() => router.push(`/dashboard/${id}/files/${appId}`)}
-            className="px-4 py-2.5 border border-[#0040B8] rounded-[4px] text-[#0040B8] hover:bg-blue-50 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-4 py-2 sm:py-2.5 border border-[#0040B8] rounded-[4px] text-xs sm:text-sm text-[#0040B8] hover:bg-blue-50 flex items-center justify-center gap-2"
           >
-            <ChevronRight size={16} className="rotate-180" />
+            <ChevronRight size={14} className="sm:w-4 sm:h-4 rotate-180" />
             Volver
           </button>
         </div>
