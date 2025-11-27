@@ -32,19 +32,30 @@ export default function ContinueApplicationPage() {
     const [foundApplication, setFoundApplication] = useState<Application | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+    // Helper function to calculate days remaining (normalizes dates to midnight to count only full days)
+    const calculateDaysRemaining = (inspection1Date: string): number => {
+        const inspectionDate = new Date(inspection1Date);
+        const currentDate = new Date();
+        
+        // Normalize both dates to midnight (00:00:00) to count only full days
+        inspectionDate.setHours(0, 0, 0, 0);
+        currentDate.setHours(0, 0, 0, 0);
+        
+        const daysPassed = Math.floor(
+            (currentDate.getTime() - inspectionDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        
+        return 60 - daysPassed;
+    };
+
     // Helper function to check if 60 days have passed since the first inspection
     const isInspectionExpired = (application: Application): boolean => {
         if (!application.inspection_1_date || application.inspection_2_date) {
             return false;
         }
 
-        const inspection1Date = new Date(application.inspection_1_date);
-        const currentDate = new Date();
-        const daysDifference = Math.floor(
-            (currentDate.getTime() - inspection1Date.getTime()) / (1000 * 60 * 60 * 24)
-        );
-
-        return daysDifference > 60;
+        const daysRemaining = calculateDaysRemaining(application.inspection_1_date);
+        return daysRemaining <= 0;
     };
 
     const handleSearch = async () => {
@@ -420,24 +431,14 @@ export default function ContinueApplicationPage() {
                                         </p>
                                         <p className={`text-md font-semibold ${
                                             (() => {
-                                                const inspection1Date = new Date(foundApplication.inspection_1_date);
-                                                const currentDate = new Date();
-                                                const daysPassed = Math.floor(
-                                                    (currentDate.getTime() - inspection1Date.getTime()) / (1000 * 60 * 60 * 24)
-                                                );
-                                                const daysRemaining = 60 - daysPassed;
+                                                const daysRemaining = calculateDaysRemaining(foundApplication.inspection_1_date);
                                                 if (daysRemaining <= 0) return "text-red-600";
                                                 if (daysRemaining <= 10) return "text-amber-600";
                                                 return "text-green-600";
                                             })()
                                         }`}>
                                             {(() => {
-                                                const inspection1Date = new Date(foundApplication.inspection_1_date);
-                                                const currentDate = new Date();
-                                                const daysPassed = Math.floor(
-                                                    (currentDate.getTime() - inspection1Date.getTime()) / (1000 * 60 * 60 * 24)
-                                                );
-                                                const daysRemaining = 60 - daysPassed;
+                                                const daysRemaining = calculateDaysRemaining(foundApplication.inspection_1_date);
                                                 return daysRemaining > 0 ? `${daysRemaining} días` : "Caducado";
                                             })()}
                                         </p>
@@ -448,12 +449,7 @@ export default function ContinueApplicationPage() {
 
                         {/* Expiration Warning */}
                         {foundApplication.inspection_1_date && !foundApplication.inspection_2_date && (() => {
-                            const inspection1Date = new Date(foundApplication.inspection_1_date);
-                            const currentDate = new Date();
-                            const daysPassed = Math.floor(
-                                (currentDate.getTime() - inspection1Date.getTime()) / (1000 * 60 * 60 * 24)
-                            );
-                            const daysRemaining = 60 - daysPassed;
+                            const daysRemaining = calculateDaysRemaining(foundApplication.inspection_1_date);
                             
                             if (daysRemaining <= 0) {
                                 return (
