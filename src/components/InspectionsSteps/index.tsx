@@ -385,6 +385,20 @@ export default function InspectionStepsClient({
     }
     if (isCompleted) return false;
 
+    // Validar que haya al menos un documento en cada dropzone
+    const hasTechDocs = (inspDocsTech?.length || 0) + (pendingTechFiles?.length || 0) > 0;
+    const hasPhotoDocs = (inspDocsPhotos?.length || 0) + (pendingPhotoFiles?.length || 0) > 0;
+    
+    if (!hasTechDocs) {
+      setError("Debés subir al menos un informe técnico");
+      return false;
+    }
+    
+    if (!hasPhotoDocs) {
+      setError("Debés subir al menos una foto del vehículo");
+      return false;
+    }
+
     setSaving(true);
     setMsg(null);
     setError(null);
@@ -600,6 +614,20 @@ export default function InspectionStepsClient({
     const allMarkedNow = steps.every((s) => Boolean(statusByStep[s.step_id]));
     if (!allMarkedNow) {
       setError("Marcá un estado en todos los pasos antes de generar el certificado");
+      return;
+    }
+
+    // Validar que haya al menos un documento en cada dropzone
+    const hasTechDocs = (inspDocsTech?.length || 0) + (pendingTechFiles?.length || 0) > 0;
+    const hasPhotoDocs = (inspDocsPhotos?.length || 0) + (pendingPhotoFiles?.length || 0) > 0;
+    
+    if (!hasTechDocs) {
+      setError("Debés subir al menos un informe técnico antes de generar el certificado");
+      return;
+    }
+    
+    if (!hasPhotoDocs) {
+      setError("Debés subir al menos una foto del vehículo antes de generar el certificado");
       return;
     }
 
