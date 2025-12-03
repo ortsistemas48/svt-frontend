@@ -378,7 +378,7 @@ export default function ApproveWorkshopTable({ workshops }: { workshops: Worksho
                 </div>
                 <div>
                   <div className="text-gray-500 mb-0.5">CUIT</div>
-                  <div className="text-gray-900 font-mono">{ws.cuit || "-"}</div>
+                  <div className="text-gray-900">{ws.cuit || "-"}</div>
                 </div>
               </div>
             </div>

@@ -340,7 +340,7 @@ export default function UserTable({ users, onDelete }: Props) {
                         </p>
                       </td>
                       <td className="p-2 sm:p-3 text-center">
-                        <p className="text-xs sm:text-sm font-mono">{user.dni || "-"}</p>
+                        <p className="text-xs sm:text-sm">{user.dni || "-"}</p>
                       </td>
                       <td className="p-2 sm:p-3 text-center text-xs sm:text-sm">{phone || "-"}</td>
                       <td className="p-0">
@@ -408,7 +408,7 @@ export default function UserTable({ users, onDelete }: Props) {
                   <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div>
                       <div className="text-gray-500 mb-0.5">DNI</div>
-                      <div className="text-gray-900 font-mono">{user.dni || "-"}</div>
+                      <div className="text-gray-900">{user.dni || "-"}</div>
                     </div>
                     <div>
                       <div className="text-gray-500 mb-0.5">Teléfono</div>

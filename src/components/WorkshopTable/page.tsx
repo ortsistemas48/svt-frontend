@@ -592,7 +592,7 @@ export default function WorkshopTable({ workshops }: Props) {
                         <p className="text-xs sm:text-sm">{workshop.province || "-"}</p>
                       </td>
                       <td className="p-2 sm:p-3 text-center">
-                        <p className="font-mono text-xs sm:text-sm">{workshop.cuit || "-"}</p>
+                        <p className=" text-xs sm:text-sm">{workshop.cuit || "-"}</p>
                       </td>
                       <td className="p-0">
                         <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
@@ -661,7 +661,7 @@ export default function WorkshopTable({ workshops }: Props) {
                   </div>
                   <div>
                     <div className="text-gray-500 mb-0.5">CUIT</div>
-                    <div className="text-gray-900 font-mono">{workshop.cuit || "-"}</div>
+                    <div className="text-gray-900">{workshop.cuit || "-"}</div>
                   </div>
                 </div>
               </div>

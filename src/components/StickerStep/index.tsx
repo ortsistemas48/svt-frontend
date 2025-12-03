@@ -586,7 +586,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
 
                     <div className="text-[10px] sm:text-xs text-gray-500 leading-snug">
                       Vista previa:{" "}
-                      <span className="font-mono text-gray-800">
+                      <span className=" text-gray-800">
                         {sanitizeStickerPart(manualPrefix) +
                           manualCode.replace(/\D/g, "") +
                           sanitizeStickerPart(manualSuffix) || "—"}

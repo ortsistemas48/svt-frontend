@@ -267,7 +267,7 @@ export default function InspectionTable() {
                 return (
                   <tr key={uniqueKey} className="transition-colors hover:bg-gray-50">
                     <td className="p-3 text-center">
-                      <div className="text-sm font-mono font-medium sm:text-base">{item.application_id || "-"}</div>
+                      <div className="text-sm font-medium sm:text-base">{item.application_id || "-"}</div>
                     </td>
                     <td className="p-3 text-center">
                       <div className="text-sm font-medium sm:text-base">{item.car?.license_plate || "-"}</div>

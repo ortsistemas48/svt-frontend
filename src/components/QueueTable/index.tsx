@@ -170,7 +170,7 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
             return (
               <div key={uniqueKey} className="border border-gray-200 rounded-lg p-3 sm:p-4 space-y-3 bg-white">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs sm:text-sm font-mono text-gray-600">CRT: <span className="font-semibold text-gray-900">{item.application_id}</span></div>
+                  <div className="text-xs sm:text-sm text-gray-600">CRT: <span className="font-semibold text-gray-900">{item.application_id}</span></div>
                   <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${tone.text} ${tone.bg}`}>
                     {item.status}
                   </span>
@@ -233,7 +233,7 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
               const uniqueKey = `${item.application_id}-${index}-${item.date}`;
               return (
                 <tr key={uniqueKey} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-3 text-center text-sm sm:text-base font-mono">{item.application_id}</td>
+                  <td className="p-3 text-center text-sm sm:text-base">{item.application_id}</td>
                   <td className="p-3 text-center">
                     <div className="font-medium text-sm sm:text-base">{item.car?.license_plate || "-"}</div>
                     <div className="text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-[160px] mx-auto">

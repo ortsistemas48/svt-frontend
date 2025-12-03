@@ -502,7 +502,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                           <p className="text-xs sm:text-sm text-gray-600 break-all max-w-[200px] mx-auto truncate">{user.email}</p>
                         </td>
                         <td className="p-3 text-center">
-                          <p className="text-sm sm:text-base font-mono">{user.dni || "-"}</p>
+                          <p className="text-sm sm:text-base">{user.dni || "-"}</p>
                         </td>
                         <td className="p-3 text-center">
                           <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm ${tone.text} ${tone.bg}`}>
@@ -565,7 +565,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                       <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
                         <div>
                           <span className="text-xs text-gray-500 font-medium block mb-1">DNI</span>
-                          <span className="text-sm font-mono text-gray-900">{user.dni || "-"}</span>
+                          <span className="text-sms text-gray-900">{user.dni || "-"}</span>
                         </div>
                         <div>
                           <span className="text-xs text-gray-500 font-medium block mb-1">Rol</span>
@@ -614,7 +614,7 @@ export default function UserTable({ users }: { users: AnyUser[] }) {
                       <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
                         <div>
                           <span className="text-xs text-gray-500 font-medium block mb-1">DNI</span>
-                          <span className="text-xs md:text-sm font-mono text-gray-900">{user.dni || "-"}</span>
+                          <span className="text-xs md:text-sm text-gray-900">{user.dni || "-"}</span>
                         </div>
                         <div>
                           <span className="text-xs text-gray-500 font-medium block mb-1">Rol</span>

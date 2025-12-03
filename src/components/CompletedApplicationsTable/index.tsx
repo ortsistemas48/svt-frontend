@@ -375,7 +375,7 @@ export default function CompletedApplicationsTable({ externalSearchQuery = "" }:
                     <div className="flex-1 space-y-2">
                       <div>
                         <p className="text-[10px] sm:text-xs text-gray-500 mb-1">CRT</p>
-                        <p className="text-sm sm:text-base font-mono font-medium text-gray-900">{item.application_id}</p>
+                        <p className="text-sm sm:text-base font-medium text-gray-900">{item.application_id}</p>
                       </div>
                       <div>
                         <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Vehículo</p>
@@ -547,7 +547,7 @@ export default function CompletedApplicationsTable({ externalSearchQuery = "" }:
               const identityText = item.owner?.cuit ? item.owner?.cuit : item.owner?.dni;
               return (
                 <tr key={item.application_id} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-3 text-center text-sm sm:text-base font-mono">{item.application_id}</td>
+                  <td className="p-3 text-center text-sm sm:text-base">{item.application_id}</td>
 
                   <td className="p-3 text-center">
                     <div className="font-medium text-sm sm:text-base">{item.car?.license_plate || "-"}</div>
