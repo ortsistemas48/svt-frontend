@@ -1,6 +1,7 @@
 import { fetchQrData } from "@/utils";
 import { Car, Wrench, CheckCircle, XCircle, Circle } from "lucide-react";
 import CheckRTOIcon from "@/components/CheckRTOIcon";
+import VehiclePhotos from "@/components/VehiclePhotos";
 import clsx from "clsx";
 
 function fmtDate(d?: string | null) {
@@ -232,6 +233,11 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
             </div>
 
           </div>
+
+          {/* Fotos del vehículo */}
+          {insp?.id && (
+            <VehiclePhotos inspectionId={insp.id} inspectionDate={insp.created_at || insp.inspection_date} />
+          )}
 
           {/* Leyenda legal */}
           <div className="max-w-4xl mx-auto rounded-2xl border border-[#d3d3d3] bg-white p-6 text-center">

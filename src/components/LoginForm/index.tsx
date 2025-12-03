@@ -41,7 +41,7 @@ export default function LoginForm() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailOrDni, password }),
+        body: JSON.stringify({ email: emailOrDni.trim(), password: password.trim() }),
       });
 
       if (!res.ok) {

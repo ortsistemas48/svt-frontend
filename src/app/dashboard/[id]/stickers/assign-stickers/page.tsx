@@ -259,8 +259,8 @@ export default function AsignarObleasPage() {
                         <label className="block text-xs text-gray-600 mb-1">Prefijo (opcional)</label>
                         <input
                           value={r.lead}
-                          onChange={(e) => updateRange(r.id, { lead: e.target.value })}
-                          className="w-full rounded-[4px] border border-gray-300 px-2 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
+                          onChange={(e) => updateRange(r.id, { lead: e.target.value.toUpperCase() })}
+                          className="w-full rounded-[4px] border border-gray-300 px-2 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent uppercase"
                           placeholder="RA"
                         />
                       </div>
