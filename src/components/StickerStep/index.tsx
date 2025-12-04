@@ -33,7 +33,6 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
   const [manualOpen, setManualOpen] = useState(false);
   const [manualPrefix, setManualPrefix] = useState("");
   const [manualCode, setManualCode] = useState("");
-  const [manualSuffix, setManualSuffix] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
   const [isAssigningManual, setIsAssigningManual] = useState(false);
 
@@ -339,11 +338,10 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     }
   };
 
-  function buildStickerFromParts(prefixRaw: string, codeRaw: string, suffixRaw: string) {
+  function buildStickerFromParts(prefixRaw: string, codeRaw: string) {
     const prefix = sanitizeStickerPart(prefixRaw);
     const code = codeRaw.replace(/\D/g, ""); // sólo dígitos
-    const suffix = sanitizeStickerPart(suffixRaw);
-    return prefix + code + suffix;
+    return prefix + code;
   }
 
   const handleManualAssign = async () => {
@@ -373,8 +371,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
 
       const finalSticker = buildStickerFromParts(
         manualPrefix,
-        manualCode,
-        manualSuffix
+        manualCode
       );
 
       const res = await fetch(`/api/stickers/assign-by-number`, {
@@ -406,7 +403,6 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
       setManualOpen(false);
       setManualPrefix("");
       setManualCode("");
-      setManualSuffix("");
     } catch (e) {
       console.error(e);
       setManualError("Ocurrió un error asignando la oblea.");
@@ -567,90 +563,96 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                 </p>
               )}
 
-              <div className="mt-4 sm:mt-5 border-t pt-3 sm:pt-4 w-full">
+              <div className="mt-4 sm:mt-5 border-t border-gray-200 pt-4 sm:pt-5 w-full">
                 <button
                   type="button"
                   onClick={() => setManualOpen((v) => !v)}
-                  className="text-xs sm:text-sm text-[#0040B8] hover:underline"
+                  className="text-xs sm:text-sm font-medium text-[#0040B8] hover:text-[#0038a6] transition-colors flex items-center gap-1"
                 >
-                  {manualOpen
-                    ? "Ocultar asignación manual"
-                    : "Asignar manualmente"}
+                  {manualOpen ? (
+                    <>
+                      <span>▼</span>
+                      <span>Ocultar asignación manual</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>▶</span>
+                      <span>Asignación manual</span>
+                    </>
+                  )}
                 </button>
 
                 {manualOpen && (
-                  <div className="mt-3 space-y-3 w-full">
-                    <label className="block text-xs sm:text-sm text-gray-700">
-                      Número de oblea
-                    </label>
-
-                    <div className="text-[10px] sm:text-xs text-gray-500 leading-snug">
-                      Vista previa:{" "}
-                      <span className=" text-gray-800">
-                        {sanitizeStickerPart(manualPrefix) +
-                          manualCode.replace(/\D/g, "") +
-                          sanitizeStickerPart(manualSuffix) || "—"}
-                      </span>
+                  <div className="mt-4 sm:mt-5 p-4 sm:p-5 bg-gray-50 rounded-lg sm:rounded-[10px] border border-gray-200 space-y-4">
+                    <div>
+                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                        Número de oblea
+                      </label>
+                      <p className="text-xs sm:text-sm text-gray-600 mb-4">
+                        Ingresá el prefijo (opcional) y el código numérico de la oblea.
+                      </p>
                     </div>
 
+                    <div className="bg-white p-3 sm:p-4 rounded-[6px] border border-gray-200 mb-4">
+                      <div className="text-[10px] sm:text-xs text-gray-500 mb-1">
+                        Vista previa:
+                      </div>
+                      <div className="text-sm sm:text-base font-mono font-semibold text-gray-800">
+                        {sanitizeStickerPart(manualPrefix) +
+                          manualCode.replace(/\D/g, "") || "—"}
+                      </div>
+                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex flex-col">
-                        <span className="text-[10px] sm:text-xs text-gray-500 mb-1">
-                          Prefijo (opcional)
-                        </span>
+                        <label className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                          Prefijo <span className="text-gray-400 font-normal">(opcional)</span>
+                        </label>
                         <input
                           type="text"
                           value={manualPrefix}
                           onChange={(e) =>
                             setManualPrefix(e.target.value.toUpperCase())
                           }
-                          className="border rounded-[4px] px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]"
-                          placeholder="ABC"
+                          className="border rounded-[6px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#0040B8] border-[#DEDEDE] transition-all"
+                          placeholder="Ej: ABC"
+                          maxLength={10}
                         />
+                        <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
+                          Letras y números, se convertirá a mayúsculas
+                        </p>
                       </div>
 
                       <div className="flex flex-col">
-                        <span className="text-[10px] sm:text-xs text-gray-500 mb-1">
-                          Código
-                        </span>
+                        <label className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                          Código <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           value={manualCode}
                           onChange={(e) =>
                             setManualCode(e.target.value.replace(/\D/g, ""))
                           }
-                          className={`border rounded-[4px] px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 ${
+                          className={`border rounded-[6px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 transition-all ${
                             manualError
                               ? "border-red-400 focus:ring-red-500"
                               : "border-[#DEDEDE] focus:ring-[#0040B8]"
                           }`}
-                          placeholder="001234"
+                          placeholder="Ej: 001234"
+                          maxLength={20}
                         />
-                      </div>
-
-                      <div className="flex flex-col">
-                        <span className="text-[10px] sm:text-xs text-gray-500 mb-1">
-                          Sufijo (opcional)
-                        </span>
-                        <input
-                          type="text"
-                          value={manualSuffix}
-                          onChange={(e) =>
-                            setManualSuffix(e.target.value.toUpperCase())
-                          }
-                          className="border rounded-[4px] px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]"
-                          placeholder="Q"
-                        />
+                        <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
+                          Solo números, requerido
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 justify-center">
+                    <div className="flex flex-wrap gap-3 justify-end pt-2">
                       <button
                         type="button"
                         onClick={handleManualAssign}
                         disabled={isAssigningManual}
-                        className="w-full sm:w-auto px-3 py-2.5 rounded-[4px] my-3 sm:my-4 text-xs sm:text-sm text-white bg-[#0040B8] hover:bg-[#024bd4] disabled:opacity-60 transition duration-150"
+                        className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-[6px] text-xs sm:text-sm font-medium text-white bg-[#0040B8] hover:bg-[#0038a6] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-150 shadow-sm hover:shadow"
                       >
                         {isAssigningManual
                           ? "Asignando oblea..."
@@ -658,20 +660,22 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                           ? "Reemplazar oblea"
                           : "Asignar oblea"}
                       </button>
-
                     </div>
 
                     {manualError && (
-                      <p className="text-[10px] sm:text-xs text-red-600">
-                        {manualError}
-                      </p>
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-[6px]">
+                        <p className="text-xs sm:text-sm text-red-600 font-medium">
+                          {manualError}
+                        </p>
+                      </div>
                     )}
 
                     {!manualError && (
-                      <p className="text-[10px] sm:text-xs md:text-sm text-gray-500">
-                        Prefijo y sufijo pueden ir vacíos. El código tiene que
-                        tener al menos un número.
-                      </p>
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-[6px]">
+                        <p className="text-xs sm:text-sm text-blue-700">
+                          <strong>Nota:</strong> El prefijo es opcional. El código debe tener al menos un número.
+                        </p>
+                      </div>
                     )}
                   </div>
                 )}

@@ -138,7 +138,7 @@ const formData2: FormFieldData[] = [
     ],
   },
   { label: "Exp. de la licencia", type: "date", placeholder: "dd/mm/aa", name: "license_expiration", isRequired: true },
-  { label: "Póliza del seguro", type: "text", placeholder: "Ej: 1234567890", name: "insurance" },
+  { label: "Póliza del seguro", type: "text", placeholder: "Ej: ABC1234567", name: "insurance" },
 ];
 
 const MSG = {
@@ -153,7 +153,7 @@ const MSG = {
   chassis_brand: "Solo letras, máx. 15.",
   green_card_number: "Campo requerido.",
   license_number: "Letras y números, máx. 15.",
-  insurance: "Solo números, hasta 10.",
+  insurance: "Letras y números, hasta 30.",
   total_weight: "Solo números, hasta 10.",
   front_weight: "Solo números, hasta 10.",
   back_weight: "Solo números, hasta 10.",
@@ -173,7 +173,7 @@ const PATTERN: Record<string, RegExp> = {
   green_card_expiration: /^\d{4}-\d{2}-\d{2}$/,
   license_number: /^[A-Z0-9]{1,15}$/,
   license_expiration: /^\d{4}-\d{2}-\d{2}$/,
-  insurance: /^\d{1,10}$/,
+  insurance: /^[A-Z0-9]{1,30}$/,
   total_weight: /^\d{1,10}$/,
   front_weight: /^\d{1,10}$/,
   back_weight: /^\d{1,10}$/,
@@ -193,7 +193,7 @@ const SANITIZE: Record<string, (s: string) => string> = {
   green_card_number: (s) => s,
   license_number: (s) => clamp(onlyAlnumUpper(s), 15),
   license_class: (s) => clamp(onlyAlnumUpper(s).trim(), 3), 
-  insurance: (s) => clamp(onlyDigits(s), 10),
+  insurance: (s) => clamp(onlyAlnumUpper(s), 30),
 };
 
 const FIELD_LABEL: Record<string, string> = {
