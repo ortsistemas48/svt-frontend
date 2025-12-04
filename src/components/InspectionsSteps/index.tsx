@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import clsx from "clsx";
-import { ChevronRight, X, Plus, Check } from "lucide-react";
+import { ChevronRight, X, Plus, Check, Minus } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import Dropzone, { type ExistingDoc as InspDoc } from "@/components/Dropzone";
 
@@ -81,12 +81,15 @@ export default function InspectionStepsClient({
 
   const [obsModalStepId, setObsModalStepId] = useState<number | null>(null);
   const [obsLoading, setObsLoading] = useState(false);
+  const [obsModalError, setObsModalError] = useState<string | null>(null);
   type ObsView = "parents" | "items";
   const [obsView, setObsView] = useState<ObsView>("parents");
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [leaves, setLeaves] = useState<ObservationLeaf[]>([]);
+  const [stepObservations, setStepObservations] = useState<ObservationLeaf[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [categoriesWithObservations, setCategoriesWithObservations] = useState<Set<number>>(new Set());
 
   // Inicializar desde props si están disponibles para render inmediato
   const initialTech = useMemo(() => {
@@ -227,12 +230,16 @@ export default function InspectionStepsClient({
   };
 
   const openObsModalForStep = async (stepId: number) => {
+    console.log("[openObsModalForStep] Abriendo modal para stepId:", stepId);
     setObsModalStepId(stepId);
     setObsView("parents");
     setSelectedCategory(null);
     setCategories([]);
     setLeaves([]);
-    await fetchCategories(stepId);
+    setStepObservations([]);
+    setObsModalError(null);
+    setCategoriesWithObservations(new Set());
+    await Promise.all([fetchCategories(stepId), fetchStepObservations(stepId)]);
   };
 
   const closeObsModal = () => {
@@ -241,6 +248,9 @@ export default function InspectionStepsClient({
     setSelectedCategory(null);
     setCategories([]);
     setLeaves([]);
+    setStepObservations([]);
+    setObsModalError(null);
+    setCategoriesWithObservations(new Set());
   };
 
   const fetchCategories = async (stepId: number) => {
@@ -250,6 +260,7 @@ export default function InspectionStepsClient({
     }
     try {
       setObsLoading(true);
+      console.log("[fetchCategories] Iniciando carga de categorías para stepId:", stepId);
       const res = await fetch(
         `${apiBase}/inspections/inspections/${inspectionId}/steps/${stepId}/categories`,
         { credentials: "include" }
@@ -259,11 +270,55 @@ export default function InspectionStepsClient({
         throw new Error(j?.error || "No se pudieron cargar las categorías");
       }
       const data: Category[] = await res.json();
+      console.log("[fetchCategories] Categorías cargadas:", data);
       setCategories(data);
+      
+      // Verificar qué categorías tienen observaciones hijo
+      const categoriesWithObs = new Set<number>();
+      console.log("[fetchCategories] Verificando observaciones para", data.length, "categorías");
+      await Promise.all(
+        data.map(async (cat) => {
+          try {
+            const obsRes = await fetch(
+              `${apiBase}/inspections/inspections/${inspectionId}/steps/${stepId}/categories/${cat.category_id}/observations`,
+              { credentials: "include" }
+            );
+            if (obsRes.ok) {
+              const obsData: ObservationLeaf[] = await obsRes.json();
+              console.log(`[fetchCategories] Categoría ${cat.name} (${cat.category_id}): ${obsData.length} observaciones`);
+              if (obsData.length > 0) {
+                categoriesWithObs.add(cat.category_id);
+              }
+            } else {
+              console.log(`[fetchCategories] Error al cargar observaciones para categoría ${cat.name} (${cat.category_id}):`, obsRes.status);
+            }
+          } catch (e) {
+            console.error(`[fetchCategories] Error verificando observaciones para categoría ${cat.name}:`, e);
+          }
+        })
+      );
+      console.log("[fetchCategories] Categorías con observaciones:", Array.from(categoriesWithObs));
+      setCategoriesWithObservations(categoriesWithObs);
     } catch (e: any) {
+      console.error("[fetchCategories] Error general:", e);
       setError(e.message || "Error cargando categorías");
     } finally {
       setObsLoading(false);
+    }
+  };
+
+  const fetchStepObservations = async (stepId: number) => {
+    if (!apiBase) return;
+    try {
+      const res = await fetch(
+        `${apiBase}/inspections/inspections/${inspectionId}/steps/${stepId}/observations`,
+        { credentials: "include" }
+      );
+      if (!res.ok) return;
+      const data: ObservationLeaf[] = await res.json();
+      setStepObservations(data);
+    } catch (e: any) {
+      // Silenciar error, no es crítico
     }
   };
 
@@ -271,6 +326,7 @@ export default function InspectionStepsClient({
     if (!apiBase || obsModalStepId === null) return;
     try {
       setObsLoading(true);
+      setObsModalError(null);
       setSelectedCategory(cat);
       setObsView("items");
       setLeaves([]);
@@ -286,26 +342,67 @@ export default function InspectionStepsClient({
       const data: ObservationLeaf[] = await res.json();
       setLeaves(data);
     } catch (e: any) {
-      setError(e.message || "Error cargando observaciones");
+      setObsModalError(e.message || "Error cargando observaciones");
     } finally {
       setObsLoading(false);
     }
   };
 
+  function compactObservation(obs: string, maxLength: number = 60): string {
+    if (obs.length <= maxLength) return obs;
+    
+    // Truncar en el último espacio antes del límite para no cortar palabras
+    const truncated = obs.substring(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(" ");
+    
+    if (lastSpace > maxLength * 0.7) {
+      // Si encontramos un espacio razonablemente cerca del final, cortar ahí
+      return truncated.substring(0, lastSpace) + "...";
+    }
+    // Si no hay espacio cercano, cortar directamente
+    return truncated + "...";
+  }
+
   function buildCategoryParts(selMap: LeafSelectionState): Record<string, string> {
     const agg: Record<string, Set<string>> = {};
+    const stepObs: string[] = [];
+    
     Object.values(selMap).forEach((catsForStep) => {
       Object.values(catsForStep).forEach(({ categoryName, leaves }) => {
-        if (!agg[categoryName]) agg[categoryName] = new Set<string>();
-        leaves.forEach((lv) => agg[categoryName].add(lv));
+        // Si la categoría está vacía, son observaciones del paso
+        if (!categoryName || categoryName.trim() === "") {
+          stepObs.push(...leaves);
+        } else {
+          if (!agg[categoryName]) agg[categoryName] = new Set<string>();
+          leaves.forEach((lv) => agg[categoryName].add(lv));
+        }
       });
     });
+    
     const out: Record<string, string> = {};
+    
+    // Agregar observaciones del paso primero (sin prefijo de categoría)
+    if (stepObs.length > 0) {
+      const compactObs = stepObs.map(obs => compactObservation(obs, 60)).join("; ");
+      out[""] = compactObs;
+    }
+    
+    // Agregar categorías
     Object.entries(agg).forEach(([cat, leavesSet]) => {
       const arr = Array.from(leavesSet);
-      out[cat] = arr.length > 0 ? `${cat} (${arr.join(", ")})` : cat;
+      if (arr.length > 0) {
+        const compactObs = arr.map(obs => compactObservation(obs, 60)).join("; ");
+        out[cat] = `${cat}: ${compactObs}`;
+      }
     });
+    
     return out;
+  }
+
+  function buildGlobalTextFromSelectionMap(selMap: LeafSelectionState): string {
+    const parts = buildCategoryParts(selMap);
+    const partsArray = Object.values(parts).filter(p => p.length > 0);
+    return partsArray.join("/");
   }
 
   function mergePartsIntoGlobalText(currentText: string, parts: Record<string, string>) {
@@ -321,8 +418,10 @@ export default function InspectionStepsClient({
     const lowerTokens = tokens.map((t) => t.toLowerCase());
 
     Object.entries(parts).forEach(([cat, newPart]) => {
+      // Buscar tokens que empiecen con el nombre de la categoría (puede ser formato antiguo o nuevo)
+      const catLower = cat.toLowerCase();
       const idx = lowerTokens.findIndex((tok) =>
-        tok.startsWith(cat.toLowerCase())
+        tok.startsWith(catLower) || tok.startsWith(`${catLower}:`) || tok.startsWith(`${catLower} (`)
       );
       if (idx >= 0) {
         tokens[idx] = newPart;
@@ -336,11 +435,16 @@ export default function InspectionStepsClient({
     return tokens.join("/");
   }
 
-  const addLeafToSelection = (stepId: number, cat: Category, leaf: ObservationLeaf) => {
+  const addLeafToSelection = (stepId: number, cat: Category | null, leaf: ObservationLeaf) => {
     setSelectionMap((prev) => {
       const prevStep = prev[stepId] || {};
-      const prevCat = prevStep[cat.category_id] || {
-        categoryName: cat.name,
+      
+      // Si no hay categoría, usar un ID especial para observaciones sin categoría
+      const catId = cat ? cat.category_id : -1;
+      const catName = cat ? cat.name : "";
+      
+      const prevCat = prevStep[catId] || {
+        categoryName: catName,
         leaves: [],
       };
 
@@ -355,8 +459,8 @@ export default function InspectionStepsClient({
         ...prev,
         [stepId]: {
           ...prevStep,
-          [cat.category_id]: {
-            categoryName: cat.name,
+          [catId]: {
+            categoryName: catName,
             leaves: newLeaves,
           },
         },
@@ -366,12 +470,67 @@ export default function InspectionStepsClient({
       const mergedText = mergePartsIntoGlobalText(globalText, draftParts);
 
       if (mergedText.length > MAX_CHARS) {
-        setError("No se puede agregar: superarías el límite de 750 caracteres.");
+        setObsModalError(`No se puede agregar: superarías el límite de ${MAX_CHARS} caracteres. Podés ir al campo de observaciones de texto y editarlo manualmente para hacer espacio.`);
         return prev;
       }
 
       setGlobalText(mergedText);
+      setObsModalError(null);
       setMsg("Observación agregada");
+      setTimeout(() => setMsg(null), 1000);
+
+      return draft;
+    });
+  };
+
+  const removeLeafFromSelection = (stepId: number, cat: Category | null, leaf: ObservationLeaf) => {
+    setSelectionMap((prev) => {
+      const prevStep = prev[stepId] || {};
+      const catId = cat ? cat.category_id : -1;
+      const prevCat = prevStep[catId];
+      
+      if (!prevCat || !prevCat.leaves.includes(leaf.description)) {
+        return prev;
+      }
+
+      const newLeaves = prevCat.leaves.filter((l) => l !== leaf.description);
+      
+      let draft: LeafSelectionState;
+
+      // Si no quedan hojas en esta categoría, eliminar la categoría del step
+      if (newLeaves.length === 0) {
+        const { [catId]: removed, ...restCats } = prevStep;
+        if (Object.keys(restCats).length === 0) {
+          // Si no quedan categorías en el step, eliminar el step completo
+          const { [stepId]: removedStep, ...restSteps } = prev;
+          draft = restSteps;
+        } else {
+          // Mantener el step pero sin esta categoría
+          draft = {
+            ...prev,
+            [stepId]: restCats,
+          };
+        }
+      } else {
+        // Mantener la categoría con las hojas actualizadas
+        const catName = cat ? cat.name : "";
+        draft = {
+          ...prev,
+          [stepId]: {
+            ...prevStep,
+            [catId]: {
+              categoryName: catName,
+              leaves: newLeaves,
+            },
+          },
+        };
+      }
+
+      // Reconstruir el texto completo desde cero basándose en el selectionMap actualizado
+      const newGlobalText = buildGlobalTextFromSelectionMap(draft);
+
+      setGlobalText(newGlobalText);
+      setMsg("Observación quitada");
       setTimeout(() => setMsg(null), 1000);
 
       return draft;
@@ -834,8 +993,33 @@ export default function InspectionStepsClient({
             )}
             maxLength={MAX_CHARS}
           />
-          <div className="mt-2 text-right text-[10px] sm:text-xs text-zinc-400">
-            {obsCharCount}/{MAX_CHARS}
+          <div className="mt-2 flex items-center justify-between">
+            <div className={clsx(
+              "text-[10px] sm:text-xs",
+              obsCharCount > MAX_CHARS * 0.9 
+                ? "text-amber-600 font-medium" 
+                : obsCharCount > MAX_CHARS * 0.75
+                ? "text-amber-500"
+                : "text-zinc-400"
+            )}>
+              {obsCharCount >= MAX_CHARS * 0.9 && (
+                <span className="mr-2">
+                  {MAX_CHARS - obsCharCount > 0 
+                    ? `Quedan ${MAX_CHARS - obsCharCount} caracteres disponibles`
+                    : "Límite alcanzado"}
+                </span>
+              )}
+            </div>
+            <div className={clsx(
+              "text-[10px] sm:text-xs",
+              obsCharCount > MAX_CHARS * 0.9 
+                ? "text-amber-600 font-medium" 
+                : obsCharCount > MAX_CHARS * 0.75
+                ? "text-amber-500"
+                : "text-zinc-400"
+            )}>
+              {obsCharCount}/{MAX_CHARS}
+            </div>
           </div>
         </div>
       </div>
@@ -1011,6 +1195,7 @@ export default function InspectionStepsClient({
                         setObsView("parents");
                         setSelectedCategory(null);
                         setLeaves([]);
+                        setObsModalError(null);
                       }}
                     >
                       <ChevronRight size={14} className="rotate-180" />
@@ -1033,89 +1218,259 @@ export default function InspectionStepsClient({
               </button>
             </div>
 
+            {obsModalError && (
+              <div className="mx-4 mt-2 p-3 rounded border border-red-300 bg-red-50 text-sm text-red-700">
+                {obsModalError}
+              </div>
+            )}
+
             <div className="flex-1 overflow-y-auto p-4">
               {obsLoading ? (
                 <div className="text-sm text-zinc-500 py-10 text-center">Cargando...</div>
               ) : (
                 <>
                   {obsView === "parents" && (
-                    <ul className="divide-y divide-zinc-200">
-                      {categories.map((c) => {
-                        const selectedCount =
-                          selectionMap[obsModalStepId!]?.[c.category_id]?.leaves.length || 0;
-                        return (
-                          <li key={c.category_id} className="flex items-center justify-between py-3">
-                            <button
-                              className="flex items-center text-left flex-1 pr-3 gap-2"
-                              disabled={isCompleted}
-                              onClick={() => goToLeaves(c)}
-                            >
-                              <span className="text-sm text-zinc-900">{c.name}</span>
+                    <>
+                      {/* Observaciones del paso */}
+                      {stepObservations.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-xs font-medium text-zinc-700 mb-2 px-1">Observaciones del paso</h4>
+                          <ul className="space-y-2">
+                            {stepObservations.map((leaf) => {
+                              const already =
+                                !!selectionMap[obsModalStepId!]?.[-1]?.leaves.includes(leaf.description);
+                              return (
+                                <li
+                                  key={leaf.observation_id}
+                                  className={clsx(
+                                    "flex items-center justify-between rounded border p-3",
+                                    already ? "border-emerald-300 bg-emerald-50/40" : "border-zinc-200"
+                                  )}
+                                >
+                                  <span className="text-sm text-zinc-800">{leaf.description}</span>
+                                  {already ? (
+                                    <button
+                                      className="inline-flex items-center gap-1 text-red-600 text-sm px-2 py-1 rounded border border-red-300 bg-white hover:bg-red-50"
+                                      disabled={isCompleted}
+                                      onClick={() =>
+                                        removeLeafFromSelection(obsModalStepId!, null, leaf)
+                                      }
+                                      title="Quitar del texto"
+                                    >
+                                      <Minus size={16} />
+                                      Quitar
+                                    </button>
+                                  ) : (
+                                    <button
+                                      className="inline-flex items-center gap-1 text-[#0040B8] text-sm px-2 py-1 rounded hover:bg-zinc-50"
+                                      disabled={isCompleted}
+                                      onClick={() =>
+                                        addLeafToSelection(obsModalStepId!, null, leaf)
+                                      }
+                                      title="Agregar al texto"
+                                    >
+                                      <Plus size={16} />
+                                      Agregar
+                                    </button>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Categorías */}
+                      <ul className="divide-y divide-zinc-200">
+                        {categories.map((c) => {
+                          const selectedCount =
+                            selectionMap[obsModalStepId!]?.[c.category_id]?.leaves.length || 0;
+                          const hasObservations = categoriesWithObservations.has(c.category_id);
+                          const isCategorySelected = 
+                            !!selectionMap[obsModalStepId!]?.[c.category_id]?.leaves.includes(c.name);
+                          
+                          console.log(`[Render Category] ${c.name} (${c.category_id}): hasObservations=${hasObservations}, isCategorySelected=${isCategorySelected}, selectedCount=${selectedCount}`);
+                          
+                          return (
+                            <li key={c.category_id} className="flex items-center justify-between py-3">
+                              <span className="text-sm text-zinc-900 flex-1">{c.name}</span>
                               {selectedCount > 0 && (
-                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 mr-2">
                                   {selectedCount} agregado{selectedCount > 1 ? "s" : ""}
                                 </span>
                               )}
-                            </button>
-                            <ChevronRight size={16} className="text-zinc-500" />
-                          </li>
-                        );
-                      })}
+                              {hasObservations ? (
+                                <button
+                                  className="flex items-center text-zinc-500 hover:text-zinc-700"
+                                  disabled={isCompleted}
+                                  onClick={() => {
+                                    console.log(`[Click] Navegando a observaciones de categoría ${c.name}`);
+                                    goToLeaves(c);
+                                  }}
+                                  title="Ver observaciones"
+                                >
+                                  <ChevronRight size={16} />
+                                </button>
+                              ) : (
+                                <button
+                                  className={clsx(
+                                    "inline-flex items-center gap-1 text-sm px-2 py-1 rounded",
+                                    isCategorySelected
+                                      ? "text-red-600 border border-red-300 bg-white hover:bg-red-50"
+                                      : "text-[#0040B8] hover:bg-zinc-50"
+                                  )}
+                                  disabled={isCompleted}
+                                  onClick={() => {
+                                    console.log(`[Click] ${isCategorySelected ? 'Quitando' : 'Agregando'} categoría ${c.name} directamente`);
+                                    const categoryAsLeaf: ObservationLeaf = {
+                                      observation_id: c.category_id,
+                                      description: c.name,
+                                    };
+                                    if (isCategorySelected) {
+                                      removeLeafFromSelection(obsModalStepId!, c, categoryAsLeaf);
+                                    } else {
+                                      addLeafToSelection(obsModalStepId!, c, categoryAsLeaf);
+                                    }
+                                  }}
+                                  title={isCategorySelected ? "Quitar del texto" : "Agregar al texto"}
+                                >
+                                  {isCategorySelected ? (
+                                    <>
+                                      <Minus size={16} />
+                                      Quitar
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Plus size={16} />
+                                      Agregar
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </li>
+                          );
+                        })}
 
-                      {categories.length === 0 && (
-                        <li className="py-6 text-center text-sm text-zinc-500">
-                          No hay categorías configuradas
-                        </li>
-                      )}
-                    </ul>
+                        {categories.length === 0 && stepObservations.length === 0 && (
+                          <li className="py-6 text-center text-sm text-zinc-500">
+                            No hay categorías configuradas
+                          </li>
+                        )}
+                      </ul>
+                    </>
                   )}
 
                   {obsView === "items" && (
                     <ul className="space-y-2">
-                      {leaves.map((leaf) => {
-                        const already =
-                          !!selectionMap[obsModalStepId!]?.[selectedCategory!.category_id]?.leaves.includes(
-                            leaf.description
-                          );
-                        return (
-                          <li
-                            key={leaf.observation_id}
-                            className={clsx(
-                              "flex items-center justify-between rounded border p-3",
-                              already ? "border-emerald-300 bg-emerald-50/40" : "border-zinc-200"
-                            )}
-                          >
-                            <span className="text-sm text-zinc-800">{leaf.description}</span>
+                      {leaves.length > 0 ? (
+                        leaves.map((leaf) => {
+                          const already =
+                            !!selectionMap[obsModalStepId!]?.[selectedCategory!.category_id]?.leaves.includes(
+                              leaf.description
+                            );
+                          return (
+                            <li
+                              key={leaf.observation_id}
+                              className={clsx(
+                                "flex items-center justify-between rounded border p-3",
+                                already ? "border-emerald-300 bg-emerald-50/40" : "border-zinc-200"
+                              )}
+                            >
+                              <span className="text-sm text-zinc-800">{leaf.description}</span>
 
-                            {already ? (
-                              <span className="inline-flex items-center gap-1 text-emerald-700 text-sm px-2 py-1 rounded border border-emerald-300 bg-white">
-                                <Check size={16} />
-                                Agregado
-                              </span>
-                            ) : (
-                              <button
-                                className="inline-flex items-center gap-1 text-[#0040B8] text-sm px-2 py-1 rounded hover:bg-zinc-50"
-                                disabled={isCompleted}
-                                onClick={() =>
-                                  addLeafToSelection(
-                                    obsModalStepId!,
-                                    selectedCategory!,
-                                    leaf
-                                  )
-                                }
-                                title="Agregar al texto"
-                              >
-                                <Plus size={16} />
-                                Agregar
-                              </button>
-                            )}
-                          </li>
-                        );
-                      })}
-                      {leaves.length === 0 && (
-                        <li className="text-sm text-zinc-500 text-center py-6">
-                          No hay observaciones en esta categoría
-                        </li>
+                              {already ? (
+                                <button
+                                  className="inline-flex items-center gap-1 text-red-600 text-sm px-2 py-1 rounded border border-red-300 bg-white hover:bg-red-50"
+                                  disabled={isCompleted}
+                                  onClick={() =>
+                                    removeLeafFromSelection(
+                                      obsModalStepId!,
+                                      selectedCategory!,
+                                      leaf
+                                    )
+                                  }
+                                  title="Quitar del texto"
+                                >
+                                  <Minus size={16} />
+                                  Quitar
+                                </button>
+                              ) : (
+                                <button
+                                  className="inline-flex items-center gap-1 text-[#0040B8] text-sm px-2 py-1 rounded hover:bg-zinc-50"
+                                  disabled={isCompleted}
+                                  onClick={() =>
+                                    addLeafToSelection(
+                                      obsModalStepId!,
+                                      selectedCategory!,
+                                      leaf
+                                    )
+                                  }
+                                  title="Agregar al texto"
+                                >
+                                  <Plus size={16} />
+                                  Agregar
+                                </button>
+                              )}
+                            </li>
+                          );
+                        })
+                      ) : (
+                        // Si no hay observaciones hijo, mostrar la categoría misma como seleccionable
+                        (() => {
+                          const categoryAsLeaf: ObservationLeaf = {
+                            observation_id: selectedCategory!.category_id,
+                            description: selectedCategory!.name,
+                          };
+                          const already =
+                            !!selectionMap[obsModalStepId!]?.[selectedCategory!.category_id]?.leaves.includes(
+                              selectedCategory!.name
+                            );
+                          return (
+                            <li
+                              key={`category-${selectedCategory!.category_id}`}
+                              className={clsx(
+                                "flex items-center justify-between rounded border p-3",
+                                already ? "border-emerald-300 bg-emerald-50/40" : "border-zinc-200"
+                              )}
+                            >
+                              <span className="text-sm text-zinc-800">{selectedCategory!.name}</span>
+
+                              {already ? (
+                                <button
+                                  className="inline-flex items-center gap-1 text-red-600 text-sm px-2 py-1 rounded border border-red-300 bg-white hover:bg-red-50"
+                                  disabled={isCompleted}
+                                  onClick={() =>
+                                    removeLeafFromSelection(
+                                      obsModalStepId!,
+                                      selectedCategory!,
+                                      categoryAsLeaf
+                                    )
+                                  }
+                                  title="Quitar del texto"
+                                >
+                                  <Minus size={16} />
+                                  Quitar
+                                </button>
+                              ) : (
+                                <button
+                                  className="inline-flex items-center gap-1 text-[#0040B8] text-sm px-2 py-1 rounded hover:bg-zinc-50"
+                                  disabled={isCompleted}
+                                  onClick={() =>
+                                    addLeafToSelection(
+                                      obsModalStepId!,
+                                      selectedCategory!,
+                                      categoryAsLeaf
+                                    )
+                                  }
+                                  title="Agregar al texto"
+                                >
+                                  <Plus size={16} />
+                                  Agregar
+                                </button>
+                              )}
+                            </li>
+                          );
+                        })()
                       )}
                     </ul>
                   )}
