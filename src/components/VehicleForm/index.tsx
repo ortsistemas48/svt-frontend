@@ -145,7 +145,9 @@ const MSG = {
   brand: "Letras y números, máx. 15.",
   model: "Campo requerido.",
   manufacture_year: "Debe tener 4 dígitos, ej: 2025.",
+  manufacture_year_future: "El año de fabricación no puede ser mayor al año actual.",
   registration_year: "Debe tener 4 dígitos, ej: 2025.",
+  registration_year_future: "El año de patentamiento no puede ser mayor al año actual.",
   engine_brand: "Letras y números, máx. 15.",
   engine_number: "Cualquier símbolo, máx. 17.",
   chassis_number: "Cualquier símbolo, máx. 17.",
@@ -351,6 +353,22 @@ export default function VehicleForm({
       }
       const formatted = /^\d{4}-\d{2}-\d{2}$/.test(v);
       setCarError(name, formatted ? "" : "Fecha inválida, usa AAAA-MM-DD.");
+      return;
+    }
+
+    if (name === "manufacture_year" || name === "registration_year") {
+      if (!p.test(v)) {
+        setCarError(name, MSG[name as keyof typeof MSG]);
+        return;
+      }
+      const currentYear = new Date().getFullYear();
+      const yearValue = Number(v);
+      if (yearValue > currentYear) {
+        const errorKey = name === "manufacture_year" ? "manufacture_year_future" : "registration_year_future";
+        setCarError(name, MSG[errorKey as keyof typeof MSG]);
+        return;
+      }
+      setCarError(name, "");
       return;
     }
 
