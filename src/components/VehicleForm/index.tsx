@@ -146,7 +146,6 @@ const MSG = {
   model: "Campo requerido.",
   manufacture_year: "Debe tener 4 dígitos, ej: 2025.",
   registration_year: "Debe tener 4 dígitos, ej: 2025.",
-  registration_month_year: "Mes y año inválidos, usa AAAA-MM.",
   engine_brand: "Letras y números, máx. 15.",
   engine_number: "Cualquier símbolo, máx. 17.",
   chassis_number: "Cualquier símbolo, máx. 17.",
@@ -164,7 +163,6 @@ const PATTERN: Record<string, RegExp> = {
   model: /^.+$/,
   manufacture_year: /^\d{4}$/,
   registration_year: /^\d{4}$/,
-  registration_month_year: /^\d{4}-\d{2}$/,
   engine_brand: /^[A-Z0-9 ]{1,15}$/,
   engine_number: /^.{1,17}$/,
   chassis_number: /^.{1,17}$/,
@@ -185,7 +183,6 @@ const SANITIZE: Record<string, (s: string) => string> = {
   model: (s) => s,
   manufacture_year: (s) => clamp(onlyDigits(s), 4),
   registration_year: (s) => clamp(onlyDigits(s), 4),
-  registration_month_year: (s) => clamp(s, 7),
   engine_brand: (s) => clamp(alnumSpaceUpper(s), 15),
   engine_number: (s) => clamp(s, 17),
   chassis_number: (s) => clamp(s, 17),
@@ -202,8 +199,6 @@ const FIELD_LABEL: Record<string, string> = {
   model: "Modelo",
   manufacture_year: "Año de fabricación",
   registration_year: "Año de patentamiento",
-  registration_month: "Mes de patentamiento",
-  registration_month_year: "Patentamiento",
 
   weight: "Peso del auto",
   fuel_type: "Tipo de combustible",
@@ -389,26 +384,6 @@ export default function VehicleForm({
   };
 
   const handleChange = (key: string, value: string) => {
-    if (key === "registration_month_year") {
-      const v = SANITIZE.registration_month_year ? SANITIZE.registration_month_year(value) : value;
-      if (!v) {
-        setCar((prev: any) => ({ ...prev, registration_year: "", registration_month: "" }));
-        setCarError("registration_month_year", "");
-        return;
-      }
-      const ok = /^\d{4}-\d{2}$/.test(v);
-      if (!ok) {
-        setCarError("registration_month_year", MSG.registration_month_year);
-        return;
-      }
-      const [year, monthNum] = v.split("-");
-      const monthName = numberToMonthName(monthNum);
-      setCar((prev: any) => ({ ...prev, registration_year: year, registration_month: monthName }));
-      setCarError("registration_month_year", "");
-      setCarError("registration_year", "");
-      setCarError("registration_month", "");
-      return;
-    }
     if (key === "license_class") {
       const v = SANITIZE.license_class ? SANITIZE.license_class(value) : String(value || "").trim().toUpperCase();
       setCar((prev: any) => ({ ...prev, license_class: v }));
@@ -560,28 +535,15 @@ export default function VehicleForm({
                       <div className="col-span-1">
                         <FormField
                           label="Patentamiento"
-                          placeholder="MM/AAAA"
-                          type="month"
-                          name="registration_month_year"
+                          placeholder="Ej: 2025"
+                          type="text"
+                          name="registration_year"
                           isOwner={true}
-                          lang="en-US"
-                          displayValue={(function() {
-                            const y = String(car?.registration_year ?? "").trim();
-                            const mName = String(car?.registration_month ?? "").trim();
-                            const mm = monthNameToNumber(mName);
-                            if (!y || !mm) return "00/0000";
-                            return `${mm}/${y}`;
-                          })()}
-                          value={(function() {
-                            const y = String(car?.registration_year ?? "").padStart(4, "");
-                            const monthName = String(car?.registration_month ?? "").toLowerCase();
-                            const m = monthNameToNumber(monthName);
-                            return y && m ? `${y}-${m}` : "";
-                          })()}
-                          onChange={(val) => handleChange("registration_month_year", val)}
-                          onFocus={() => handleFocus("registration_month_year")}
-                          onBlur={() => handleBlur("registration_month_year")}
-                          error={getCarError("registration_month_year")}
+                          value={car?.registration_year ?? ""}
+                          onChange={(val) => handleChange("registration_year", val)}
+                          onFocus={() => handleFocus("registration_year")}
+                          onBlur={() => handleBlur("registration_year")}
+                          error={getCarError("registration_year")}
                           isRequired={true}
                         />
                       </div>

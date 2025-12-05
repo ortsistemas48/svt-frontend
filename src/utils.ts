@@ -420,7 +420,6 @@ export function getMissingCarFields(car: any): string[] {
     "license_number",
     "license_expiration",
     "registration_year",
-    "registration_month",
   ];
   
   const fieldTranslations = {
@@ -428,7 +427,6 @@ export function getMissingCarFields(car: any): string[] {
     brand: "Marca",
     model: "Modelo",
     registration_year: "Año de Patentamiento",
-    registration_month: "Mes de Patentamiento",
     weight: "Peso",
     fuel_type: "Tipo de combustible",
     vehicle_type: "Tipo de vehículo",

@@ -368,7 +368,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         total_weight: currentCar.total_weight,
         front_weight: currentCar.front_weight,
         back_weight: currentCar.back_weight,
-        registration_month: currentCar.registration_month,
       }),
     });
 
