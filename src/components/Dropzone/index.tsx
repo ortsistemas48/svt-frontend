@@ -20,6 +20,8 @@ type Props = {
   title?: string;
   maxSizeMB?: number;
   onDeleteExisting?: (docId: number) => Promise<void> | void;
+  /** (OPCIONAL) Función que determina si un documento puede ser eliminado */
+  canDeleteDocument?: (docId: number) => boolean;
 
   /** (OPCIONAL) Si cambia este token, el Dropzone limpia la cola de pendientes. */
   resetToken?: number | string;
@@ -55,6 +57,7 @@ export default function Dropzone({
   title,
   maxSizeMB = 15,
   onDeleteExisting,
+  canDeleteDocument,
   resetToken, // 👈 NUEVO prop
   frontSelection,
 }: Props) {
@@ -314,7 +317,7 @@ export default function Dropzone({
                   )}
 
                   {isExisting ? (
-                    onDeleteExisting && (
+                    onDeleteExisting && (canDeleteDocument === undefined || canDeleteDocument((item as any).id)) && (
                       <button
                         type="button"
                         onClick={() => handleDelete((item as any).id)}

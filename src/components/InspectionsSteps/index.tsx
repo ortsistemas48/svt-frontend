@@ -47,6 +47,7 @@ export default function InspectionStepsClient({
   userType,
   isSecondInspection,
   initialInspDocs,
+  firstInspectionId,
   initialIsCompleted,
   usageType
 }: {
@@ -59,6 +60,7 @@ export default function InspectionStepsClient({
   userType: string;
   isSecondInspection?: boolean;
   initialInspDocs?: InspDoc[];
+  firstInspectionId?: number | null;
   initialIsCompleted?: boolean;
   usageType?: string;
 }) {
@@ -148,8 +150,7 @@ export default function InspectionStepsClient({
       throw new Error(j?.error || "No se pudieron cargar los documentos");
     }
     const data: InspDoc[] = await res.json();
-    if (typeKey === "technical_report") setInspDocsTech(data);
-    if (typeKey === "vehicle_photo") setInspDocsPhotos(data);
+    // No actualizar estados directamente aquí, solo retornar datos
     return data;
   };
 
@@ -157,18 +158,53 @@ export default function InspectionStepsClient({
     if (!apiBase) return;
     try {
       setInspDocsLoading(true);
-      const [, photosData] = await Promise.all([
+      const [techData, photosData] = await Promise.all([
         fetchInspectionDocumentsByType("technical_report"),
         fetchInspectionDocumentsByType("vehicle_photo"),
       ]);
       
+      // Combinar documentos iniciales (de primera inspección) con los nuevos de la inspección actual
+      // Usar los estados actuales que ya tienen los documentos iniciales
+      setInspDocsTech((currentTech) => {
+        const hasInitial = (initialInspDocs || []).length > 0;
+        if (!hasInitial) return techData || [];
+        
+        // Combinar: mantener los documentos actuales (que incluyen los iniciales) y agregar los nuevos
+        const combined = [...currentTech];
+        (techData || []).forEach((doc: any) => {
+          if (!combined.find((d: any) => d.id === doc.id)) {
+            combined.push(doc);
+          }
+        });
+        return combined;
+      });
+      
+      setInspDocsPhotos((currentPhotos) => {
+        const hasInitial = (initialInspDocs || []).length > 0;
+        if (!hasInitial) return photosData || [];
+        
+        // Combinar: mantener los documentos actuales (que incluyen los iniciales) y agregar los nuevos
+        const combined = [...currentPhotos];
+        (photosData || []).forEach((doc: any) => {
+          if (!combined.find((d: any) => d.id === doc.id)) {
+            combined.push(doc);
+          }
+        });
+        return combined;
+      });
+      
       // Inferir selección inicial desde existentes (si alguno está marcado como frente)
       // Solo si usageType es "D"
       const isUsageTypeD = (usageType || "").trim().toUpperCase() === "D";
-      if (isUsageTypeD && photosData) {
+      const hasInitialDocs = (initialInspDocs || []).length > 0;
+      const allPhotos = hasInitialDocs ? 
+        [...(initialInspDocs || []).filter((d: any) => d.type === "vehicle_photo"), ...(photosData || [])] :
+        (photosData || []);
+      
+      if (isUsageTypeD && allPhotos.length > 0) {
         setFrontPhotoSel((prev) => {
           if (prev) return prev;
-          const existingFront = photosData.find((d: any) => (d as any).is_front === true);
+          const existingFront = allPhotos.find((d: any) => (d as any).is_front === true);
           return existingFront ? { kind: "existing", id: (existingFront as any).id } : null;
         });
       } else if (!isUsageTypeD) {
@@ -192,7 +228,7 @@ export default function InspectionStepsClient({
     
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiBase, inspectionId]);
+  }, [apiBase, inspectionId, initialInspDocs]);
 
   // Limpiar selección de foto de frente si usageType no es "D"
   useEffect(() => {
@@ -211,17 +247,84 @@ export default function InspectionStepsClient({
       return;
     }
     if (isCompleted) return;
+    
+    // Verificar si el documento pertenece a la primera inspección
+    const isFromFirstInspection = (initialInspDocs || []).some(
+      (d: any) => d.id === docId && d.type === typeKey
+    );
+    
+    // Determinar qué inspection_id usar
+    const targetInspectionId = isFromFirstInspection && firstInspectionId 
+      ? firstInspectionId 
+      : inspectionId;
+    
     try {
       setInspDocsDeletingId(docId);
       const res = await fetch(
-        `${apiBase}/inspections/inspections/${inspectionId}/documents/${docId}`,
+        `${apiBase}/inspections/inspections/${targetInspectionId}/documents/${docId}`,
         { method: "DELETE", credentials: "include" }
       );
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         throw new Error(j?.error || "No se pudo borrar el documento");
       }
-      await fetchInspectionDocumentsByType(typeKey);
+      // Actualizar estados removiendo el documento eliminado
+      if (typeKey === "technical_report") {
+        setInspDocsTech((currentTech) => currentTech.filter((d: any) => d.id !== docId));
+      } else if (typeKey === "vehicle_photo") {
+        setInspDocsPhotos((currentPhotos) => currentPhotos.filter((d: any) => d.id !== docId));
+        
+        // Limpiar selección de frente si se eliminó la foto seleccionada
+        setFrontPhotoSel((prev) => {
+          if (prev?.kind === "existing" && prev.id === docId) {
+            return null;
+          }
+          return prev;
+        });
+      }
+      
+      // Si el documento era de la primera inspección, también removerlo de initialInspDocs
+      // (actualizar el estado local, no recargar desde servidor ya que no estará disponible)
+      if (isFromFirstInspection) {
+        // El documento ya fue removido del estado visual arriba
+        // No necesitamos recargar desde el servidor porque el documento ya no existe
+      } else {
+        // Si es de la inspección actual, recargar desde el servidor para mantener sincronización
+        const data = await fetchInspectionDocumentsByType(typeKey);
+        if (data) {
+          if (typeKey === "technical_report") {
+            setInspDocsTech((currentTech) => {
+              const hasInitial = (initialInspDocs || []).length > 0;
+              if (!hasInitial) return data;
+              
+              // Combinar: mantener los documentos iniciales y agregar los nuevos
+              const initialTech = (initialInspDocs || []).filter((d: any) => d.type === "technical_report");
+              const combined = [...initialTech];
+              data.forEach((doc: any) => {
+                if (!combined.find((d: any) => d.id === doc.id)) {
+                  combined.push(doc);
+                }
+              });
+              return combined;
+            });
+          } else if (typeKey === "vehicle_photo") {
+            setInspDocsPhotos((currentPhotos) => {
+              const hasInitial = (initialInspDocs || []).length > 0;
+              if (!hasInitial) return data;
+              
+              // Combinar: mantener los documentos iniciales y agregar los nuevos
+              const initialPhotos = (initialInspDocs || []).filter((d: any) => d.type === "vehicle_photo");
+              const combined = [...initialPhotos];
+              data.forEach((doc: any) => {
+                if (!combined.find((d: any) => d.id === doc.id)) {
+                  combined.push(doc);
+                }
+              });
+              return combined;
+            });
+          }
+        }
+      }
     } catch (e: any) {
       setError(e.message || "Error borrando documento");
     } finally {
@@ -581,7 +684,24 @@ export default function InspectionStepsClient({
           throw new Error(upData?.error || "No se pudieron subir los archivos de informes técnicos");
         }
         setPendingTechFiles([]);
-        await fetchInspectionDocumentsByType("technical_report");
+        // Recargar documentos y combinar con los iniciales
+        const techData = await fetchInspectionDocumentsByType("technical_report");
+        if (techData) {
+          setInspDocsTech((currentTech) => {
+            const hasInitial = (initialInspDocs || []).length > 0;
+            if (!hasInitial) return techData;
+            
+            // Combinar: mantener los documentos iniciales y agregar los nuevos
+            const initialTech = (initialInspDocs || []).filter((d: any) => d.type === "technical_report");
+            const combined = [...initialTech];
+            techData.forEach((doc: any) => {
+              if (!combined.find((d: any) => d.id === doc.id)) {
+                combined.push(doc);
+              }
+            });
+            return combined;
+          });
+        }
       }
 
       if (pendingPhotoFiles.length > 0) {
@@ -593,6 +713,7 @@ export default function InspectionStepsClient({
         if (frontPhotoSel?.kind === "queue") {
           form.append("front_idx", String(frontPhotoSel.index));
         } else if (frontPhotoSel?.kind === "existing") {
+          // Enviar el front_existing_id - el backend manejará la lógica
           form.append("front_existing_id", String(frontPhotoSel.id));
         }
         const uploadRes = await fetch(
@@ -608,10 +729,45 @@ export default function InspectionStepsClient({
           throw new Error(upData?.error || "No se pudieron subir las fotos del vehículo");
         }
         setPendingPhotoFiles([]);
-        await fetchInspectionDocumentsByType("vehicle_photo");
+        // Recargar documentos y combinar con los iniciales
+        const photosData = await fetchInspectionDocumentsByType("vehicle_photo");
+        if (photosData) {
+          setInspDocsPhotos((currentPhotos) => {
+            const hasInitial = (initialInspDocs || []).length > 0;
+            if (!hasInitial) return photosData;
+            
+            // Combinar: mantener los documentos iniciales y agregar los nuevos
+            const initialPhotos = (initialInspDocs || []).filter((d: any) => d.type === "vehicle_photo");
+            const combined = [...initialPhotos];
+            photosData.forEach((doc: any) => {
+              if (!combined.find((d: any) => d.id === doc.id)) {
+                combined.push(doc);
+              }
+            });
+            return combined;
+          });
+          
+          // Actualizar selección de foto de frente si es necesario
+          const isUsageTypeD = (usageType || "").trim().toUpperCase() === "D";
+          if (isUsageTypeD && photosData.length > 0) {
+            setFrontPhotoSel((prev) => {
+              if (prev) return prev;
+              const existingFront = photosData.find((d: any) => (d as any).is_front === true);
+              return existingFront ? { kind: "existing", id: (existingFront as any).id } : null;
+            });
+          }
+        }
       } else if (frontPhotoSel?.kind === "existing") {
         // No se subieron nuevas fotos, pero el usuario eligió como frente una existente
-        const res = await fetch(`${apiBase}/inspections/inspections/${inspectionId}/documents/set-front`, {
+        // Determinar qué inspection_id usar
+        const isFromFirstInspection = (initialInspDocs || []).some(
+          (d: any) => d.id === frontPhotoSel.id && d.type === "vehicle_photo"
+        );
+        const targetInspectionId = isFromFirstInspection && firstInspectionId 
+          ? firstInspectionId 
+          : inspectionId;
+        
+        const res = await fetch(`${apiBase}/inspections/inspections/${targetInspectionId}/documents/set-front`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -621,7 +777,24 @@ export default function InspectionStepsClient({
         if (!res.ok) {
           throw new Error(j?.error || "No se pudo marcar la foto de frente");
         }
-        await fetchInspectionDocumentsByType("vehicle_photo");
+        // Recargar documentos y combinar con los iniciales
+        const photosData = await fetchInspectionDocumentsByType("vehicle_photo");
+        if (photosData) {
+          setInspDocsPhotos((currentPhotos) => {
+            const hasInitial = (initialInspDocs || []).length > 0;
+            if (!hasInitial) return photosData;
+            
+            // Combinar: mantener los documentos iniciales y agregar los nuevos
+            const initialPhotos = (initialInspDocs || []).filter((d: any) => d.type === "vehicle_photo");
+            const combined = [...initialPhotos];
+            photosData.forEach((doc: any) => {
+              if (!combined.find((d: any) => d.id === doc.id)) {
+                combined.push(doc);
+              }
+            });
+            return combined;
+          });
+        }
       }
 
       const items = steps

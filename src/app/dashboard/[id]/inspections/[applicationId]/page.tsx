@@ -200,6 +200,56 @@ async function fetchInspectionDocuments(inspectionId: number) {
   return (Array.isArray(data) ? data : []) as any[];
 }
 
+async function fetchFirstInspectionId(appId: number): Promise<number | null> {
+  const base = await getBaseURL();
+  const headersObj = await getCookieHeader();
+
+  const res = await fetch(
+    `${base}/api/inspections/applications/${appId}/inspection?is_second=false`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...headersObj,
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    return null;
+  }
+
+  const data = await res.json();
+  return data.inspection_id as number | null;
+}
+
+async function fetchInspectionDocumentsByType(
+  inspectionId: number,
+  type: "vehicle_photo" | "technical_report"
+): Promise<any[]> {
+  const base = await getBaseURL();
+  const headersObj = await getCookieHeader();
+
+  const res = await fetch(
+    `${base}/api/inspections/inspections/${inspectionId}/documents?role=global&type=${type}`,
+    {
+      headers: {
+        ...headersObj,
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    // No bloquear la carga si falla esta parte; devolver vacío
+    return [];
+  }
+
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
 export default async function InspectionPage({
   params,
 }: {
@@ -246,6 +296,27 @@ export default async function InspectionPage({
         initialStatuses[row.step_id] = row.detail.status;
       }
     });
+  }
+
+  // Cargar documentos de la primera inspección si es segunda inspección
+  let initialInspDocs: any[] = [];
+  let firstInspectionId: number | null = null;
+  if (isSecondInspection) {
+    try {
+      firstInspectionId = await fetchFirstInspectionId(appId);
+      if (firstInspectionId) {
+        // Cargar fotos e informes en paralelo
+        const [photos, reports] = await Promise.all([
+          fetchInspectionDocumentsByType(firstInspectionId, "vehicle_photo"),
+          fetchInspectionDocumentsByType(firstInspectionId, "technical_report"),
+        ]);
+        // Combinar ambos tipos en un array
+        initialInspDocs = [...photos, ...reports];
+      }
+    } catch (error) {
+      // Si falla, continuar con array vacío (no bloquear la carga)
+      console.error("Error al cargar documentos de la primera inspección:", error);
+    }
   }
 
   const plateLabel = (licensePlate?.trim() || "Sin dominio").toUpperCase();
@@ -303,7 +374,8 @@ export default async function InspectionPage({
         initialGlobalObs={isSecondInspection ? "" : globalObs}
         userType={userType}
         isSecondInspection={isSecondInspection}
-        initialInspDocs={[]}
+        initialInspDocs={initialInspDocs}
+        firstInspectionId={firstInspectionId}
         initialIsCompleted={applicationData.status === "Completado"}
         usageType={usageType}
       />
