@@ -39,6 +39,26 @@ function fmtDate(d?: string | null) {
   return `${dd}/${mm}/${yyyy}`;
 }
 
+const handleDownload = async (fileUrl: string, fileName: string) => {
+  try {
+    const response = await fetch(fileUrl);
+    if (!response.ok) throw new Error("Error al descargar el archivo");
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error al descargar:", error);
+    // Fallback: abrir en nueva pestaña si falla la descarga
+    window.open(fileUrl, "_blank");
+  }
+};
+
 export default function VehiclePhotos({ inspectionId, inspectionDate }: { inspectionId?: number | null; inspectionDate?: string | null }) {
   const [photos, setPhotos] = useState<InspDoc[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,16 +169,16 @@ export default function VehiclePhotos({ inspectionId, inspectionDate }: { inspec
                   >
                     Ver
                   </a>
-                  <a
-                    href={photo.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download={photo.file_name}
-                    className="text-[10px] sm:text-xs text-[#0040B8] hover:underline flex items-center gap-1"
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleDownload(photo.file_url, photo.file_name);
+                    }}
+                    className="text-[10px] sm:text-xs text-[#0040B8] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
                   >
                     <Download className="w-3 h-3" />
                     Descargar
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
