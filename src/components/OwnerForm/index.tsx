@@ -220,7 +220,7 @@ export default function OwnerForm({
         value = clamp(value, 100);
         break;
       case "street":
-        value = clamp(value, 40);
+        // Sin límite de caracteres
         break;
       case "phone_number":
         value = clamp(onlyDigits(value), 15);
