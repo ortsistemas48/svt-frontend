@@ -39,9 +39,9 @@ const MSG = {
   brand: "Letras y números, máx. 15.",
   model: "Campo requerido.",
   manufacture_year: "Debe tener 4 dígitos, ej: 2025.",
-  manufacture_year_future: "El año de fabricación no puede ser mayor al año actual.",
+  manufacture_year_future: "El año no puede ser mayor al año actual.",
   registration_year: "Debe tener 4 dígitos, ej: 2025.",
-  registration_year_future: "El año de patentamiento no puede ser mayor al año actual.",
+  registration_year_future: "El año no puede ser mayor al año actual.",
   engine_brand: "Letras y números, máx. 15.",
   engine_number: "Cualquier símbolo, máx. 17.",
   chassis_number: "Cualquier símbolo, máx. 17.",
@@ -49,6 +49,7 @@ const MSG = {
   green_card_number: "Campo requerido.",
   license_number: "Letras y números, máx. 15.",
   insurance: "Letras y números, hasta 30.",
+  license_plate: "Formato inválido. Debe ser AAA111 o AB123AB.",
   total_weight: "Solo números, hasta 10.",
   front_weight: "Solo números, hasta 10.",
   back_weight: "Solo números, hasta 10.",
@@ -68,6 +69,7 @@ const PATTERN: Record<string, RegExp> = {
   license_number: /^[A-Z0-9]{1,15}$/,
   license_expiration: /^\d{4}-\d{2}-\d{2}$/,
   insurance: /^[A-Z0-9]{1,30}$/,
+  license_plate: /^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$/,
   total_weight: /^\d{1,10}$/,
   front_weight: /^\d{1,10}$/,
   back_weight: /^\d{1,10}$/,
@@ -97,6 +99,9 @@ const FIELD_LABEL: Record<string, string> = {
   registration_year: "Año de patentamiento",
 
   weight: "Peso del auto",
+  total_weight: "Peso total",
+  front_weight: "Peso eje delantero",
+  back_weight: "Peso eje trasero",
   fuel_type: "Tipo de combustible",
   vehicle_type: "Tipo de vehículo",
   usage_type: "Tipo de uso",
@@ -266,6 +271,16 @@ export default function VehicleForm({
       return;
     }
 
+    if (name === "license_plate") {
+      if (!v) {
+        setCarError(name, "");
+        return;
+      }
+      const isValid = PATTERN.license_plate.test(v);
+      setCarError(name, isValid ? "" : MSG.license_plate);
+      return;
+    }
+
     if (name === "total_weight" || name === "front_weight" || name === "back_weight") {
       const total = Number(car?.total_weight);
       const front = Number(car?.front_weight);
@@ -423,8 +438,8 @@ export default function VehicleForm({
             </div>
             <div className="p-3 sm:p-4 md:p-6">
               <div className="space-y-6">
-                {/* Primera fila: Dominio, Marca, Modelo */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                {/* Primera fila: Dominio y Marca */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <FormField
                     label="Dominio"
                     placeholder="Ej: AB123AB"
@@ -451,6 +466,9 @@ export default function VehicleForm({
                     error={getCarError("brand")}
                     isRequired={true}
                   />
+                </div>
+                {/* Segunda fila: Modelo (mitad) y Años (otra mitad) */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
                   <FormField
                     label="Modelo"
                     placeholder="Ej: Cronos"
@@ -463,10 +481,8 @@ export default function VehicleForm({
                     onBlur={() => handleBlur("model")}
                     error={getCarError("model")}
                     isRequired={true}
+                    className="md:col-span-2"
                   />
-                </div>
-                {/* Segunda fila: Años */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-2xl">
                   <FormField
                     label="Año de fabricación"
                     placeholder="Ej: 2025"
@@ -514,21 +530,7 @@ export default function VehicleForm({
               <div className="space-y-6">
                 {/* Pesos */}
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Pesos del vehículo</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                    <FormField
-                      label="Peso total (KG)"
-                      placeholder="Ej: 2000"
-                      type="text"
-                      name="total_weight"
-                      isOwner={true}
-                      value={car?.total_weight ?? ""}
-                      onChange={(val) => handleChange("total_weight", val)}
-                      onFocus={() => handleFocus("total_weight")}
-                      onBlur={() => handleBlur("total_weight")}
-                      error={getCarError("total_weight")}
-                      isRequired={true}
-                    />
                     <FormField
                       label="Peso eje delantero (KG)"
                       placeholder="Ej: 1000"
@@ -555,11 +557,23 @@ export default function VehicleForm({
                       error={getCarError("back_weight")}
                       isRequired={true}
                     />
+                    <FormField
+                      label="Peso total (KG)"
+                      placeholder="Ej: 2000"
+                      type="text"
+                      name="total_weight"
+                      isOwner={true}
+                      value={car?.total_weight ?? ""}
+                      onChange={(val) => handleChange("total_weight", val)}
+                      onFocus={() => handleFocus("total_weight")}
+                      onBlur={() => handleBlur("total_weight")}
+                      error={getCarError("total_weight")}
+                      isRequired={true}
+                    />
                   </div>
                 </div>
                 {/* Clasificación */}
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Clasificación del vehículo</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                     <FormField
                       label="Tipo de combustible"
@@ -726,101 +740,95 @@ export default function VehicleForm({
             </div>
             <div className="p-3 sm:p-4 md:p-6">
               <div className="space-y-6">
-                {/* Cédula Verde */}
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Cédula Verde</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                    <FormField
-                      label="Nº de cédula verde"
-                      placeholder="Ej: ABF45658"
-                      type="text"
-                      name="green_card_number"
-                      isOwner={true}
-                      value={car?.green_card_number ?? ""}
-                      onChange={(val) => handleChange("green_card_number", val)}
-                      onFocus={() => handleFocus("green_card_number")}
-                      onBlur={() => handleBlur("green_card_number")}
-                      error={getCarError("green_card_number")}
-                      isRequired={true}
-                    />
-                    <FormField
-                      label="Exp. de la cédula"
-                      placeholder="dd/mm/aa"
-                      type="date"
-                      name="green_card_expiration"
-                      isOwner={true}
-                      value={toDateInputValue(car?.["green_card_expiration"])}
-                      onChange={(val) => handleChange("green_card_expiration", val)}
-                      onFocus={() => handleFocus("green_card_expiration")}
-                      onBlur={() => handleBlur("green_card_expiration")}
-                      error={getCarError("green_card_expiration")}
-                      disabled={greenCardNoExpiration}
-                      innerCheckboxLabel="Sin vencimiento"
-                      innerCheckboxChecked={greenCardNoExpiration}
-                      onInnerCheckboxChange={handleGreenCardNoExpirationChange}
-                      isRequired={true}
-                    />
-                  </div>
+                {/* Primera fila: Cédula Verde y Nº de licencia */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
+                  <FormField
+                    label="Nº de cédula verde"
+                    placeholder="Ej: ABF45658"
+                    type="text"
+                    name="green_card_number"
+                    isOwner={true}
+                    value={car?.green_card_number ?? ""}
+                    onChange={(val) => handleChange("green_card_number", val)}
+                    onFocus={() => handleFocus("green_card_number")}
+                    onBlur={() => handleBlur("green_card_number")}
+                    error={getCarError("green_card_number")}
+                    isRequired={true}
+                  />
+                  <FormField
+                    label="Exp. de la cédula"
+                    placeholder="dd/mm/aa"
+                    type="date"
+                    name="green_card_expiration"
+                    isOwner={true}
+                    value={toDateInputValue(car?.["green_card_expiration"])}
+                    onChange={(val) => handleChange("green_card_expiration", val)}
+                    onFocus={() => handleFocus("green_card_expiration")}
+                    onBlur={() => handleBlur("green_card_expiration")}
+                    error={getCarError("green_card_expiration")}
+                    disabled={greenCardNoExpiration}
+                    innerCheckboxLabel="Sin vencimiento"
+                    innerCheckboxChecked={greenCardNoExpiration}
+                    onInnerCheckboxChange={handleGreenCardNoExpirationChange}
+                    isRequired={true}
+                  />
+                  <FormField
+                    label="Nº de licencia"
+                    placeholder="Ej: A123456789"
+                    type="text"
+                    name="license_number"
+                    isOwner={true}
+                    value={car?.license_number ?? ""}
+                    onChange={(val) => handleChange("license_number", val)}
+                    onFocus={() => handleFocus("license_number")}
+                    onBlur={() => handleBlur("license_number")}
+                    error={getCarError("license_number")}
+                    isRequired={true}
+                    className="md:col-span-2"
+                  />
                 </div>
-                {/* Licencia */}
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Licencia de Conducir</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-                    <FormField
-                      label="Nº de licencia"
-                      placeholder="Ej: A123456789"
-                      type="text"
-                      name="license_number"
-                      isOwner={true}
-                      value={car?.license_number ?? ""}
-                      onChange={(val) => handleChange("license_number", val)}
-                      onFocus={() => handleFocus("license_number")}
-                      onBlur={() => handleBlur("license_number")}
-                      error={getCarError("license_number")}
-                      isRequired={true}
-                    />
-                    <FormField
-                      label="Clase de licencia"
-                      type="select"
-                      name="license_class"
-                      isOwner={true}
-                      value={car?.license_class ?? ""}
-                      onChange={(val) => handleChange("license_class", val)}
-                      onBlur={() => handleBlur("license_class")}
-                      error={getCarError("license_class")}
-                      options={[
-                        { value: "A", label: "A - Motocicletas" },
-                        { value: "A1", label: "A1 - Motocicletas pequeñas" },
-                        { value: "A2", label: "A2 - Motocicletas medianas" },
-                        { value: "B1", label: "B1 - Automóviles particulares" },
-                        { value: "B2", label: "B2 - Automóviles con remolque" },
-                        { value: "C", label: "C - Camiones sin acoplado" },
-                        { value: "D1", label: "D1 - Transporte de pasajeros hasta 8" },
-                        { value: "D2", label: "D2 - Transporte de pasajeros más de 8" },
-                        { value: "E1", label: "E1 - Camiones con acoplado" },
-                        { value: "E2", label: "E2 - Maquinaria especial no agrícola" },
-                        { value: "F", label: "F - Vehículos para personas con discapacidad" },
-                      ]}
-                    />
-                    <FormField
-                      label="Exp. de la licencia"
-                      placeholder="dd/mm/aa"
-                      type="date"
-                      name="license_expiration"
-                      isOwner={true}
-                      value={toDateInputValue(car?.["license_expiration"])}
-                      onChange={(val) => handleChange("license_expiration", val)}
-                      onFocus={() => handleFocus("license_expiration")}
-                      onBlur={() => handleBlur("license_expiration")}
-                      error={getCarError("license_expiration")}
-                      isRequired={true}
-                    />
-                  </div>
+                {/* Segunda fila: Clase y Expiración de licencia */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <FormField
+                    label="Clase de licencia"
+                    type="select"
+                    name="license_class"
+                    isOwner={true}
+                    value={car?.license_class ?? ""}
+                    onChange={(val) => handleChange("license_class", val)}
+                    onBlur={() => handleBlur("license_class")}
+                    error={getCarError("license_class")}
+                    options={[
+                      { value: "A", label: "A - Motocicletas" },
+                      { value: "A1", label: "A1 - Motocicletas pequeñas" },
+                      { value: "A2", label: "A2 - Motocicletas medianas" },
+                      { value: "B1", label: "B1 - Automóviles particulares" },
+                      { value: "B2", label: "B2 - Automóviles con remolque" },
+                      { value: "C", label: "C - Camiones sin acoplado" },
+                      { value: "D1", label: "D1 - Transporte de pasajeros hasta 8" },
+                      { value: "D2", label: "D2 - Transporte de pasajeros más de 8" },
+                      { value: "E1", label: "E1 - Camiones con acoplado" },
+                      { value: "E2", label: "E2 - Maquinaria especial no agrícola" },
+                      { value: "F", label: "F - Vehículos para personas con discapacidad" },
+                    ]}
+                  />
+                  <FormField
+                    label="Exp. de la licencia"
+                    placeholder="dd/mm/aa"
+                    type="date"
+                    name="license_expiration"
+                    isOwner={true}
+                    value={toDateInputValue(car?.["license_expiration"])}
+                    onChange={(val) => handleChange("license_expiration", val)}
+                    onFocus={() => handleFocus("license_expiration")}
+                    onBlur={() => handleBlur("license_expiration")}
+                    error={getCarError("license_expiration")}
+                    isRequired={true}
+                  />
                 </div>
                 {/* Seguro */}
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Seguro</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-2xl">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <FormField
                       label="Póliza del seguro"
                       placeholder="Ej: ABC1234567"
@@ -852,7 +860,7 @@ export default function VehicleForm({
                 </div>
               </div>
             </div>
-            <div className="p-3 sm:p-4 md:p-6">
+            <div className="px-3 sm:px-4 md:px-6">
               <VehicleDocsDropzone
                 existing={existingCarDocs as CarExistingDoc[]}
                 onDeleteExisting={onDeleteCarDoc}

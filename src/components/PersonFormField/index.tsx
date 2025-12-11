@@ -130,7 +130,9 @@ export default function PersonFormField({
         <div className={checkboxRowClass} aria-hidden />
       )}
 
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      <div className="min-h-[20px]">
+        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      </div>
     </div>
   );
 }
