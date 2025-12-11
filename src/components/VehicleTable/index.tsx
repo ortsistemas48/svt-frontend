@@ -7,6 +7,7 @@ const tableData = [
   { label: "Modelo", key: "model" },
   { label: "Año de fabricación", key: "manufacture_year" },
   { label: "Año de patentamiento", key: "registration_year" },
+  { label: "Tipo", key: "type_ced" },
   { label: "Peso del auto (KG)", key: "total_weight" },
   { label: "Peso eje trasero (KG)", key: "back_weight" },
   { label: "Peso eje delantero (KG)", key: "front_weight" },
@@ -64,10 +65,10 @@ const renderVehicle = (car: CarType, carDocs: Doc[] = []) => {
 
   // Group fields by category for better organization
   const categories = {
-    basic: tableData.slice(0, 5), // Dominio, Marca, Modelo, Año
-    technical: tableData.slice(5, 10), // Peso, combustible, tipo vehículo, etc.
-    engine: tableData.slice(10, 14), // Motor y chasis
-    documents: tableData.slice(14, 23), // Cédula, licencia, seguro
+    basic: tableData.slice(0, 6), // Dominio, Marca, Modelo, Años, Tipo
+    technical: tableData.slice(6, 11), // Peso, combustible, tipo vehículo, etc.
+    engine: tableData.slice(11, 15), // Motor y chasis
+    documents: tableData.slice(15, 24), // Cédula, licencia, seguro
   };
 
   const renderField = (item: any) => {

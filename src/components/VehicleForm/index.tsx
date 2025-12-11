@@ -97,6 +97,7 @@ const FIELD_LABEL: Record<string, string> = {
   model: "Modelo",
   manufacture_year: "Año de fabricación",
   registration_year: "Año de patentamiento",
+  type_ced: "Tipo",
 
   weight: "Peso del auto",
   total_weight: "Peso total",
@@ -438,8 +439,8 @@ export default function VehicleForm({
             </div>
             <div className="p-3 sm:p-4 md:p-6">
               <div className="space-y-6">
-                {/* Primera fila: Dominio y Marca */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                {/* Primera fila: Dominio y Marca en una mitad, Modelo en otra mitad */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
                   <FormField
                     label="Dominio"
                     placeholder="Ej: AB123AB"
@@ -466,9 +467,6 @@ export default function VehicleForm({
                     error={getCarError("brand")}
                     isRequired={true}
                   />
-                </div>
-                {/* Segunda fila: Modelo (mitad) y Años (otra mitad) */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
                   <FormField
                     label="Modelo"
                     placeholder="Ej: Cronos"
@@ -483,6 +481,9 @@ export default function VehicleForm({
                     isRequired={true}
                     className="md:col-span-2"
                   />
+                </div>
+                {/* Segunda fila: Años en una mitad y Tipo al lado */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
                   <FormField
                     label="Año de fabricación"
                     placeholder="Ej: 2025"
@@ -507,6 +508,19 @@ export default function VehicleForm({
                     onBlur={() => handleBlur("registration_year")}
                     error={getCarError("registration_year")}
                     isRequired={true}
+                  />
+                  <FormField
+                    label="Tipo"
+                    placeholder="Ej: Sedán 3 Puertas"
+                    type="text"
+                    name="type_ced"
+                    isOwner={true}
+                    value={car?.type_ced ?? ""}
+                    onChange={(val) => handleChange("type_ced", val)}
+                    onFocus={() => handleFocus("type_ced")}
+                    onBlur={() => handleBlur("type_ced")}
+                    error={getCarError("type_ced")}
+                    className="md:col-span-2"
                   />
                 </div>
               </div>
@@ -787,8 +801,8 @@ export default function VehicleForm({
                     className="md:col-span-2"
                   />
                 </div>
-                {/* Segunda fila: Clase y Expiración de licencia */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                {/* Primera fila: Clase y Exp. de licencia en una mitad, Póliza en otra mitad */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
                   <FormField
                     label="Clase de licencia"
                     type="select"
@@ -825,23 +839,19 @@ export default function VehicleForm({
                     error={getCarError("license_expiration")}
                     isRequired={true}
                   />
-                </div>
-                {/* Seguro */}
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                    <FormField
-                      label="Póliza del seguro"
-                      placeholder="Ej: ABC1234567"
-                      type="text"
-                      name="insurance"
-                      isOwner={true}
-                      value={car?.insurance ?? ""}
-                      onChange={(val) => handleChange("insurance", val)}
-                      onFocus={() => handleFocus("insurance")}
-                      onBlur={() => handleBlur("insurance")}
-                      error={getCarError("insurance")}
-                    />
-                  </div>
+                  <FormField
+                    label="Póliza del seguro"
+                    placeholder="Ej: ABC1234567"
+                    type="text"
+                    name="insurance"
+                    isOwner={true}
+                    value={car?.insurance ?? ""}
+                    onChange={(val) => handleChange("insurance", val)}
+                    onFocus={() => handleFocus("insurance")}
+                    onBlur={() => handleBlur("insurance")}
+                    error={getCarError("insurance")}
+                    className="md:col-span-2"
+                  />
                 </div>
               </div>
             </div>

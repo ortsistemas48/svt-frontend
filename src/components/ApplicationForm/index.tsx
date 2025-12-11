@@ -349,6 +349,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         model: currentCar.model,
         manufacture_year: currentCar.manufacture_year,
         registration_year: currentCar.registration_year,
+        type_ced: currentCar.type_ced,
         weight: currentCar.weight,
         fuel_type: currentCar.fuel_type,
         vehicle_type: currentCar.vehicle_type,
