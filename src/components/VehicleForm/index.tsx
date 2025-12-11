@@ -856,7 +856,7 @@ export default function VehicleForm({
                 </div>
                 <div>
                   <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">Documentos Adjuntos</h2>
-                  <p className="text-xs sm:text-sm text-gray-600">Subí los documentos del vehículo</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Subí los documentos requeridos.</p>
                 </div>
               </div>
             </div>

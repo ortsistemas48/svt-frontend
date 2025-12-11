@@ -153,30 +153,32 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
       {/* Search y filtros */}
       <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 gap-3 px-[1.5px] pt-1">
-          <input
-            disabled={loading}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="flex-1 rounded-[4px] border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:text-base"
-            placeholder="Buscar packs de obleas por nombre"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
+          <div className="relative flex-1">
+            <input
+              disabled={loading}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full rounded-[4px] border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:pr-12 sm:text-base"
+              placeholder="Buscar packs de obleas por nombre"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearchQuery(q);
+                  setPage(1);
+                }
+              }}
+            />
+            <button
+              disabled={loading}
+              onClick={() => {
                 setSearchQuery(q);
                 setPage(1);
-              }
-            }}
-          />
-          <button
-            disabled={loading}
-            onClick={() => {
-              setSearchQuery(q);
-              setPage(1);
-            }}
-            className="flex items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
-          >
-            <Search size={16} />
-            <span className="hidden sm:inline">Buscar</span>
-          </button>
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors duration-200 disabled:opacity-50 sm:right-3"
+              type="button"
+            >
+              <Search size={16} />
+            </button>
+          </div>
           <button
             disabled={loading}
             onClick={() => {
@@ -188,6 +190,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
             <SlidersHorizontal size={16} className="text-white" />
             <span className="hidden sm:inline text-white">Filtrar</span>
           </button>
+          <RefreshButton loading={loading} fetchApps={fetchOrders} />
         </div>
       </div>
 
