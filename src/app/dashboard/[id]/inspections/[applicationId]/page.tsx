@@ -283,13 +283,44 @@ export default async function InspectionPage({
     licensePlate,
   } = detailsResp;
 
-  // If second inspection, start with empty statuses (backend returns empty details)
+  // Mapa con el estado de cada paso en la inspección anterior, si existe
+  const previousStatuses: Record<
+    number,
+    "Apto" | "Condicional" | "Rechazado" | undefined
+  > = {};
+  let previousGlobalObs = "";
+
+  // Si es segunda inspección, intentar cargar los resultados de la primera
+  if (isSecondInspection) {
+    try {
+      const firstInspectionId = await fetchFirstInspectionId(appId);
+      if (firstInspectionId) {
+        const firstDetailsResp = await fetchDetails(firstInspectionId);
+        firstDetailsResp.detailsRows.forEach((row) => {
+          if (row.detail?.status) {
+            previousStatuses[row.step_id] = row.detail.status;
+          }
+        });
+        // Cargar también las observaciones globales de la primera inspección
+        previousGlobalObs = firstDetailsResp.globalObs || "";
+      }
+    } catch (error) {
+      // No bloquear la carga de la segunda inspección si falla la carga de la primera
+      console.error(
+        "Error al cargar los detalles de la primera inspección:",
+        error
+      );
+    }
+  }
+
+  // Inicializar estados: en segunda inspección, los campos empiezan vacíos
+  // (solo se muestran los badges con los resultados anteriores)
   const initialStatuses: Record<
     number,
     "Apto" | "Condicional" | "Rechazado" | undefined
   > = {};
 
-  // Only load statuses if NOT second inspection
+  // Para primera inspección: usar los detalles actuales
   if (!isSecondInspection) {
     detailsRows.forEach((row) => {
       if (row.detail?.status) {
@@ -297,6 +328,8 @@ export default async function InspectionPage({
       }
     });
   }
+  // Para segunda inspección: los campos empiezan vacíos (sin prellenar)
+  // previousStatuses se usa solo para mostrar los badges
 
   // Cargar documentos de la primera inspección si es segunda inspección
   let initialInspDocs: any[] = [];
@@ -370,8 +403,10 @@ export default async function InspectionPage({
         appId={appId}
         steps={[...steps].sort((a, b) => a.order - b.order)}
         initialStatuses={initialStatuses}
+        previousStatuses={isSecondInspection ? previousStatuses : undefined}
         apiBase="/api"
-        initialGlobalObs={isSecondInspection ? "" : globalObs}
+        initialGlobalObs={isSecondInspection ? previousGlobalObs : globalObs}
+        previousGlobalObs={isSecondInspection && previousGlobalObs ? previousGlobalObs : undefined}
         userType={userType}
         isSecondInspection={isSecondInspection}
         initialInspDocs={initialInspDocs}
