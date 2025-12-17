@@ -474,7 +474,7 @@ export default function InspectionStepsClient({
     const agg: Record<string, Set<string>> = {};
     const stepObs: string[] = [];
     
-    Object.values(selMap).forEach((catsForStep) => {
+    Object.entries(selMap).forEach(([stepId, catsForStep]) => {
       Object.values(catsForStep).forEach(({ categoryName, leaves }) => {
         // Si la categoría está vacía, son observaciones del paso
         if (!categoryName || categoryName.trim() === "") {
@@ -510,6 +510,131 @@ export default function InspectionStepsClient({
     const parts = buildCategoryParts(selMap);
     const partsArray = Object.values(parts).filter(p => p.length > 0);
     return partsArray.join("/");
+  }
+
+  function buildStepParts(stepId: number, selMap: LeafSelectionState): Record<string, string> {
+    const stepData = selMap[stepId];
+    if (!stepData) return {};
+    
+    const agg: Record<string, Set<string>> = {};
+    const stepObs: string[] = [];
+    
+    Object.values(stepData).forEach(({ categoryName, leaves }) => {
+      // Si la categoría está vacía, son observaciones del paso
+      if (!categoryName || categoryName.trim() === "") {
+        stepObs.push(...leaves);
+      } else {
+        if (!agg[categoryName]) agg[categoryName] = new Set<string>();
+        leaves.forEach((lv) => agg[categoryName].add(lv));
+      }
+    });
+    
+    const out: Record<string, string> = {};
+    
+    // Agregar observaciones del paso primero (sin prefijo de categoría)
+    if (stepObs.length > 0) {
+      const compactObs = stepObs.map(obs => compactObservation(obs, 60)).join("; ");
+      out[""] = compactObs;
+    }
+    
+    // Agregar categorías
+    Object.entries(agg).forEach(([cat, leavesSet]) => {
+      const arr = Array.from(leavesSet);
+      if (arr.length > 0) {
+        const compactObs = arr.map(obs => compactObservation(obs, 60)).join("; ");
+        out[cat] = `${cat}: ${compactObs}`;
+      }
+    });
+    
+    return out;
+  }
+
+  function removeStepFromGlobalText(currentText: string, stepId: number, selMap: LeafSelectionState): string {
+    const stepParts = buildStepParts(stepId, selMap);
+    if (Object.keys(stepParts).length === 0) return currentText;
+    
+    if (!currentText.trim()) return "";
+    
+    // Construir las partes de texto que corresponden a este paso
+    const stepPartsArray = Object.values(stepParts).filter(p => p.length > 0);
+    if (stepPartsArray.length === 0) return currentText;
+    
+    const tokens = currentText
+      .split("/")
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+    
+    const tokensToKeep: string[] = [];
+    
+    // Para cada token, verificar si coincide con alguna parte del paso
+    tokens.forEach((token) => {
+      const tokenLower = token.toLowerCase();
+      let shouldRemove = false;
+      
+      // Verificar si el token coincide con alguna parte del paso
+      for (const part of stepPartsArray) {
+        const partLower = part.toLowerCase();
+        
+        // Si el token es exactamente igual a la parte (o contiene la parte completa)
+        if (tokenLower === partLower || tokenLower.includes(partLower) || partLower.includes(tokenLower)) {
+          // Verificar que realmente es una coincidencia válida
+          // Para observaciones sin categoría (part que no tiene ":")
+          if (!part.includes(":")) {
+            // Verificar que todas las observaciones del paso están en el token
+            const stepData = selMap[stepId];
+            if (stepData) {
+              const stepObs: string[] = [];
+              Object.values(stepData).forEach(({ categoryName, leaves }) => {
+                if (!categoryName || categoryName.trim() === "") {
+                  stepObs.push(...leaves);
+                }
+              });
+              
+              if (stepObs.length > 0) {
+                const allObsMatch = stepObs.every(obs => {
+                  const obsLower = obs.toLowerCase();
+                  const obsCompact = compactObservation(obs, 60).toLowerCase();
+                  return tokenLower.includes(obsLower.substring(0, Math.min(obsLower.length, 60))) ||
+                         tokenLower.includes(obsCompact);
+                });
+                if (allObsMatch) {
+                  shouldRemove = true;
+                  break;
+                }
+              }
+            }
+          } else {
+            // Para categorías (part que tiene ":")
+            const catName = part.split(":")[0].trim().toLowerCase();
+            if (tokenLower.startsWith(catName) || tokenLower.startsWith(`${catName}:`)) {
+              // Verificar que contiene las observaciones de esta categoría
+              const stepData = selMap[stepId];
+              if (stepData) {
+                const catData = Object.values(stepData).find(c => c.categoryName && c.categoryName.toLowerCase() === catName);
+                if (catData && catData.leaves.length > 0) {
+                  const allCatObsMatch = catData.leaves.every(obs => {
+                    const obsLower = obs.toLowerCase();
+                    const obsCompact = compactObservation(obs, 60).toLowerCase();
+                    return tokenLower.includes(obsLower.substring(0, Math.min(obsLower.length, 60))) ||
+                           tokenLower.includes(obsCompact);
+                  });
+                  if (allCatObsMatch) {
+                    shouldRemove = true;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      if (!shouldRemove) {
+        tokensToKeep.push(token);
+      }
+    });
+    
+    return tokensToKeep.join("/");
   }
 
   function mergePartsIntoGlobalText(currentText: string, parts: Record<string, string>) {
@@ -1143,12 +1268,34 @@ export default function InspectionStepsClient({
                         key={opt}
                         type="button"
                         disabled={isCompleted}
-                        onClick={() =>
+                        onClick={() => {
+                          const previousStatus = statusByStep[s.step_id];
+                          const newStatus = previousStatus === opt ? undefined : opt;
+                          
+                          // Si el nuevo estado es "Apto", verificar y eliminar observaciones del paso
+                          if (newStatus === "Apto") {
+                            setSelectionMap((prev) => {
+                              // Verificar si hay observaciones para este paso
+                              if (prev[s.step_id]) {
+                                const { [s.step_id]: removedStep, ...restSteps } = prev;
+                                
+                                // Reconstruir el texto global desde el selectionMap actualizado
+                                // Esto elimina automáticamente las observaciones del paso eliminado
+                                const newGlobalText = buildGlobalTextFromSelectionMap(restSteps);
+                                setGlobalText(newGlobalText);
+                                
+                                return restSteps;
+                              }
+                              // Si no hay observaciones, no hacer nada
+                              return prev;
+                            });
+                          }
+                          
                           setStatusByStep((prev) => ({
                             ...prev,
-                            [s.step_id]: prev[s.step_id] === opt ? undefined : opt,
-                          }))
-                        }
+                            [s.step_id]: newStatus,
+                          }));
+                        }}
                         className={clsx(
                           "w-full sm:w-[140px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-[4px] border text-xs sm:text-sm transition",
                           selected ? STATUS_UI[opt].btn : "border-zinc-200 text-zinc-700 hover:bg-zinc-50",
@@ -1513,7 +1660,6 @@ export default function InspectionStepsClient({
                           const isCategorySelected = 
                             !!selectionMap[obsModalStepId!]?.[c.category_id]?.leaves.includes(c.name);
                           
-                          console.log(`[Render Category] ${c.name} (${c.category_id}): hasObservations=${hasObservations}, isCategorySelected=${isCategorySelected}, selectedCount=${selectedCount}`);
                           
                           return (
                             <li key={c.category_id} className="flex items-center justify-between py-3">
