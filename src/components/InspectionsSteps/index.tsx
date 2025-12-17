@@ -647,19 +647,19 @@ export default function InspectionStepsClient({
     }
     if (isCompleted) return false;
 
-    // Validar que haya al menos un documento en cada dropzone
-    const hasTechDocs = (inspDocsTech?.length || 0) + (pendingTechFiles?.length || 0) > 0;
-    const hasPhotoDocs = (inspDocsPhotos?.length || 0) + (pendingPhotoFiles?.length || 0) > 0;
+    // // Validar que haya al menos un documento en cada dropzone
+    // const hasTechDocs = (inspDocsTech?.length || 0) + (pendingTechFiles?.length || 0) > 0;
+    // const hasPhotoDocs = (inspDocsPhotos?.length || 0) + (pendingPhotoFiles?.length || 0) > 0;
     
-    if (!hasTechDocs) {
-      setError("Debés subir al menos un informe técnico");
-      return false;
-    }
+    // if (!hasTechDocs) {
+    //   setError("Debés subir al menos un informe técnico");
+    //   return false;
+    // }
     
-    if (!hasPhotoDocs) {
-      setError("Debés subir al menos una foto del vehículo");
-      return false;
-    }
+    // if (!hasPhotoDocs) {
+    //   setError("Debés subir al menos una foto del vehículo");
+    //   return false;
+    // }
 
     setSaving(true);
     setMsg(null);
@@ -936,16 +936,19 @@ export default function InspectionStepsClient({
   async function generateCertificate(status: Status) {
     if (!apiBase) {
       setError("Falta configurar NEXT_PUBLIC_API_URL");
+      setConfirmOpen(false);
       return;
     }
     if (isCompleted) {
       setError("La revisión ya está completada");
+      setConfirmOpen(false);
       return;
     }
 
     const allMarkedNow = steps.every((s) => Boolean(statusByStep[s.step_id]));
     if (!allMarkedNow) {
       setError("Marcá un estado en todos los pasos antes de generar el certificado");
+      setConfirmOpen(false);
       return;
     }
 
@@ -955,11 +958,13 @@ export default function InspectionStepsClient({
     
     if (!hasTechDocs) {
       setError("Debés subir al menos un informe técnico antes de generar el certificado");
+      setConfirmOpen(false);
       return;
     }
     
     if (!hasPhotoDocs) {
       setError("Debés subir al menos una foto del vehículo antes de generar el certificado");
+      setConfirmOpen(false);
       return;
     }
 
@@ -968,6 +973,7 @@ export default function InspectionStepsClient({
     const needsFrontPhoto = (usageType || "").trim().toUpperCase() === "D";
     if (needsFrontPhoto && totalPhotosNow > 0 && !frontPhotoSel) {
       setError("Seleccioná qué foto es el frente del vehículo");
+      setConfirmOpen(false);
       return;
     }
 
@@ -979,6 +985,7 @@ export default function InspectionStepsClient({
     if (!newTab) {
       setCertLoading(false);
       setError("El navegador bloqueó la ventana emergente");
+      setConfirmOpen(false);
       return;
     }
 
@@ -989,6 +996,7 @@ export default function InspectionStepsClient({
       const saved = await saveAll();
       if (!saved) {
         try { if (!newTab.closed) newTab.close(); } catch {}
+        setConfirmOpen(false);
         setCertLoading(false);
         return;
       }
@@ -1046,6 +1054,7 @@ export default function InspectionStepsClient({
     } catch (e: any) {
       try { if (!newTab.closed) newTab.close(); } catch {}
       setError(e.message || "Error generando certificado");
+      setConfirmOpen(false);
     } finally {
       setCertLoading(false);
     }

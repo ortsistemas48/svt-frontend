@@ -521,6 +521,7 @@ export default function VehicleForm({
                     onBlur={() => handleBlur("type_ced")}
                     error={getCarError("type_ced")}
                     className="md:col-span-2"
+                    isRequired={true}
                   />
                 </div>
               </div>
