@@ -196,7 +196,6 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
           signal: ctrl.signal,
         }
       );
-
       if (id !== fetchRef.current.id) return;
 
       if (res.status === 404) {
@@ -216,9 +215,19 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
         void fetchAvailableHint();
         return;
       }
-
-      if (!res.ok) {
-        setSearchError("Ocurrió un error al buscar el vehículo.");
+      if (res.status === 400) {
+        // Intentar obtener el mensaje de error específico del endpoint
+        let errorMessage = "Ocurrió un error al buscar el vehículo.";
+        try {
+          const errorData = await res.json();
+          if (errorData?.error && typeof errorData.error === "string") {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // Si no se puede parsear el JSON, usar el mensaje genérico
+          console.error("Error al parsear respuesta de error:", e);
+        }
+        setSearchError(errorMessage);
         return;
       }
 

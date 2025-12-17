@@ -24,6 +24,7 @@ type FormFieldProps = {
   innerCheckboxLabel?: string;
   innerCheckboxChecked?: boolean;
   onInnerCheckboxChange?: (checked: boolean) => void;
+  innerCheckboxDisabled?: boolean;
 };
 
 export default function PersonFormField({
@@ -46,6 +47,7 @@ export default function PersonFormField({
   innerCheckboxLabel,
   innerCheckboxChecked,
   onInnerCheckboxChange,
+  innerCheckboxDisabled = false,
   
 }: FormFieldProps) {
   const safe = (s: string) => s.toLowerCase().replace(/\s+/g, "-");
@@ -59,7 +61,7 @@ export default function PersonFormField({
 
   const showInnerCheckbox = typeof innerCheckboxLabel === "string" && !!onInnerCheckboxChange;
   // Altura reservada para el renglón del checkbox, asegura alineación entre campos
-  const checkboxRowClass = "flex items-center gap-2 text-sm h-1"; // 1.5rem
+  const checkboxRowClass = "flex items-center gap-3 text-sm min-h-[2rem]"; // Mínimo 2rem de altura
   return (
     <div className={`flex flex-col justify-center w-full ${className}`}>
       <label htmlFor={id} className="mb-1 block text-sm font-regular text-[#000000] leading-tight">
@@ -116,18 +118,25 @@ export default function PersonFormField({
       )}
 
       {showInnerCheckbox ? (
-        <label className={checkboxRowClass}>
+        <label 
+          htmlFor={`${id}-inner-checkbox`}
+          className={`${checkboxRowClass} ${innerCheckboxDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} py-2 -mt-1`}
+        >
           <input
             type="checkbox"
+            id={`${id}-inner-checkbox`}
             checked={Boolean(innerCheckboxChecked)}
             onChange={(e) => onInnerCheckboxChange?.(e.target.checked)}
-            className="mt-5 rounded border-gray-300 text-[#0040B8] focus:ring-[#0040B8]"
+            disabled={innerCheckboxDisabled}
+            className="w-5 h-5 rounded border-gray-300 text-[#0040B8] focus:ring-[#0040B8] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex-shrink-0"
           />
-          <span className="mt-5 text-gray-700">{innerCheckboxLabel}</span>
+          <span className="text-gray-700 flex-1 select-none">
+            {innerCheckboxLabel}
+          </span>
         </label>
       ) : (
         // Spacer para mantener la misma altura aunque no haya checkbox
-        <div className={checkboxRowClass} aria-hidden />
+        <div className={`${checkboxRowClass} py-2 -mt-1`} aria-hidden />
       )}
 
       <div className="min-h-[20px]">

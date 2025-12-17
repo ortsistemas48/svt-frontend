@@ -606,9 +606,10 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         existingCarDocs={existingDocsByRole.car as any}
         onDeleteCarDoc={onDeleteCarDoc}
         onVehicleDocsCountChange={setVehicleDocsCount}
+        ownerDni={owner?.dni}
       />
     </Suspense>
-  ), [car, existingDocsByRole.car, onDeleteCarDoc]); // setCar, setPendingCarDocs, setVehicleDocsCount son estables
+  ), [car, existingDocsByRole.car, onDeleteCarDoc, owner?.dni]); // setCar, setPendingCarDocs, setVehicleDocsCount son estables
 
   const step4Content = useMemo(() => (
     <Suspense fallback={<ApplicationSkeleton />}>

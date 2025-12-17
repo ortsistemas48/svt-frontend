@@ -21,6 +21,7 @@ interface VehicleFormProps {
   existingCarDocs?: CarExistingDoc[];
   onDeleteCarDoc?: (docId: number) => Promise<void> | void;
   onVehicleDocsCountChange?: (count: number) => void;
+  ownerDni?: string;
 }
 
 const toDateInputValue = (v: any): string => {
@@ -126,6 +127,7 @@ export default function VehicleForm({
   existingCarDocs = [],
   onDeleteCarDoc,
   onVehicleDocsCountChange,
+  ownerDni,
 }: VehicleFormProps) {
   const { setIsIdle, errors, setErrors } = useApplication() as any;
 
@@ -136,6 +138,16 @@ export default function VehicleForm({
       (!car?.green_card_expiration || car?.green_card_expiration === "")
     );
 
+  // Si green_card_no_expiration es explícitamente false, no usar la lógica automática
+  // Si es explícitamente true, siempre está marcado
+  // Si es undefined, usar la lógica automática basada en si el campo está vacío
+  const isGreenCardNoExpirationChecked = 
+    car?.green_card_no_expiration === false 
+      ? false 
+      : car?.green_card_no_expiration === true
+        ? true
+        : greenCardNoExpiration;
+
   const setCarError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`car_${name}`]: msg }));
 
@@ -144,49 +156,13 @@ export default function VehicleForm({
   const engineAuto = useRef<boolean>(!car?.engine_brand || String(car?.engine_brand).trim() === "");
   const chassisAuto = useRef<boolean>(!car?.chassis_brand || String(car?.chassis_brand).trim() === "");
   const didAutofill = useRef(false);
-  const fetchedByPlateRef = useRef<string | null>(null);
   
-  const [isTypingInBrand, setIsTypingInBrand] = useState(false);
+  const [_, setIsTypingInBrand] = useState(false);
   
   const [engineBrandManuallyEdited, setEngineBrandManuallyEdited] = useState(false);
   const [chassisBrandManuallyEdited, setChassisBrandManuallyEdited] = useState(false);
+  const [useSameAsDni, setUseSameAsDni] = useState(false);
 
-  const monthNameToNumber = (name: string) => {
-    const m: Record<string, string> = {
-      "enero": "01",
-      "febrero": "02",
-      "marzo": "03",
-      "abril": "04",
-      "mayo": "05",
-      "junio": "06",
-      "julio": "07",
-      "agosto": "08",
-      "septiembre": "09",
-      "octubre": "10",
-      "noviembre": "11",
-      "diciembre": "12",
-    };
-    return m[String(name || "").toLowerCase()] ?? "";
-  };
-  const numberToMonthName = (num: string) => {
-    const m: Record<string, string> = {
-      "01": "enero",
-      "02": "febrero",
-      "03": "marzo",
-      "04": "abril",
-      "05": "mayo",
-      "06": "junio",
-      "07": "julio",
-      "08": "agosto",
-      "09": "septiembre",
-      "10": "octubre",
-      "11": "noviembre",
-      "12": "diciembre",
-    };
-    return m[num] ?? "";
-  };
-
-  // helpers para mapear mes nombre <-> número
 
   useEffect(() => {
     if (didAutofill.current) return;
@@ -247,7 +223,7 @@ export default function VehicleForm({
     if (!v) return setCarError(name, "");
 
     if (name === "green_card_expiration" || name === "license_expiration") {
-      if (name === "green_card_expiration" && greenCardNoExpiration) {
+      if (name === "green_card_expiration" && isGreenCardNoExpirationChecked) {
         setCarError(name, "");
         return;
       }
@@ -355,6 +331,14 @@ export default function VehicleForm({
       validateOne(key, v);
       return;
     }
+    if (key === "license_number") {
+      // Si el usuario edita manualmente, desmarcar el checkbox
+      if (useSameAsDni) {
+        setUseSameAsDni(false);
+      }
+      sanitizeAndMaybeError(key, value);
+      return;
+    }
     sanitizeAndMaybeError(key, value);
   };
 
@@ -386,9 +370,39 @@ export default function VehicleForm({
     setCarError("green_card_expiration", "");
   };
 
+  const handleSameAsDniChange = (checked: boolean) => {
+    if (!ownerDni) return; // No permitir cambios si no hay DNI
+    setUseSameAsDni(checked);
+    if (checked && ownerDni) {
+      const sanitized = SANITIZE.license_number ? SANITIZE.license_number(ownerDni) : ownerDni;
+      setCar((prev: any) => ({
+        ...prev,
+        license_number: sanitized,
+      }));
+      validateOne("license_number", sanitized);
+    }
+  };
+
   useEffect(() => {
     setIsIdle(false);
   }, [setIsIdle]);
+
+  // Sincronizar license_number cuando ownerDni cambia y el checkbox está marcado
+  useEffect(() => {
+    if (useSameAsDni && ownerDni) {
+      const sanitized = SANITIZE.license_number ? SANITIZE.license_number(ownerDni) : ownerDni;
+      setCar((prev: any) => {
+        if (prev?.license_number !== sanitized) {
+          return { ...prev, license_number: sanitized };
+        }
+        return prev;
+      });
+      validateOne("license_number", sanitized);
+    } else if (useSameAsDni && !ownerDni) {
+      // Si el checkbox está marcado pero no hay DNI, desmarcarlo
+      setUseSameAsDni(false);
+    }
+  }, [ownerDni, useSameAsDni, setCar]);
 
   const carErrorsList = useMemo(() => {
     const entries = Object.entries(errors ?? {}).filter(
@@ -781,9 +795,9 @@ export default function VehicleForm({
                     onFocus={() => handleFocus("green_card_expiration")}
                     onBlur={() => handleBlur("green_card_expiration")}
                     error={getCarError("green_card_expiration")}
-                    disabled={greenCardNoExpiration}
+                    disabled={isGreenCardNoExpirationChecked}
                     innerCheckboxLabel="Sin vencimiento"
-                    innerCheckboxChecked={greenCardNoExpiration}
+                    innerCheckboxChecked={isGreenCardNoExpirationChecked}
                     onInnerCheckboxChange={handleGreenCardNoExpirationChange}
                     isRequired={true}
                   />
@@ -800,6 +814,10 @@ export default function VehicleForm({
                     error={getCarError("license_number")}
                     isRequired={true}
                     className="md:col-span-2"
+                    innerCheckboxLabel="Mismo que DNI"
+                    innerCheckboxChecked={useSameAsDni}
+                    onInnerCheckboxChange={handleSameAsDniChange}
+                    innerCheckboxDisabled={!ownerDni}
                   />
                 </div>
                 {/* Primera fila: Clase y Exp. de licencia en una mitad, Póliza en otra mitad */}

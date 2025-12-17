@@ -420,6 +420,7 @@ export function getMissingCarFields(car: any): string[] {
     "license_number",
     "license_expiration",
     "registration_year",
+    "type_ced",
   ];
   
   const fieldTranslations = {
@@ -442,7 +443,7 @@ export function getMissingCarFields(car: any): string[] {
     total_weight: "Peso total",
     front_weight: "Peso delantero",
     back_weight: "Peso trasero",
-
+    type_ced: "Tipo",
 
   };
 

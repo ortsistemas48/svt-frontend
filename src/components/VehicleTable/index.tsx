@@ -47,8 +47,19 @@ function getByPath(obj: any, path: string) {
 }
 
 const renderVehicle = (car: CarType, carDocs: Doc[] = []) => {
+  
   const formatDate = (value: string) => {
-    const d = new Date(value);
+    // Si la fecha viene en formato YYYY-MM-DD, parsearla como fecha local
+    // para evitar problemas de zona horaria que muestran un día menos
+    let d: Date;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      // Formato YYYY-MM-DD - parsear como fecha local
+      const [year, month, day] = value.split('-').map(Number);
+      d = new Date(year, month - 1, day);
+    } else {
+      // Otros formatos - usar Date normal
+      d = new Date(value);
+    }
     // Si no es fecha válida, devolvés el valor crudo
     if (isNaN(d.getTime())) return value;
     return new Intl.DateTimeFormat("es-AR", {
