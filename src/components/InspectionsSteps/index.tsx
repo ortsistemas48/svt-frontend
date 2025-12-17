@@ -42,8 +42,10 @@ export default function InspectionStepsClient({
   appId,
   steps,
   initialStatuses,
+  previousStatuses,
   apiBase,
   initialGlobalObs,
+  previousGlobalObs,
   userType,
   isSecondInspection,
   initialInspDocs,
@@ -55,8 +57,10 @@ export default function InspectionStepsClient({
   appId: number;
   steps: Step[];
   initialStatuses: Record<number, Status | undefined>;
+  previousStatuses?: Record<number, Status | undefined>;
   apiBase: string | undefined;
   initialGlobalObs?: string;
+  previousGlobalObs?: string;
   userType: string;
   isSecondInspection?: boolean;
   initialInspDocs?: InspDoc[];
@@ -1087,8 +1091,17 @@ export default function InspectionStepsClient({
       <div className="w-full space-y-3 sm:space-y-4">
         {steps.map((s) => {
           const current = statusByStep[s.step_id];
+          const previous = previousStatuses?.[s.step_id];
           const isNonApto = current === "Condicional" || current === "Rechazado";
-          const options: Status[] = isNonApto ? ([current] as Status[]) : (["Apto", "Condicional", "Rechazado"] as Status[]);
+
+          // En segunda inspección, siempre permitir cambiar libremente el estado,
+          // aunque el valor inicial venga de la inspección anterior.
+          const options: Status[] =
+            isSecondInspection
+              ? (["Apto", "Condicional", "Rechazado"] as Status[])
+              : isNonApto
+              ? ([current] as Status[])
+              : (["Apto", "Condicional", "Rechazado"] as Status[]);
           return (
             <section
               key={s.step_id}
@@ -1106,6 +1119,23 @@ export default function InspectionStepsClient({
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 lg:gap-5 flex-wrap">
+                  {isSecondInspection && previous && (
+                    <span
+                      className={clsx(
+                        "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] sm:text-xs font-medium",
+                        previous === "Apto" &&
+                          "border-emerald-300 bg-emerald-50 text-emerald-800",
+                        previous === "Condicional" &&
+                          "border-amber-300 bg-amber-50 text-amber-800",
+                        previous === "Rechazado" &&
+                          "border-zinc-400 bg-zinc-100 text-zinc-900"
+                      )}
+                    >
+                      Anterior:&nbsp;
+                      <span className="font-semibold">{previous}</span>
+                    </span>
+                  )}
+
                   {options.map((opt) => {
                     const selected = current === opt;
                     return (
@@ -1154,9 +1184,21 @@ export default function InspectionStepsClient({
 
       <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-3 sm:gap-4 mt-6 sm:mt-8 w-full">
         <div className="md:col-span-2">
-          <h4 className="text-xs sm:text-sm font-medium text-zinc-900">Observaciones generales</h4>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className="text-xs sm:text-sm font-medium text-zinc-900">Observaciones generales</h4>
+            {isSecondInspection && previousGlobalObs && previousGlobalObs.trim() && (
+              <span className="inline-flex items-center rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-[10px] sm:text-xs font-medium text-blue-800">
+                Observaciones anteriores cargadas
+              </span>
+            )}
+          </div>
           <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
             Escribí las observaciones del vehículo, se guardan cuando confirmás la revisión. Máximo {MAX_CHARS} caracteres.
+            {isSecondInspection && previousGlobalObs && previousGlobalObs.trim() && (
+              <span className="block mt-1 text-amber-600">
+                Las observaciones de la primera inspección han sido precargadas y pueden ser editadas.
+              </span>
+            )}
           </p>
         </div>
 
