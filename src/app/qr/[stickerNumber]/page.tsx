@@ -256,7 +256,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
                 <img
                   src="/images/other-logos/ministerio-transporte.png"
                   alt="Ministerio de Transporte"
-                  className="h-10 md:h-12 invert opacity-90 brightness-110 contrast-90"
+                  className="h-10 md:h-12 brightness-0"
                   loading="lazy"
                   decoding="async"
                 />
