@@ -375,7 +375,7 @@ function WeeklyChart({ data, yAxisTicks, maxTick }: { data: Array<{ label: strin
                       <div
                         className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg pointer-events-none whitespace-nowrap z-20"
                       >
-                        {week.value} inspecciones
+                        {week.value} revisiones
                         <div className="absolute left-1/2 top-full -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                       </div>
                     )}
@@ -949,7 +949,7 @@ export default function Statistics({
                   })}
                 </div>
               ) : (
-                <EmptyState title="Sin vencimientos" subtitle="No hay inspecciones próximas a vencer" icon={AlertCircle} className="py-4" />
+                <EmptyState title="Sin vencimientos" subtitle="No hay revisiones próximas a vencer" icon={AlertCircle} className="py-4" />
               )}
             </div>
           </Card>

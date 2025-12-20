@@ -72,7 +72,7 @@ export default function SelectApplicationType() {
       title: "Nueva Revisión",
       description:
         available === 0
-          ? "Sin inspecciones disponibles, contactá al administrador"
+          ? "Sin revisiones disponibles, contactá al administrador"
           : "Iniciar una nueva revisión desde cero",
       disabled: newDisabled,
       handleOnClick: () => handleCreateApplication(available, id, setCreating, router),
@@ -107,19 +107,19 @@ export default function SelectApplicationType() {
       {!wsLoading && available !== null && (
         <div className="mt-2 sm:mt-3 text-xs sm:text-sm">
           <p className="text-gray-600">
-            Inspecciones disponibles: <strong>{available}</strong>
+            Revisiones disponibles: <strong>{available}</strong>
           </p>
 
           {available <= 0 ? (
             <p className="mt-1 text-red-700">
-              No hay inspecciones disponibles,{" "}
+              No hay revisiones disponibles,{" "}
               <Link href={`/dashboard/${id}/payment`} className="font-medium underline">
                 comprá más aquí
               </Link>.
             </p>
           ) : available < 75 ? (
             <p className="mt-1 text-amber-700">
-              Quedan pocas inspecciones,{" "}
+              Quedan pocas revisiones,{" "}
               <Link href={`/dashboard/${id}/payment`} className="font-medium underline">
                 comprá más aquí
               </Link>.
@@ -145,7 +145,7 @@ export default function SelectApplicationType() {
               ].join(" ")}
               title={
                 option.key === "new" && available === 0
-                  ? "No tenés inspecciones disponibles para crear una nueva revisión"
+                  ? "No tenés revisiones disponibles para crear una nueva revisión"
                   : undefined
               }
             >

@@ -729,7 +729,7 @@ export async function fetchAdminWorkshops() {
 export async function handleCreateApplication(available: number | null, id: string, setCreating: (creating: boolean) => void, router: any) {
   // doble guard por si alguien intenta forzar el click
   if (available === 0) {
-    alert("No tenés inspecciones disponibles para iniciar una nueva revisión");
+    alert("No tenés revisiones disponibles para iniciar una nueva revisión");
     return;
   }
   

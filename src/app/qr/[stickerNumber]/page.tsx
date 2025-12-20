@@ -183,7 +183,13 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
                 {insp.result === "Condicional" && <Circle className="h-4 w-4 text-orange-700" />}
                 {insp.result === "Rechazado" && <XCircle className="h-4 w-4 text-black" />}
                 {!insp.result && <Circle className="h-4 w-4 text-zinc-600" />}
-                {insp.result ? `Resultado de la revisión: ${insp.result}` : "Resultado de la revisión: No disponible"}
+                {insp.result === "Rechazado" 
+                  ? "Vehículo no apto para circular"
+                  : insp.result === "Condicional"
+                  ? `Vehículo apto para circular dentro del ejido municipal hasta ${fmtDate(insp.expiration_date)}`
+                  : insp.result === "Apto"
+                  ? `Resultado de la revisión: ${insp.result}`
+                  : "Resultado de la revisión: No disponible"}
               </div>
             </div>
 

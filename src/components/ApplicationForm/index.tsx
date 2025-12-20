@@ -119,7 +119,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
       if (res.status === 409) {
         const j = await res.json().catch(() => ({}));
-        alert(j?.error || "No hay inspecciones disponibles para este taller");
+        alert(j?.error || "No hay revisiones disponibles para este taller");
         return false;
       }
 

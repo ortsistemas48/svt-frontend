@@ -107,9 +107,9 @@ export default function ContinueApplicationPage() {
                 );
                 
                 if (alreadyInspected.length > 0) {
-                    setError(`La revisión con dominio ${plate} ya completó su segunda inspección con resultado "${alreadyInspected[0].result_2}". No se permiten más inspecciones.`);
+                    setError(`La revisión con dominio ${plate} ya completó su segunda revisión con resultado "${alreadyInspected[0].result_2}". No se permiten más revisiones.`);
                 } else {
-                    setError(`No se encontraron revisiones con resultado "Condicional" pendientes de segunda inspección para el dominio ${plate}`);
+                    setError(`No se encontraron revisiones con resultado "Condicional" pendientes de segunda revisión para el dominio ${plate}`);
                 }
                 return;
             }
@@ -144,13 +144,13 @@ export default function ContinueApplicationPage() {
         
         // Verify that the application has "Condicional" result before proceeding
         if (foundApplication.result !== "Condicional") {
-            setError("Solo se pueden realizar segundas inspecciones para revisiones con resultado 'Condicional'");
+            setError("Solo se pueden realizar segundas revisiones para revisiones con resultado 'Condicional'");
             return;
         }
 
         // Check if second inspection already completed
         if (foundApplication.result_2) {
-            setError(`Esta revisión ya completó su segunda inspección con resultado "${foundApplication.result_2}". No se permiten más inspecciones.`);
+            setError(`Esta revisión ya completó su segunda revisión con resultado "${foundApplication.result_2}". No se permiten más revisiones.`);
             return;
         }
 
@@ -535,7 +535,7 @@ export default function ContinueApplicationPage() {
                                                 Enviar a Cola
                                             </h4>
                                             <p className="text-xs sm:text-sm text-center text-gray-600">
-                                                Agregar a la cola de inspecciones
+                                                Agregar a la cola de revisiones
                                             </p>
                                         </>
                                     )}

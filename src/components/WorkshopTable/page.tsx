@@ -816,7 +816,7 @@ export default function WorkshopTable({ workshops }: Props) {
                     <Row label="Teléfono" value={selected.phone} />
                     <Row label="Número de Planta" value={selected.plant_number} />
                     <Row label="Número de Disposición" value={selected.disposition_number} />
-                    <Row label="Inspecciones Disponibles" value={selected.available_inspections} />
+                    <Row label="Revisiones Disponibles" value={selected.available_inspections} />
                   </div>
 
                   {/* Personal Asignado */}
