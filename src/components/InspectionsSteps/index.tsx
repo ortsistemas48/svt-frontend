@@ -498,8 +498,13 @@ export default function InspectionStepsClient({
     Object.entries(agg).forEach(([cat, leavesSet]) => {
       const arr = Array.from(leavesSet);
       if (arr.length > 0) {
-        const compactObs = arr.map(obs => compactObservation(obs, 60)).join("; ");
-        out[cat] = `${cat}: ${compactObs}`;
+        // Si solo hay una observación y es igual al nombre de la categoría, mostrar solo la categoría
+        if (arr.length === 1 && arr[0].trim() === cat.trim()) {
+          out[cat] = cat;
+        } else {
+          const compactObs = arr.map(obs => compactObservation(obs, 60)).join("; ");
+          out[cat] = `${cat}: ${compactObs}`;
+        }
       }
     });
     
@@ -541,8 +546,13 @@ export default function InspectionStepsClient({
     Object.entries(agg).forEach(([cat, leavesSet]) => {
       const arr = Array.from(leavesSet);
       if (arr.length > 0) {
-        const compactObs = arr.map(obs => compactObservation(obs, 60)).join("; ");
-        out[cat] = `${cat}: ${compactObs}`;
+        // Si solo hay una observación y es igual al nombre de la categoría, mostrar solo la categoría
+        if (arr.length === 1 && arr[0].trim() === cat.trim()) {
+          out[cat] = cat;
+        } else {
+          const compactObs = arr.map(obs => compactObservation(obs, 60)).join("; ");
+          out[cat] = `${cat}: ${compactObs}`;
+        }
       }
     });
     
@@ -1213,16 +1223,88 @@ export default function InspectionStepsClient({
         </div>
       )}
 
+      {/* Campo de observaciones arriba de los steps - solo para segunda revisión */}
+      {isSecondInspection && (
+        <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-3 sm:gap-4 mb-6 sm:mb-8 w-full">
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="text-xs sm:text-sm font-medium text-zinc-900">Observaciones generales</h4>
+              {previousGlobalObs && previousGlobalObs.trim() && (
+                <span className="inline-flex items-center rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-[10px] sm:text-xs font-medium text-blue-800">
+                  Observaciones anteriores cargadas
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
+              Escribí las observaciones del vehículo, se guardan cuando confirmás la revisión. Máximo {MAX_CHARS} caracteres.
+              {previousGlobalObs && previousGlobalObs.trim() && (
+                <span className="block mt-1 text-amber-600">
+                  Las observaciones de la primera inspección han sido precargadas y pueden ser editadas.
+                </span>
+              )}
+            </p>
+          </div>
+
+          <div className="rounded-lg sm:rounded-[14px] text-xs sm:text-sm border border-zinc-200 bg-white p-3 sm:p-4 w-full self-start md:col-span-2">
+            <textarea
+              value={globalText}
+              onChange={(e) => {
+                const txt = e.target.value;
+                if (txt.length <= MAX_CHARS) setGlobalText(txt);
+              }}
+              disabled={isCompleted}
+              placeholder="Ingresá tus observaciones."
+              className={clsx(
+                "w-full h-32 sm:h-40 outline-none resize-none text-xs sm:text-sm",
+                isCompleted && "opacity-50 cursor-not-allowed"
+              )}
+              maxLength={MAX_CHARS}
+            />
+            <div className="mt-2 flex items-center justify-between">
+              <div className={clsx(
+                "text-[10px] sm:text-xs",
+                obsCharCount > MAX_CHARS * 0.9 
+                  ? "text-amber-600 font-medium" 
+                  : obsCharCount > MAX_CHARS * 0.75
+                  ? "text-amber-500"
+                  : "text-zinc-400"
+              )}>
+                {obsCharCount >= MAX_CHARS * 0.9 && (
+                  <span className="mr-2">
+                    {MAX_CHARS - obsCharCount > 0 
+                      ? `Quedan ${MAX_CHARS - obsCharCount} caracteres disponibles`
+                      : "Límite alcanzado"}
+                  </span>
+                )}
+              </div>
+              <div className={clsx(
+                "text-[10px] sm:text-xs",
+                obsCharCount > MAX_CHARS * 0.9 
+                  ? "text-amber-600 font-medium" 
+                  : obsCharCount > MAX_CHARS * 0.75
+                  ? "text-amber-500"
+                  : "text-zinc-400"
+              )}>
+                {obsCharCount}/{MAX_CHARS}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full space-y-3 sm:space-y-4">
         {steps.map((s) => {
           const current = statusByStep[s.step_id];
           const previous = previousStatuses?.[s.step_id];
           const isNonApto = current === "Condicional" || current === "Rechazado";
 
-          // En segunda inspección, siempre permitir cambiar libremente el estado,
-          // aunque el valor inicial venga de la inspección anterior.
+          // En segunda inspección, cuando se selecciona Condicional o Rechazado,
+          // mostrar solo ese estado (como primera revisión)
+          // Si es segunda inspección pero aún no se seleccionó nada o es Apto, mostrar todas las opciones
           const options: Status[] =
-            isSecondInspection
+            isSecondInspection && isNonApto
+              ? ([current] as Status[])
+              : isSecondInspection
               ? (["Apto", "Condicional", "Rechazado"] as Status[])
               : isNonApto
               ? ([current] as Status[])
@@ -1235,16 +1317,10 @@ export default function InspectionStepsClient({
                 current ? STATUS_UI[current as Status].stepBorder : "border-zinc-200"
               )}
             >
-              <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3 p-3 sm:p-4">
-                <div className="min-w-0">
-                  <h3 className="text-sm sm:text-base font-medium text-zinc-900">{s.name}</h3>
-                  <p className="hidden min-[1300px]:block text-xs sm:text-sm md:max-w-[400px] text-zinc-500">
-                    {s.description}
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 lg:gap-5 flex-wrap">
-                  {isSecondInspection && previous && (
+              <div className="flex flex-col gap-3 p-3 sm:p-4">
+                {/* Estado anterior arriba - solo para segunda revisión */}
+                {isSecondInspection && previous && (
+                  <div className="flex items-center">
                     <span
                       className={clsx(
                         "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] sm:text-xs font-medium",
@@ -1256,72 +1332,83 @@ export default function InspectionStepsClient({
                           "border-zinc-400 bg-zinc-100 text-zinc-900"
                       )}
                     >
-                      Anterior:&nbsp;
+                      Estado anterior:&nbsp;
                       <span className="font-semibold">{previous}</span>
                     </span>
-                  )}
+                  </div>
+                )}
 
-                  {options.map((opt) => {
-                    const selected = current === opt;
-                    return (
+                <div className="flex flex-col lg:flex-row md:items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="text-sm sm:text-base font-medium text-zinc-900">{s.name}</h3>
+                    <p className="hidden min-[1300px]:block text-xs sm:text-sm md:max-w-[400px] text-zinc-500">
+                      {s.description}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 lg:gap-5 flex-wrap">
+                    {options.map((opt) => {
+                      const selected = current === opt;
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          disabled={isCompleted}
+                          onClick={() => {
+                            const previousStatus = statusByStep[s.step_id];
+                            const newStatus = previousStatus === opt ? undefined : opt;
+                            
+                            // Si el nuevo estado es "Apto", verificar y eliminar observaciones del paso
+                            if (newStatus === "Apto") {
+                              setSelectionMap((prev) => {
+                                // Verificar si hay observaciones para este paso
+                                if (prev[s.step_id]) {
+                                  const { [s.step_id]: removedStep, ...restSteps } = prev;
+                                  
+                                  // Reconstruir el texto global desde el selectionMap actualizado
+                                  // Esto elimina automáticamente las observaciones del paso eliminado
+                                  const newGlobalText = buildGlobalTextFromSelectionMap(restSteps);
+                                  setGlobalText(newGlobalText);
+                                  
+                                  return restSteps;
+                                }
+                                // Si no hay observaciones, no hacer nada
+                                return prev;
+                              });
+                            }
+                            
+                            setStatusByStep((prev) => ({
+                              ...prev,
+                              [s.step_id]: newStatus,
+                            }));
+                          }}
+                          className={clsx(
+                            "w-full sm:w-[140px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-[4px] border text-xs sm:text-sm transition",
+                            selected ? STATUS_UI[opt].btn : "border-zinc-200 text-zinc-700 hover:bg-zinc-50",
+                            isCompleted && "opacity-50 cursor-not-allowed"
+                          )}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
+
+                    {isNonApto && (
                       <button
-                        key={opt}
                         type="button"
                         disabled={isCompleted}
-                        onClick={() => {
-                          const previousStatus = statusByStep[s.step_id];
-                          const newStatus = previousStatus === opt ? undefined : opt;
-                          
-                          // Si el nuevo estado es "Apto", verificar y eliminar observaciones del paso
-                          if (newStatus === "Apto") {
-                            setSelectionMap((prev) => {
-                              // Verificar si hay observaciones para este paso
-                              if (prev[s.step_id]) {
-                                const { [s.step_id]: removedStep, ...restSteps } = prev;
-                                
-                                // Reconstruir el texto global desde el selectionMap actualizado
-                                // Esto elimina automáticamente las observaciones del paso eliminado
-                                const newGlobalText = buildGlobalTextFromSelectionMap(restSteps);
-                                setGlobalText(newGlobalText);
-                                
-                                return restSteps;
-                              }
-                              // Si no hay observaciones, no hacer nada
-                              return prev;
-                            });
-                          }
-                          
-                          setStatusByStep((prev) => ({
-                            ...prev,
-                            [s.step_id]: newStatus,
-                          }));
-                        }}
                         className={clsx(
-                          "w-full sm:w-[140px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-[4px] border text-xs sm:text-sm transition",
-                          selected ? STATUS_UI[opt].btn : "border-zinc-200 text-zinc-700 hover:bg-zinc-50",
+                          "w-full sm:w-auto sm:ml-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[4px] border text-xs sm:text-sm flex items-center justify-center gap-2",
+                          "border-[#0040B8] text-[#0040B8] hover:bg-zinc-50",
                           isCompleted && "opacity-50 cursor-not-allowed"
                         )}
+                        onClick={() => openObsModalForStep(s.step_id)}
                       >
-                        {opt}
+                        <span>Observaciones</span>
+                        <ChevronRight size={14} className="sm:w-4 sm:h-4" />
                       </button>
-                    );
-                  })}
-
-                  {isNonApto && (
-                    <button
-                      type="button"
-                      disabled={isCompleted}
-                      className={clsx(
-                        "w-full sm:w-auto sm:ml-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[4px] border text-xs sm:text-sm flex items-center justify-center gap-2",
-                        "border-[#0040B8] text-[#0040B8] hover:bg-zinc-50",
-                        isCompleted && "opacity-50 cursor-not-allowed"
-                      )}
-                      onClick={() => openObsModalForStep(s.step_id)}
-                    >
-                      <span>Observaciones</span>
-                      <ChevronRight size={14} className="sm:w-4 sm:h-4" />
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </section>
@@ -1329,23 +1416,15 @@ export default function InspectionStepsClient({
         })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-3 sm:gap-4 mt-6 sm:mt-8 w-full">
+      {/* Campo de observaciones abajo de los steps - solo para primera revisión */}
+      {!isSecondInspection && (
+        <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-3 sm:gap-4 mt-6 sm:mt-8 w-full">
         <div className="md:col-span-2">
           <div className="flex items-center gap-2 flex-wrap">
             <h4 className="text-xs sm:text-sm font-medium text-zinc-900">Observaciones generales</h4>
-            {isSecondInspection && previousGlobalObs && previousGlobalObs.trim() && (
-              <span className="inline-flex items-center rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-[10px] sm:text-xs font-medium text-blue-800">
-                Observaciones anteriores cargadas
-              </span>
-            )}
           </div>
           <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
             Escribí las observaciones del vehículo, se guardan cuando confirmás la revisión. Máximo {MAX_CHARS} caracteres.
-            {isSecondInspection && previousGlobalObs && previousGlobalObs.trim() && (
-              <span className="block mt-1 text-amber-600">
-                Las observaciones de la primera inspección han sido precargadas y pueden ser editadas.
-              </span>
-            )}
           </p>
         </div>
 
@@ -1393,7 +1472,8 @@ export default function InspectionStepsClient({
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
       
       <section className="rounded-lg sm:rounded-[14px] border border-zinc-200 bg-white p-3 sm:p-4 w-full mt-4 sm:mt-6">
         <div className="flex items-center justify-between mb-1">
