@@ -21,6 +21,7 @@ type Application = {
   result_2?: "Apto" | "Condicional" | "Rechazado";
   inspection_1_date?: string | null;
   inspection_2_date?: string | null;
+  first_inspection_observations?: string | null;
 };
 
 export default function ContinueApplicationPage() {
@@ -56,6 +57,59 @@ export default function ContinueApplicationPage() {
 
         const daysRemaining = calculateDaysRemaining(application.inspection_1_date);
         return daysRemaining <= 0;
+    };
+
+    // Function to fetch first inspection observations
+    const fetchFirstInspectionObservations = async (appId: number): Promise<string | null> => {
+        try {
+            // Get the first inspection ID
+            const inspectionRes = await fetch(
+                `/api/inspections/applications/${appId}/inspection?is_second=false`,
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
+
+            if (!inspectionRes.ok) {
+                return null;
+            }
+
+            const inspectionData = await inspectionRes.json();
+            const inspectionId = inspectionData.inspection_id as number | null;
+
+            if (!inspectionId) {
+                return null;
+            }
+
+            // Get the inspection details
+            const detailsRes = await fetch(
+                `/api/inspections/inspections/${inspectionId}/details`,
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
+
+            if (!detailsRes.ok) {
+                return null;
+            }
+
+            const detailsData = await detailsRes.json();
+
+            // Handle both response formats (array or object)
+            if (Array.isArray(detailsData)) {
+                return null;
+            }
+
+            const globalObservations = detailsData.global_observations as string | null | undefined;
+            return globalObservations ?? null;
+        } catch (error) {
+            console.error("Error fetching first inspection observations:", error);
+            return null;
+        }
     };
 
     const handleSearch = async () => {
@@ -123,7 +177,16 @@ export default function ContinueApplicationPage() {
                 return;
             }
             
-            setFoundApplication(lastApplication);
+            // Fetch first inspection observations
+            const observations = await fetchFirstInspectionObservations(lastApplication.application_id);
+            
+            // Update application with observations
+            const applicationWithObservations: Application = {
+                ...lastApplication,
+                first_inspection_observations: observations,
+            };
+            
+            setFoundApplication(applicationWithObservations);
 
         } catch (err: any) {
             console.error(err);
@@ -444,6 +507,22 @@ export default function ContinueApplicationPage() {
                                         </p>
                                     </div>
                                 )}
+                                <div className="md:col-span-2">
+                                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide mb-1">
+                                        Observaciones Primera Inspección
+                                    </p>
+                                    <div className="mt-1 p-2 sm:p-3 bg-white rounded-[4px] border border-gray-200">
+                                        {foundApplication.first_inspection_observations ? (
+                                            <p className="text-xs sm:text-sm text-gray-900 whitespace-pre-wrap">
+                                                {foundApplication.first_inspection_observations}
+                                            </p>
+                                        ) : (
+                                            <p className="text-xs sm:text-sm text-gray-400 italic">
+                                                No hay observaciones registradas
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

@@ -39,15 +39,52 @@ export default function InspectionTable() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailTarget, setDetailTarget] = useState<Application | null>(null);
   const detailCloseBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [observations, setObservations] = useState<{
+    first?: string | null;
+    second?: string | null;
+  }>({});
+  const [loadingObservations, setLoadingObservations] = useState(false);
+
+  // Function to load observations for both inspections
+  const loadObservations = async (application: Application) => {
+    setLoadingObservations(true);
+    setObservations({});
+
+    try {
+      // Load first inspection observations
+      const firstObs = await fetchInspectionObservations(application.application_id, false);
+
+      // Load second inspection observations if inspection_2_date exists
+      let secondObs: string | null = null;
+      if (application.inspection_2_date) {
+        secondObs = await fetchInspectionObservations(application.application_id, true);
+      }
+
+      setObservations({
+        first: firstObs,
+        second: secondObs,
+      });
+    } catch (error) {
+      console.error("Error loading observations:", error);
+      // Don't block the UI if loading observations fails
+    } finally {
+      setLoadingObservations(false);
+    }
+  };
 
   const openDetail = (application: Application) => {
     setDetailTarget(application);
     setDetailOpen(true);
+    loadObservations(application);
   };
 
   const closeDetail = () => {
     setDetailOpen(false);
-    setTimeout(() => setDetailTarget(null), 200);
+    setTimeout(() => {
+      setDetailTarget(null);
+      setObservations({});
+      setLoadingObservations(false);
+    }, 200);
   };
 
   const formatDateTime = (value?: string | null) => {
@@ -76,6 +113,59 @@ export default function InspectionTable() {
         return "text-black";
       default:
         return "text-gray-900";
+    }
+  };
+
+  // Function to fetch inspection observations
+  const fetchInspectionObservations = async (appId: number, isSecond: boolean): Promise<string | null> => {
+    try {
+      // Get the inspection ID
+      const inspectionRes = await fetch(
+        `/api/inspections/applications/${appId}/inspection?is_second=${isSecond}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!inspectionRes.ok) {
+        return null;
+      }
+
+      const inspectionData = await inspectionRes.json();
+      const inspectionId = inspectionData.inspection_id as number | null;
+
+      if (!inspectionId) {
+        return null;
+      }
+
+      // Get the inspection details
+      const detailsRes = await fetch(
+        `/api/inspections/inspections/${inspectionId}/details`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!detailsRes.ok) {
+        return null;
+      }
+
+      const detailsData = await detailsRes.json();
+
+      // Handle both response formats (array or object)
+      if (Array.isArray(detailsData)) {
+        return null;
+      }
+
+      const globalObservations = detailsData.global_observations as string | null | undefined;
+      return globalObservations ?? null;
+    } catch (error) {
+      console.error("Error fetching inspection observations:", error);
+      return null;
     }
   };
 
@@ -492,7 +582,37 @@ export default function InspectionTable() {
                 </h3>
                 <div className="space-y-2 text-sm text-gray-700">
                   <DetailRow label="Fecha 1ª Inspección" value={formatDateTime(detailTarget.inspection_1_date)} />
+                  {loadingObservations ? (
+                    <div className="rounded-[4px] border border-gray-100 bg-gray-50 px-3 py-2">
+                      <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Observaciones 1ª Inspección</span>
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#0040B8]"></div>
+                        <span className="text-xs text-gray-500">Cargando observaciones...</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <DetailObservationRow 
+                      label="Observaciones 1ª Inspección" 
+                      value={observations.first} 
+                    />
+                  )}
                   <DetailRow label="Fecha 2ª Inspección" value={formatDateTime(detailTarget.inspection_2_date)} />
+                  {detailTarget.inspection_2_date && (
+                    loadingObservations ? (
+                      <div className="rounded-[4px] border border-gray-100 bg-gray-50 px-3 py-2">
+                        <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Observaciones 2ª Inspección</span>
+                        <div className="mt-2 flex items-center gap-2">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#0040B8]"></div>
+                          <span className="text-xs text-gray-500">Cargando observaciones...</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <DetailObservationRow 
+                        label="Observaciones 2ª Inspección" 
+                        value={observations.second} 
+                      />
+                    )
+                  )}
                 </div>
               </section>
             </div>
@@ -592,6 +712,27 @@ function DetailRow({
       >
         {value !== undefined && value !== null && value !== "" ? value : "-"}
       </span>
+    </div>
+  );
+}
+
+function DetailObservationRow({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | null;
+}) {
+  return (
+    <div className="rounded-[4px] border border-gray-100 bg-gray-50 px-3 py-2">
+      <span className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</span>
+      <div className="mt-2">
+        {value && value.trim() ? (
+          <p className="text-sm text-gray-900 whitespace-pre-wrap break-words">{value}</p>
+        ) : (
+          <p className="text-sm text-gray-400 italic">No hay observaciones registradas</p>
+        )}
+      </div>
     </div>
   );
 }
