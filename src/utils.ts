@@ -404,7 +404,6 @@ export function getMissingPersonFields(person: any): string[] {
 export function getMissingCarFields(car: any): string[] {
   const requiredFields = [
     "license_plate",
-    "license_class",
     "brand",
     "vehicle_type",
     "usage_type",
@@ -427,7 +426,6 @@ export function getMissingCarFields(car: any): string[] {
   const fieldTranslations = {
     license_plate: "Dominio",
     brand: "Marca", 
-    license_class: "Clase de licencia",
     model: "Modelo",
     registration_year: "Año de Patentamiento",
     weight: "Peso",
