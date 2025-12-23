@@ -166,27 +166,27 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
                 "px-5 py-2",
                 insp.result === "Apto" && "bg-blue-50",
                 insp.result === "Condicional" && "bg-orange-50",
-                insp.result === "Rechazado" && "bg-zinc-50",
+                insp.result === "Rechazado" && "bg-red-50",
                 !insp.result && "bg-zinc-50"
               )}
             >
               <div
                 className={clsx(
-                  "w-full px-1 py-2 text-left text-sm font-normal flex items-center gap-2",
-                  insp.result === "Apto" && "text-blue-700",
-                  insp.result === "Condicional" && "text-orange-700",
-                  insp.result === "Rechazado" && "text-black",
-                  !insp.result && "text-zinc-700"
+                  "w-full px-1 py-2 text-left text-sm flex items-center gap-2",
+                  insp.result === "Apto" && "text-blue-700 font-bold",
+                  insp.result === "Condicional" && "text-orange-700 font-bold",
+                  insp.result === "Rechazado" && "text-red-700 font-bold",
+                  !insp.result && "text-zinc-700 font-normal"
                 )}
               >
                 {insp.result === "Apto" && <CheckCircle className="h-4 w-4 text-blue-700" />}
                 {insp.result === "Condicional" && <Circle className="h-4 w-4 text-orange-700" />}
-                {insp.result === "Rechazado" && <XCircle className="h-4 w-4 text-black" />}
+                {insp.result === "Rechazado" && <XCircle className="h-4 w-4 text-red-700" />}
                 {!insp.result && <Circle className="h-4 w-4 text-zinc-600" />}
                 {insp.result === "Rechazado" 
-                  ? "Vehículo no apto para circular"
+                  ? "Vehículo no apto para circular - Revisión rechazada"
                   : insp.result === "Condicional"
-                  ? `Vehículo apto para circular dentro del ejido municipal hasta ${fmtDate(insp.expiration_date)}`
+                  ? `Resultado condicional: Vehículo apto para circular dentro del ejido municipal hasta ${fmtDate(insp.expiration_date)}`
                   : insp.result === "Apto"
                   ? `Resultado de la revisión: ${insp.result}`
                   : "Resultado de la revisión: No disponible"}
