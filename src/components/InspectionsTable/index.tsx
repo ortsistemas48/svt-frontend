@@ -581,10 +581,13 @@ export default function InspectionTable() {
                   Inspecciones
                 </h3>
                 <div className="space-y-2 text-sm text-gray-700">
-                  <DetailRow label="Fecha 1ª Inspección" value={formatDateTime(detailTarget.inspection_1_date)} />
+                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500 mb">
+                    Primera Inspección
+                  </h2>
+                  <DetailRow label="Fecha" value={formatDateTime(detailTarget.inspection_1_date)} />
                   {loadingObservations ? (
                     <div className="rounded-[4px] border border-gray-100 bg-gray-50 px-3 py-2">
-                      <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Observaciones 1ª Inspección</span>
+                      <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Observaciones</span>
                       <div className="mt-2 flex items-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#0040B8]"></div>
                         <span className="text-xs text-gray-500">Cargando observaciones...</span>
@@ -592,15 +595,18 @@ export default function InspectionTable() {
                     </div>
                   ) : (
                     <DetailObservationRow 
-                      label="Observaciones 1ª Inspección" 
+                      label="Observaciones" 
                       value={observations.first} 
                     />
                   )}
-                  <DetailRow label="Fecha 2ª Inspección" value={formatDateTime(detailTarget.inspection_2_date)} />
+                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Segunda Inspección
+                  </h2>
+                  <DetailRow label="Fecha" value={formatDateTime(detailTarget.inspection_2_date)} />
                   {detailTarget.inspection_2_date && (
                     loadingObservations ? (
                       <div className="rounded-[4px] border border-gray-100 bg-gray-50 px-3 py-2">
-                        <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Observaciones 2ª Inspección</span>
+                        <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Observaciones</span>
                         <div className="mt-2 flex items-center gap-2">
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#0040B8]"></div>
                           <span className="text-xs text-gray-500">Cargando observaciones...</span>
@@ -608,7 +614,7 @@ export default function InspectionTable() {
                       </div>
                     ) : (
                       <DetailObservationRow 
-                        label="Observaciones 2ª Inspección" 
+                        label="Observaciones" 
                         value={observations.second} 
                       />
                     )
