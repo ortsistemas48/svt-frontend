@@ -113,6 +113,8 @@ export default function InspectionStepsClient({
   const [inspDocsDeletingId, setInspDocsDeletingId] = useState<number | null>(null);
   const [dzResetTokenTech, setDzResetTokenTech] = useState(0);
   const [dzResetTokenPhotos, setDzResetTokenPhotos] = useState(0);
+  // Rastrear IDs de documentos eliminados de initialInspDocs (primera inspección)
+  const [deletedInitialDocIds, setDeletedInitialDocIds] = useState<Set<number>>(new Set());
   // Selección de foto de frente: puede ser una pendiente (queue) o una existente
   const [frontPhotoSel, setFrontPhotoSel] = useState<{ kind: "queue"; index: number } | { kind: "existing"; id: number } | null>(null);
 
@@ -173,8 +175,11 @@ export default function InspectionStepsClient({
         const hasInitial = (initialInspDocs || []).length > 0;
         if (!hasInitial) return techData || [];
         
-        // Combinar: mantener los documentos actuales (que incluyen los iniciales) y agregar los nuevos
-        const combined = [...currentTech];
+        // Combinar: mantener los documentos iniciales (excluyendo eliminados) y agregar los nuevos
+        const initialTech = (initialInspDocs || []).filter((d: any) => 
+          d.type === "technical_report" && !deletedInitialDocIds.has(d.id)
+        );
+        const combined = [...initialTech];
         (techData || []).forEach((doc: any) => {
           if (!combined.find((d: any) => d.id === doc.id)) {
             combined.push(doc);
@@ -187,8 +192,11 @@ export default function InspectionStepsClient({
         const hasInitial = (initialInspDocs || []).length > 0;
         if (!hasInitial) return photosData || [];
         
-        // Combinar: mantener los documentos actuales (que incluyen los iniciales) y agregar los nuevos
-        const combined = [...currentPhotos];
+        // Combinar: mantener los documentos iniciales (excluyendo eliminados) y agregar los nuevos
+        const initialPhotos = (initialInspDocs || []).filter((d: any) => 
+          d.type === "vehicle_photo" && !deletedInitialDocIds.has(d.id)
+        );
+        const combined = [...initialPhotos];
         (photosData || []).forEach((doc: any) => {
           if (!combined.find((d: any) => d.id === doc.id)) {
             combined.push(doc);
@@ -202,7 +210,9 @@ export default function InspectionStepsClient({
       const isUsageTypeD = (usageType || "").trim().toUpperCase() === "D";
       const hasInitialDocs = (initialInspDocs || []).length > 0;
       const allPhotos = hasInitialDocs ? 
-        [...(initialInspDocs || []).filter((d: any) => d.type === "vehicle_photo"), ...(photosData || [])] :
+        [...(initialInspDocs || []).filter((d: any) => 
+          d.type === "vehicle_photo" && !deletedInitialDocIds.has(d.id)
+        ), ...(photosData || [])] :
         (photosData || []);
       
       if (isUsageTypeD && allPhotos.length > 0) {
@@ -291,6 +301,8 @@ export default function InspectionStepsClient({
       // (actualizar el estado local, no recargar desde servidor ya que no estará disponible)
       if (isFromFirstInspection) {
         // El documento ya fue removido del estado visual arriba
+        // Agregar el ID al Set de documentos eliminados para evitar que se vuelva a agregar al recargar
+        setDeletedInitialDocIds((prev) => new Set(prev).add(docId));
         // No necesitamos recargar desde el servidor porque el documento ya no existe
       } else {
         // Si es de la inspección actual, recargar desde el servidor para mantener sincronización
@@ -301,8 +313,10 @@ export default function InspectionStepsClient({
               const hasInitial = (initialInspDocs || []).length > 0;
               if (!hasInitial) return data;
               
-              // Combinar: mantener los documentos iniciales y agregar los nuevos
-              const initialTech = (initialInspDocs || []).filter((d: any) => d.type === "technical_report");
+              // Combinar: mantener los documentos iniciales (excluyendo eliminados) y agregar los nuevos
+              const initialTech = (initialInspDocs || []).filter((d: any) => 
+                d.type === "technical_report" && !deletedInitialDocIds.has(d.id)
+              );
               const combined = [...initialTech];
               data.forEach((doc: any) => {
                 if (!combined.find((d: any) => d.id === doc.id)) {
@@ -316,8 +330,10 @@ export default function InspectionStepsClient({
               const hasInitial = (initialInspDocs || []).length > 0;
               if (!hasInitial) return data;
               
-              // Combinar: mantener los documentos iniciales y agregar los nuevos
-              const initialPhotos = (initialInspDocs || []).filter((d: any) => d.type === "vehicle_photo");
+              // Combinar: mantener los documentos iniciales (excluyendo eliminados) y agregar los nuevos
+              const initialPhotos = (initialInspDocs || []).filter((d: any) => 
+                d.type === "vehicle_photo" && !deletedInitialDocIds.has(d.id)
+              );
               const combined = [...initialPhotos];
               data.forEach((doc: any) => {
                 if (!combined.find((d: any) => d.id === doc.id)) {
@@ -830,8 +846,10 @@ export default function InspectionStepsClient({
             const hasInitial = (initialInspDocs || []).length > 0;
             if (!hasInitial) return techData;
             
-            // Combinar: mantener los documentos iniciales y agregar los nuevos
-            const initialTech = (initialInspDocs || []).filter((d: any) => d.type === "technical_report");
+            // Combinar: mantener los documentos iniciales (excluyendo eliminados) y agregar los nuevos
+            const initialTech = (initialInspDocs || []).filter((d: any) => 
+              d.type === "technical_report" && !deletedInitialDocIds.has(d.id)
+            );
             const combined = [...initialTech];
             techData.forEach((doc: any) => {
               if (!combined.find((d: any) => d.id === doc.id)) {
@@ -875,8 +893,10 @@ export default function InspectionStepsClient({
             const hasInitial = (initialInspDocs || []).length > 0;
             if (!hasInitial) return photosData;
             
-            // Combinar: mantener los documentos iniciales y agregar los nuevos
-            const initialPhotos = (initialInspDocs || []).filter((d: any) => d.type === "vehicle_photo");
+            // Combinar: mantener los documentos iniciales (excluyendo eliminados) y agregar los nuevos
+            const initialPhotos = (initialInspDocs || []).filter((d: any) => 
+              d.type === "vehicle_photo" && !deletedInitialDocIds.has(d.id)
+            );
             const combined = [...initialPhotos];
             photosData.forEach((doc: any) => {
               if (!combined.find((d: any) => d.id === doc.id)) {
@@ -923,8 +943,10 @@ export default function InspectionStepsClient({
             const hasInitial = (initialInspDocs || []).length > 0;
             if (!hasInitial) return photosData;
             
-            // Combinar: mantener los documentos iniciales y agregar los nuevos
-            const initialPhotos = (initialInspDocs || []).filter((d: any) => d.type === "vehicle_photo");
+            // Combinar: mantener los documentos iniciales (excluyendo eliminados) y agregar los nuevos
+            const initialPhotos = (initialInspDocs || []).filter((d: any) => 
+              d.type === "vehicle_photo" && !deletedInitialDocIds.has(d.id)
+            );
             const combined = [...initialPhotos];
             photosData.forEach((doc: any) => {
               if (!combined.find((d: any) => d.id === doc.id)) {
