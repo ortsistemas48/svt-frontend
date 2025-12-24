@@ -17,6 +17,12 @@ const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> 
   "Emitir CRT": { text: "text-violet-700", bg: "bg-violet-100" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
+const RESULT_TONES: Record<string, { text: string; bg: string }> = {
+  Apto: { text: "text-blue-700", bg: "bg-blue-50" },
+  Condicional: { text: "text-amber-700", bg: "bg-amber-50" },
+  Rechazado: { text: "text-white", bg: "bg-black" },
+};
+const DEFAULT_RESULT_TONE = { text: "text-gray-900", bg: "bg-gray-100" };
 const TABLE_FILTERS = ["Todos", "Pendiente", "En curso", "Completado", "A Inspeccionar", "Emitir CRT", "Segunda Inspección"];
 export default function InspectionTable() {
   const { id } = useParams();
@@ -104,16 +110,8 @@ export default function InspectionTable() {
   };
 
   const getResultTone = (result?: Application["result"] | null) => {
-    switch (result) {
-      case "Apto":
-        return "text-blue-700";
-      case "Condicional":
-        return "text-amber-700";
-      case "Rechazado":
-        return "text-black";
-      default:
-        return "text-gray-900";
-    }
+    if (!result) return DEFAULT_RESULT_TONE;
+    return RESULT_TONES[result] || DEFAULT_RESULT_TONE;
   };
 
   // Function to fetch inspection observations
@@ -523,16 +521,23 @@ export default function InspectionTable() {
                   Información general
                 </h3>
                 <div className="space-y-2 text-sm text-gray-700">
-                  <DetailRow label="Estado" value={detailTarget.status} />
+                  <DetailRow 
+                    label="Estado" 
+                    value={detailTarget.status}
+                    valueClassName={STATUS_TONES[detailTarget.status]?.text || DEFAULT_TONE.text}
+                    bgClassName={STATUS_TONES[detailTarget.status]?.bg || DEFAULT_TONE.bg}
+                  />
                   <DetailRow
                     label="Resultado (1ª)"
                     value={detailTarget.result || "-"}
-                    valueClassName={getResultTone(detailTarget.result)}
+                    valueClassName={getResultTone(detailTarget.result).text}
+                    bgClassName={getResultTone(detailTarget.result).bg}
                   />
                   <DetailRow
                     label="Resultado (2ª)"
                     value={detailTarget.result_2 || "-"}
-                    valueClassName={getResultTone(detailTarget.result_2)}
+                    valueClassName={getResultTone(detailTarget.result_2).text}
+                    bgClassName={getResultTone(detailTarget.result_2).bg}
                   />
                   <DetailRow label="Fecha de creación" value={formatDateTime(detailTarget.date)} />
                   <DetailRow label="Usuario" value={detailTarget.user_name ?? "-"} />
@@ -705,18 +710,23 @@ function DetailRow({
   label,
   value,
   valueClassName,
+  bgClassName,
 }: {
   label: string;
   value?: string | number | null;
   valueClassName?: string;
+  bgClassName?: string;
 }) {
+  const hasValue = value !== undefined && value !== null && value !== "";
+  const bgClass = hasValue && bgClassName ? bgClassName : "";
+  const paddingClass = hasValue && bgClassName ? "px-2 py-1 rounded" : "";
   return (
     <div className="flex items-start justify-between rounded-[4px] border border-gray-100 bg-gray-50 px-3 py-2">
       <span className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</span>
       <span
-        className={`max-w-[60%] break-words text-right text-sm ${valueClassName || "text-gray-900"}`}
+        className={`max-w-[60%] break-words text-right text-sm ${paddingClass} ${bgClass} ${valueClassName || "text-gray-900"}`}
       >
-        {value !== undefined && value !== null && value !== "" ? value : "-"}
+        {hasValue ? value : "-"}
       </span>
     </div>
   );
