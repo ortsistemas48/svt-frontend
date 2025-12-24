@@ -203,7 +203,6 @@ export default function InspectionTable() {
       setItems(uniqueItems);
       setTotal(data.total ?? 0);
     } catch (err) {
-      console.error(err);
       setItems([]);
       setTotal(0);
       setErrorMsg("No se pudieron cargar las revisiones");
@@ -297,7 +296,7 @@ export default function InspectionTable() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="w-full rounded-[4px] border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:pr-12 sm:text-base"
-              placeholder="Busca revisiones por su: CRT, DNI del propietario o Dominio"
+              placeholder="Busca revisiones por su: CRT, DNI, CUIT, Razón Social o Dominio"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   setSearchQuery(q);

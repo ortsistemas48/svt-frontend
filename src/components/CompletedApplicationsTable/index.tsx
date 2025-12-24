@@ -305,7 +305,7 @@ export default function CompletedApplicationsTable({ externalSearchQuery = "" }:
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="w-full rounded-[4px] border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:pr-12 sm:text-base"
-              placeholder="Busca aplicaciones completadas por: Dominio, Propietario u Oblea"
+              placeholder="Busca revisiones por: CRT, DNI, CUIT, Razón Social o Dominio"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   setSearchQuery(q);
