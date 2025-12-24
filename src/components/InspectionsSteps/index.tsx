@@ -1151,8 +1151,22 @@ export default function InspectionStepsClient({
         }
       );
 
-      // compat hacia atrás, si vuelve 200 con URL directo
+      // Si la respuesta es un PDF, mostrarlo directamente
       if (res.ok && res.status === 200) {
+        const contentType = res.headers.get("content-type") || "";
+        
+        // Detectar si es PDF por Content-Type
+        if (contentType.includes("application/pdf")) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          newTab.location.href = url;
+          setMsg("Certificado generado");
+          setConfirmOpen(false);
+          router.push(`/dashboard/${id}/inspections-queue`);
+          return;
+        }
+        
+        // Si no es PDF, intentar parsear como JSON (compatibilidad hacia atrás)
         const data = await res.json().catch(() => ({} as any));
         const url = data?.public_url || data?.template_url;
         if (!url) throw new Error("No se recibió el link del certificado");
