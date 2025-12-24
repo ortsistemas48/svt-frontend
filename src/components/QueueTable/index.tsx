@@ -1,7 +1,7 @@
 // components/QueueTable/index.tsx
 "use client";
-import { useEffect, useState } from "react";
-import { Play, Search, SlidersHorizontal } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Play, Search, SlidersHorizontal, Undo2, X } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Application } from "@/app/types";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
@@ -32,6 +32,12 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
   // Filter states
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("Todos"); // Empty means all statuses
+
+  // Revert states
+  const [revertTarget, setRevertTarget] = useState<Application | null>(null);
+  const [reverting, setReverting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const headers: TableHeader[] = [
     { label: "CRT" },
@@ -78,6 +84,36 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
     }
   };
 
+  const handleRevertToPending = async () => {
+    if (!revertTarget) return;
+    try {
+      setReverting(true);
+      setErrorMsg(null);
+
+      const res = await fetch(
+        `/api/applications/${revertTarget.application_id}/revert-to-pending`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || "No se pudo revertir el estado del trámite");
+      }
+
+      setSuccessMsg(`Trámite #${revertTarget.application_id} revertido a Pendiente`);
+      setRevertTarget(null);
+      await fetchApps();
+    } catch (e: any) {
+      setErrorMsg(e?.message || "Error revirtiendo el estado del trámite");
+    } finally {
+      setReverting(false);
+      setTimeout(() => setSuccessMsg(null), 3000);
+    }
+  };
+
   useEffect(() => {
     fetchApps();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -94,8 +130,25 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
+  const revertSummary = useMemo(() => {
+    if (!revertTarget) return null;
+    const lp = revertTarget.car?.license_plate || "-";
+    const owner = `${revertTarget.owner?.first_name || "-"} ${revertTarget.owner?.last_name || ""}`.trim();
+    return { lp, owner, id: revertTarget.application_id };
+  }, [revertTarget]);
+
   return (
     <div className="p-0 sm:p-4 md:p-6">
+      {errorMsg && (
+        <div className="mb-3 rounded-[4px] border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {errorMsg}
+        </div>
+      )}
+      {successMsg && (
+        <div className="mb-3 rounded-[4px] border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+          {successMsg}
+        </div>
+      )}
       {/* Search and filters section */}
       <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 gap-3">
@@ -196,7 +249,7 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-gray-100">
+                <div className="pt-2 border-t border-gray-100 space-y-2">
                   <button
                     type="button"
                     className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] bg-[#0040B8] px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-[#00379f] transition-colors"
@@ -205,6 +258,16 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                     <Play size={14} />
                     Abrir inspección
                   </button>
+                  {item.status === "A Inspeccionar" && (
+                    <button
+                      type="button"
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] border border-amber-300 bg-amber-50 px-4 py-2 text-xs sm:text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
+                      onClick={() => setRevertTarget(item)}
+                    >
+                      <Undo2 size={14} />
+                      Revertir a Pendiente
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -270,6 +333,16 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                       >
                         <Play size={16} />
                       </button>
+                      {item.status === "A Inspeccionar" && (
+                        <button
+                          type="button"
+                          className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
+                          title="Revertir a Pendiente"
+                          onClick={() => setRevertTarget(item)}
+                        >
+                          <Undo2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -336,6 +409,65 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
           </div>
         )}
       </div>
+
+      {revertTarget && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
+            onClick={() => !reverting && setRevertTarget(null)}
+          />
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl">
+              <div className="p-4 sm:p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-2">
+                      <Undo2 className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Revertir a Pendiente</h3>
+                      <p className="mt-1 text-xs text-gray-600 sm:text-sm">
+                        Esta acción cambiará el estado de la revisión de 'A Inspeccionar' a 'Pendiente'. La revisión deberá ser procesada nuevamente.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    className="rounded-[4px] p-1 hover:bg-gray-100"
+                    onClick={() => !reverting && setRevertTarget(null)}
+                    aria-label="Cerrar"
+                  >
+                    <X className="h-5 w-5 text-gray-500" />
+                  </button>
+                </div>
+
+                <div className="mt-4 rounded-[4px] border border-gray-200 bg-gray-50 p-3">
+                  <p className="text-sm text-gray-700">
+                    Confirmás revertir el trámite #{revertSummary?.id}
+                    {revertSummary?.lp && revertSummary.lp !== "-" ? `, patente ${revertSummary.lp}` : ""} a estado 'Pendiente'?
+                  </p>
+                </div>
+
+                <div className="mt-6 flex items-center justify-end gap-3">
+                  <button
+                    className="rounded-[4px] border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                    onClick={() => setRevertTarget(null)}
+                    disabled={reverting}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="rounded-[4px] bg-amber-600 px-4 py-2 text-white hover:bg-amber-700 disabled:opacity-60"
+                    onClick={handleRevertToPending}
+                    disabled={reverting}
+                  >
+                    {reverting ? "Revirtiendo..." : "Revertir"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
