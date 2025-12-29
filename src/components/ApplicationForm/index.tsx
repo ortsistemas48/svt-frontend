@@ -504,10 +504,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         }
 
         if (!res.ok) throw new Error("Error al guardar el conductor");
-        const okConsume = await consumeSlot();
-        if (!okConsume) {
-          return;
-        }
 
       }
       if (step === 2) {
@@ -792,7 +788,11 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
                   if (confirmAction === "inspect") {
                     try {
-                      await consumeSlot();
+                      const okConsume = await consumeSlot();
+                      if (!okConsume) {
+                        setProcessingAction(false);
+                        return;
+                      }
                       router.push(`/dashboard/${id}/inspections/${applicationId}`);
                     } catch (e) {
                       console.error(e);
@@ -804,6 +804,11 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
 
                   if (confirmAction === "queue") {
                     try {
+                      const okConsume = await consumeSlot();
+                      if (!okConsume) {
+                        setProcessingAction(false);
+                        return;
+                      }
                       await sendToQueue();
                     } catch (e) {
                       console.error(e);

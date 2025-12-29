@@ -45,9 +45,9 @@ const ZONE_BY_PROVINCE: Record<string, "SUR" | "CENTRO" | "NORTE"> = {
 };
 
 const UNIT_PRICE: Record<"SUR" | "CENTRO" | "NORTE", number> = {
-  SUR: 3500,
-  CENTRO: 2500,
-  NORTE: 2000,
+  SUR: 3000,
+  CENTRO: 1500,
+  NORTE: 1500,
 };
 
 function formatARS(n: number) {
