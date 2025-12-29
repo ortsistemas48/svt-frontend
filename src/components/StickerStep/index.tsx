@@ -190,7 +190,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
       });
 
       const res = await fetch(
-        `/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}`,
+        `/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}?workshop_id=${workshopId}`,
         {
           credentials: "include",
           signal: ctrl.signal,
