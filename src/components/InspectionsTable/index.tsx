@@ -175,6 +175,7 @@ export default function InspectionTable() {
     { label: "Titular" },
     { label: "Fecha de creación" },
     { label: "Estado" },
+    { label: "Oblea" },
     { label: "Acciones" },
   ];
 
@@ -420,6 +421,10 @@ export default function InspectionTable() {
                       </span>
                     </td>
 
+                    <td className="p-3 text-center">
+                      <div className="text-sm font-medium sm:text-base">{item.sticker_number || "-"}</div>
+                    </td>
+
                     <td className="p-0">
                       <div className="flex h-full min-h-[48px] items-center justify-center gap-2 px-2 sm:gap-3 sm:px-3">
                         {(item.status !== "Pendiente" && item.status !== "Completado") && (
@@ -487,6 +492,9 @@ export default function InspectionTable() {
                       <Sk className="h-4 w-24" />
                       <Sk className="h-3 w-20" />
                     </div>
+                  </td>
+                  <td className="p-3 text-center">
+                    <Sk className="mx-auto h-4 w-16" />
                   </td>
                   <td className="p-0">
                     <div className="flex h-full min-h-[48px] items-center justify-center gap-3 px-3">

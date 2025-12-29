@@ -189,8 +189,9 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
         return updated;
       });
 
+      const url = `/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}?workshop_id=${workshopId}${appId ? `&application_id=${appId}` : ''}`;
       const res = await fetch(
-        `/api/vehicles/get-vehicle-data/${encodeURIComponent(plate)}?workshop_id=${workshopId}`,
+        url,
         {
           credentials: "include",
           signal: ctrl.signal,

@@ -103,6 +103,7 @@ export type Application = {
   inspection_1_date?: string | null;
   inspection_2_date?: string | null;
   user_name?: string | null;
+  sticker_number?: string | null;
 };
 
 export type UserTypeInWorkshop = {
