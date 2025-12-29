@@ -494,6 +494,9 @@ export default function InspectionTable() {
                     </div>
                   </td>
                   <td className="p-3 text-center">
+                    <Sk className="mx-auto h-6 w-20 rounded-full" />
+                  </td>
+                  <td className="p-3 text-center">
                     <Sk className="mx-auto h-4 w-16" />
                   </td>
                   <td className="p-0">
