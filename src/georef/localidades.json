@@ -104941,6 +104941,32 @@
         "lon": -67.7629045285789,
         "lat": -54.6407832656577
       }
+    },
+    {
+      "id": "94015030",
+      "nombre": "Tolhuin",
+      "fuente": "INDEC",
+      "provincia": {
+        "id": "94",
+        "nombre": "Tierra del Fuego"
+      },
+      "departamento": {
+        "id": "94015",
+        "nombre": "Ushuaia"
+      },
+      "municipio": {
+        "id": "940015",
+        "nombre": "Tolhuin"
+      },
+      "localidad_censal": {
+        "id": "94015030",
+        "nombre": "Tolhuin"
+      },
+      "categoria": "Localidad simple",
+      "centroide": {
+        "lon": -67.196944,
+        "lat": -54.509722
+      }
     }
   ]
 }
