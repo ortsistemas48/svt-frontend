@@ -169,9 +169,20 @@ export default function InspectionTable() {
     }
   };
 
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 1375);
+    };
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
   const headers: TableHeader[] = [
     { label: "CRT" },
-    { label: "Vehículo" },
+    { label: isSmallScreen ? "Dominio" : "Vehículo" },
     { label: "Titular" },
     { label: "Fecha de creación" },
     { label: "Estado" },
@@ -400,7 +411,7 @@ export default function InspectionTable() {
                     </td>
                     <td className="p-3 text-center">
                       <div className="text-sm font-medium sm:text-base">{item.car?.license_plate || "-"}</div>
-                      <div className="mx-auto max-w-[120px] truncate text-xs text-gray-600 sm:max-w-[160px] sm:text-sm">
+                      <div className="vehicle-details mx-auto max-w-[120px] truncate text-xs text-gray-600 sm:max-w-[160px] sm:text-sm">
                         {item.car?.brand} {item.car?.model}
                       </div>
                     </td>
@@ -815,6 +826,9 @@ export default function InspectionTable() {
         .insp-table table { border-collapse: collapse; width: 100%; }
         .insp-table thead tr { border-bottom: 1px solid rgb(229 231 235); }
         .insp-table tbody > tr { border-top: 1px solid rgb(229 231 235); }
+        @media (max-width: 1374px) {
+          .vehicle-details { display: none !important; }
+        }
       `}</style>
     </div>
   );
