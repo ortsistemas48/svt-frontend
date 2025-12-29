@@ -6,11 +6,20 @@ import clsx from "clsx";
 
 function fmtDate(d?: string | null) {
   if (!d) return "No disponible";
+  
+  // Si la fecha viene en formato YYYY-MM-DD, parsearla directamente sin conversión de zona horaria
+  const dateMatch = d.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (dateMatch) {
+    const [, year, month, day] = dateMatch;
+    return `${day}/${month}/${year}`;
+  }
+  
+  // Para otros formatos, usar Date pero con métodos UTC para evitar problemas de zona horaria
   const date = new Date(d);
   if (isNaN(date.getTime())) return "No disponible";
-  const dd = String(date.getDate()).padStart(2, "0");
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const yyyy = date.getFullYear();
+  const dd = String(date.getUTCDate()).padStart(2, "0");
+  const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const yyyy = date.getUTCFullYear();
   return `${dd}/${mm}/${yyyy}`;
 }
 
@@ -46,7 +55,6 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
   const car = qrData.car || {};
   const workshop = qrData.workshop || {};
   const insp = qrData.inspection || {};
-
   const labelCls = "text-[13px] font-medium text-zinc-600";
   const valueCls = "text-[15px] text-zinc-900";
 
@@ -66,7 +74,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
   const isCrtVigente = expDate ? !isNaN(expDate.getTime()) && expDate >= startOfToday : false;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6">
+    <div className={clsx("min-h-screen py-6", isCrtVigente ? "bg-gray-50" : "bg-red-50")}>
       <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-4">
@@ -164,8 +172,10 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
             <div
               className={clsx(
                 "px-5 py-2",
-                insp.result === "Apto" && "bg-blue-50",
-                insp.result === "Condicional" && "bg-orange-50",
+                !isCrtVigente && insp.result === "Apto" && "bg-red-50",
+                isCrtVigente && insp.result === "Apto" && "bg-blue-50",
+                !isCrtVigente && insp.result === "Condicional" && "bg-red-50",
+                isCrtVigente && insp.result === "Condicional" && "bg-orange-50",
                 insp.result === "Rechazado" && "bg-red-50",
                 !insp.result && "bg-zinc-50"
               )}
@@ -173,18 +183,24 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
               <div
                 className={clsx(
                   "w-full px-1 py-2 text-left text-sm flex items-center gap-2",
-                  insp.result === "Apto" && "text-blue-700 font-bold",
-                  insp.result === "Condicional" && "text-orange-700 font-bold",
+                  !isCrtVigente && insp.result === "Apto" && "text-red-700 font-bold",
+                  isCrtVigente && insp.result === "Apto" && "text-blue-700 font-bold",
+                  !isCrtVigente && insp.result === "Condicional" && "text-red-700 font-bold",
+                  isCrtVigente && insp.result === "Condicional" && "text-orange-700 font-bold",
                   insp.result === "Rechazado" && "text-red-700 font-bold",
                   !insp.result && "text-zinc-700 font-normal"
                 )}
               >
-                {insp.result === "Apto" && <CheckCircle className="h-4 w-4 text-blue-700" />}
-                {insp.result === "Condicional" && <Circle className="h-4 w-4 text-orange-700" />}
+                {!isCrtVigente && insp.result === "Apto" && <XCircle className="h-4 w-4 text-red-700" />}
+                {isCrtVigente && insp.result === "Apto" && <CheckCircle className="h-4 w-4 text-blue-700" />}
+                {!isCrtVigente && insp.result === "Condicional" && <XCircle className="h-4 w-4 text-red-700" />}
+                {isCrtVigente && insp.result === "Condicional" && <Circle className="h-4 w-4 text-orange-700" />}
                 {insp.result === "Rechazado" && <XCircle className="h-4 w-4 text-red-700" />}
                 {!insp.result && <Circle className="h-4 w-4 text-zinc-600" />}
                 {insp.result === "Rechazado" 
                   ? "Vehículo no apto para circular - Revisión rechazada"
+                  : !isCrtVigente && (insp.result === "Apto" || insp.result === "Condicional")
+                  ? "Vehículo no apto para circular - CRT Vencido"
                   : insp.result === "Condicional"
                   ? `Resultado condicional: Vehículo apto para circular dentro del ejido municipal hasta ${fmtDate(insp.expiration_date)}`
                   : insp.result === "Apto"
@@ -241,7 +257,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
           </div>
 
           {/* Fotos del vehículo */}
-          {insp?.id && (
+          {isCrtVigente && insp?.id && (
             <VehiclePhotos inspectionId={insp.id} inspectionDate={insp.created_at || insp.inspection_date} />
           )}
 
