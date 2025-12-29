@@ -84,14 +84,14 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
     }
   };
 
-  const handleRevertToPending = async () => {
+  const handleRevertToCompleted = async () => {
     if (!revertTarget) return;
     try {
       setReverting(true);
       setErrorMsg(null);
 
       const res = await fetch(
-        `/api/applications/${revertTarget.application_id}/revert-to-pending`,
+        `/api/applications/${revertTarget.application_id}/revert-to-completed`,
         {
           method: "POST",
           credentials: "include",
@@ -103,7 +103,7 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
         throw new Error(data?.error || "No se pudo revertir el estado del trámite");
       }
 
-      setSuccessMsg(`Trámite #${revertTarget.application_id} revertido a Pendiente`);
+      setSuccessMsg(`Trámite #${revertTarget.application_id} revertido a Completado`);
       setRevertTarget(null);
       await fetchApps();
     } catch (e: any) {
@@ -158,7 +158,7 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="w-full rounded-[4px] border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:pr-12 sm:text-base"
-              placeholder="Busca revisiones por su: CRT, DNI, CUIT, Razón Social o Dominio"
+              placeholder="Busca por: CRT, DNI, CUIT, Nro de Oblea, Razón Social o Dominio"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   setSearchQuery(q);
@@ -258,14 +258,14 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                     <Play size={14} />
                     Abrir inspección
                   </button>
-                  {item.status === "A Inspeccionar" && (
+                  {item.status === "Segunda Inspección" && (
                     <button
                       type="button"
                       className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] border border-amber-300 bg-amber-50 px-4 py-2 text-xs sm:text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
                       onClick={() => setRevertTarget(item)}
                     >
                       <Undo2 size={14} />
-                      Revertir a Pendiente
+                      Revertir a Completado
                     </button>
                   )}
                 </div>
@@ -333,11 +333,11 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                       >
                         <Play size={16} />
                       </button>
-                      {item.status === "A Inspeccionar" && (
+                      {item.status === "Segunda Inspección" && (
                         <button
                           type="button"
                           className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
-                          title="Revertir a Pendiente"
+                          title="Revertir a Completado"
                           onClick={() => setRevertTarget(item)}
                         >
                           <Undo2 size={16} />
@@ -425,9 +425,9 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                       <Undo2 className="h-5 w-5 text-amber-600" />
                     </div>
                     <div>
-                      <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Revertir a Pendiente</h3>
+                      <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Revertir a Completado</h3>
                       <p className="mt-1 text-xs text-gray-600 sm:text-sm">
-                        Esta acción cambiará el estado de la revisión de 'A Inspeccionar' a 'Pendiente'. La revisión deberá ser procesada nuevamente.
+                        Esta acción cambiará el estado de la revisión de 'Segunda Inspección' a 'Completado'. La revisión deberá ser procesada nuevamente.
                       </p>
                     </div>
                   </div>
@@ -443,7 +443,7 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                 <div className="mt-4 rounded-[4px] border border-gray-200 bg-gray-50 p-3">
                   <p className="text-sm text-gray-700">
                     Confirmás revertir el trámite #{revertSummary?.id}
-                    {revertSummary?.lp && revertSummary.lp !== "-" ? `, patente ${revertSummary.lp}` : ""} a estado 'Pendiente'?
+                    {revertSummary?.lp && revertSummary.lp !== "-" ? `, patente ${revertSummary.lp}` : ""} a estado 'Completado'?
                   </p>
                 </div>
 
@@ -457,7 +457,7 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                   </button>
                   <button
                     className="rounded-[4px] bg-amber-600 px-4 py-2 text-white hover:bg-amber-700 disabled:opacity-60"
-                    onClick={handleRevertToPending}
+                    onClick={handleRevertToCompleted}
                     disabled={reverting}
                   >
                     {reverting ? "Revirtiendo..." : "Revertir"}
