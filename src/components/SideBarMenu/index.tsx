@@ -35,7 +35,7 @@ export default function SideBarMenu({ userType, loading }: Props) {
     { href: `/dashboard/${id}/payment`, icon: BanknoteIcon, label: "Comprar revisiones", roles: ["titular", "ingeniero"] },
     { href: `/dashboard/${id}/statistics`, icon: ChartColumn, label: "Estadísticas", roles: ["titular", "ingeniero"] },
     { href: `/dashboard/${id}/files`, icon: FileText, label: "Legajos", roles: ["all"] },
-    { href: `/dashboard/${id}/users`, icon: Users, label: "Usuarios", roles: ["titular"] },
+    { href: `/dashboard/${id}/users`, icon: Users, label: "Usuarios", roles: ["titular", "ingeniero"] },
   ];
 
   const role = userType?.name?.toLowerCase();
