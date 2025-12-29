@@ -29,8 +29,8 @@ type AgeBands = {
 
 type ValidityByUsage = Record<string, AgeBands>; // key: usage value (A, B, ...)
 
-async function fetchValidity(provinceValue: string, localidadKey: string): Promise<ValidityByUsage> {
-  const url = `/api/inspection_validity/${encodeURIComponent(provinceValue)}/${encodeURIComponent(localidadKey)}`;
+async function fetchValidity(provinceCode: string, localidadKey: string): Promise<ValidityByUsage> {
+  const url = `/api/inspection_validity/${encodeURIComponent(provinceCode)}/${encodeURIComponent(localidadKey)}`;
   try {
     const res = await apiFetch(url, { method: "GET" });
     if (!res.ok) return {} as ValidityByUsage;
@@ -86,9 +86,15 @@ export default function InspectionValidityPage() {
   }, [selectedProvince]);
 
   useEffect(() => {
-    if (!selectedProvince || !selectedLocalidad) return;
+    if (!selectedProvince || !selectedLocalidad) {
+      // Limpiar validity cuando no hay localidad seleccionada
+      setValidity({});
+      return;
+    }
+    // Limpiar validity antes de cargar nuevos datos para evitar mostrar datos antiguos
+    setValidity({});
     (async () => {
-      const next = await fetchValidity(selectedProvince.value, selectedLocalidad.key);
+      const next = await fetchValidity(selectedProvince.key, selectedLocalidad.key);
       const filled: ValidityByUsage = { ...next };
       USAGE_TYPES.forEach(({ value }) => {
         if (!filled[value]) filled[value] = { up_to_36: "", from_3_to_7: "", over_7: "" };
@@ -147,7 +153,7 @@ export default function InspectionValidityPage() {
       });
 
       const res = await apiFetch(
-        `/api/inspection_validity/${encodeURIComponent(selectedProvince.value)}/${encodeURIComponent(selectedLocalidad.key)}`,
+        `/api/inspection_validity/${encodeURIComponent(selectedProvince.key)}/${encodeURIComponent(selectedLocalidad.key)}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -198,7 +204,7 @@ export default function InspectionValidityPage() {
       if (bulkLoc.over_7 !== "") values.over_7 = Number(bulkLoc.over_7);
 
       const res = await apiFetch(
-        `/api/inspection_validity/${encodeURIComponent(selectedProvince.value)}/bulk`,
+        `/api/inspection_validity/${encodeURIComponent(selectedProvince.key)}/bulk`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
