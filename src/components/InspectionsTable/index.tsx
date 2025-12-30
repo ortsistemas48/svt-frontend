@@ -1,7 +1,7 @@
 // components/InspectionTable/index.tsx
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Play, Pencil, Trash2, X, Search, SlidersHorizontal, EllipsisVertical, Undo2 } from "lucide-react";
+import { Play, Pencil, X, Search, SlidersHorizontal, EllipsisVertical, Undo2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Application } from "@/app/types";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
@@ -38,8 +38,6 @@ export default function InspectionTable() {
   const [statusFilter, setStatusFilter] = useState<string>("Todos");
   const router = useRouter();
 
-  const [deleteTarget, setDeleteTarget] = useState<Application | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [revertTarget, setRevertTarget] = useState<Application | null>(null);
   const [reverting, setReverting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -213,7 +211,7 @@ export default function InspectionTable() {
           acc.push(item);
         }
         return acc;
-      }, []);
+      }, []); 
       setItems(uniqueItems);
       setTotal(data.total ?? 0);
     } catch (err) {
@@ -252,13 +250,6 @@ export default function InspectionTable() {
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
-  const deleteSummary = useMemo(() => {
-    if (!deleteTarget) return null;
-    const lp = deleteTarget.car?.license_plate || "-";
-    const owner = `${deleteTarget.owner?.first_name || "-"} ${deleteTarget.owner?.last_name || ""}`.trim();
-    return { lp, owner, id: deleteTarget.application_id };
-  }, [deleteTarget]);
-
   const revertSummary = useMemo(() => {
     if (!revertTarget) return null;
     const lp = revertTarget.car?.license_plate || "-";
@@ -266,44 +257,16 @@ export default function InspectionTable() {
     return { lp, owner, id: revertTarget.application_id };
   }, [revertTarget]);
 
-  const handleConfirmDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      setDeleting(true);
-      setErrorMsg(null);
+ 
 
-      const res = await fetch(
-        `/api/applications/${deleteTarget.application_id}/soft-delete`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.error || "No se pudo eliminar el trámite");
-      }
-
-      setSuccessMsg(`Trámite #${deleteTarget.application_id} eliminado`);
-      setDeleteTarget(null);
-      await fetchApps();
-    } catch (e: any) {
-      setErrorMsg(e?.message || "Error eliminando el trámite");
-    } finally {
-      setDeleting(false);
-      setTimeout(() => setSuccessMsg(null), 3000);
-    }
-  };
-
-  const handleRevertToPending = async () => {
+  const handleRevertToCompleted = async () => {
     if (!revertTarget) return;
     try {
       setReverting(true);
       setErrorMsg(null);
 
       const res = await fetch(
-        `/api/applications/${revertTarget.application_id}/revert-to-pending`,
+        `/api/applications/${revertTarget.application_id}/revert-to-completed`,
         {
           method: "POST",
           credentials: "include",
@@ -312,14 +275,14 @@ export default function InspectionTable() {
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.error || "No se pudo revertir el estado del trámite");
+        throw new Error(data?.error || "No se pudo revertir el estado de la revisión");
       }
 
-      setSuccessMsg(`Trámite #${revertTarget.application_id} revertido a Pendiente`);
+      setSuccessMsg(`Revisión #${revertTarget.application_id} revertida a Completado`);
       setRevertTarget(null);
       await fetchApps();
     } catch (e: any) {
-      setErrorMsg(e?.message || "Error revirtiendo el estado del trámite");
+      setErrorMsg(e?.message || "Error revirtiendo el estado de la revisión");
     } finally {
       setReverting(false);
       setTimeout(() => setSuccessMsg(null), 3000);
@@ -347,7 +310,7 @@ export default function InspectionTable() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="w-full rounded-[4px] border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:pr-12 sm:text-base"
-              placeholder="Busca revisiones por su: CRT, DNI, CUIT, Razón Social o Dominio"
+              placeholder="Busca por: CRT, DNI, CUIT, Nro de Oblea, Razón Social o Dominio"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   setSearchQuery(q);
@@ -448,11 +411,11 @@ export default function InspectionTable() {
                             <Play size={16} />
                           </button>
                         )}
-                        {item.status === "A Inspeccionar" && (
+                        {item.status === "Segunda Inspección" && (
                           <button
                             type="button"
                             className="cursor-pointer rounded p-1 text-[#0040B8] transition-colors hover:bg-blue-50 hover:opacity-80"
-                            title="Revertir a Pendiente"
+                            title="Revertir a Completado"
                             onClick={() => setRevertTarget(item)}
                           >
                             <Undo2 size={16} />
@@ -472,7 +435,7 @@ export default function InspectionTable() {
                           <button
                             type="button"
                             className="cursor-pointer rounded p-1 text-[#0040B8] transition-colors hover:bg-blue-50 hover:opacity-80"
-                            title="Ver detalle del trámite"
+                            title="Ver detalle de la revisión"
                             onClick={() => openDetail(item)}
                           >
                             <EllipsisVertical size={16} />
@@ -570,7 +533,7 @@ export default function InspectionTable() {
       >
         <div className="flex items-center justify-between border-b px-4 py-3">
           <h2 className="text-base font-semibold sm:text-lg">
-            {detailTarget ? `Trámite #${detailTarget.application_id}` : "Detalle del trámite"}
+            {detailTarget ? `Revisión #${detailTarget.application_id}` : "Detalle de la revisión"}
           </h2>
           <button
             ref={detailCloseBtnRef}
@@ -603,12 +566,14 @@ export default function InspectionTable() {
                     valueClassName={getResultTone(detailTarget.result).text}
                     bgClassName={getResultTone(detailTarget.result).bg}
                   />
-                  <DetailRow
-                    label="Resultado (2ª)"
-                    value={detailTarget.result_2 || "-"}
-                    valueClassName={getResultTone(detailTarget.result_2).text}
-                    bgClassName={getResultTone(detailTarget.result_2).bg}
-                  />
+                  {detailTarget.result === "Condicional" && (
+                    <DetailRow
+                      label="Resultado (2ª)"
+                      value={detailTarget.result_2 || "-"}
+                      valueClassName={getResultTone(detailTarget.result_2).text}
+                      bgClassName={getResultTone(detailTarget.result_2).bg}
+                    />
+                  )}
                   <DetailRow label="Fecha de creación" value={formatDateTime(detailTarget.date)} />
                   <DetailRow label="Usuario" value={detailTarget.user_name ?? "-"} />
                 </div>
@@ -674,93 +639,38 @@ export default function InspectionTable() {
                       value={observations.first} 
                     />
                   )}
-                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Segunda Inspección
-                  </h2>
-                  <DetailRow label="Fecha" value={formatDateTime(detailTarget.inspection_2_date)} />
-                  {detailTarget.inspection_2_date && (
-                    loadingObservations ? (
-                      <div className="rounded-[4px] border border-gray-100 bg-gray-50 px-3 py-2">
-                        <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Observaciones</span>
-                        <div className="mt-2 flex items-center gap-2">
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#0040B8]"></div>
-                          <span className="text-xs text-gray-500">Cargando observaciones...</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <DetailObservationRow 
-                        label="Observaciones" 
-                        value={observations.second} 
-                      />
-                    )
+                  {detailTarget.result === "Condicional" && (
+                    <>
+                      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Segunda Inspección
+                      </h2>
+                      <DetailRow label="Fecha" value={formatDateTime(detailTarget.inspection_2_date)} />
+                      {detailTarget.inspection_2_date && (
+                        loadingObservations ? (
+                          <div className="rounded-[4px] border border-gray-100 bg-gray-50 px-3 py-2">
+                            <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Observaciones</span>
+                            <div className="mt-2 flex items-center gap-2">
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#0040B8]"></div>
+                              <span className="text-xs text-gray-500">Cargando observaciones...</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <DetailObservationRow 
+                            label="Observaciones" 
+                            value={observations.second} 
+                          />
+                        )
+                      )}
+                    </>
                   )}
                 </div>
               </section>
             </div>
           ) : (
-            <p className="text-sm text-gray-600">Selecciona un trámite para ver sus datos.</p>
+            <p className="text-sm text-gray-600">Selecciona una revisión para ver sus datos.</p>
           )}
         </div>
       </aside>
-
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
-            onClick={() => !deleting && setDeleteTarget(null)}
-          />
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl">
-              <div className="p-4 sm:p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-xl border border-red-200 bg-red-50 p-2">
-                      <Trash2 className="h-5 w-5 text-red-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Eliminar trámite</h3>
-                      <p className="mt-1 text-xs text-gray-600 sm:text-sm">
-                        Esta acción marca el trámite como eliminado, no lo borra de forma definitiva
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    className="rounded-[4px] p-1 hover:bg-gray-100"
-                    onClick={() => !deleting && setDeleteTarget(null)}
-                    aria-label="Cerrar"
-                  >
-                    <X className="h-5 w-5 text-gray-500" />
-                  </button>
-                </div>
-
-                <div className="mt-4 rounded-[4px] border border-gray-200 bg-gray-50 p-3">
-                  <p className="text-sm text-gray-700">
-                    Confirmás eliminar el trámite #{deleteSummary?.id}
-                    {deleteSummary?.lp && deleteSummary.lp !== "-" ? `, patente ${deleteSummary.lp}` : ""}?
-                  </p>
-                </div>
-
-                <div className="mt-6 flex items-center justify-end gap-3">
-                  <button
-                    className="rounded-[4px] border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-                    onClick={() => setDeleteTarget(null)}
-                    disabled={deleting}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    className="rounded-[4px] bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-60"
-                    onClick={handleConfirmDelete}
-                    disabled={deleting}
-                  >
-                    {deleting ? "Eliminando..." : "Eliminar"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {revertTarget && (
         <div className="fixed inset-0 z-50">
@@ -777,9 +687,9 @@ export default function InspectionTable() {
                       <Undo2 className="h-5 w-5 text-amber-600" />
                     </div>
                     <div>
-                      <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Revertir a Pendiente</h3>
+                      <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Revertir a Completado</h3>
                       <p className="mt-1 text-xs text-gray-600 sm:text-sm">
-                        Esta acción cambiará el estado de la revisión de 'A Inspeccionar' a 'Pendiente'. La revisión deberá ser procesada nuevamente.
+                        Esta acción cambiará el estado de la revisión de 'Segunda Inspección' a 'Completado'. La revisión deberá ser procesada nuevamente.
                       </p>
                     </div>
                   </div>
@@ -794,8 +704,8 @@ export default function InspectionTable() {
 
                 <div className="mt-4 rounded-[4px] border border-gray-200 bg-gray-50 p-3">
                   <p className="text-sm text-gray-700">
-                    Confirmás revertir el trámite #{revertSummary?.id}
-                    {revertSummary?.lp && revertSummary.lp !== "-" ? `, patente ${revertSummary.lp}` : ""} a estado 'Pendiente'?
+                    Confirmás revertir la revisión #{revertSummary?.id}
+                    {revertSummary?.lp && revertSummary.lp !== "-" ? `, patente ${revertSummary.lp}` : ""} a estado 'Completado'?
                   </p>
                 </div>
 
@@ -809,7 +719,7 @@ export default function InspectionTable() {
                   </button>
                   <button
                     className="rounded-[4px] bg-amber-600 px-4 py-2 text-white hover:bg-amber-700 disabled:opacity-60"
-                    onClick={handleRevertToPending}
+                    onClick={handleRevertToCompleted}
                     disabled={reverting}
                   >
                     {reverting ? "Revirtiendo..." : "Revertir"}
