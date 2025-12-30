@@ -37,11 +37,15 @@ export default function LoginForm() {
 
     try {
       setSubmitting(true); 
+      // Normalizar email a minúsculas si contiene @, de lo contrario dejarlo como está (puede ser DNI)
+      const normalizedIdentifier = emailOrDni.trim().includes('@') 
+        ? emailOrDni.trim().toLowerCase() 
+        : emailOrDni.trim();
       const res = await fetch(`/api/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailOrDni.trim(), password: password.trim() }),
+        body: JSON.stringify({ email: normalizedIdentifier, password: password.trim() }),
       });
 
       if (!res.ok) {
