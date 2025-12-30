@@ -58,6 +58,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
   const labelCls = "text-[13px] font-medium text-zinc-600";
   const valueCls = "text-[15px] text-zinc-900";
 
+
   // Badge de estado: toma el de la inspección y, si no hay, el del sticker
   const estado = ( qrData.sticker_status || "").toString();
   const estadoCfg =
@@ -72,6 +73,9 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const expDate = insp?.expiration_date ? new Date(insp.expiration_date) : null;
   const isCrtVigente = expDate ? !isNaN(expDate.getTime()) && expDate >= startOfToday : false;
+  
+  // Calcular si se deben mostrar las fotos
+  const shouldShowPhotos = insp?.photos_inspection_ids && insp.photos_inspection_ids.length > 0 && (isCrtVigente || insp?.has_result_2 || insp?.is_second);
 
   return (
     <div className={clsx("min-h-screen py-6", isCrtVigente ? "bg-gray-50" : "bg-red-50")}>
@@ -257,9 +261,16 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
           </div>
 
           {/* Fotos del vehículo */}
-          {isCrtVigente && insp?.id && (
-            <VehiclePhotos inspectionId={insp.id} inspectionDate={insp.created_at || insp.inspection_date} />
-          )}
+          {shouldShowPhotos && insp?.photos_inspection_ids && insp.photos_inspection_ids.map((inspectionId: number, index: number) => {
+            return (
+              <VehiclePhotos 
+                key={inspectionId} 
+                inspectionId={inspectionId} 
+                inspectionDate={insp.created_at || insp.inspection_date}
+                title={index === 0 ? "Fotos de la primera inspección" : "Fotos de la segunda inspección"}
+              />
+            );
+          })}
 
           {/* Leyenda legal */}
           <div className="max-w-4xl mx-auto rounded-2xl border border-[#d3d3d3] bg-white p-6 text-center">

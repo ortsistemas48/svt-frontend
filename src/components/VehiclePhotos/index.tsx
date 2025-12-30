@@ -53,16 +53,16 @@ const handleDownload = async (fileUrl: string, fileName: string) => {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
   } catch (error) {
-    console.error("Error al descargar:", error);
     // Fallback: abrir en nueva pestaña si falla la descarga
     window.open(fileUrl, "_blank");
   }
 };
 
-export default function VehiclePhotos({ inspectionId, inspectionDate }: { inspectionId?: number | null; inspectionDate?: string | null }) {
+export default function VehiclePhotos({ inspectionId, inspectionDate, title }: { inspectionId?: number | null; inspectionDate?: string | null; title?: string }) {
   const [photos, setPhotos] = useState<InspDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!inspectionId) {
@@ -73,16 +73,18 @@ export default function VehiclePhotos({ inspectionId, inspectionDate }: { inspec
     const fetchPhotos = async () => {
       try {
         setLoading(true);
+        setError(null);
         // Usar endpoint público de QR para obtener las fotos
         const res = await apiFetch(`/api/qr/get-vehicle-photos/${inspectionId}`);
+        
         if (!res.ok) {
-          throw new Error("No se pudieron cargar las fotos");
+          const errorText = await res.text().catch(() => "Unknown error");
+          throw new Error(`No se pudieron cargar las fotos: ${res.status} - ${errorText}`);
         }
         const data: InspDoc[] = await res.json();
         setPhotos(data);
-      } catch (err) {
-        console.error("Error al cargar fotos:", err);
-        setError("No se pudieron cargar las fotos del vehículo");
+      } catch (err: any) {
+        setError(err?.message || "No se pudieron cargar las fotos del vehículo");
       } finally {
         setLoading(false);
       }
@@ -107,8 +109,8 @@ export default function VehiclePhotos({ inspectionId, inspectionDate }: { inspec
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto rounded-2xl border border-[#d3d3d3] overflow-hidden">
-        <div className="bg-white px-5 py-4">
+      <div className="max-w-4xl mx-auto rounded-2xl border border-red-300 overflow-hidden">
+        <div className="bg-red-50 px-5 py-4">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       </div>
@@ -126,7 +128,7 @@ export default function VehiclePhotos({ inspectionId, inspectionDate }: { inspec
           <FileImage className="w-5 h-5 text-green-600" />
         </div>
         <div>
-          <h2 className="text-[15px] font-semibold text-zinc-900">Fotos del vehículo</h2>
+          <h2 className="text-[15px] font-semibold text-zinc-900">{title || "Fotos del vehículo"}</h2>
           <p className="text-xs text-zinc-600">
             Fecha de toma: {fmtDate(inspectionDate)}
           </p>
@@ -135,54 +137,66 @@ export default function VehiclePhotos({ inspectionId, inspectionDate }: { inspec
       <div className="border-t border-[#eaeaea]" />
       <div className="px-5 py-5 bg-white">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {photos.map((photo) => (
-            <div
-              key={photo.id}
-              className="relative rounded-lg sm:rounded-[14px] border border-[#E6E6E6] bg-white p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                <a href={photo.file_url} target="_blank" rel="noopener noreferrer" className="w-full group">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-lg sm:rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden group-hover:opacity-90">
-                    {photo.mime_type?.startsWith("image/") ? (
-                      <img src={photo.file_url} alt={photo.file_name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-zinc-400">
-                        {iconForMime(photo.mime_type)}
-                      </div>
-                    )}
+          {photos.map((photo) => {
+            const hasImageError = imageErrors.has(photo.id);
+            const isImage = photo.mime_type?.startsWith("image/");
+            
+            return (
+              <div
+                key={photo.id}
+                className="relative rounded-lg sm:rounded-[14px] border border-[#E6E6E6] bg-white p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="w-full">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-lg sm:rounded-[14px] bg-[#F5F7FF] flex items-center justify-center overflow-hidden">
+                      {isImage && !hasImageError ? (
+                        <img 
+                          src={photo.file_url} 
+                          alt={photo.file_name} 
+                          className="w-full h-full object-cover"
+                          onError={() => {
+                            setImageErrors(prev => new Set(prev).add(photo.id));
+                          }}
+                        />
+                      ) : (
+                        <div className="text-zinc-400">
+                          {iconForMime(photo.mime_type)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-full mt-2">
+                      <p className="text-xs sm:text-sm font-medium text-gray-900 truncate" title={photo.file_name}>
+                        {photo.file_name}
+                      </p>
+                      <p className="text-[10px] sm:text-xs text-[#7a7a7a] mt-1">
+                        {photo.mime_type || "archivo"} · {prettySize(photo.size_bytes)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="w-full mt-2">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900 truncate group-hover:underline" title={photo.file_name}>
-                      {photo.file_name}
-                    </p>
-                    <p className="text-[10px] sm:text-xs text-[#7a7a7a] mt-1">
-                      {photo.mime_type || "archivo"} · {prettySize(photo.size_bytes)}
-                    </p>
+                  <div className="w-full flex justify-center gap-3">
+                    <a
+                      href={photo.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] sm:text-xs text-[#0040B8] hover:underline"
+                    >
+                      Ver
+                    </a>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDownload(photo.file_url, photo.file_name);
+                      }}
+                      className="text-[10px] sm:text-xs text-[#0040B8] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
+                    >
+                      <Download className="w-3 h-3" />
+                      Descargar
+                    </button>
                   </div>
-                </a>
-                <div className="w-full flex justify-center gap-3">
-                  <a
-                    href={photo.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[10px] sm:text-xs text-[#0040B8] hover:underline"
-                  >
-                    Ver
-                  </a>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleDownload(photo.file_url, photo.file_name);
-                    }}
-                    className="text-[10px] sm:text-xs text-[#0040B8] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
-                  >
-                    <Download className="w-3 h-3" />
-                    Descargar
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
