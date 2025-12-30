@@ -138,7 +138,7 @@ export default function DashboardClientLayout({
       [`/dashboard/${workshopId}/reprint-crt`]: ["all"],
       [`/dashboard/${workshopId}/buy-oblea`]: ["titular"],
       [`/dashboard/${workshopId}/statistics`]: ["titular", "ingeniero"],
-      [`/dashboard/${workshopId}/users`]: ["titular"],
+      [`/dashboard/${workshopId}/users`]: ["titular", "ingeniero"],
       [`/dashboard/${workshopId}/settings`]: ["titular"],
     };
 
