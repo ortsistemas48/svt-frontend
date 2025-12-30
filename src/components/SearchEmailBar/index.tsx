@@ -20,7 +20,7 @@ export default function SearchEmailBar({ workshopId }: { workshopId: number }) {
         <Search size={20} className="text-gray-500 mr-3 flex-shrink-0 sm:w-[18px] sm:h-[18px] md:w-5 md:h-5" />
         <input
           type="email"
-          placeholder="Agregar usuario"
+          placeholder="Ingresar email del usuario"
           className="w-full text-base sm:text-sm md:text-base focus:outline-none bg-transparent placeholder:text-gray-400 placeholder:text-base sm:placeholder:text-sm"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
