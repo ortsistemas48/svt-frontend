@@ -4,6 +4,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useApplication } from "@/context/ApplicationContext";
 import { useParams } from "next/navigation";
+import { X } from "lucide-react";
 
 const PLATE_REGEX = /^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$/;
 
@@ -35,6 +36,13 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
   const [manualCode, setManualCode] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
   const [isAssigningManual, setIsAssigningManual] = useState(false);
+  const [isFirstApplication, setIsFirstApplication] = useState<boolean | null>(null);
+
+  // Modal de confirmación
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+  const [confirmType, setConfirmType] = useState<"assign" | "unassign">("assign");
 
   const fetchRef = useRef<{ id: number; ctrl?: AbortController }>({ id: 0 });
   const prevLicensePlateRef = useRef<string | undefined>(undefined);
@@ -115,6 +123,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     if (mode === "result") {
       setMode("idle");
       setVehicleFound(null);
+      setIsFirstApplication(null);
       setCar((prev: any) => ({
         ...(prev || {}),
         sticker_id: undefined,
@@ -154,6 +163,35 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
 
   const sanitizeStickerPart = (s: string) =>
     s.toUpperCase().replace(/[\s-_/\\.]/g, "");
+
+  // Función para verificar si es la primera revisión
+  const checkIfFirstApplication = async (licensePlate: string): Promise<boolean> => {
+    try {
+      // Buscar aplicaciones del taller con este dominio
+      const res = await fetch(
+        `/api/applications/workshop/${workshopId}/full?q=${encodeURIComponent(licensePlate)}&per_page=100`,
+        { credentials: "include" }
+      );
+      if (!res.ok) {
+        // Si hay error, asumimos que es la primera
+        return true;
+      }
+      const data = await res.json();
+      const applications = Array.isArray(data) ? data : (data.items || []);
+      // Filtrar solo las que coinciden exactamente con el dominio y excluir la actual
+      const matchingApps = applications.filter((app: any) => {
+        const appPlate = app.car?.license_plate?.trim().toUpperCase();
+        const searchPlate = licensePlate.trim().toUpperCase();
+        return appPlate === searchPlate && 
+               app.application_id?.toString() !== appId?.toString();
+      });
+      return matchingApps.length === 0;
+    } catch (e) {
+      console.error("Error checking first application:", e);
+      // En caso de error, asumimos que es la primera
+      return true;
+    }
+  };
 
   const fetchVehicleByPlate = async () => {
     const plate = plateQuery.trim().toUpperCase().replace(/[-\s]/g, "");
@@ -205,6 +243,9 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
           license_plate: plate,
         });
         setVehicleFound(false);
+        // Verificar si es la primera aplicación para este dominio
+        const isFirst = await checkIfFirstApplication(plate);
+        setIsFirstApplication(isFirst);
         setMode("result");
         setErrors((prev: any) => {
           if (!prev) return prev;
@@ -235,6 +276,9 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
       const data = await res.json();
       setCar((prev: any) => safeMergeCar(prev, data));
       setObleaValue(String(data?.sticker?.sticker_number ?? data?.oblea ?? ""));
+      // Verificar si es la primera aplicación para este dominio
+      const isFirst = await checkIfFirstApplication(plate);
+      setIsFirstApplication(isFirst);
       setMode("result");
       void fetchAvailableHint();
     } catch (e: any) {
@@ -247,105 +291,134 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     }
   };
 
-  const handleAutoAssign = async () => {
-    setAssignError(null);
-    setIsAssigning(true);
-    try {
-      const plate = (
-        car?.license_plate ||
-        plateQuery ||
-        ""
-      )
-        .trim()
-        .toUpperCase();
-      if (!plate || !PLATE_REGEX.test(plate)) {
-        setAssignError("Dominio inválido, corregilo e intentá otra vez.");
-        return;
-      }
+  const handleAutoAssign = () => {
+    setConfirmMessage("¿Confirmás asignar la oblea a este vehículo?");
+    setConfirmType("assign");
+    setConfirmAction(() => async () => {
+      setShowConfirmModal(false);
+      setAssignError(null);
+      setIsAssigning(true);
+      try {
+        const plate = (
+          car?.license_plate ||
+          plateQuery ||
+          ""
+        )
+          .trim()
+          .toUpperCase();
+        if (!plate || !PLATE_REGEX.test(plate)) {
+          setAssignError("Dominio inválido, corregilo e intentá otra vez.");
+          setIsAssigning(false);
+          return;
+        }
 
-      const avRes = await fetch(
-        `/api/stickers/available?workshop_id=${workshopId}`,
-        { credentials: "include" }
-      );
-      if (!avRes.ok) {
-        setAssignError("No se pudieron consultar las obleas disponibles.");
-        return;
-      }
-      const list = await avRes.json();
-      if (!Array.isArray(list) || list.length === 0) {
-        setAssignError("No hay obleas disponibles en el taller.");
-        return;
-      }
+        const avRes = await fetch(
+          `/api/stickers/available?workshop_id=${workshopId}`,
+          { credentials: "include" }
+        );
+        if (!avRes.ok) {
+          setAssignError("No se pudieron consultar las obleas disponibles.");
+          setIsAssigning(false);
+          return;
+        }
+        const list = await avRes.json();
+        if (!Array.isArray(list) || list.length === 0) {
+          setAssignError("No hay obleas disponibles en el taller.");
+          setIsAssigning(false);
+          return;
+        }
 
-      const pick = list[0];
-      const asRes = await fetch(`/api/stickers/assign-to-car`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        const pick = list[0];
+        const asRes = await fetch(`/api/stickers/assign-to-car`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            license_plate: plate,
+            sticker_id: pick.id,
+            workshop_id: workshopId,
+          }),
+        });
+        if (!asRes.ok) {
+          const j = await asRes.json().catch(() => ({}));
+          setAssignError(j?.error || "No se pudo asignar la oblea.");
+          setIsAssigning(false);
+          return;
+        }
+
+        setCar((prev: any) => ({
+          ...(prev || {}),
           license_plate: plate,
           sticker_id: pick.id,
-          workshop_id: workshopId,
-        }),
-      });
-      if (!asRes.ok) {
-        const j = await asRes.json().catch(() => ({}));
-        setAssignError(j?.error || "No se pudo asignar la oblea.");
-        return;
+          sticker: { id: pick.id, sticker_number: pick.sticker_number },
+        }));
+        setObleaValue(String(pick.sticker_number || ""));
+      } catch (e) {
+        console.error(e);
+        setAssignError("Ocurrió un error asignando la oblea.");
+      } finally {
+        setIsAssigning(false);
       }
-
-      setCar((prev: any) => ({
-        ...(prev || {}),
-        license_plate: plate,
-        sticker_id: pick.id,
-        sticker: { id: pick.id, sticker_number: pick.sticker_number },
-      }));
-      setObleaValue(String(pick.sticker_number || ""));
-    } catch (e) {
-      console.error(e);
-      setAssignError("Ocurrió un error asignando la oblea.");
-    } finally {
-      setIsAssigning(false);
-    }
+    });
+    setShowConfirmModal(true);
   };
 
   const handleUnassign = async () => {
-    setAssignError(null);
-    setIsAssigning(true);
-    try {
-      const plate = (
-        car?.license_plate ||
-        plateQuery ||
-        ""
-      )
-        .trim()
-        .toUpperCase();
-      if (!plate) return;
+    const plate = (
+      car?.license_plate ||
+      plateQuery ||
+      ""
+    )
+      .trim()
+      .toUpperCase();
+    
+    if (!plate) return;
 
-      const res = await fetch(`/api/stickers/unassign-from-car`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ license_plate: plate, set_available: false }),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        setAssignError(j?.error || "No se pudo quitar la oblea.");
-        return;
+    // Verificar si es la primera aplicación
+    const isFirst = await checkIfFirstApplication(plate);
+    setIsFirstApplication(isFirst);
+    
+    const message = isFirst
+      ? "¿Confirmás quitar la oblea? La oblea se va a poner como disponible nuevamente."
+      : "¿Confirmás quitar la oblea? Se va a invalidar.";
+
+    setConfirmMessage(message);
+    setConfirmType("unassign");
+    setConfirmAction(() => async () => {
+      setShowConfirmModal(false);
+      setAssignError(null);
+      setIsAssigning(true);
+      try {
+        // Si es la primera aplicación, poner como disponible (true), sino invalidar (false)
+        const setAvailable = isFirst === true;
+
+        const res = await fetch(`/api/stickers/unassign-from-car`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ license_plate: plate, set_available: setAvailable }),
+        });
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          setAssignError(j?.error || "No se pudo quitar la oblea.");
+          setIsAssigning(false);
+          return;
+        }
+
+        setCar((prev: any) => ({
+          ...(prev || {}),
+          sticker_id: null,
+          sticker: undefined,
+        }));
+        setObleaValue("");
+      } catch (e) {
+        console.error(e);
+        setAssignError("Ocurrió un error quitando la oblea.");
+      } finally {
+        setIsAssigning(false);
       }
-
-      setCar((prev: any) => ({
-        ...(prev || {}),
-        sticker_id: null,
-        sticker: undefined,
-      }));
-      setObleaValue("");
-    } catch (e) {
-      console.error(e);
-      setAssignError("Ocurrió un error quitando la oblea.");
-    } finally {
-      setIsAssigning(false);
-    }
+    });
+    setShowConfirmModal(true);
   };
 
   function buildStickerFromParts(prefixRaw: string, codeRaw: string) {
@@ -354,71 +427,79 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
     return prefix + code;
   }
 
-  const handleManualAssign = async () => {
-    setManualError(null);
-    setAssignError(null);
-    setIsAssigningManual(true);
+  const handleManualAssign = () => {
+    setConfirmMessage("¿Confirmás asignar la oblea a este vehículo?");
+    setConfirmType("assign");
+    setConfirmAction(() => async () => {
+      setShowConfirmModal(false);
+      setManualError(null);
+      setAssignError(null);
+      setIsAssigningManual(true);
+      try {
+        const plate = (
+          car?.license_plate ||
+          plateQuery ||
+          ""
+        )
+          .trim()
+          .toUpperCase();
 
-    try {
-      const plate = (
-        car?.license_plate ||
-        plateQuery ||
-        ""
-      )
-        .trim()
-        .toUpperCase();
+        if (!plate || !PLATE_REGEX.test(plate)) {
+          setManualError("Dominio inválido, corregilo e intentá otra vez.");
+          setIsAssigningManual(false);
+          return;
+        }
 
-      if (!plate || !PLATE_REGEX.test(plate)) {
-        setManualError("Dominio inválido, corregilo e intentá otra vez.");
-        return;
-      }
+        const cleanedCode = manualCode.replace(/\D/g, "");
+        if (!cleanedCode) {
+          setManualError("Ingresá el código numérico de la oblea.");
+          setIsAssigningManual(false);
+          return;
+        }
 
-      const cleanedCode = manualCode.replace(/\D/g, "");
-      if (!cleanedCode) {
-        setManualError("Ingresá el código numérico de la oblea.");
-        return;
-      }
+        const finalSticker = buildStickerFromParts(
+          manualPrefix,
+          manualCode
+        );
 
-      const finalSticker = buildStickerFromParts(
-        manualPrefix,
-        manualCode
-      );
+        const res = await fetch(`/api/stickers/assign-by-number`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            license_plate: plate,
+            workshop_id: workshopId,
+            sticker_number: finalSticker,
+          }),
+        });
 
-      const res = await fetch(`/api/stickers/assign-by-number`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          setManualError(j?.error || "No se pudo asignar la oblea ingresada.");
+          setIsAssigningManual(false);
+          return;
+        }
+
+        const j = await res.json();
+        setCar((prev: any) => ({
+          ...(prev || {}),
           license_plate: plate,
-          workshop_id: workshopId,
-          sticker_number: finalSticker,
-        }),
-      });
+          sticker_id: j?.sticker_id,
+          sticker: { id: j?.sticker_id, sticker_number: j?.sticker_number },
+        }));
+        setObleaValue(String(j?.sticker_number || ""));
 
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        setManualError(j?.error || "No se pudo asignar la oblea ingresada.");
-        return;
+        setManualOpen(false);
+        setManualPrefix("");
+        setManualCode("");
+      } catch (e) {
+        console.error(e);
+        setManualError("Ocurrió un error asignando la oblea.");
+      } finally {
+        setIsAssigningManual(false);
       }
-
-      const j = await res.json();
-      setCar((prev: any) => ({
-        ...(prev || {}),
-        license_plate: plate,
-        sticker_id: j?.sticker_id,
-        sticker: { id: j?.sticker_id, sticker_number: j?.sticker_number },
-      }));
-      setObleaValue(String(j?.sticker_number || ""));
-
-      setManualOpen(false);
-      setManualPrefix("");
-      setManualCode("");
-    } catch (e) {
-      console.error(e);
-      setManualError("Ocurrió un error asignando la oblea.");
-    } finally {
-      setIsAssigningManual(false);
-    }
+    });
+    setShowConfirmModal(true);
   };
 
   const plateErr = errors?.car_license_plate;
@@ -694,6 +775,59 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
           </div>
         )}
       </div>
+
+      {/* Modal de confirmación */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
+            onClick={() => setShowConfirmModal(false)}
+          />
+          <div className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-start justify-between mb-4">
+                <h3 className="text-base font-semibold text-gray-900 sm:text-lg">
+                  Confirmar acción
+                </h3>
+                <button
+                  className="rounded-[4px] p-1 hover:bg-gray-100 transition-colors"
+                  onClick={() => setShowConfirmModal(false)}
+                  aria-label="Cerrar"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-700 mb-6">
+                {confirmMessage}
+              </p>
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  className="rounded-[4px] border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className={`rounded-[4px] px-4 py-2 text-sm text-white transition-colors ${
+                    confirmType === "unassign"
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-[#0040B8] hover:bg-[#00379f]"
+                  }`}
+                  onClick={() => {
+                    if (confirmAction) {
+                      confirmAction();
+                    }
+                  }}
+                >
+                  {confirmType === "unassign" ? "Quitar oblea" : "Asignar oblea"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
