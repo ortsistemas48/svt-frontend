@@ -1,7 +1,7 @@
 // components/QueueTable/index.tsx
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import { Play, Search, SlidersHorizontal, Undo2, X } from "lucide-react";
+import { Play, Search, SlidersHorizontal, Undo2, X, EllipsisVertical } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Application } from "@/app/types";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
@@ -38,13 +38,24 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
   const [reverting, setReverting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [detailTarget, setDetailTarget] = useState<Application | null>(null);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 1375);
+    };
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   const headers: TableHeader[] = [
     { label: "CRT" },
-    { label: "Vehículo" },
-    { label: "Titular" },
+    { label: isSmallScreen ? "Dominio" : "Vehículo" },
     { label: "Fecha de creación" },
     { label: "Estado" },
+    { label: "Oblea" },
     { label: "Acciones" },
   ];
 
@@ -238,9 +249,8 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                     <div className="text-gray-500">{item.car?.brand} {item.car?.model}</div>
                   </div>
                   <div>
-                    <div className="text-gray-600 mb-1">Titular</div>
-                    <div className="font-medium">{ownerText}</div>
-                    <div className="text-gray-500">{identityText || "-"}</div>
+                    <div className="text-gray-600 mb-1">Oblea</div>
+                    <div className="font-medium">{item.sticker_number || "-"}</div>
                   </div>
                   <div>
                     <div className="text-gray-600 mb-1">Fecha de creación</div>
@@ -276,8 +286,13 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
       </div>
 
       {/* Tabla para desktop */}
-      <div className="hidden xl:block rounded-xl sm:rounded-[14px] border border-gray-200 overflow-hidden bg-white">
+      <div className="hidden xl:block queue-table rounded-xl sm:rounded-[14px] border border-gray-200 overflow-hidden bg-white">
         <div className="overflow-x-auto">
+          <style jsx global>{`
+            @media (max-width: 1374px) {
+              .queue-table .vehicle-details { display: none !important; }
+            }
+          `}</style>
           <TableTemplate<Application>
             headers={headers}
             items={items}
@@ -301,15 +316,9 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                   <td className="p-3 text-center text-sm sm:text-base">{item.application_id}</td>
                   <td className="p-3 text-center">
                     <div className="font-medium text-sm sm:text-base">{item.car?.license_plate || "-"}</div>
-                    <div className="text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-[160px] mx-auto">
+                    <div className="vehicle-details text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-[160px] mx-auto">
                       {item.car?.brand} {item.car?.model}
                     </div>
-                  </td>
-                  <td className="p-3 text-center">
-                    <div className="font-medium text-sm sm:text-base max-w-[120px] sm:max-w-[160px] truncate mx-auto">
-                      {ownerText}
-                    </div>
-                    <div className="text-xs sm:text-sm text-gray-600">{identityText || "-"}</div>
                   </td>
                   <td className="p-3 text-center">
                     <div className="text-sm sm:text-base">{date}</div>
@@ -323,26 +332,20 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                     </span>
                   </td>
 
+                  <td className="p-3 text-center">
+                    <div className="text-sm font-medium sm:text-base">{item.sticker_number || "-"}</div>
+                  </td>
+
                   <td className="p-0">
-                    <div className="flex justify-center items-center gap-2 sm:gap-3 h-full min-h-[48px] px-2 sm:px-3">
+                    <div className="flex justify-center items-center h-full min-h-[48px] px-2 sm:px-3">
                       <button
                         type="button"
-                        className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
-                        title="Abrir inspección"
-                        onClick={() => router.push(`/dashboard/${id}/inspections/${item.application_id}`)}
+                        className="cursor-pointer text-gray-600 hover:text-[#0040B8] p-1 rounded hover:bg-blue-50 transition-colors"
+                        title="Ver detalles"
+                        onClick={() => setDetailTarget(item)}
                       >
-                        <Play size={16} />
+                        <EllipsisVertical size={18} />
                       </button>
-                      {item.status === "Segunda Inspección" && (
-                        <button
-                          type="button"
-                          className="cursor-pointer text-[#0040B8] hover:opacity-80 p-1 rounded hover:bg-blue-50 transition-colors"
-                          title="Revertir a Completado"
-                          onClick={() => setRevertTarget(item)}
-                        >
-                          <Undo2 size={16} />
-                        </button>
-                      )}
                     </div>
                   </td>
                 </tr>
@@ -359,12 +362,6 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                 </td>
                 <td className="p-3 text-center">
                   <div className="flex flex-col items-center gap-1">
-                    <Sk className="h-4 w-40" />
-                    <Sk className="h-3 w-24" />
-                  </div>
-                </td>
-                <td className="p-3 text-center">
-                  <div className="flex flex-col items-center gap-1">
                     <Sk className="h-4 w-24" />
                     <Sk className="h-3 w-20" />
                   </div>
@@ -372,8 +369,11 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                 <td className="p-3 text-center">
                   <Sk className="h-6 w-20 rounded-full mx-auto" />
                 </td>
+                <td className="p-3 text-center">
+                  <Sk className="h-4 w-16 mx-auto" />
+                </td>
                 <td className="p-0">
-                  <div className="flex justify-center items-center gap-3 h-full min-h-[48px] px-3">
+                  <div className="flex justify-center items-center h-full min-h-[48px] px-3">
                     <Sk className="h-5 w-5 rounded" />
                   </div>
                 </td>
@@ -409,6 +409,170 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
           </div>
         )}
       </div>
+
+      {/* Overlay de detalles desde la derecha */}
+      {detailTarget && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-[1px] transition-opacity"
+            onClick={() => setDetailTarget(null)}
+          />
+          <div className="absolute inset-y-0 right-0 w-full max-w-2xl bg-white shadow-2xl">
+            <div className="h-full overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+                <h2 className="text-xl font-semibold text-gray-900">Detalles de la revisión</h2>
+                <button
+                  className="rounded-[4px] p-1 hover:bg-gray-100 transition-colors"
+                  onClick={() => setDetailTarget(null)}
+                  aria-label="Cerrar"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                {/* Información básica */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-600">CRT</p>
+                    <p className="text-base font-semibold text-gray-900">{detailTarget.application_id || "-"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-600">Estado</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${(STATUS_TONES[detailTarget.status] || DEFAULT_TONE).text} ${(STATUS_TONES[detailTarget.status] || DEFAULT_TONE).bg}`}>
+                      {detailTarget.status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Vehículo */}
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Vehículo</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">Dominio</p>
+                      <p className="text-base font-medium text-gray-900">{detailTarget.car?.license_plate || "-"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">Marca</p>
+                      <p className="text-base font-medium text-gray-900">{detailTarget.car?.brand || "-"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">Modelo</p>
+                      <p className="text-base font-medium text-gray-900">{detailTarget.car?.model || "-"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Titular */}
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Titular</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {detailTarget.owner?.cuit ? (
+                      <>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">Razón Social</p>
+                          <p className="text-base font-medium text-gray-900">{detailTarget.owner?.razon_social || "-"}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">CUIT</p>
+                          <p className="text-base font-medium text-gray-900">{detailTarget.owner?.cuit || "-"}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">Nombre</p>
+                          <p className="text-base font-medium text-gray-900">
+                            {`${detailTarget.owner?.first_name || ""} ${detailTarget.owner?.last_name || ""}`.trim() || "-"}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">DNI</p>
+                          <p className="text-base font-medium text-gray-900">{detailTarget.owner?.dni || "-"}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Información adicional */}
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Información adicional</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">Oblea</p>
+                      <p className="text-base font-medium text-gray-900">{detailTarget.sticker_number || "-"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">Fecha de creación</p>
+                      <p className="text-base font-medium text-gray-900">
+                        {new Date(detailTarget.date).toLocaleDateString("es-AR")} {new Date(detailTarget.date).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                    {detailTarget.inspection_1_date && (
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-600">Fecha primera inspección</p>
+                        <p className="text-base font-medium text-gray-900">
+                          {new Date(detailTarget.inspection_1_date).toLocaleDateString("es-AR")} {new Date(detailTarget.inspection_1_date).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    )}
+                    {detailTarget.inspection_2_date && (
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-600">Fecha segunda inspección</p>
+                        <p className="text-base font-medium text-gray-900">
+                          {new Date(detailTarget.inspection_2_date).toLocaleDateString("es-AR")} {new Date(detailTarget.inspection_2_date).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    )}
+                    {detailTarget.result && (
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-600">Resultado primera inspección</p>
+                        <p className="text-base font-medium text-gray-900">{detailTarget.result}</p>
+                      </div>
+                    )}
+                    {detailTarget.result_2 && (
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-600">Resultado segunda inspección</p>
+                        <p className="text-base font-medium text-gray-900">{detailTarget.result_2}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Acciones */}
+                <div className="border-t border-gray-200 pt-6 flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-[4px] bg-[#0040B8] px-4 py-2 text-sm font-medium text-white hover:bg-[#00379f] transition-colors"
+                    onClick={() => {
+                      router.push(`/dashboard/${id}/inspections/${detailTarget.application_id}`);
+                      setDetailTarget(null);
+                    }}
+                  >
+                    <Play size={16} />
+                    Abrir inspección
+                  </button>
+                  {detailTarget.status === "Segunda Inspección" && (
+                    <button
+                      type="button"
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-[4px] border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
+                      onClick={() => {
+                        setRevertTarget(detailTarget);
+                        setDetailTarget(null);
+                      }}
+                    >
+                      <Undo2 size={16} />
+                      Revertir a Completado
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {revertTarget && (
         <div className="fixed inset-0 z-50">

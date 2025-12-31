@@ -3,12 +3,14 @@ import {
   CircleFadingPlus,
   AlertTriangle,
   ScrollText,
-  ArrowUp
+  ArrowUp,
+  Clock
 } from 'lucide-react';
 import clsx from 'clsx';
-import { fetchDailyStatistics, fetchLatestApplications } from '@/utils';
+import { fetchDailyStatistics, fetchLatestApplications, fetchQueueApplications } from '@/utils';
 import Card from '../Card';
 import QuickActions from '../QuickActions';
+import { UserTypeInWorkshop } from '@/app/types';
 
 type Status = 'Pendiente' | 'En Cola' | 'En curso' | 'Completado' | 'A Inspeccionar' | 'Emitir CRT' | 'Segunda Inspección';
 
@@ -25,11 +27,182 @@ const BADGE: Record<Status, string> = {
 interface DashboardProps {
   workshopId: number;
   date?: string;
+  userType?: UserTypeInWorkshop | { error?: string } | null;
 }
 
-export default async function Dashboard({ workshopId, date }: DashboardProps) {
+export default async function Dashboard({ workshopId, date, userType }: DashboardProps) {
   const statistics = await fetchDailyStatistics(workshopId, date);
   const latestApps = await fetchLatestApplications(workshopId);
+  const queueApps = await fetchQueueApplications(workshopId);
+  
+  // Check if user is "Personal de planta"
+  const isPersonalPlanta = userType && !('error' in userType) && userType?.name?.toLowerCase() === 'personal de planta';
+  
+  // Special start page for Personal de planta
+  if (isPersonalPlanta) {
+    return (
+      <div className="bg-white">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <article className="flex items-center justify-between text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
+            <div className="flex items-center gap-1">
+              <span className="text-gray-600">Inicio</span>
+            </div>
+          </article>
+
+          {/* Quick action: Cola de revisiones */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <Link href={`/dashboard/${workshopId}/inspections-queue`} className="group">
+              <Card className="h-full transition-colors duration-200 group-hover:bg-[#f1f6ff99] group-hover:border-[#0040B899] group-focus:ring-2 group-focus:ring-offset-2 group-focus:ring-[#0040B8]">
+                <div className="px-4 py-3.5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-[50px] bg-[#E6ECF8] text-[#0040B8] flex items-center justify-center hidden sm:flex">
+                      <Clock className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-md ml-0 sm:ml-2">Cola de revisiones</h4>
+                      
+                    </div>
+                  </div>
+                  <ArrowUp className="h-5 w-5 group-hover:text-[#0040B8] transition-colors duration-200" />
+                </div>
+              </Card>
+            </Link>
+          </div>
+
+          {/* Queue applications list */}
+          <Card className="xl:col-span-2">
+            <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Revisiones en cola</h3>
+                <p className="mt-1 text-xs sm:text-sm text-gray-500">Revisiones pendientes de inspección</p>
+              </div>
+              <Link href={`/dashboard/${workshopId}/inspections-queue`} className="text-xs sm:text-sm text-[#0040B8] hover:underline self-start sm:self-auto">
+                Ver todo
+              </Link>
+            </div>
+
+            {queueApps.items?.length ? (
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden xl:block p-5 overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gray-500">
+                        <th className="py-2 pr-4 font-medium">CRT</th>
+                        <th className="py-2 pr-4 font-medium">Patente</th>
+                        <th className="py-2 pr-4 font-medium">Titular</th>
+                        <th className="py-2 pr-4 font-medium">Estado</th>
+                        <th className="py-2 pr-4 font-medium">Actualizado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {queueApps.items.map((r: any) => (
+                        <tr key={r.application_id} className="border-t border-gray-100">
+                          <td className="py-3 pr-4 font-medium text-gray-900">{r.application_id || 'N/A'}</td>
+                          <td className="py-3 pr-4 font-medium text-gray-900">{r.car?.license_plate || 'N/A'}</td>
+                          <td className="py-3 pr-4 text-gray-700">
+                            {r.owner ? r.owner.cuit ? r.owner.razon_social : r.owner.first_name + " " + r.owner.last_name : 'N/A'}  
+                          </td>
+                          <td className="py-3 pr-4">
+                            <span
+                              className={clsx(
+                                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset',
+                                BADGE[r.status as Status]
+                              )}
+                            >
+                              {r.status}
+                            </span>
+                          </td>
+                          <td className="py-3 pr-4 text-gray-500">
+                            {new Date(r.date).toLocaleString('es-AR')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile/Tablet Card View */}
+                <div className="xl:hidden">
+                  <div className="p-4 sm:p-5 space-y-3 sm:space-y-4">
+                    <div className="sm:hidden space-y-3">
+                      {queueApps.items.slice(0, 2).map((r: any) => (
+                        <div key={r.application_id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-gray-900">{r.car?.license_plate || 'N/A'}</span>
+                            <span
+                              className={clsx(
+                                'inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset',
+                                BADGE[r.status as Status]
+                              )}
+                            >
+                              {r.status}
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-gray-100">
+                            <span className="text-xs text-gray-500">{new Date(r.date).toLocaleString('es-AR')}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="hidden sm:block">
+                      {queueApps.items.map((r: any) => (
+                        <div key={r.application_id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500 font-medium">CRT:</span>
+                              <span className="text-sm font-semibold text-gray-900">{r.application_id || 'N/A'}</span>
+                            </div>
+                            <span
+                              className={clsx(
+                                'inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset w-fit',
+                                BADGE[r.status as Status]
+                              )}
+                            >
+                              {r.status}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                            <div>
+                              <span className="text-xs text-gray-500 font-medium block mb-1">Patente</span>
+                              <span className="text-sm font-medium text-gray-900">{r.car?.license_plate || 'N/A'}</span>
+                            </div>
+                            <div>
+                              <span className="text-xs text-gray-500 font-medium block mb-1">Titular</span>
+                              <span className="text-sm text-gray-700 line-clamp-1">
+                                {r.owner ? r.owner.cuit ? r.owner.razon_social : r.owner.first_name + " " + r.owner.last_name : 'N/A'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="pt-2 border-t border-gray-100">
+                            <span className="text-xs text-gray-500 font-medium block mb-1">Actualizado</span>
+                            <span className="text-xs text-gray-500">{new Date(r.date).toLocaleString('es-AR')}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="p-6 sm:p-10">
+                <div className="flex flex-col items-center justify-center text-center p-4 sm:p-6">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" />
+                  </div>
+                  <h4 className="mt-4 text-sm font-semibold text-gray-900">No hay revisiones en cola</h4>
+                  <p className="mt-1 text-xs sm:text-sm text-gray-500">
+                    No hay revisiones pendientes de inspección en este momento.
+                  </p>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="bg-white">

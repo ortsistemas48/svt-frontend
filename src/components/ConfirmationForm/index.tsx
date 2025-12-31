@@ -23,6 +23,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
   const [car, setCar] = useState<CarType | null>(null);
   const [owner, setOwner] = useState<PersonType | null>(null);
   const [driver, setDriver] = useState<PersonType | null>(null);
+  const [stickerNumber, setStickerNumber] = useState<string | null>(null);
 
   const [carDocs, setCarDocs] = useState<Doc[]>([]);
 
@@ -44,6 +45,7 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
       const data = await res.json();
       setCar(data.car || null);
       setOwner(data.owner || null);
+      setStickerNumber(data.sticker_number || data.car?.sticker?.sticker_number || data.car?.sticker_number || null);
 
       if (data.owner?.id && data.driver?.id && data.owner.id === data.driver.id) {
         setDriver(null);
@@ -141,6 +143,37 @@ export default function ConfirmationForm({ applicationId }: ConfirmationFormProp
                 <div className="flex items-center justify-center py-8 sm:py-12">
                   <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-purple-600"></div>
                   <span className="ml-2 sm:ml-3 text-xs sm:text-sm text-gray-500">Cargando vehículo...</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Oblea asignada */}
+          <div className={`bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 overflow-hidden ${showDriver ? "lg:col-span-2" : "lg:col-span-1"}`}>
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-100 rounded-lg sm:rounded-[14px] flex items-center justify-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">Oblea Asignada</h2>
+                  <p className="text-xs sm:text-sm text-gray-600">Número de oblea del vehículo</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-3 sm:p-4 md:p-6">
+              {stickerNumber ? (
+                <div className="flex items-center justify-center py-4 sm:py-6">
+                  <div className="text-center">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2">Número de oblea</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stickerNumber}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center py-4 sm:py-6">
+                  <p className="text-xs sm:text-sm text-gray-500">No hay oblea asignada</p>
                 </div>
               )}
             </div>

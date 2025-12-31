@@ -45,6 +45,9 @@ interface Props {
 }
 export default async function fetchUserTypeInWorkshop({ workshopId }: Props) {
   const user = await getUserFromCookies()
+  if (!user.user) {
+    return { error: "Usuario no autenticado" }
+  }
   const res = await apiFetch(`/api/users/user-type-in-workshop?userId=${user.user.id}&workshopId=${workshopId}`,
     { credentials: "include"}
   )

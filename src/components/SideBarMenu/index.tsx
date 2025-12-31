@@ -28,19 +28,30 @@ export default function SideBarMenu({ userType, loading }: Props) {
 
   const links = [
     { href: `/dashboard/${id}`, icon: Home, label: "Inicio", roles: ["all"] },
-    { href: `/dashboard/${id}/applications`, icon: ClipboardList, label: "Revisiones", roles: ["all"] },
+    { href: `/dashboard/${id}/applications`, icon: ClipboardList, label: "Revisiones", roles: ["administrativo", "titular", "ingeniero"] },
     { href: `/dashboard/${id}/inspections-queue`, icon: Clock, label: "Cola de revisiones", roles: ["all"] },
-    { href: `/dashboard/${id}/reprint-crt`, icon: Printer, label: "Reimpresión de CRT", roles: ["all"] },
-    { href: `/dashboard/${id}/stickers`, icon: ScrollText, label: "Asignar obleas", roles: ["titular"] },
-    { href: `/dashboard/${id}/payment`, icon: BanknoteIcon, label: "Comprar revisiones", roles: ["titular", "ingeniero"] },
+    { href: `/dashboard/${id}/reprint-crt`, icon: Printer, label: "Reimpresión de CRT", roles: ["administrativo", "titular", "ingeniero"] },
+    { href: `/dashboard/${id}/stickers`, icon: ScrollText, label: "Asignar obleas", roles: ["administrativo", "titular", "ingeniero"] },
+    { href: `/dashboard/${id}/payment`, icon: BanknoteIcon, label: "Comprar revisiones", roles: ["administrativo", "titular", "ingeniero"] },
     { href: `/dashboard/${id}/statistics`, icon: ChartColumn, label: "Estadísticas", roles: ["titular", "ingeniero"] },
-    { href: `/dashboard/${id}/files`, icon: FileText, label: "Legajos", roles: ["all"] },
+    { href: `/dashboard/${id}/files`, icon: FileText, label: "Legajos", roles: ["titular", "ingeniero"] },
     { href: `/dashboard/${id}/users`, icon: Users, label: "Usuarios", roles: ["titular", "ingeniero"] },
   ];
 
   const role = userType?.name?.toLowerCase();
   const filtered = role
-    ? links.filter(l => l.roles.includes("all") || l.roles.includes(role))
+    ? links.filter(l => {
+        // Personal de planta solo ve: Inicio y Cola de revisiones
+        if (role === "personal de planta") {
+          return l.href === `/dashboard/${id}` || l.href === `/dashboard/${id}/inspections-queue`;
+        }
+        // Administrativo ve: Inicio, Revisiones, Cola de revisiones, Reimpresión, Obleas, Comprar revisiones
+        if (role === "administrativo") {
+          return l.roles.includes("administrativo") || l.href === `/dashboard/${id}` || l.href === `/dashboard/${id}/inspections-queue`;
+        }
+        // Ingeniero y Titular ven todo
+        return l.roles.includes("all") || l.roles.includes(role);
+      })
     : links.filter(l => l.roles.includes("all"));
 
     const baseHref = `/dashboard/${id}`;

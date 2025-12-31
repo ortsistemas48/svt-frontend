@@ -133,12 +133,15 @@ export default function DashboardClientLayout({
 
     const routePermissions: { [key: string]: string[] } = {
       [`/dashboard/${workshopId}/`]: ["all"],
-      [`/dashboard/${workshopId}/applications`]: ["all"],
+      [`/dashboard/${workshopId}/applications`]: ["administrativo", "titular", "ingeniero"],
       [`/dashboard/${workshopId}/inspections-queue`]: ["all"],
-      [`/dashboard/${workshopId}/reprint-crt`]: ["all"],
+      [`/dashboard/${workshopId}/reprint-crt`]: ["administrativo", "titular", "ingeniero"],
+      [`/dashboard/${workshopId}/stickers`]: ["administrativo", "titular", "ingeniero"],
+      [`/dashboard/${workshopId}/payment`]: ["administrativo", "titular", "ingeniero"],
       [`/dashboard/${workshopId}/buy-oblea`]: ["titular"],
       [`/dashboard/${workshopId}/statistics`]: ["titular", "ingeniero"],
       [`/dashboard/${workshopId}/users`]: ["titular", "ingeniero"],
+      [`/dashboard/${workshopId}/files`]: ["titular", "ingeniero"],
       [`/dashboard/${workshopId}/settings`]: ["titular"],
     };
 

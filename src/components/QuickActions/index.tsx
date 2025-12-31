@@ -7,7 +7,8 @@ import {
   CircleFadingPlus,
   ClipboardList,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  Clock
 } from 'lucide-react';
 
 import Card from '../Card';
@@ -79,7 +80,7 @@ export default function QuickActions({ workshopId, availableInspections }: Quick
           <div className="px-4 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-[50px] bg-[#E6ECF8] text-[#0040B8] flex items-center justify-center hidden sm:flex">
-                <RefreshCw className="h-5 w-5" />
+                <Clock className="h-5 w-5" />
               </div>
               <div>
                 <h4 className="text-md ml-0 sm:ml-2">Cola de revisiones</h4>

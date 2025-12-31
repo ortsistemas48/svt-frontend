@@ -181,7 +181,6 @@ export default function InspectionTable() {
   const headers: TableHeader[] = [
     { label: "CRT" },
     { label: isSmallScreen ? "Dominio" : "Vehículo" },
-    { label: "Titular" },
     { label: "Fecha de creación" },
     { label: "Estado" },
     { label: "Oblea" },
@@ -379,12 +378,6 @@ export default function InspectionTable() {
                       </div>
                     </td>
                     <td className="p-3 text-center">
-                      <div className="mx-auto max-w-[120px] truncate text-sm font-medium sm:max-w-[160px] sm:text-base">
-                        {ownerText}
-                      </div>
-                      <div className="text-xs text-gray-600 sm:text-sm">{identityText || "-"}</div>
-                    </td>
-                    <td className="p-3 text-center">
                       <div className="text-sm sm:text-base">{date}</div>
                       <div className="text-xs text-gray-600 sm:text-sm">{time}</div>
                     </td>
@@ -400,47 +393,25 @@ export default function InspectionTable() {
                     </td>
 
                     <td className="p-0">
-                      <div className="flex h-full min-h-[48px] items-center justify-center gap-2 px-2 sm:gap-3 sm:px-3">
-                        {(item.status !== "Pendiente" && item.status !== "Completado") && (
-                          <button
-                            type="button"
-                            className="cursor-pointer rounded p-1 text-[#0040B8] transition-colors hover:bg-blue-50 hover:opacity-80"
-                            title="Abrir revisión"
-                            onClick={() => router.push(`/dashboard/${id}/inspections/${item.application_id}`)}
-                          >
-                            <Play size={16} />
-                          </button>
-                        )}
-                        {item.status === "Segunda Inspección" && (
-                          <button
-                            type="button"
-                            className="cursor-pointer rounded p-1 text-[#0040B8] transition-colors hover:bg-blue-50 hover:opacity-80"
-                            title="Revertir a Completado"
-                            onClick={() => setRevertTarget(item)}
-                          >
-                            <Undo2 size={16} />
-                          </button>
-                        )}
+                      <div className="flex h-full min-h-[48px] items-center justify-center gap-2 px-2 sm:px-3">
                         {item.status === "Pendiente" && (
                           <button
                             type="button"
-                            className="cursor-pointer rounded p-1 text-[#0040B8] transition-colors hover:bg-blue-50 hover:opacity-80"
+                            className="cursor-pointer rounded p-1 text-gray-600 hover:text-[#0040B8] transition-colors hover:bg-blue-50"
                             title="Editar revisión"
                             onClick={() => router.push(`/dashboard/${id}/applications/create-applications/${item.application_id}`)}
                           >
-                            <Pencil size={16} />
+                            <Pencil size={18} />
                           </button>
                         )}
-                        {item.status === "Completado" && (
-                          <button
-                            type="button"
-                            className="cursor-pointer rounded p-1 text-[#0040B8] transition-colors hover:bg-blue-50 hover:opacity-80"
-                            title="Ver detalle de la revisión"
-                            onClick={() => openDetail(item)}
-                          >
-                            <EllipsisVertical size={16} />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          className="cursor-pointer rounded p-1 text-gray-600 hover:text-[#0040B8] transition-colors hover:bg-blue-50"
+                          title="Ver detalles"
+                          onClick={() => openDetail(item)}
+                        >
+                          <EllipsisVertical size={18} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -457,12 +428,6 @@ export default function InspectionTable() {
                   </td>
                   <td className="p-3 text-center">
                     <div className="flex flex-col items-center gap-1">
-                      <Sk className="h-4 w-40" />
-                      <Sk className="h-3 w-24" />
-                    </div>
-                  </td>
-                  <td className="p-3 text-center">
-                    <div className="flex flex-col items-center gap-1">
                       <Sk className="h-4 w-24" />
                       <Sk className="h-3 w-20" />
                     </div>
@@ -474,9 +439,7 @@ export default function InspectionTable() {
                     <Sk className="mx-auto h-4 w-16" />
                   </td>
                   <td className="p-0">
-                    <div className="flex h-full min-h-[48px] items-center justify-center gap-3 px-3">
-                      <Sk className="h-5 w-5 rounded" />
-                      <Sk className="h-5 w-5 rounded" />
+                    <div className="flex h-full min-h-[48px] items-center justify-center px-3">
                       <Sk className="h-5 w-5 rounded" />
                     </div>
                   </td>
@@ -549,6 +512,51 @@ export default function InspectionTable() {
         <div className="h-[calc(100%-56px)] overflow-y-auto p-4">
           {detailTarget ? (
             <div className="space-y-6">
+              {/* Acciones - Arriba del todo */}
+              <section className="border-b border-gray-200 pb-6">
+                <div className="flex flex-col gap-3">
+                  {(detailTarget.status !== "Pendiente" && detailTarget.status !== "Completado") && (
+                    <button
+                      type="button"
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] bg-[#0040B8] px-4 py-2 text-sm font-medium text-white hover:bg-[#00379f] transition-colors"
+                      onClick={() => {
+                        router.push(`/dashboard/${id}/inspections/${detailTarget.application_id}`);
+                        closeDetail();
+                      }}
+                    >
+                      <Play size={16} />
+                      Abrir revisión
+                    </button>
+                  )}
+                  {detailTarget.status === "Segunda Inspección" && (
+                    <button
+                      type="button"
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
+                      onClick={() => {
+                        setRevertTarget(detailTarget);
+                        closeDetail();
+                      }}
+                    >
+                      <Undo2 size={16} />
+                      Revertir a Completado
+                    </button>
+                  )}
+                  {detailTarget.status === "Pendiente" && (
+                    <button
+                      type="button"
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] border border-[#0040B8] bg-white px-4 py-2 text-sm font-medium text-[#0040B8] hover:bg-[#0040B8]/5 transition-colors"
+                      onClick={() => {
+                        router.push(`/dashboard/${id}/applications/create-applications/${detailTarget.application_id}`);
+                        closeDetail();
+                      }}
+                    >
+                      <Pencil size={16} />
+                      Editar revisión
+                    </button>
+                  )}
+                </div>
+              </section>
+
               <section>
                 <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
                   Información general
@@ -575,6 +583,7 @@ export default function InspectionTable() {
                     />
                   )}
                   <DetailRow label="Fecha de creación" value={formatDateTime(detailTarget.date)} />
+                  <DetailRow label="Oblea" value={detailTarget.sticker_number || "-"} />
                   <DetailRow label="Usuario" value={detailTarget.user_name ?? "-"} />
                 </div>
               </section>
@@ -663,6 +672,16 @@ export default function InspectionTable() {
                       )}
                     </>
                   )}
+                </div>
+              </section>
+
+              {/* Oblea asignada */}
+              <section className="border-t border-gray-200 pt-6">
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                  Oblea asignada
+                </h3>
+                <div className="space-y-2 text-sm text-gray-700">
+                  <DetailRow label="Número de oblea" value={detailTarget.sticker_number || "-"} />
                 </div>
               </section>
             </div>
