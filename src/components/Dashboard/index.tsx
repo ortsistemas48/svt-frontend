@@ -36,7 +36,7 @@ export default async function Dashboard({ workshopId, date, userType }: Dashboar
   const queueApps = await fetchQueueApplications(workshopId);
   
   // Check if user is "Personal de planta"
-  const isPersonalPlanta = userType && !('error' in userType) && userType?.name?.toLowerCase() === 'personal de planta';
+  const isPersonalPlanta = userType && 'name' in userType && userType.name?.toLowerCase() === 'personal de planta';
   
   // Special start page for Personal de planta
   if (isPersonalPlanta) {
