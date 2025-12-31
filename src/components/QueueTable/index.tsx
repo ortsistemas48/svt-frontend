@@ -15,6 +15,7 @@ const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> 
   "A Inspeccionar": { text: "text-amber-700", bg: "bg-amber-50" },
   "Emitir CRT": { text: "text-violet-700", bg: "bg-violet-100" },
   "Segunda Inspección": { text: "text-amber-700", bg: "bg-amber-50" },
+  "Abandonado": { text: "text-gray-700", bg: "bg-gray-100" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
 const TABLE_FILTERS = ["Todos", "En curso", "A Inspeccionar", "Segunda Inspección", "Emitir CRT"];
