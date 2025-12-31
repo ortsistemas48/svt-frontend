@@ -11,7 +11,7 @@ type SearchHistoryItem = {
   userName: string;
   userIdentity?: string;
   searchDate: string; // formato: "DD/MM/YYYY HH:mm hs"
-  status: "Pendiente" | "Completado" | "En curso" | "A Inspeccionar" | "Emitir CRT";
+  status: "Pendiente" | "Completado" | "En curso" | "A Inspeccionar" | "Emitir CRT" | "Abandonado";
   applicationId: number;
   result: "Apto" | "Condicional" | "Rechazado" | null;
   result_2?: "Apto" | "Condicional" | "Rechazado" | null;
@@ -59,7 +59,7 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
       const usp = new URLSearchParams({
         page: String(page),
         per_page: String(perPage),
-        status: "Completado", // Filtrar solo completadas en el backend
+        status_in: "Completado,Abandonado", // Filtrar completadas y abandonadas en el backend
       });
       
       if (searchQuery?.trim()) {
@@ -199,6 +199,10 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
                 <div className="hidden xl:block">
                   {searchHistory.map((item) => {
                     const resultConfig = getResultConfig(item.result);
+                    const displayResult = item.status === "Abandonado" ? "Abandonado" : (item.result || "-");
+                    const displayConfig = item.status === "Abandonado" 
+                      ? { bg: "bg-gray-100", text: "text-gray-700" }
+                      : resultConfig;
                     
                     return (
                       <div
@@ -241,10 +245,10 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
                           <div className="w-40 min-w-[120px] flex justify-center">
                             <span className={clsx(
                               "inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
-                              resultConfig.bg,
-                              resultConfig.text
+                              displayConfig.bg,
+                              displayConfig.text
                             )}>
-                              {item.result || "-"}
+                              {displayResult}
                             </span>
                           </div>
 
@@ -263,6 +267,10 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
                   <div className="px-1 sm:px-2 md:px-4 py-2 sm:py-3 space-y-3 sm:space-y-4">
                     {searchHistory.map((item) => {
                       const resultConfig = getResultConfig(item.result);
+                      const displayResult = item.status === "Abandonado" ? "Abandonado" : (item.result || "-");
+                      const displayConfig = item.status === "Abandonado" 
+                        ? { bg: "bg-gray-100", text: "text-gray-700" }
+                        : resultConfig;
                       
                       return (
                         <div
@@ -312,10 +320,10 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
                               <span className="text-xs text-gray-500 font-medium">Resultado</span>
                               <span className={clsx(
                                 "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs sm:text-sm font-medium",
-                                resultConfig.bg,
-                                resultConfig.text
+                                displayConfig.bg,
+                                displayConfig.text
                               )}>
-                                {item.result || "-"}
+                                {displayResult}
                               </span>
                             </div>
                           </div>

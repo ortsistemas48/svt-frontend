@@ -15,6 +15,7 @@ const STATUS_TONES: Record<Application["status"], { text: string; bg: string }> 
   Pendiente: { text: "text-red-700", bg: "bg-red-50" },
   "A Inspeccionar": { text: "text-amber-700", bg: "bg-amber-50" },
   "Emitir CRT": { text: "text-violet-700", bg: "bg-violet-100" },
+  Abandonado: { text: "text-gray-700", bg: "bg-gray-100" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
 const RESULT_TONES: Record<string, { text: string; bg: string }> = {
@@ -23,7 +24,7 @@ const RESULT_TONES: Record<string, { text: string; bg: string }> = {
   Rechazado: { text: "text-white", bg: "bg-black" },
 };
 const DEFAULT_RESULT_TONE = { text: "text-gray-900", bg: "bg-gray-100" };
-const TABLE_FILTERS = ["Todos", "Pendiente", "En curso", "Completado", "A Inspeccionar", "Emitir CRT", "Segunda Inspección"];
+const TABLE_FILTERS = ["Todos", "Pendiente", "En curso", "Completado", "A Inspeccionar", "Emitir CRT", "Segunda Inspección", "Abandonado"];
 export default function InspectionTable() {
   const { id } = useParams();
   const [items, setItems] = useState<Application[]>([]);
@@ -40,6 +41,7 @@ export default function InspectionTable() {
 
   const [revertTarget, setRevertTarget] = useState<Application | null>(null);
   const [reverting, setReverting] = useState(false);
+  const [reportingAbandonment, setReportingAbandonment] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -288,6 +290,36 @@ export default function InspectionTable() {
     }
   };
 
+  const handleReportAbandonment = async () => {
+    if (!detailTarget) return;
+    try {
+      setReportingAbandonment(true);
+      setErrorMsg(null);
+
+      const res = await fetch(
+        `/api/applications/${detailTarget.application_id}/report-abandonment`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || "No se pudo reportar el abandono");
+      }
+
+      setSuccessMsg(`Revisión #${detailTarget.application_id} marcada como Abandonado`);
+      closeDetail();
+      await fetchApps();
+    } catch (e: any) {
+      setErrorMsg(e?.message || "Error reportando el abandono");
+    } finally {
+      setReportingAbandonment(false);
+      setTimeout(() => setSuccessMsg(null), 3000);
+    }
+  };
+
   return (
     <div className="">
       {errorMsg && (
@@ -515,7 +547,7 @@ export default function InspectionTable() {
               {/* Acciones - Arriba del todo */}
               <section className="border-b border-gray-200 pb-6">
                 <div className="flex flex-col gap-3">
-                  {(detailTarget.status !== "Pendiente" && detailTarget.status !== "Completado") && (
+                  {(detailTarget.status !== "Pendiente" && detailTarget.status !== "Completado" && detailTarget.status !== "Abandonado") && (
                     <button
                       type="button"
                       className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] bg-[#0040B8] px-4 py-2 text-sm font-medium text-white hover:bg-[#00379f] transition-colors"
@@ -542,17 +574,37 @@ export default function InspectionTable() {
                     </button>
                   )}
                   {detailTarget.status === "Pendiente" && (
-                    <button
-                      type="button"
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] border border-[#0040B8] bg-white px-4 py-2 text-sm font-medium text-[#0040B8] hover:bg-[#0040B8]/5 transition-colors"
-                      onClick={() => {
-                        router.push(`/dashboard/${id}/applications/create-applications/${detailTarget.application_id}`);
-                        closeDetail();
-                      }}
-                    >
-                      <Pencil size={16} />
-                      Editar revisión
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] border border-[#0040B8] bg-white px-4 py-2 text-sm font-medium text-[#0040B8] hover:bg-[#0040B8]/5 transition-colors"
+                        onClick={() => {
+                          router.push(`/dashboard/${id}/applications/create-applications/${detailTarget.application_id}`);
+                          closeDetail();
+                        }}
+                      >
+                        <Pencil size={16} />
+                        Editar revisión
+                      </button>
+                      <button
+                        type="button"
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
+                        onClick={handleReportAbandonment}
+                        disabled={reportingAbandonment}
+                      >
+                        {reportingAbandonment ? (
+                          <>
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-700"></div>
+                            Reportando...
+                          </>
+                        ) : (
+                          <>
+                            <X size={16} />
+                            Reportar Abandono
+                          </>
+                        )}
+                      </button>
+                    </>
                   )}
                 </div>
               </section>

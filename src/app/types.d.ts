@@ -97,7 +97,7 @@ export type Application = {
     razon_social?: string;
   } | null;
   date: string;
-  status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección";
+  status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección" | "Abandonado";
   result?: "Apto" | "Condicional" | "Rechazado";
   result_2?: "Apto" | "Condicional" | "Rechazado";
   inspection_1_date?: string | null;

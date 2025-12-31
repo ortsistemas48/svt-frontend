@@ -629,41 +629,43 @@ export default function FileDetailPage() {
           </div>
 
           {/* Archivos de revisión técnica - ahora dentro de cada ficha técnica */}
-          <div className="bg-white rounded-lg sm:rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-4 sm:mb-6">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-200">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-lg sm:rounded-[14px] flex items-center justify-center flex-shrink-0">
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+          {status !== "Abandonado" && (
+            <div className="bg-white rounded-lg sm:rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-4 sm:mb-6">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-lg sm:rounded-[14px] flex items-center justify-center flex-shrink-0">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm sm:text-base md:text-md text-gray-900">Archivos de revisión técnica</h3>
                 </div>
-                <h3 className="text-sm sm:text-base md:text-md text-gray-900">Archivos de revisión técnica</h3>
               </div>
-            </div>
-            <div className="p-3 sm:p-4 md:p-6 space-y-2">
-              <p className="text-xs sm:text-sm text-gray-700">
-                Los documentos de revisión técnica se encuentran dentro de cada ficha técnica.
-              </p>
-              <div className="text-xs sm:text-sm">
-                <a
-                  className="text-[#0040B8] hover:underline"
-                  href={`/dashboard/${id}/files/${applicationId}/inspection`}
-                >
-                  Ir a ficha técnica primera revisión
-                </a>
-              </div>
-              {result2 && (
+              <div className="p-3 sm:p-4 md:p-6 space-y-2">
+                <p className="text-xs sm:text-sm text-gray-700">
+                  Los documentos de revisión técnica se encuentran dentro de cada ficha técnica.
+                </p>
                 <div className="text-xs sm:text-sm">
                   <a
                     className="text-[#0040B8] hover:underline"
-                    href={`/dashboard/${id}/files/${applicationId}/inspection?is_second=true`}
+                    href={`/dashboard/${id}/files/${applicationId}/inspection`}
                   >
-                    Ir a ficha técnica segunda revisión
+                    Ir a ficha técnica primera revisión
                   </a>
                 </div>
-              )}
+                {result2 && (
+                  <div className="text-xs sm:text-sm">
+                    <a
+                      className="text-[#0040B8] hover:underline"
+                      href={`/dashboard/${id}/files/${applicationId}/inspection?is_second=true`}
+                    >
+                      Ir a ficha técnica segunda revisión
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Certificado Revisión Técnica */}
           <div className="bg-white rounded-lg sm:rounded-[14px] shadow-sm border border-gray-200 overflow-hidden mb-4 sm:mb-6">
@@ -808,7 +810,7 @@ export default function FileDetailPage() {
           </div>
 
           {/* Ficha técnica */}
-          {(() => {
+          {status !== "Abandonado" && (() => {
             const resultConfig = getResultConfig(result);
             const ResultIcon = resultConfig.icon;
             return (
@@ -860,15 +862,17 @@ export default function FileDetailPage() {
           })()}
 
           {/* Agregar documentos */}
-          <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 p-3 sm:p-4 md:p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("documents")}>
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <h2 className="text-sm sm:text-base md:text-md text-gray-900 mb-1">Ver documentos</h2>
-                <p className="text-xs sm:text-sm text-gray-500">Aquí podrás ver los documentos adjuntos al legajo</p>
-              </div>
-              <ChevronRight size={20} className="sm:w-6 sm:h-6 text-gray-400 flex-shrink-0" />
-              </div>
-          </div>
+          {status !== "Abandonado" && (
+            <div className="bg-white rounded-lg sm:rounded-[14px] border border-gray-200 p-3 sm:p-4 md:p-5 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setView("documents")}>
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-sm sm:text-base md:text-md text-gray-900 mb-1">Ver documentos</h2>
+                  <p className="text-xs sm:text-sm text-gray-500">Aquí podrás ver los documentos adjuntos al legajo</p>
+                </div>
+                <ChevronRight size={20} className="sm:w-6 sm:h-6 text-gray-400 flex-shrink-0" />
+                </div>
+            </div>
+          )}
         </div>
 
         {/* Bottom Navigation */}
