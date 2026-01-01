@@ -202,6 +202,7 @@ export default function PaymentPage() {
         setShowModal(false);
     } catch (e: any) {
         setErrorMsg(e?.message || "No se pudo generar la orden o subir el comprobante");
+        setShowModal(false);
     } finally {
         setSubmitting(false);
     }
