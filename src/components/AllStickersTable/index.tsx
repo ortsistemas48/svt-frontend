@@ -92,6 +92,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
 
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const buttonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
 
   const headers: TableHeader[] = [
     { label: "Número" },
@@ -360,6 +361,10 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
                     </div>
                     <div className="relative">
                       <button
+                        ref={(el) => {
+                          if (el) buttonRefs.current.set(item.id, el);
+                          else buttonRefs.current.delete(item.id);
+                        }}
                         aria-haspopup="menu"
                         aria-expanded={isMenuOpen}
                         onClick={() => setOpenMenuId((cur) => (cur === item.id ? null : item.id))}
@@ -375,6 +380,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
                         onDisponible={() => updateStatus(item, "Disponible")}
                         onEnUso={() => updateStatus(item, "En Uso")}
                         onNoDisponible={() => updateStatus(item, "No Disponible")}
+                        buttonRef={{ current: buttonRefs.current.get(item.id) || null }}
                       />
                     </div>
                   </div>
@@ -443,6 +449,10 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
                     <td className="relative p-3 text-center">
                       {/* Botón solo ícono */}
                       <button
+                        ref={(el) => {
+                          if (el) buttonRefs.current.set(item.id, el);
+                          else buttonRefs.current.delete(item.id);
+                        }}
                         aria-haspopup="menu"
                         aria-expanded={isMenuOpen}
                         onClick={() => setOpenMenuId((cur) => (cur === item.id ? null : item.id))}
@@ -459,6 +469,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
                         onDisponible={() => updateStatus(item, "Disponible")}
                         onEnUso={() => updateStatus(item, "En Uso")}
                         onNoDisponible={() => updateStatus(item, "No Disponible")}
+                        buttonRef={{ current: buttonRefs.current.get(item.id) || null }}
                       />
                     </td>
                   </tr>
@@ -530,6 +541,7 @@ function RowActionsMenu({
   onEnUso,
   onNoDisponible,
   disabled,
+  buttonRef,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -537,8 +549,10 @@ function RowActionsMenu({
   onEnUso: () => void;
   onNoDisponible: () => void;
   disabled?: boolean;
+  buttonRef?: { current: HTMLButtonElement | null };
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const [position, setPosition] = useState<{ top: number; right: number } | null>(null);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -551,19 +565,32 @@ function RowActionsMenu({
     if (isOpen) {
       document.addEventListener("mousedown", onDocClick);
       document.addEventListener("keydown", onKey);
+      
+      // Calcular posición cuando se abre el menú (fixed es relativo al viewport)
+      if (buttonRef?.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setPosition({
+          top: rect.bottom + 4,
+          right: window.innerWidth - rect.right,
+        });
+      }
     }
     return () => {
       document.removeEventListener("mousedown", onDocClick);
       document.removeEventListener("keydown", onKey);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, buttonRef]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !position) return null;
 
   return (
     <div
       ref={ref}
-      className="absolute right-2 top-10 z-20 w-56 overflow-hidden rounded-[4px] border border-gray-200 bg-white"
+      className="fixed z-[9999] w-56 overflow-hidden rounded-[4px] border border-gray-200 bg-white shadow-lg"
+      style={{
+        top: `${position.top}px`,
+        right: `${position.right}px`,
+      }}
       role="menu"
       aria-orientation="vertical"
     >

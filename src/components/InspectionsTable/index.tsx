@@ -314,6 +314,7 @@ export default function InspectionTable() {
       await fetchApps();
     } catch (e: any) {
       setErrorMsg(e?.message || "Error reportando el abandono");
+      closeDetail();
     } finally {
       setReportingAbandonment(false);
       setTimeout(() => setSuccessMsg(null), 3000);
@@ -573,19 +574,21 @@ export default function InspectionTable() {
                       Revertir a Completado
                     </button>
                   )}
-                  {detailTarget.status === "Pendiente" && (
+                  {(detailTarget.status === "Pendiente" || detailTarget.status === "A Inspeccionar" || detailTarget.status === "En curso" || detailTarget.status === "Emitir CRT") && (
                     <>
-                      <button
-                        type="button"
-                        className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] border border-[#0040B8] bg-white px-4 py-2 text-sm font-medium text-[#0040B8] hover:bg-[#0040B8]/5 transition-colors"
-                        onClick={() => {
-                          router.push(`/dashboard/${id}/applications/create-applications/${detailTarget.application_id}`);
-                          closeDetail();
-                        }}
-                      >
-                        <Pencil size={16} />
-                        Editar revisión
-                      </button>
+                      {detailTarget.status === "Pendiente" && (
+                        <button
+                          type="button"
+                          className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] border border-[#0040B8] bg-white px-4 py-2 text-sm font-medium text-[#0040B8] hover:bg-[#0040B8]/5 transition-colors"
+                          onClick={() => {
+                            router.push(`/dashboard/${id}/applications/create-applications/${detailTarget.application_id}`);
+                            closeDetail();
+                          }}
+                        >
+                          <Pencil size={16} />
+                          Editar revisión
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="w-full inline-flex items-center justify-center gap-2 rounded-[4px] border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
