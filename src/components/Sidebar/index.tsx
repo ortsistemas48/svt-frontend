@@ -325,7 +325,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
         <div className="mt-6 border-t border-gray-200 pt-5 pb-10 px-1">
           <p className="text-[11px] tracking-wide text-black/50 mb-3 px-3">Ajustes</p>
           <div className="flex flex-col space-y-3">
-            {(userType?.name?.toLowerCase() === "titular" || userType?.name?.toLowerCase() === "ingeniero") && (
+            {(userType?.name?.toLowerCase() === "titular" || userType?.name?.toLowerCase() === "ingeniero") &&  (
               <Link href={`/dashboard/${id}/settings`}>
                 <div className="group flex items-center gap-3 rounded-[4px] px-3 py-3 hover:bg-gray-50  duration-150 transition-colors">
                   <Settings size={20} className="text-[#0040B8]" />
