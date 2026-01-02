@@ -70,7 +70,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
   const [existingDocsByRole, setExistingDocsByRole] = useState<{
     owner: Doc[]; driver: Doc[]; car: Doc[]; generic: Doc[];
   }>({ owner: [], driver: [], car: [], generic: [] });
-  const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | "confirm_car" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<"inspect" | "queue" | null>(null);
   const [processingAction, setProcessingAction] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [owner, setOwner] = useState<any>({ ...(initialData?.owner || {}) });
@@ -515,15 +515,10 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
       }
 
       if (step === 3) {
-        const missing = getMissingCarFields(currentCar);
-        if (missing.length > 0) {
-          setMissingFields(prev => [...prev, ...missing.map(f => `Vehículo, ${f}`)]);
-          setShowMissingDataModal(true);
-          setLoading(false);
-          return;
+        const ok = await saveVehicle();
+        if (ok) {
+          setStep(4);
         }
-        setConfirmAction("confirm_car");
-        setShowConfirmModal(true);
         setLoading(false);
         return;
       }
@@ -545,7 +540,7 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [step, applicationId, uploadPendingDocuments, router, id, consumeSlot, saveStickerStep]);
+  }, [step, applicationId, uploadPendingDocuments, router, id, consumeSlot, saveStickerStep, saveVehicle]);
 
   const handlePrev = useCallback(() => {
     setIsIdle(false)
@@ -703,13 +698,11 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           <div className="bg-white rounded-lg sm:rounded-[14px] max-w-md w-full p-4 sm:p-5 md:p-6 max-h-[90vh] overflow-y-auto">
             {/* Título y cuerpo del modal según acción */}
             <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
-              {confirmAction === "confirm_car" ? "¿Estás seguro?" : "¿Estás seguro?"}
+              ¿Estás seguro?
             </h2>
 
             <p className="text-sm sm:text-base mb-3 sm:mb-4">
-              {confirmAction === "confirm_car"
-                ? "Estás por confirmar los datos de tu vehículo. ¿Deseás continuar?"
-                : "Vas a confirmar el trámite. ¿Deseás continuar?"}
+              Vas a confirmar el trámite. ¿Deseás continuar?
             </p>
             {
               (confirmAction === "queue") &&
@@ -767,24 +760,6 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
               <button
                 onClick={async () => {
                   setProcessingAction(true);
-
-                  if (confirmAction === "confirm_car") {
-                    try {
-                      setLoading(true);
-                      const ok = await saveVehicle();
-                      if (ok) {
-                        setStep(4);
-                        setShowConfirmModal(false);
-                      }
-                    } catch (e) {
-                      console.error(e);
-                      alert("Hubo un error al guardar los datos del vehículo.");
-                    } finally {
-                      setLoading(false);
-                      setProcessingAction(false);
-                    }
-                    return;
-                  }
 
                   if (confirmAction === "inspect") {
                     try {

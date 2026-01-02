@@ -814,7 +814,7 @@ export default function VehicleForm({
                     error={getCarError("license_number")}
                     isRequired={true}
                     className="md:col-span-2"
-                    innerCheckboxLabel="Mismo que DNI(Titular)"
+                    innerCheckboxLabel="Mismo que DNI de Titular"
                     innerCheckboxChecked={useSameAsDni}
                     onInnerCheckboxChange={handleSameAsDniChange}
                     innerCheckboxDisabled={!ownerDni}

@@ -138,13 +138,13 @@ export default function LoginForm() {
   </div>
 
   {/* Contenido con scroll interno */}
-  <div className="flex-1 overflow-auto">
+  <div className="flex-1 overflow-auto -mx-1 px-1">
     <div className="space-y-8 pt-4">
       <form onSubmit={handleSubmit} className="mt-8">
         <input
           type="text"
           placeholder="Correo electrónico o DNI"
-          className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+          className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 focus:outline-none focus:border-[#0040B8] focus:ring-1 focus:ring-[#0040B8] focus:ring-offset-0"
           value={emailOrDni}
           onChange={(e) => setEmailOrDni(e.target.value)}
           disabled={submitting}
@@ -154,7 +154,7 @@ export default function LoginForm() {
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Contraseña"
-            className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+            className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 pr-10 text-sm focus:outline-none focus:border-[#0040B8] focus:ring-1 focus:ring-[#0040B8] focus:ring-offset-0"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={submitting}
