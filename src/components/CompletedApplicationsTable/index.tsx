@@ -325,23 +325,23 @@ export default function CompletedApplicationsTable({ externalSearchQuery = "" }:
               <Search size={16} />
             </button>
           </div>
-          <button
-            disabled={isLoading}
-            onClick={() => {
-              setShowFilters(!showFilters);
-              setPage(1);
-            }}
-            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
-          >
-            <SlidersHorizontal size={16} className="text-white" />
-            <span className="hidden sm:inline text-white">Filtrar</span>
-          </button>
+          <div className="hidden sm:block relative">
+            <button
+              disabled={isLoading}
+              onClick={() => {
+                setShowFilters(!showFilters);
+                setPage(1);
+              }}
+              className="flex bg-[#0040B8] items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+            >
+              <SlidersHorizontal size={16} className="text-white" />
+              <span className="hidden sm:inline text-white">Filtrar</span>
+            </button>
+            {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={resultFilter} setStatusFilter={setResultFilter} setShowFilters={setShowFilters} setPage={setPage} />}
+          </div>
           <RefreshButton loading={isLoading} fetchApps={fetchApplications} />
         </div>
       </div>
-
-      {/* Filter overlay */}
-      {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={resultFilter} setStatusFilter={setResultFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
       {/* Vista de tarjetas para mobile/tablet */}
       <div className="xl:hidden px-1 sm:px-0">

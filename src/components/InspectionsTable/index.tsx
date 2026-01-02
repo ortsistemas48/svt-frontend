@@ -361,24 +361,25 @@ export default function InspectionTable() {
               <Search size={16} />
             </button>
           </div>
-          <button
-            disabled={loading}
-            onClick={() => {
-              setShowFilters(!showFilters);
-              setPage(1);
-            }}
-            className="hidden sm:flex bg-[#0040B8] items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
-          >
-            <SlidersHorizontal size={16} className="text-white" />
-            <span className="hidden sm:inline text-white">Filtrar</span>
-          </button>
+          <div className="hidden sm:block relative">
+            <button
+              disabled={loading}
+              onClick={() => {
+                setShowFilters(!showFilters);
+                setPage(1);
+              }}
+              className="flex bg-[#0040B8] items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+            >
+              <SlidersHorizontal size={16} className="text-white" />
+              <span className="hidden sm:inline text-white">Filtrar</span>
+            </button>
+            {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
+          </div>
           <div className="hidden sm:flex">
             <RefreshButton loading={loading} fetchApps={fetchApps} />
           </div>
         </div>
       </div>
-
-      {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
 
       <div className="insp-table overflow-hidden rounded-[14px] border border-gray-200 bg-white">
         <div className="overflow-x-auto">

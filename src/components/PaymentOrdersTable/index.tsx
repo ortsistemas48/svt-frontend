@@ -6,6 +6,7 @@ import { Search, SlidersHorizontal, X, Upload } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import RefreshButton from "@/components/RefreshButton";
 import PaymentDropzone from "@/components/PaymentDropzone";
+import TableFilters from "../TableFilters";
 import clsx from "clsx";
 
 type PaymentOrder = {
@@ -219,8 +220,8 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
       )}
 
       {/* Search y filtros compactos, look minimal */}
-      <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 gap-3 px-[1.5px] pt-1">
+      <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between overflow-visible">
+        <div className="flex flex-1 gap-3 px-[1.5px] pt-1 overflow-visible">
           <div className="relative flex-1">
             <input
               disabled={loading}
@@ -238,46 +239,24 @@ const PaymentOrdersTable = forwardRef<PaymentOrdersTableRef>((props, ref) => {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           </div>
 
-          <button
-            disabled={loading}
-            onClick={() => {
-              setShowFilters(!showFilters);
-              setPage(1);
-            }}
-            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-[4px] px-3 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#00379f] disabled:opacity-50 sm:px-4"
-          >
-            <SlidersHorizontal size={16} className="text-white" />
-            <span className="hidden sm:inline">Filtrar</span>
-          </button>
+          <div className="hidden sm:block relative">
+            <button
+              disabled={loading}
+              onClick={() => {
+                setShowFilters(!showFilters);
+                setPage(1);
+              }}
+              className="flex bg-[#0040B8] items-center justify-center gap-2 rounded-[4px] px-3 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#00379f] disabled:opacity-50 sm:px-4"
+            >
+              <SlidersHorizontal size={16} className="text-white" />
+              <span className="hidden sm:inline">Filtrar</span>
+            </button>
+            {showFilters && <TableFilters tableFilters={[...TABLE_FILTERS]} statusFilter={statusFilter} setStatusFilter={(status: string) => setStatusFilter(status as (typeof TABLE_FILTERS)[number])} setShowFilters={setShowFilters} setPage={setPage} />}
+          </div>
 
           <RefreshButton loading={loading} fetchApps={fetchOrders} />
         </div>
       </div>
-
-      {/* Panel de filtros, estilo chips */}
-      {showFilters && (
-        <div className="hidden sm:block mb-4 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            {TABLE_FILTERS.map((opt) => {
-              const active = statusFilter === opt;
-              return (
-                <button
-                  key={opt}
-                  onClick={() => setStatusFilter(opt)}
-                  className={clsx(
-                    "rounded-full px-3 py-1.5 text-sm border transition-colors",
-                    active
-                      ? "bg-[#0040B8] text-white border-[#0040B8]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  )}
-                >
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Vista de cards para mobile/tablet */}
       <div className="xl:hidden space-y-3 sm:space-y-4">

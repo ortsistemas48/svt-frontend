@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
@@ -17,11 +17,35 @@ export default function LoginForm() {
   const { user } = useUser();
   const router = useRouter();
   const [checking, setChecking] = useState(true);
+  const phrases = useMemo(
+    () => ["más simple.", "más claro.", "más seguro.", "más preciso.", "más confiable.", "más consistente.", "más prolijo.", "más controlado.", "más escalable.", "más automático.", "más moderno.", "más práctico.", "más fluido.", "más estable.", "más rentable.", "más económico.", "más profesional.", "más optimizado.", "más ágil para el equipo."],
+    []
+  );
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [typed, setTyped] = useState("");
 
   useEffect(() => {
     if (user === null) setChecking(false);
     else if (user) router.push("/select-workshop");
   }, [user, router]);
+
+  // Typewriter effect para el slogan
+  useEffect(() => {
+    const current = phrases[phraseIndex] || "";
+    const isDone = typed.length === current.length;
+
+    const timeout = setTimeout(() => {
+      if (!isDone) {
+        setTyped(current.slice(0, typed.length + 1));
+      } else {
+        const next = (phraseIndex + 1) % phrases.length;
+        setPhraseIndex(next);
+        setTyped("");
+      }
+    }, isDone ? 1300 : 110);
+
+    return () => clearTimeout(timeout);
+  }, [typed, phraseIndex, phrases]);
 
   if (checking || user) return null;
 
@@ -94,71 +118,99 @@ export default function LoginForm() {
   };
 
   return (
-      <div className="w-full max-w-md bg-white rounded-[14px] border border-[#DEDEDE] px-4 py-10 text-center
-                      flex flex-col justify-between
-                      max-h-[calc(100dvh-2rem)] overflow-auto"> {/*  scroll interno, no en body */}
-        <div className="space-y-8">
-          <Image
-            src="/images/logo.svg"
-            alt="Logo Track Detail"
-            width={170}
-            height={180}
-            className="mx-auto"
+<div className="w-full max-w-md px-6 py-14 text-center flex flex-col max-h-[calc(100dvh-2rem)] border border-[#DEDEDE] rounded-[14px]">
+  {/* Header fijo (sin overflow, no se corta) */}
+  <div className="shrink-0 flex flex-col items-center -mt-2">
+    <Image
+      src="/images/logo.svg"
+      alt="CheckRTO"
+      width={160}
+      height={32}
+      className="mx-auto"
+    />
+    <p className="text-lg text-gray-700 mt-5 h-8">
+      Hacé tu taller {" "}
+      <span className="font-medium text-[#0040B8]">
+        {typed || "\u00A0"}
+      </span>
+      <span className="inline-block w-[6px] h-[22px] ml-1 align-middle bg-[#0040B8] animate-pulse" />
+    </p>
+  </div>
+
+  {/* Contenido con scroll interno */}
+  <div className="flex-1 overflow-auto">
+    <div className="space-y-8 pt-4">
+      <form onSubmit={handleSubmit} className="mt-8">
+        <input
+          type="text"
+          placeholder="Correo electrónico o DNI"
+          className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+          value={emailOrDni}
+          onChange={(e) => setEmailOrDni(e.target.value)}
+          disabled={submitting}
+        />
+
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Contraseña"
+            className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={submitting}
           />
-
-          <h1 className="text-lg text-black font-medium">¡Bienvenido nuevamente!</h1>
-
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Correo electrónico o DNI"
-              className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[14px] px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
-              value={emailOrDni}
-              onChange={(e) => setEmailOrDni(e.target.value)}
-              disabled={submitting}
-            />
-
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Contraseña"
-                className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={submitting}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500"
-                disabled={submitting}
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              >
-                {showPassword ? <EyeOff stroke="#0040B8" size={20} /> : <Eye stroke="#0040B8" size={20} />}
-              </button>
-            </div>
-
-            {error && <p className="text-sm text-red-600 mt-5">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              aria-busy={submitting}
-              className={`mt-5 w-full bg-[#0040B8] text-white text-lg font-semibold rounded-[4px] py-3.5 transition
-                ${submitting ? "cursor-not-allowed" : "hover:bg-[#0038a6]"}`}
-            >
-              {submitting ? <Spinner size={22} className="mx-auto text-white" /> : "Ingresar"}
-            </button>
-          </form>
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500"
+            disabled={submitting}
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+          >
+            {showPassword ? (
+              <EyeOff stroke="#0040B8" size={20} />
+            ) : (
+              <Eye stroke="#0040B8" size={20} />
+            )}
+          </button>
         </div>
-        <Link href="/register-owner" className="text-sm mt-6 text-[#00000099] hover:underline">
-          ¿No Tienes Cuenta? Regístrate
-        </Link>
+        <div className="mt-2 text-right">
+          <Link href="/forgot-password" className="text-sm text-[#0040B8] hover:underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
 
-        <Link href="/forgot-password" className="text-sm mt-3 text-[#0040B8] hover:underline">
-          ¿Olvidaste tu contraseña?
-        </Link>
-      </div>
+        {error && <p className="text-sm text-red-600 mt-5">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          aria-busy={submitting}
+          className={`mt-5 w-full bg-[#0040B8] text-white text-sm font-regular rounded-[14px] py-3 transition ${
+            submitting ? "cursor-not-allowed" : "hover:bg-[#0038a6]"
+          }`}
+        >
+          {submitting ? (
+            <Spinner size={22} className="mx-auto text-white" />
+          ) : (
+            "Ingresar"
+          )}
+        </button>
+        <div className="mt-6 border-t border-[#DEDEDE]" />
+      </form>
+    </div>
+  </div>
+
+  {/* Footer fijo (links abajo) */}
+  <div className="shrink-0 pt-6">
+    <Link
+      href="/register-owner"
+      className="text-sm block text-[#00000099] hover:underline"
+    >
+      ¿No Tienes Cuenta? <span className="text-[#0040B8] underline font-normal">Regístrate</span>
+    </Link>
+  </div>
+</div>
+
     
 );
 

@@ -75,7 +75,7 @@ export default function ResetPasswordTokenPage() {
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "No se pudo restablecer");
       setDone(true);
-      setTimeout(() => router.push("/"), 1800);
+      setTimeout(() => router.push("/login"), 1800);
     } catch (err: any) {
       setError(err.message || "Ocurrió un error");
     } finally {
@@ -148,7 +148,7 @@ export default function ResetPasswordTokenPage() {
               <h1 className="text-lg text-black font-medium">Contraseña actualizada</h1>
             </div>
             <p className="text-sm text-[#00000099]">Redirigiendo al login</p>
-            <Link href="/" className="text-sm text-[#0040B8] hover:underline">
+            <Link href="/login" className="text-sm text-[#0040B8] hover:underline">
               Ir al login
             </Link>
           </div>
@@ -233,7 +233,7 @@ export default function ResetPasswordTokenPage() {
           </form>
 
           <div>
-            <Link href="/" className="text-sm text-[#0040B8] hover:underline">
+            <Link href="/login" className="text-sm text-[#0040B8] hover:underline">
               Volver a iniciar sesión
             </Link>
           </div>

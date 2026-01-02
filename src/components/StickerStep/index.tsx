@@ -783,14 +783,14 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
             className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
             onClick={() => setShowConfirmModal(false)}
           />
-          <div className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl">
+          <div className="relative w-full max-w-sm rounded-2xl border border-gray-200 bg-white shadow-2xl">
             <div className="p-4 sm:p-6">
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-base font-semibold text-gray-900 sm:text-lg">
+              <div className="relative flex items-center justify-center mb-4">
+                <h3 className="text-base font-semibold text-gray-900 sm:text-lg text-center">
                   Confirmar acción
                 </h3>
                 <button
-                  className="rounded-[4px] p-1 hover:bg-gray-100 transition-colors"
+                  className="absolute right-0 rounded-[4px] p-1 hover:bg-gray-100 transition-colors"
                   onClick={() => setShowConfirmModal(false)}
                   aria-label="Cerrar"
                 >
@@ -798,19 +798,13 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                 </button>
               </div>
 
-              <p className="text-sm text-gray-700 mb-6">
+              <p className="text-sm text-gray-700 mb-6 text-center">
                 {confirmMessage}
               </p>
 
-              <div className="flex items-center justify-end gap-3">
+              <div className="flex flex-col items-center gap-3">
                 <button
-                  className="rounded-[4px] border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  onClick={() => setShowConfirmModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button
-                  className={`rounded-[4px] px-4 py-2 text-sm text-white transition-colors ${
+                  className={`w-full rounded-[4px] px-4 py-2 text-sm text-white transition-colors ${
                     confirmType === "unassign"
                       ? "bg-red-600 hover:bg-red-700"
                       : "bg-[#0040B8] hover:bg-[#00379f]"
@@ -822,6 +816,12 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                   }}
                 >
                   {confirmType === "unassign" ? "Quitar oblea" : "Asignar oblea"}
+                </button>
+                <button
+                  className="w-full rounded-[4px] border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:border-gray-400 hover:shadow-sm transition-all"
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  Cancelar
                 </button>
               </div>
             </div>

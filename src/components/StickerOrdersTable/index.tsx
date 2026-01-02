@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Search, SlidersHorizontal, Eye, RefreshCw } from "lucide-react";
 import TableTemplate, { TableHeader } from "@/components/TableTemplate";
 import RefreshButton from "@/components/RefreshButton";
+import TableFilters from "../TableFilters";
 
 type StickerOrder = {
   id: number;
@@ -151,8 +152,8 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
       )}
     
       {/* Search y filtros */}
-      <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 gap-3 px-[1.5px] pt-1">
+      <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between overflow-visible">
+        <div className="flex flex-1 gap-3 px-[1.5px] pt-1 overflow-visible">
           <div className="relative flex-1">
             <input
               disabled={loading}
@@ -179,45 +180,23 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
               <Search size={16} />
             </button>
           </div>
-          <button
-            disabled={loading}
-            onClick={() => {
-              setShowFilters(!showFilters);
-              setPage(1);
-            }}
-            className="bg-[#0040B8] flex items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
-          >
-            <SlidersHorizontal size={16} className="text-white" />
-            <span className="hidden sm:inline text-white">Filtrar</span>
-          </button>
+          <div className="hidden sm:block relative">
+            <button
+              disabled={loading}
+              onClick={() => {
+                setShowFilters(!showFilters);
+                setPage(1);
+              }}
+              className="flex bg-[#0040B8] items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
+            >
+              <SlidersHorizontal size={16} className="text-white" />
+              <span className="hidden sm:inline text-white">Filtrar</span>
+            </button>
+            {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
+          </div>
           <RefreshButton loading={loading} fetchApps={fetchOrders} />
         </div>
       </div>
-
-      {/* Panel de filtros simple */}
-      {showFilters && (
-        <div className="mb-4 rounded-[14px] border border-gray-200 bg-white p-3 sm:p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            {TABLE_FILTERS.map((opt) => {
-              const active = statusFilter === opt;
-              return (
-                <button
-                  key={opt}
-                  onClick={() => setStatusFilter(opt)}
-                  className={[
-                    "rounded-full px-3 py-1 text-sm border",
-                    active
-                      ? "bg-[#0040B8] text-white border-[#0040B8]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50",
-                  ].join(" ")}
-                >
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Tabla */}
       <div className="stk-table overflow-hidden sm:rounded-[14px] sm:border sm:border-gray-200 bg-white">

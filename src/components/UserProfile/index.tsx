@@ -28,7 +28,7 @@ export default function UserProfile() {
         headers: { "Content-Type": "application/json" },
       });
       if (!res.ok) return;
-      router.push("/");
+      router.push("/login");
       router.refresh();
     } catch (err) {
       console.error("Error de red:", err);

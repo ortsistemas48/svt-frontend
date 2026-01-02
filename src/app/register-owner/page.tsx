@@ -64,17 +64,17 @@ export default function RegisterOwnerForm() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-2xl bg-white rounded-[14px] border border-gray-200 shadow-sm px-4 py-6 sm:px-6 sm:py-10">
+      <div className="w-full max-w-lg bg-white rounded-[14px] border border-gray-200 shadow-sm px-4 py-6 sm:px-6 sm:py-10">
         <div className="space-y-5">
           <Image
             src="/images/logo.svg"
             alt="Logo Track Detail"
-            width={170}
-            height={180}
+            width={140}
+            height={28}
             className="mx-auto"
           />
 
-          <h1 className="text-center text-lg text-black font-medium">¡Crea tu cuenta en CheckRTO!</h1>
+          <h1 className="text-center text-base text-black font-medium">¡Crea tu cuenta en CheckRTO!</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-6 sm:mt-8">
@@ -86,8 +86,8 @@ export default function RegisterOwnerForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nombre@dominio.com"
-              className="w-full border border-gray-300 rounded-[4px] px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
-              focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
+              className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 text-sm 
+              focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
               required
             />
           </div>
@@ -101,8 +101,8 @@ export default function RegisterOwnerForm() {
               value={dni}
               onChange={(e) => setDni(e.target.value)}
               placeholder="Ej: 12345678"
-              className="w-full border border-gray-300 rounded-[4px] px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
-              focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
+              className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 text-sm 
+              focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
               required
             />
           </div>
@@ -115,8 +115,8 @@ export default function RegisterOwnerForm() {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="Ej: Juan Diego"
-              className="w-full border border-gray-300 rounded-[4px] px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
-              focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
+              className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 text-sm 
+              focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
               required
             />
           </div>
@@ -129,32 +129,34 @@ export default function RegisterOwnerForm() {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="Ej: Martin"
-              className="w-full border border-gray-300 rounded-[4px] px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base 
-              focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
+              className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 text-sm 
+              focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
               required
             />
           </div>
 
-          <div className="relative md:col-span-2">
+          <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
-              <input
-                className="w-full border border-gray-300 rounded-[4px] placeholder:text-sm px-3 py-2.5 sm:px-4 sm:py-3 pr-10 text-sm sm:text-base 
-                focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
-                type={showPass ? "text" : "password"}
-                placeholder={"Ingresá una contraseña"}
-                value={password}
-                onChange={(e)=> setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={()=> setShowPass(v=>!v)}
-                className="absolute right-3 top-8 sm:top-9 p-1"
-                tabIndex={-1}
-                aria-label={showPass ? "Ocultar contraseña" : "Ver contraseña"}
-                title={showPass ? "Ocultar contraseña" : "Ver contraseña"}
-              >
-                {showPass ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5 text-[#0040B8]" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-[#0040B8]" />}
-              </button>
+              <div className="relative">
+                <input
+                  className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 pr-10 text-sm 
+                  focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+                  type={showPass ? "text" : "password"}
+                  placeholder={"Ingresá una contraseña"}
+                  value={password}
+                  onChange={(e)=> setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={()=> setShowPass(v=>!v)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-4"
+                  tabIndex={-1}
+                  aria-label={showPass ? "Ocultar contraseña" : "Ver contraseña"}
+                  title={showPass ? "Ocultar contraseña" : "Ver contraseña"}
+                >
+                  {showPass ? <EyeOff stroke="#0040B8" size={20} /> : <Eye stroke="#0040B8" size={20} />}
+                </button>
+              </div>
               
               <button 
                 type="button" 
@@ -167,9 +169,10 @@ export default function RegisterOwnerForm() {
 
           <div className="relative md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
+            <div className="relative">
               <input
-                className="w-full border border-gray-300 rounded-[4px] placeholder:text-sm px-3 py-2.5 sm:px-4 sm:py-3 pr-10 text-sm sm:text-base 
-                focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent transition-colors duration-200"
+                className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 pr-10 text-sm 
+                focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
                 type={showPass ? "text" : "password"}
                 placeholder={"Repetí la contraseña"}
                 value={confirmPassword}
@@ -178,13 +181,14 @@ export default function RegisterOwnerForm() {
               <button
                 type="button"
                 onClick={()=> setShowPass(v=>!v)}
-                className="absolute right-3 top-8 sm:top-9 p-1"
+                className="absolute inset-y-0 right-0 flex items-center pr-4"
                 tabIndex={-1}
                 aria-label={showPass ? "Ocultar contraseña" : "Ver contraseña"}
                 title={showPass ? "Ocultar contraseña" : "Ver contraseña"}
               >
-                {showPass ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5 text-[#0040B8]" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-[#0040B8]" />}
+                {showPass ? <EyeOff stroke="#0040B8" size={20} /> : <Eye stroke="#0040B8" size={20} />}
               </button>
+            </div>
           </div>
           
           
@@ -206,8 +210,9 @@ export default function RegisterOwnerForm() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-4 w-full bg-[#0040B8] text-white text-sm sm:text-base font-medium rounded-[4px] py-3 sm:py-3.5 
-              hover:bg-[#0035A0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className={`mt-4 w-full bg-[#0040B8] text-white text-sm font-regular rounded-[14px] py-3 transition ${
+                loading ? "cursor-not-allowed opacity-50" : "hover:bg-[#0038a6]"
+              }`}
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -223,10 +228,10 @@ export default function RegisterOwnerForm() {
         
         <div className="mt-6 text-center">
           <Link 
-            href="/" 
-            className="text-sm sm:text-base text-[#0040B8] hover:text-[#0035A0] hover:underline transition-colors duration-200"
+            href="/login" 
+            className="text-sm sm:text-base hover:underline transition-colors duration-200"
           >
-            ¿Ya tienes cuenta? Ingresa
+            <span className="text-gray-600">¿Ya tienes cuenta?</span> <span className="text-[#0040B8] underline">Ingresa</span>
           </Link>
         </div>
 

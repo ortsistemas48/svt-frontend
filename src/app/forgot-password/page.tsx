@@ -66,7 +66,7 @@ export default function ForgotPasswordPage() {
               Si tu email está registrado, te enviamos un enlace para restablecer la contraseña.
             </p>
 
-            <Link href="/" className="text-sm mt-6 text-[#0040B8] hover:underline">
+            <Link href="/login" className="text-sm mt-6 text-[#0040B8] hover:underline">
               Volver a iniciar sesión
             </Link>
           </div>
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
               id="email"
               type="email"
               placeholder="tu@email.com"
-              className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[14px] px-5 py-4
+              className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3
                          focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -94,24 +94,25 @@ export default function ForgotPasswordPage() {
               type="submit"
               disabled={submitting}
               aria-busy={submitting}
-              className={`w-full bg-[#0040B8] text-white text-md font-semibold rounded-[4px] py-3.5 mb-6 transition
+              className={`w-full bg-[#0040B8] text-white text-sm font-regular rounded-[14px] py-3 transition
                 ${submitting ? "cursor-not-allowed" : "hover:bg-[#0038a6]"}`}
             >
               {submitting ? <Spinner size={22} className="mx-auto text-white" /> : "Enviar enlace"}
             </button>
+            <div className="mt-5 border-t border-[#DEDEDE]" />
           </form>
         )}
       </div>
 
       {/* Footer con enlaces */}
       {!done ? (
-        <div>
-          <Link href="/register-owner" className="text-sm text-[#00000099] hover:underline">
-            ¿No Tienes Cuenta? Regístrate
+        <div className="pt-6">
+          <Link href="/register-owner" className="text-sm block text-[#00000099] hover:underline">
+            ¿No Tienes Cuenta? <span className="text-[#0040B8] underline font-normal">Regístrate</span>
           </Link>
 
           <div className="mt-3">
-            <Link href="/" className="text-sm text-[#0040B8] hover:underline">
+            <Link href="/login" className="text-sm text-[#0040B8] hover:underline">
               Volver a iniciar sesión
             </Link>
           </div>

@@ -155,7 +155,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
         headers: { "Content-Type": "application/json" },
       });
       if (!res.ok) return;
-      router.push("/");
+      router.push("/login");
       router.refresh();
     } catch (err) {
       console.error("Error de red:", err);
@@ -288,36 +288,45 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
               />
             </button>
 
-            {openWorkshops ? (
-              <div id="workshops-list" className="space-y-2 pl-2">
-                {approvedWorkshops.map(w => (
-                  <WorkshopItem
-                    key={w.workshop_id}
-                    name={w.workshop_name}
-                    selected={String(id) === String(w.workshop_id)}
-                    onClick={() => handleWorkshopClick(w.workshop_id)}
-                  />
-                ))}
-                <Link href="/create-workshop">
-                  <div className="mt-4 flex items-center gap-2 rounded-[4px] border border-dashed border-slate-300 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                    <svg width="18" height="18" viewBox="0 0 24 24" className="text-[#0040B8]">
-                      <path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />
-                    </svg>
-                    Inscribir taller
+            <div
+              id="workshops-list"
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                openWorkshops ? "max-h-[1000px]" : "max-h-[60px]"
+              }`}
+            >
+              <div className="space-y-2 pl-2">
+                {openWorkshops ? (
+                  <div className="transition-opacity duration-300 ease-in-out opacity-100">
+                    {approvedWorkshops.map(w => (
+                      <WorkshopItem
+                        key={w.workshop_id}
+                        name={w.workshop_name}
+                        selected={String(id) === String(w.workshop_id)}
+                        onClick={() => handleWorkshopClick(w.workshop_id)}
+                      />
+                    ))}
+                    <Link href="/create-workshop">
+                      <div className="mt-4 flex items-center gap-2 rounded-[4px] border border-dashed border-slate-300 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+                        <svg width="18" height="18" viewBox="0 0 24 24" className="text-[#0040B8]">
+                          <path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />
+                        </svg>
+                        Inscribir taller
+                      </div>
+                    </Link>
                   </div>
-                </Link>
+                ) : (
+                  <div className="transition-opacity duration-300 ease-in-out opacity-100">
+                    <WorkshopItem
+                      name={currentWorkshop?.workshop_name || "Taller actual"}
+                      selected
+                      onClick={() =>
+                        currentWorkshop && handleWorkshopClick(currentWorkshop.workshop_id)
+                      }
+                    />
+                  </div>
+                )}
               </div>
-            ) : (
-              <div id="workshops-list">
-                <WorkshopItem
-                  name={currentWorkshop?.workshop_name || "Taller actual"}
-                  selected
-                  onClick={() =>
-                    currentWorkshop && handleWorkshopClick(currentWorkshop.workshop_id)
-                  }
-                />
-              </div>
-            )}
+            </div>
           </>
         )}
 

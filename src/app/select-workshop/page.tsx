@@ -19,7 +19,7 @@ export default function SelectWorkshopPage() {
         headers: { "Content-Type": "application/json" },
       });
       if (!res.ok) return;
-      router.push("/");
+      router.push("/login");
       router.refresh();
     } catch (err) {
       console.error("❌ Error de red:", err);
@@ -34,7 +34,7 @@ export default function SelectWorkshopPage() {
       });
 
       if (!res.ok) {
-        router.push("/");
+        router.push("/login");
         return;
       }
 
@@ -61,18 +61,6 @@ export default function SelectWorkshopPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 font-sans relative p-4">
-      {/* Header fijo arriba a la derecha */}
-      <header className="absolute top-4 right-4 z-10">
-        <button
-          onClick={logOutFunction}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-[4px] border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors duration-200"
-          aria-label="Cerrar sesión"
-        >
-          <LogOut size={16} />
-          <span className="hidden sm:inline">Cerrar sesión</span>
-        </button>
-      </header>
-
       <section className="w-full max-w-md sm:max-w-lg bg-white rounded-[14px] border border-gray-200 shadow-sm flex flex-col max-h-[90vh] sm:max-h-[80vh]">
         {/* Header Section - Fixed */}
         <div className="px-6 py-6 border-b border-gray-100">
@@ -94,7 +82,7 @@ export default function SelectWorkshopPage() {
               workshops.map((w) => (
                 <article
                   key={w.workshop_id}
-                  className={`relative group flex justify-between items-center border rounded-[4px] p-4 transition-all duration-200 ${
+                  className={`relative group flex justify-between items-center border rounded-[4px] p-3 transition-all duration-200 ${
                     w.is_approved
                       ? "cursor-pointer hover:bg-gray-50 hover:border-[#0040B8] hover:shadow-sm border-gray-200"
                       : "bg-gray-50 border-gray-200 cursor-not-allowed"
@@ -120,7 +108,7 @@ export default function SelectWorkshopPage() {
                   )}
 
                   <div className="flex items-center min-w-0 flex-1">
-                    <h3 className="font-medium text-sm sm:text-base text-gray-900 truncate">
+                    <h3 className="font-medium text-sm text-gray-900 truncate">
                       {w.workshop_name}
                     </h3>
                     {!w.is_approved && (
@@ -132,9 +120,9 @@ export default function SelectWorkshopPage() {
 
                   <div className="ml-3 flex-shrink-0">
                     {w.is_approved ? (
-                      <MoveRight size={18} className="text-[#0040B8]" />
+                      <MoveRight size={16} className="text-[#0040B8]" />
                     ) : (
-                      <Info size={18} className="text-gray-400" />
+                      <Info size={16} className="text-gray-400" />
                     )}
                   </div>
                 </article>
@@ -153,15 +141,23 @@ export default function SelectWorkshopPage() {
         </div>
 
         {/* Footer Section - Fixed, siempre visible */}
-        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-lg">
+        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-lg space-y-3">
           <button
-            className="w-full flex justify-center items-center bg-[#0040B8] hover:bg-[#0035A0] text-white rounded-[4px] p-4 cursor-pointer transition-colors duration-200 font-medium text-sm sm:text-base"
+            className="w-full flex justify-center items-center bg-[#0040B8] hover:bg-[#0035A0] text-white rounded-[4px] py-3 px-4 cursor-pointer transition-colors duration-200 font-medium text-base"
             onClick={() => router.push("/create-workshop")}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") router.push("/create-workshop");
             }}
           >
             <span>Inscribir mi taller</span>
+          </button>
+          <button
+            onClick={logOutFunction}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[4px] border border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-300 hover:text-red-700 hover:shadow-sm text-sm font-medium transition-all duration-200"
+            aria-label="Cerrar sesión"
+          >
+            <LogOut size={16} />
+            <span>Cerrar sesión</span>
           </button>
         </div>
       </section>

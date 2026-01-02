@@ -102,7 +102,7 @@ export default function EmailVerifiedClient() {
           {!!status && (
             <div className="space-y-3">
               {status === "ok" && (
-                <Link href="/" className="block w-full bg-[#0040B8] text-white text-md rounded-[4px] py-3.5 hover:bg-[#0038a6] transition">
+                <Link href="/login" className="block w-full bg-[#0040B8] text-white text-md rounded-[4px] py-3.5 hover:bg-[#0038a6] transition">
                   Ir a iniciar sesión
                 </Link>
               )}
@@ -139,7 +139,7 @@ export default function EmailVerifiedClient() {
               )}
 
               {status === "used" && (
-                <Link href="/" className="block w-full bg-[#0040B8] text-white text-md rounded-[4px] py-3.5 hover:bg-[#0038a6] transition">
+                <Link href="/login" className="block w-full bg-[#0040B8] text-white text-md rounded-[4px] py-3.5 hover:bg-[#0038a6] transition">
                   Ir a iniciar sesión
                 </Link>
               )}
@@ -148,7 +148,7 @@ export default function EmailVerifiedClient() {
         </div>
 
         {!!status && (
-          <Link href="/" className="text-sm mt-6 text-[#0040B8] hover:underline">
+          <Link href="/login" className="text-sm mt-6 text-[#0040B8] hover:underline">
             Volver al inicio
           </Link>
         )}

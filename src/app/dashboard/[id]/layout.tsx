@@ -61,7 +61,7 @@ export default function DashboardClientLayout({
   // 1) Gate de autenticación
   useEffect(() => {
     if (!user) {
-      router.replace("/");
+      router.replace("/login");
     } else {
       checkMembership();
     }
@@ -71,7 +71,7 @@ export default function DashboardClientLayout({
   // 2) Chequeo membresía
   async function checkMembership() {
     if (!workshopId) {
-      router.replace("/");
+      router.replace("/login");
       return;
     }
     try {
@@ -80,19 +80,19 @@ export default function DashboardClientLayout({
         { method: "GET", credentials: "include" }
       );
       if (res.status === 401 || res.status === 404) {
-        router.replace("/");
+        router.replace("/login");
         router.refresh();
         return;
       }
       const data: MembershipResponse = await res.json();
       if ("is_member" in data && !data.is_member) {
-        router.replace("/");
+        router.replace("/login");
         router.refresh();
         return;
       }
       setIsChecking(false);
     } catch {
-      router.replace("/");
+      router.replace("/login");
     }
   }
 
@@ -111,12 +111,12 @@ export default function DashboardClientLayout({
           setUserType(data);
         } else {
           console.error("Error fetching user type,", await res.text());
-          router.replace("/");
+          router.replace("/login");
           return;
         }
       } catch (error) {
         console.error("Error fetching user type,", error);
-        router.replace("/");
+        router.replace("/login");
       } finally {
         setPermissionLoading(false);
       }

@@ -522,8 +522,16 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
           setLoading(false);
           return;
         }
-        setConfirmAction("confirm_car");
-        setShowConfirmModal(true);
+        // Guardar vehículo directamente sin modal
+        try {
+          const ok = await saveVehicle();
+          if (ok) {
+            setStep(4);
+          }
+        } catch (e) {
+          console.error(e);
+          alert("Hubo un error al guardar los datos del vehículo.");
+        }
         setLoading(false);
         return;
       }
@@ -698,18 +706,15 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         )}
       </div>
 
-      {showConfirmModal && (
+      {showConfirmModal && confirmAction !== "confirm_car" && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4">
           <div className="bg-white rounded-lg sm:rounded-[14px] max-w-md w-full p-4 sm:p-5 md:p-6 max-h-[90vh] overflow-y-auto">
             {/* Título y cuerpo del modal según acción */}
-            <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
-              {confirmAction === "confirm_car" ? "¿Estás seguro?" : "¿Estás seguro?"}
+            <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-center">
+              ¿Estás seguro?
             </h2>
 
-            <p className="text-sm sm:text-base mb-3 sm:mb-4">
-              {confirmAction === "confirm_car"
-                ? "Estás por confirmar los datos de tu vehículo. ¿Deseás continuar?"
-                : "Vas a confirmar el trámite. ¿Deseás continuar?"}
+            <p className="text-sm sm:text-base mb-3 sm:mb-4 text-center">
             </p>
             {
               (confirmAction === "queue") &&
@@ -753,38 +758,10 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-5 mt-4 sm:mt-5">
-              <button
-                onClick={() => {
-                  setShowConfirmModal(false);
-                  setProcessingAction(false);
-                }}
-                disabled={processingAction}
-                className="w-full sm:w-auto bg-white border border-[#d91e1e] text-[#d91e1e] duration-150 text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-[4px] hover:text-white hover:bg-[#d91e1e] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancelar
-              </button>
+            <div className="flex flex-col justify-center gap-3 mt-4 sm:mt-5">
               <button
                 onClick={async () => {
                   setProcessingAction(true);
-
-                  if (confirmAction === "confirm_car") {
-                    try {
-                      setLoading(true);
-                      const ok = await saveVehicle();
-                      if (ok) {
-                        setStep(4);
-                        setShowConfirmModal(false);
-                      }
-                    } catch (e) {
-                      console.error(e);
-                      alert("Hubo un error al guardar los datos del vehículo.");
-                    } finally {
-                      setLoading(false);
-                      setProcessingAction(false);
-                    }
-                    return;
-                  }
 
                   if (confirmAction === "inspect") {
                     try {
@@ -819,9 +796,19 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
                   }
                 }}
                 disabled={processingAction}
-                className="w-full sm:w-auto bg-[#0040B8] text-white text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-[4px] hover:bg-[#0032a0] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#0040B8] text-white text-sm sm:text-base px-5 sm:px-6 py-3 rounded-[4px] hover:bg-[#0032a0] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processingAction ? "Procesando..." : "Confirmar"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setProcessingAction(false);
+                }}
+                disabled={processingAction}
+                className="w-full bg-gray-100 border border-gray-300 text-gray-700 text-sm sm:text-base px-5 sm:px-6 py-3 rounded-[4px] hover:bg-gray-200 hover:border-gray-400 hover:shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
               </button>
             </div>
           </div>
