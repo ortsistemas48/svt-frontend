@@ -367,7 +367,6 @@ export default function CompletedApplicationsTable({ externalSearchQuery = "" }:
               const tone = STATUS_TONES[item.result as string] || DEFAULT_TONE;
               // Si no hay nombre completo ni DNI, usar razón social y CUIT (i  gual que InspectionsTable)
               const hasNameAndDni = (item.owner?.first_name || item.owner?.last_name) && item.owner?.dni;
-              console.log(item);
               const ownerText = hasNameAndDni 
                 ? `${item.owner?.first_name || ""} ${item.owner?.last_name || ""}`.trim() 
                 : (item.owner?.razon_social || "");

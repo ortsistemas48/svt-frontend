@@ -35,7 +35,7 @@ export default function BuyObleaPage() {
         </div>
 
         {/* Barra de búsqueda para obleas */}
-        <div className="mb-4 sm:mb-6 mx-1 sm:mx-0">
+        <div className="mb-4 sm:mb-6 mx-1 sm:mx-0 sm:hidden">
           <div className="flex flex-row gap-3 w-full sm:max-w-2xl sm:mx-auto justify-center">
             <div className="flex-1 flex items-center border border-gray-300 rounded-[4px] px-3 sm:px-4 h-12 sm:h-14 focus-within:ring-2 focus-within:ring-[#0040B8] focus-within:border-transparent">
               <Search size={18} className="text-gray-500 mr-2 flex-shrink-0 sm:w-5 sm:h-5" />

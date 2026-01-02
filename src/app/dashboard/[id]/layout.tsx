@@ -142,7 +142,7 @@ export default function DashboardClientLayout({
       [`/dashboard/${workshopId}/statistics`]: ["titular", "ingeniero"],
       [`/dashboard/${workshopId}/users`]: ["titular", "ingeniero"],
       [`/dashboard/${workshopId}/files`]: ["titular", "ingeniero"],
-      [`/dashboard/${workshopId}/settings`]: ["titular"],
+      [`/dashboard/${workshopId}/settings`]: ["titular", "ingeniero"]
     };
 
     const currentRoute = pathname;
