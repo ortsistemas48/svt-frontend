@@ -2,7 +2,7 @@ import { X, ChevronDown } from "lucide-react";
 
 
 interface TableFiltersProps {
-    tableFilters: string[];
+    tableFilters: readonly string[];
     statusFilter: string;
     setStatusFilter: (status: string) => void;
     setShowFilters: (show: boolean) => void;

@@ -270,7 +270,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
               <SlidersHorizontal size={16} className="text-white" />
               <span className="hidden sm:inline text-white">Filtrar</span>
             </button>
-            {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
+            {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={(status) => setStatusFilter(status as UiState)} setShowFilters={setShowFilters} setPage={setPage} />}
           </div>
           <RefreshButton loading={loading} fetchApps={() => fetchStickers(page)} />
         </div>
