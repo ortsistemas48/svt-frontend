@@ -60,12 +60,12 @@ export default function BuyObleaPage() {
               <Search size={18} className="text-gray-500 mr-2 flex-shrink-0" />
               <input
                 type="text"
-                placeholder="Buscar obleas"
+                placeholder="Buscar packs de obleas"
                 className="w-full text-sm focus:outline-none bg-transparent placeholder:text-gray-400 placeholder:text-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                aria-label="Buscar obleas"
+                aria-label="Buscar packs de obleas"
               />
             </div>
             <button

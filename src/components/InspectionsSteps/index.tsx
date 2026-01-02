@@ -353,7 +353,6 @@ export default function InspectionStepsClient({
   };
 
   const openObsModalForStep = async (stepId: number) => {
-    console.log("[openObsModalForStep] Abriendo modal para stepId:", stepId);
     setObsModalStepId(stepId);
     setObsView("parents");
     setSelectedCategory(null);

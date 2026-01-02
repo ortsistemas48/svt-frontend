@@ -102,7 +102,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
     { label: "Acciones" },
   ];
 
-  const fetchStickers = async (p = page) => {
+  const fetchStickers = async (p = page, search = searchQuery) => {
     if (!id) return;
     try {
       setLoading(true);
@@ -112,6 +112,10 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
         page: String(p),
         per_page: String(perPage),
       });
+
+      if (search.trim()) {
+        usp.set("q", search.trim());
+      }
 
       const res = await fetch(
         `/api/stickers/workshop/${id}?${usp.toString()}`,
@@ -124,6 +128,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
       }
 
       const data: StickersResponse = await res.json();
+      console.log("data", data);
       setRows(Array.isArray(data?.stickers) ? data.stickers : []);
       if (data?.pagination) setMeta(data.pagination);
     } catch (err: any) {
@@ -143,9 +148,13 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
   };
 
   useEffect(() => {
-    fetchStickers(page);
+    setPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    fetchStickers(page, searchQuery);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, page]);
+  }, [id, page, searchQuery]);
 
   // Sincronizar searchQuery externo
   useEffect(() => {
@@ -159,24 +168,15 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
   const filtered = useMemo(() => {
     let list = rows;
 
-    if (searchQuery.trim()) {
-      const s = searchQuery.trim().toLowerCase();
-      list = list.filter((o) => {
-        const byNumber = (o.sticker_number || "").toLowerCase().includes(s);
-        const byPlate  = (o.license_plate || "").toLowerCase().includes(s);
-        const byOrder  = (o.order_name || "").toLowerCase().includes(s);
-        const byId     = String(o.id).includes(s);
-        return byNumber || byPlate || byOrder || byId;
-      });
-    }
-
+    // El filtrado por búsqueda ahora se hace en el backend
+    // Solo mantenemos el filtrado por estado localmente
     if (statusFilter !== "Todos") {
       const target = uiToApi[statusFilter].toLowerCase(); // "disponible", "no disponible", "en uso"
       list = list.filter((o) => (o.status || "").toLowerCase() === target);
     }
 
     return list;
-  }, [rows, searchQuery, statusFilter]);
+  }, [rows, statusFilter]);
 
   const statusTone = (ui: UiState) => {
     if (ui === "No Disponible")
@@ -324,42 +324,45 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
               return (
                 <div
                   key={item.id}
-                  className="border border-gray-200 rounded-lg px-3 py-4 sm:p-4 space-y-3 sm:space-y-4 relative"
+                  className="border border-gray-200 rounded-lg p-4 space-y-3 relative"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 space-y-3 min-w-0">
+                      {/* Número de oblea */}
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-500 mb-1">Número</p>
-                        <p className="text-sm sm:text-base font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 mb-1">Número</p>
+                        <p className="text-sm font-semibold text-gray-900 break-words">
                           {item.sticker_number || "-"}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 flex-wrap">
+
+                      {/* Estado y Patente en una fila */}
+                      <div className="flex flex-wrap items-center gap-3">
                         <div>
-                          <p className="text-xs sm:text-sm text-gray-500 mb-1">Estado</p>
+                          <p className="text-xs text-gray-500 mb-1">Estado</p>
                           <span
-                            className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm ${tone.text} ${tone.bg}`}
+                            className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${tone.text} ${tone.bg}`}
                           >
                             {ui}
                           </span>
                         </div>
-                        {item.license_plate && (
-                          <div>
-                            <p className="text-xs sm:text-sm text-gray-500 mb-1">Patente</p>
-                            <span className="inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm text-gray-800 bg-gray-100">
-                              {item.license_plate}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      {item.issued_at && (
                         <div>
-                          <p className="text-xs sm:text-sm text-gray-500 mb-1">Emitida</p>
-                          <p className="text-xs sm:text-sm text-gray-900">{fmtDate(item.issued_at)}</p>
+                          <p className="text-xs text-gray-500 mb-1">Patente</p>
+                          <span className="inline-block rounded-full px-2.5 py-1 text-xs font-medium text-gray-800 bg-gray-100">
+                            {item.license_plate || "—"}
+                          </span>
                         </div>
-                      )}
+                      </div>
+
+                      {/* Fecha de emisión */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Emitida</p>
+                        <p className="text-xs text-gray-900">{fmtDate(item.issued_at)}</p>
+                      </div>
                     </div>
-                    <div className="relative">
+
+                    {/* Botón de acciones */}
+                    <div className="relative flex-shrink-0">
                       <button
                         ref={(el) => {
                           if (el) buttonRefs.current.set(item.id, el);
@@ -367,10 +370,14 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
                         }}
                         aria-haspopup="menu"
                         aria-expanded={isMenuOpen}
-                        onClick={() => setOpenMenuId((cur) => (cur === item.id ? null : item.id))}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-[4px] text-gray-700 hover:bg-gray-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId((cur) => (cur === item.id ? null : item.id));
+                        }}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-[4px] text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+                        type="button"
                       >
-                        <EllipsisVertical size={18} />
+                        <EllipsisVertical size={20} />
                         <span className="sr-only">Abrir acciones</span>
                       </button>
                       <RowActionsMenu
@@ -384,8 +391,9 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
                       />
                     </div>
                   </div>
+                  
                   {isUpdating && (
-                    <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 pt-3 border-t border-gray-100">
                       <Loader2 size={14} className="animate-spin" />
                       Actualizando...
                     </div>
@@ -497,7 +505,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
         {meta.total > meta.per_page && (
           <div className="flex items-center gap-2">
             <button
-              className="rounded-[4px] border border-gray-300 px-2 sm:px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={!meta.has_prev}
             >
@@ -508,7 +516,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
               Página {meta.page} de {meta.total_pages}
             </span>
             <button
-              className="rounded-[4px] border border-gray-300 px-2 sm:px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="rounded-[4px] border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => setPage((p) => p + 1)}
               disabled={!meta.has_next}
             >
@@ -555,28 +563,61 @@ function RowActionsMenu({
   const [position, setPosition] = useState<{ top: number; right: number } | null>(null);
 
   useEffect(() => {
+    if (!isOpen) {
+      setPosition(null);
+      return;
+    }
+
+    // Calcular posición cuando se abre el menú (fixed es relativo al viewport)
+    if (buttonRef?.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      // Asegurar que el menú no se salga de la pantalla en mobile
+      const menuWidth = 224; // w-56 = 224px
+      const rightSpace = window.innerWidth - rect.right;
+      const leftSpace = rect.left;
+      
+      let menuRight = window.innerWidth - rect.right;
+      
+      // Si no hay espacio a la derecha, posicionar a la izquierda
+      if (rightSpace < menuWidth && leftSpace >= menuWidth) {
+        menuRight = window.innerWidth - rect.left;
+      }
+      
+      setPosition({
+        top: rect.bottom + 4,
+        right: menuRight,
+      });
+    }
+
+    // Handlers para cerrar el menú
     const onDocClick = (e: MouseEvent) => {
       if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) onClose();
+      const target = e.target as Node;
+      // No cerrar si el click es dentro del menú o del botón
+      if (ref.current.contains(target) || buttonRef?.current?.contains(target)) {
+        return;
+      }
+      onClose();
     };
+    
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    if (isOpen) {
-      document.addEventListener("mousedown", onDocClick);
+
+    // Agregar listeners después de un pequeño delay para evitar que se cierre inmediatamente
+    // Esto permite que el estado se actualice y el menú se renderice antes de agregar los listeners
+    const timeoutId = setTimeout(() => {
+      // Usar click en lugar de mousedown/touchstart para mejor comportamiento en mobile
+      // El capture phase asegura que se ejecute antes que otros handlers
+      document.addEventListener("click", onDocClick, true);
       document.addEventListener("keydown", onKey);
-      
-      // Calcular posición cuando se abre el menú (fixed es relativo al viewport)
-      if (buttonRef?.current) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        setPosition({
-          top: rect.bottom + 4,
-          right: window.innerWidth - rect.right,
-        });
-      }
-    }
+    }, 10);
+
+    // Cleanup function
     return () => {
-      document.removeEventListener("mousedown", onDocClick);
+      clearTimeout(timeoutId);
+      // Remover listeners si ya se agregaron
+      document.removeEventListener("click", onDocClick, true);
       document.removeEventListener("keydown", onKey);
     };
   }, [isOpen, onClose, buttonRef]);
@@ -590,31 +631,51 @@ function RowActionsMenu({
       style={{
         top: `${position.top}px`,
         right: `${position.right}px`,
+        maxWidth: `calc(100vw - 16px)`, // Asegurar que no se salga en mobile
       }}
       role="menu"
       aria-orientation="vertical"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
     >
       <button
-        onClick={() => { onDisponible(); onClose(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDisponible();
+          onClose();
+        }}
         disabled={disabled}
-        className="flex w-full items-center px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 disabled:opacity-50"
+        className="flex w-full items-center px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 touch-manipulation"
         role="menuitem"
+        type="button"
       >
         Marcar como Disponible
       </button>
       <button
-        onClick={() => { onEnUso(); onClose(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onEnUso();
+          onClose();
+        }}
         disabled={disabled}
-        className="flex w-full items-center px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 disabled:opacity-50"
+        className="flex w-full items-center px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 touch-manipulation"
         role="menuitem"
+        type="button"
       >
         Marcar como En uso
       </button>
       <button
-        onClick={() => { onNoDisponible(); onClose(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onNoDisponible();
+          onClose();
+        }}
         disabled={disabled}
-        className="flex w-full items-center px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 disabled:opacity-50"
+        className="flex w-full items-center px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 touch-manipulation"
         role="menuitem"
+        type="button"
       >
         Marcar como No disponible
       </button>
