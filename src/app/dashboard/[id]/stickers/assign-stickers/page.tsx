@@ -103,7 +103,8 @@ export default function AsignarObleasPage() {
       const end = toNumberOrNaN(r.end);
       if (Number.isNaN(start) || Number.isNaN(end)) return acc;
       if (end < start) return acc;
-      return acc + (end - start);
+      // Incluir ambos extremos: si va de 100 a 103, son 4 obleas (100, 101, 102, 103)
+      return acc + (end - start + 1);
     }, 0);
   }, [ranges]);
 

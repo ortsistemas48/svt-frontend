@@ -37,6 +37,7 @@ export default function InspectionTable() {
 
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("Todos");
+  const [dateFilter, setDateFilter] = useState<string>("");
   const router = useRouter();
 
   const [revertTarget, setRevertTarget] = useState<Application | null>(null);
@@ -199,6 +200,9 @@ export default function InspectionTable() {
       if (searchQuery.trim()) usp.set("q", searchQuery.trim());
       if (statusFilter === "Todos") usp.delete("status");
       else if (statusFilter) usp.set("status", statusFilter);
+      if (dateFilter) {
+        usp.set("dateFilter", dateFilter);
+      }
 
       const res = await fetch(
         `/api/applications/workshop/${id}/full?${usp.toString()}`,
@@ -206,6 +210,7 @@ export default function InspectionTable() {
       );
       if (!res.ok) throw new Error("Error al traer revisiones");
       const data = await res.json();
+      console.log(usp.toString());
       // Filtrar duplicados por application_id para evitar keys duplicadas
       const uniqueItems = (data.items ?? []).reduce((acc: Application[], item: Application) => {
         if (!acc.find(existing => existing.application_id === item.application_id)) {
@@ -227,7 +232,7 @@ export default function InspectionTable() {
   useEffect(() => {
     fetchApps();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, page, searchQuery, statusFilter]);
+  }, [id, page, searchQuery, statusFilter, dateFilter]);
 
   useEffect(() => {
     if (!detailOpen) return;
@@ -374,7 +379,7 @@ export default function InspectionTable() {
               <SlidersHorizontal size={16} className="text-white" />
               <span className="hidden sm:inline text-white">Filtrar</span>
             </button>
-            {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
+            {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} dateFilter={dateFilter} setDateFilter={setDateFilter} />}
           </div>
           <div className="hidden sm:flex">
             <RefreshButton loading={loading} fetchApps={fetchApps} />

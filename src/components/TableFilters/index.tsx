@@ -7,9 +7,11 @@ interface TableFiltersProps {
     setStatusFilter: (status: string) => void;
     setShowFilters: (show: boolean) => void;
     setPage: (page: number) => void;
+    dateFilter?: string;
+    setDateFilter?: (date: string) => void;
 }
 
-export default function TableFilters({ tableFilters, statusFilter, setStatusFilter, setShowFilters, setPage }: TableFiltersProps) {
+export default function TableFilters({ tableFilters, statusFilter, setStatusFilter, setShowFilters, setPage, dateFilter, setDateFilter }: TableFiltersProps) {
     return (
         <div className="absolute top-full -left-20 mt-2 z-10">
           <div className="bg-white border border-gray-200 rounded-[14px] shadow-lg p-5 w-80">
@@ -49,6 +51,22 @@ export default function TableFilters({ tableFilters, statusFilter, setStatusFilt
                   </div>
                 </div>
               </div>
+              {dateFilter !== undefined && setDateFilter && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Fecha
+                  </label>
+                  <input
+                    type="date"
+                    value={dateFilter}
+                    onChange={(e) => {
+                      setDateFilter(e.target.value);
+                      setPage(1);
+                    }}
+                    className="w-full rounded-[4px] border border-gray-300 px-3 py-2 text-sm bg-white focus:border-[#0040B8] focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
