@@ -103,7 +103,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
     { label: "Acciones" },
   ];
 
-  const fetchStickers = async (p = page, search = searchQuery) => {
+  const fetchStickers = async (p = page, search = searchQuery, status = statusFilter) => {
     if (!id) return;
     try {
       setLoading(true);
@@ -118,6 +118,11 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
         usp.set("q", search.trim());
       }
 
+      if (status !== "Todos") {
+        usp.set("status", uiToApi[status]);
+      }
+
+      
       const res = await fetch(
         `/api/stickers/workshop/${id}?${usp.toString()}`,
         { credentials: "include" }
@@ -129,7 +134,6 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
       }
 
       const data: StickersResponse = await res.json();
-      console.log("data", data);
       setRows(Array.isArray(data?.stickers) ? data.stickers : []);
       if (data?.pagination) setMeta(data.pagination);
     } catch (err: any) {
@@ -153,9 +157,13 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
   }, [searchQuery]);
 
   useEffect(() => {
-    fetchStickers(page, searchQuery);
+    setPage(1);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    fetchStickers(page, searchQuery, statusFilter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, page, searchQuery]);
+  }, [id, page, searchQuery, statusFilter]);
 
   // Sincronizar searchQuery externo
   useEffect(() => {
@@ -165,19 +173,6 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
       setPage(1);
     }
   }, [externalSearchQuery]);
-
-  const filtered = useMemo(() => {
-    let list = rows;
-
-    // El filtrado por búsqueda ahora se hace en el backend
-    // Solo mantenemos el filtrado por estado localmente
-    if (statusFilter !== "Todos") {
-      const target = uiToApi[statusFilter].toLowerCase(); // "disponible", "no disponible", "en uso"
-      list = list.filter((o) => (o.status || "").toLowerCase() === target);
-    }
-
-    return list;
-  }, [rows, statusFilter]);
 
   const statusTone = (ui: UiState) => {
     if (ui === "No Disponible")
@@ -290,13 +285,13 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
               </div>
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : rows.length === 0 ? (
           <div className="border border-gray-200 rounded-lg p-4 sm:p-6 md:p-8 text-center">
             <p className="text-xs sm:text-sm md:text-base text-gray-500">No hay obleas para mostrar</p>
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4">
-            {filtered.map((item) => {
+            {rows.map((item) => {
               const ui = apiToUi(item.status);
               const tone = statusTone(ui);
               const isUpdating = updatingId === item.id;
@@ -392,7 +387,7 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
           <div className="min-w-[980px]">
             <TableTemplate<StickerItem>
               headers={headers}
-              items={filtered}
+              items={rows}
               isLoading={loading}
               emptyMessage="No hay obleas para mostrar"
               rowsPerSkeleton={perPage}
