@@ -24,6 +24,21 @@ const BADGE: Record<Status, string> = {
   'Emitir CRT': 'bg-violet-100 text-violet-700 ring-violet-300'
 };
 
+function formatDateToEsAR(dateString: string): string {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Fecha inválida';
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // 0 should be 12
+  const hoursFormatted = String(hours).padStart(2, '0');
+  return `${day}/${month}/${year} ${hoursFormatted}:${minutes} ${ampm}`;
+}
+
 interface DashboardProps {
   workshopId: number;
   date?: string;
@@ -34,7 +49,6 @@ export default async function Dashboard({ workshopId, date, userType }: Dashboar
   const statistics = await fetchDailyStatistics(workshopId, date);
   const latestApps = await fetchLatestApplications(workshopId);
   const queueApps = await fetchQueueApplications(workshopId);
-  
   // Check if user is "Personal de planta"
   const isPersonalPlanta = userType && 'name' in userType && userType.name?.toLowerCase() === 'personal de planta';
   
@@ -92,7 +106,7 @@ export default async function Dashboard({ workshopId, date, userType }: Dashboar
                         <th className="py-2 pr-4 font-medium">Patente</th>
                         <th className="py-2 pr-4 font-medium">Titular</th>
                         <th className="py-2 pr-4 font-medium">Estado</th>
-                        <th className="py-2 pr-4 font-medium">Actualizado</th>
+                        <th className="py-2 pr-4 font-medium">Fecha de Creación</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -114,7 +128,7 @@ export default async function Dashboard({ workshopId, date, userType }: Dashboar
                             </span>
                           </td>
                           <td className="py-3 pr-4 text-gray-500">
-                            {new Date(r.date).toLocaleString('es-AR')}
+                            {formatDateToEsAR(r.date)}
                           </td>
                         </tr>
                       ))}
@@ -140,7 +154,7 @@ export default async function Dashboard({ workshopId, date, userType }: Dashboar
                             </span>
                           </div>
                           <div className="pt-2 border-t border-gray-100">
-                            <span className="text-xs text-gray-500">{new Date(r.date).toLocaleString('es-AR')}</span>
+                            <span className="text-xs text-gray-500">{formatDateToEsAR(r.date)}</span>
                           </div>
                         </div>
                       ))}
@@ -177,7 +191,7 @@ export default async function Dashboard({ workshopId, date, userType }: Dashboar
                           </div>
                           <div className="pt-2 border-t border-gray-100">
                             <span className="text-xs text-gray-500 font-medium block mb-1">Actualizado</span>
-                            <span className="text-xs text-gray-500">{new Date(r.date).toLocaleString('es-AR')}</span>
+                            <span className="text-xs text-gray-500">{formatDateToEsAR(r.date)}</span>
                           </div>
                         </div>
                       ))}
@@ -321,7 +335,7 @@ export default async function Dashboard({ workshopId, date, userType }: Dashboar
                         <th className="py-2 pr-4 font-medium">Patente</th>
                         <th className="py-2 pr-4 font-medium">Titular</th>
                         <th className="py-2 pr-4 font-medium">Estado</th>
-                        <th className="py-2 pr-4 font-medium">Actualizado</th>
+                        <th className="py-2 pr-4 font-medium">Fecha de Creación</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -343,7 +357,7 @@ export default async function Dashboard({ workshopId, date, userType }: Dashboar
                             </span>
                           </td>
                           <td className="py-3 pr-4 text-gray-500">
-                            {new Date(r.date).toLocaleString('es-AR')}
+                            {formatDateToEsAR(r.date)}
                           </td>
                         </tr>
                       ))}
@@ -379,7 +393,7 @@ export default async function Dashboard({ workshopId, date, userType }: Dashboar
                             </span>
                           </div>
                           <div className="pt-2 border-t border-gray-100">
-                            <span className="text-xs text-gray-500">{new Date(r.date).toLocaleString('es-AR')}</span>
+                            <span className="text-xs text-gray-500">{formatDateToEsAR(r.date)}</span>
                           </div>
                         </div>
                       ))}
@@ -417,7 +431,7 @@ export default async function Dashboard({ workshopId, date, userType }: Dashboar
                           </div>
                           <div className="pt-2 border-t border-gray-100">
                             <span className="text-xs text-gray-500 font-medium block mb-1">Actualizado</span>
-                            <span className="text-xs text-gray-500">{new Date(r.date).toLocaleString('es-AR')}</span>
+                            <span className="text-xs text-gray-500">{formatDateToEsAR(r.date)}</span>
                           </div>
                         </div>
                       ))}
