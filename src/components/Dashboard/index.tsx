@@ -27,16 +27,47 @@ const BADGE: Record<Status, string> = {
 function formatDateToEsAR(dateString: string): string {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return 'Fecha inválida';
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  let hours = date.getHours();
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
-  hours = hours % 12;
-  hours = hours ? hours : 12; // 0 should be 12
-  const hoursFormatted = String(hours).padStart(2, '0');
-  return `${day}/${month}/${year} ${hoursFormatted}:${minutes} ${ampm}`;
+  
+  try {
+    // Intentar usar Intl.DateTimeFormat con zona horaria de Argentina
+    const formatter = new Intl.DateTimeFormat('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+    
+    const parts = formatter.formatToParts(date);
+    const day = parts.find(p => p.type === 'day')?.value || '';
+    const month = parts.find(p => p.type === 'month')?.value || '';
+    const year = parts.find(p => p.type === 'year')?.value || '';
+    const hour = parts.find(p => p.type === 'hour')?.value || '';
+    const minute = parts.find(p => p.type === 'minute')?.value || '';
+    const dayPeriod = parts.find(p => p.type === 'dayPeriod')?.value || '';
+    
+    // Convertir am/pm a a. m./p. m.
+    const ampm = dayPeriod === 'AM' || dayPeriod === 'am' ? 'a. m.' : 'p. m.';
+    
+    return `${day}/${month}/${year} ${hour}:${minute} ${ampm}`;
+  } catch (error) {
+    // Fallback manual si Intl no está disponible o falla
+    // Usar métodos locales (asumiendo que el servidor está en zona horaria correcta)
+    // o convertir manualmente a Argentina (UTC-3)
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // 0 should be 12
+    const hoursFormatted = String(hours).padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hoursFormatted}:${minutes} ${ampm}`;
+  }
 }
 
 interface DashboardProps {
