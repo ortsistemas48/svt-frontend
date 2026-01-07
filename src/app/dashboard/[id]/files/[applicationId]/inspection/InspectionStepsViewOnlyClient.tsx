@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import clsx from "clsx";
 import { ChevronRight } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import { FileImage, FileText, FileArchive, FileIcon } from "lucide-react";
+import { FileImage, FileText, FileArchive, FileIcon, Eye, Download } from "lucide-react";
 
 type Step = { step_id: number; name: string; description: string; order: number };
 type Status = "Apto" | "Condicional" | "Rechazado";
@@ -75,6 +75,32 @@ export function InspectionStepsViewOnlyClient({
   const router = useRouter();
 
   const statusByStep = initialStatuses;
+
+  const handleDownload = async (fileUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(fileUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch file');
+      }
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      // Fallback: open in new tab
+      window.open(fileUrl, '_blank');
+    }
+  };
 
   const overallStatus: Status | null = useMemo(() => {
     const values = steps.map((s) => statusByStep[s.step_id]);
@@ -186,15 +212,23 @@ export function InspectionStepsViewOnlyClient({
                           </p>
                         </div>
                       </a>
-                      <div className="w-full flex justify-center">
+                      <div className="w-full flex justify-center gap-2">
                         <a
                           href={d.file_url}
                           target="_blank"
-                          download={d.file_name}
-                          className="text-[10px] sm:text-xs text-[#0040B8] hover:underline"
+                          rel="noopener noreferrer"
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-[4px] transition-colors duration-200"
+                          title="Ver documento"
                         >
-                          Ver Documento
+                          <Eye size={14} className="sm:w-4 sm:h-4" />
                         </a>
+                        <button
+                          onClick={() => handleDownload(d.file_url, d.file_name)}
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-[4px] transition-colors duration-200"
+                          title="Descargar documento"
+                        >
+                          <Download size={14} className="sm:w-4 sm:h-4" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -233,15 +267,23 @@ export function InspectionStepsViewOnlyClient({
                           </p>
                         </div>
                       </a>
-                      <div className="w-full flex justify-center">
+                      <div className="w-full flex justify-center gap-2">
                         <a
                           href={d.file_url}
                           target="_blank"
-                          download={d.file_name}
-                          className="text-[10px] sm:text-xs text-[#0040B8] hover:underline"
+                          rel="noopener noreferrer"
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-[4px] transition-colors duration-200"
+                          title="Ver documento"
                         >
-                          Ver Documento
+                          <Eye size={14} className="sm:w-4 sm:h-4" />
                         </a>
+                        <button
+                          onClick={() => handleDownload(d.file_url, d.file_name)}
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-[4px] transition-colors duration-200"
+                          title="Descargar documento"
+                        >
+                          <Download size={14} className="sm:w-4 sm:h-4" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -282,15 +324,23 @@ export function InspectionStepsViewOnlyClient({
                           </p>
                         </div>
                       </a>
-                      <div className="w-full flex justify-center">
+                      <div className="w-full flex justify-center gap-2">
                         <a
                           href={d.file_url}
                           target="_blank"
-                          download={d.file_name}
-                          className="text-[10px] sm:text-xs text-[#0040B8] hover:underline"
+                          rel="noopener noreferrer"
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-[4px] transition-colors duration-200"
+                          title="Ver documento"
                         >
-                          Ver Documento
+                          <Eye size={14} className="sm:w-4 sm:h-4" />
                         </a>
+                        <button
+                          onClick={() => handleDownload(d.file_url, d.file_name)}
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-[4px] transition-colors duration-200"
+                          title="Descargar documento"
+                        >
+                          <Download size={14} className="sm:w-4 sm:h-4" />
+                        </button>
                       </div>
                     </div>
                   </div>

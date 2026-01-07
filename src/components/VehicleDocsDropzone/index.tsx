@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { X, Trash2, FileImage } from "lucide-react";
+import { X, Trash2, FileImage, Eye, Download } from "lucide-react";
 import { compressManySmart } from "@/utils/image";
 
 export type ExistingDoc = {
@@ -127,6 +127,32 @@ export default function VehicleDocsDropzone({
 		e.preventDefault();
 		setIsDragging(false);
 		addFiles(e.dataTransfer.files);
+	};
+
+	const handleDownload = async (fileUrl: string, fileName: string) => {
+		try {
+			const response = await fetch(fileUrl);
+			if (!response.ok) {
+				throw new Error('Failed to fetch file');
+			}
+			
+			const blob = await response.blob();
+			const downloadUrl = window.URL.createObjectURL(blob);
+			
+			const link = document.createElement('a');
+			link.href = downloadUrl;
+			link.download = fileName;
+			document.body.appendChild(link);
+			link.click();
+			
+			// Cleanup
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(downloadUrl);
+		} catch (error) {
+			console.error('Error downloading file:', error);
+			// Fallback: open in new tab
+			window.open(fileUrl, '_blank');
+		}
 	};
 
   return (
@@ -255,8 +281,26 @@ export default function VehicleDocsDropzone({
 							<div className="px-1.5 sm:px-2 py-1">
 								<p className="text-[10px] sm:text-[11px] font-medium text-neutral-800 truncate" title={d.file_name}>{d.file_name}</p>
 								<p className="text-[10px] sm:text-[11px] text-neutral-500">{d.mime_type || "archivo"} · {prettySize(d.size_bytes)}</p>
-                </div>
-              </div>
+							</div>
+							<div className="px-1.5 sm:px-2 pb-1.5 sm:pb-2 flex justify-center gap-1.5 sm:gap-2">
+								<a
+									href={d.file_url}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="p-1 sm:p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-[4px] transition-colors duration-200"
+									title="Ver documento"
+								>
+									<Eye size={12} className="sm:w-3.5 sm:h-3.5" />
+								</a>
+								<button
+									onClick={() => handleDownload(d.file_url, d.file_name)}
+									className="p-1 sm:p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-[4px] transition-colors duration-200"
+									title="Descargar documento"
+								>
+									<Download size={12} className="sm:w-3.5 sm:h-3.5" />
+								</button>
+							</div>
+						</div>
 					))}
 				</div>
       </div>
