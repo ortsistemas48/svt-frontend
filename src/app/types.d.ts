@@ -98,6 +98,7 @@ export type Application = {
   } | null;
   date: string;
   status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección" | "Abandonado";
+  previous_status?: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección" | "Abandonado" | null;
   result?: "Apto" | "Condicional" | "Rechazado";
   result_2?: "Apto" | "Condicional" | "Rechazado";
   inspection_1_date?: string | null;

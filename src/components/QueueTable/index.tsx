@@ -230,8 +230,6 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
             const date = d.toLocaleDateString("es-AR");
             const time = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
             const tone = STATUS_TONES[item.status] || DEFAULT_TONE;
-            const ownerText = item.owner?.cuit ? item.owner?.razon_social : item.owner?.first_name + " " + item.owner?.last_name;
-            const identityText = item.owner?.cuit ? item.owner?.cuit : item.owner?.dni;
             const uniqueKey = `${item.application_id}-${index}-${item.date}`;
 
             return (
@@ -308,8 +306,6 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
               const date = d.toLocaleDateString("es-AR");
               const time = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
               const tone = STATUS_TONES[item.status] || DEFAULT_TONE;
-              const ownerText = item.owner?.cuit ? item.owner?.razon_social : item.owner?.first_name + " " + item.owner?.last_name;
-              const identityText = item.owner?.cuit ? item.owner?.cuit : item.owner?.dni;
               // Usar key compuesta para garantizar unicidad (application_id + índice + fecha como fallback)
               const uniqueKey = `${item.application_id}-${index}-${item.date}`;
               return (

@@ -400,8 +400,6 @@ export default function InspectionTable() {
                 const date = d.toLocaleDateString("es-AR");
                 const time = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
                 const tone = STATUS_TONES[item.status] || DEFAULT_TONE;
-                const ownerText = item.owner?.cuit ? item.owner?.razon_social : item.owner?.first_name + " " + item.owner?.last_name;
-                const identityText = item.owner?.cuit ? item.owner?.cuit : item.owner?.dni;
                 // Usar key compuesta para garantizar unicidad (application_id + índice + fecha como fallback)
                 const uniqueKey = `${item.application_id}-${index}-${item.date}`;
                 return (
@@ -628,6 +626,14 @@ export default function InspectionTable() {
                     valueClassName={STATUS_TONES[detailTarget.status]?.text || DEFAULT_TONE.text}
                     bgClassName={STATUS_TONES[detailTarget.status]?.bg || DEFAULT_TONE.bg}
                   />
+                  {detailTarget.status === "Abandonado" && (
+                    <DetailRow
+                      label="Estado Previo"
+                      value={detailTarget.previous_status || "-"}
+                      valueClassName={detailTarget.previous_status ? (STATUS_TONES[detailTarget.previous_status]?.text || DEFAULT_TONE.text) : DEFAULT_TONE.text}
+                      bgClassName={detailTarget.previous_status ? (STATUS_TONES[detailTarget.previous_status]?.bg || DEFAULT_TONE.bg) : DEFAULT_TONE.bg}
+                    />
+                  )}
                   <DetailRow
                     label="Resultado (1ª)"
                     value={detailTarget.result || "-"}
