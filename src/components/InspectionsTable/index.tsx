@@ -29,8 +29,8 @@ export default function InspectionTable() {
   const { id } = useParams();
   const [items, setItems] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState(""); 
-  const [searchQuery, setSearchQuery] = useState(""); 
+  const [q, setQ] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 5;
   const [total, setTotal] = useState(0);
@@ -196,7 +196,7 @@ export default function InspectionTable() {
       const usp = new URLSearchParams({
         page: String(page),
         per_page: String(perPage),
-        });
+      });
       if (searchQuery.trim()) usp.set("q", searchQuery.trim());
       if (statusFilter === "Todos") usp.delete("status");
       else if (statusFilter) usp.set("status", statusFilter);
@@ -216,7 +216,7 @@ export default function InspectionTable() {
           acc.push(item);
         }
         return acc;
-      }, []); 
+      }, []);
       setItems(uniqueItems);
       setTotal(data.total ?? 0);
     } catch (err) {
@@ -262,7 +262,7 @@ export default function InspectionTable() {
     return { lp, owner, id: revertTarget.application_id };
   }, [revertTarget]);
 
- 
+
 
   const handleRevertToCompleted = async () => {
     if (!revertTarget) return;
@@ -514,9 +514,8 @@ export default function InspectionTable() {
 
       {/* Detail overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-200 ${
-          detailOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-200 ${detailOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
         onClick={closeDetail}
         aria-hidden={!detailOpen}
       />
@@ -525,9 +524,8 @@ export default function InspectionTable() {
       <aside
         role="dialog"
         aria-modal="true"
-        className={`fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] bg-white shadow-2xl transform transition-transform duration-200 ${
-          detailOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] bg-white shadow-2xl transform transition-transform duration-200 ${detailOpen ? "translate-x-0" : "translate-x-full"
+          }`}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b px-4 py-3">
@@ -620,20 +618,13 @@ export default function InspectionTable() {
                   Información general
                 </h3>
                 <div className="space-y-2 text-sm text-gray-700">
-                  <DetailRow 
-                    label="Estado" 
+                  <DetailRow
+                    label="Estado"
                     value={detailTarget.status}
                     valueClassName={STATUS_TONES[detailTarget.status]?.text || DEFAULT_TONE.text}
                     bgClassName={STATUS_TONES[detailTarget.status]?.bg || DEFAULT_TONE.bg}
                   />
-                  {detailTarget.status === "Abandonado" && (
-                    <DetailRow
-                      label="Estado Previo"
-                      value={detailTarget.previous_status || "-"}
-                      valueClassName={detailTarget.previous_status ? (STATUS_TONES[detailTarget.previous_status]?.text || DEFAULT_TONE.text) : DEFAULT_TONE.text}
-                      bgClassName={detailTarget.previous_status ? (STATUS_TONES[detailTarget.previous_status]?.bg || DEFAULT_TONE.bg) : DEFAULT_TONE.bg}
-                    />
-                  )}
+
                   <DetailRow
                     label="Resultado (1ª)"
                     value={detailTarget.result || "-"}
@@ -709,9 +700,9 @@ export default function InspectionTable() {
                       </div>
                     </div>
                   ) : (
-                    <DetailObservationRow 
-                      label="Observaciones" 
-                      value={observations.first} 
+                    <DetailObservationRow
+                      label="Observaciones"
+                      value={observations.first}
                     />
                   )}
                   {detailTarget.result === "Condicional" && (
@@ -730,9 +721,9 @@ export default function InspectionTable() {
                             </div>
                           </div>
                         ) : (
-                          <DetailObservationRow 
-                            label="Observaciones" 
-                            value={observations.second} 
+                          <DetailObservationRow
+                            label="Observaciones"
+                            value={observations.second}
                           />
                         )
                       )}
@@ -750,6 +741,21 @@ export default function InspectionTable() {
                   <DetailRow label="Número de oblea" value={detailTarget.sticker_number || "-"} />
                 </div>
               </section>
+              {
+                detailTarget.status === "Abandonado" && detailTarget.previous_status && (
+                  <section className="border-t border-gray-200 pt-6">
+                    <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                      Informe de Abandono
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-2">Aquí se muestra el estado previo y la fecha abandono de la revisión.</p>
+                    <div className="space-y-2 text-sm text-gray-700">
+                      <DetailRow label="Estado Previo" value={detailTarget.previous_status || "-"} valueClassName={detailTarget.previous_status ? (STATUS_TONES[detailTarget.previous_status]?.text || DEFAULT_TONE.text) : DEFAULT_TONE.text} bgClassName={detailTarget.previous_status ? (STATUS_TONES[detailTarget.previous_status]?.bg || DEFAULT_TONE.bg) : DEFAULT_TONE.bg} />
+                      <DetailRow label="Fecha de abandono" value={formatDateTime(detailTarget.previous_status_date) || "-"} />
+                    </div>
+                  </section>
+
+                )}
+
             </div>
           ) : (
             <p className="text-sm text-gray-600">Selecciona una revisión para ver sus datos.</p>

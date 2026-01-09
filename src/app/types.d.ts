@@ -97,15 +97,19 @@ export type Application = {
     razon_social?: string;
   } | null;
   date: string;
-  status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección" | "Abandonado";
-  previous_status?: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección" | "Abandonado" | null;
-  result?: "Apto" | "Condicional" | "Rechazado";
-  result_2?: "Apto" | "Condicional" | "Rechazado";
+  status: ApplicationStatus;
+  previous_status?: ApplicationStatus | null;
+  previous_status_date?: string | null;
+  result?: ApplicationResult;
+  result_2?: ApplicationResult;
   inspection_1_date?: string | null;
   inspection_2_date?: string | null;
   user_name?: string | null;
   sticker_number?: string | null;
 };
+
+type ApplicationStatus = "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección" | "Abandonado";
+type ApplicationResult = "Apto" | "Condicional" | "Rechazado";
 
 export type UserTypeInWorkshop = {
   id: number;
