@@ -96,11 +96,10 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
   const buttonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
 
   const headers: TableHeader[] = [
-    { label: "Número" },
-    { label: "Estado" },
-    { label: "Emitida" },
-    { label: "Patente" },
-    { label: "Acciones" },
+    { label: "Número", thProps: { style: { width: "180px", minWidth: "180px" } } },
+    { label: "Estado", thProps: { style: { width: "140px", minWidth: "140px" } } },
+    { label: "Emitida", thProps: { style: { width: "110px", minWidth: "110px" } } },
+    { label: "Patente", thProps: { style: { width: "100px", minWidth: "100px" } } },
   ];
 
   const fetchStickers = async (p = page, search = searchQuery, status = statusFilter) => {
@@ -337,35 +336,6 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
                       </div>
                     </div>
 
-                    {/* Botón de acciones */}
-                    <div className="relative flex-shrink-0">
-                      <button
-                        ref={(el) => {
-                          if (el) buttonRefs.current.set(item.id, el);
-                          else buttonRefs.current.delete(item.id);
-                        }}
-                        aria-haspopup="menu"
-                        aria-expanded={isMenuOpen}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId((cur) => (cur === item.id ? null : item.id));
-                        }}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-[4px] text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
-                        type="button"
-                      >
-                        <EllipsisVertical size={20} />
-                        <span className="sr-only">Abrir acciones</span>
-                      </button>
-                      <RowActionsMenu
-                        isOpen={isMenuOpen}
-                        onClose={() => setOpenMenuId(null)}
-                        disabled={isUpdating}
-                        onDisponible={() => updateStatus(item, "Disponible")}
-                        onEnUso={() => updateStatus(item, "En Uso")}
-                        onNoDisponible={() => updateStatus(item, "No Disponible")}
-                        buttonRef={{ current: buttonRefs.current.get(item.id) || null }}
-                      />
-                    </div>
                   </div>
                   
                   {isUpdating && (
@@ -384,96 +354,55 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
       {/* Vista de tabla para desktop */}
       <div className="hidden xl:block stk-table overflow-hidden rounded-[14px] border border-gray-200 bg-white">
         <div className="overflow-x-auto">
-          <div className="min-w-[980px]">
-            <TableTemplate<StickerItem>
-              headers={headers}
-              items={rows}
-              isLoading={loading}
-              emptyMessage="No hay obleas para mostrar"
-              rowsPerSkeleton={perPage}
-              renderRow={(item) => {
-                const ui = apiToUi(item.status);
-                const tone = statusTone(ui);
-                const isUpdating = updatingId === item.id;
-                const isMenuOpen = openMenuId === item.id;
+          <TableTemplate<StickerItem>
+            headers={headers}
+            items={rows}
+            isLoading={loading}
+            emptyMessage="No hay obleas para mostrar"
+            rowsPerSkeleton={perPage}
+            renderRow={(item) => {
+              const ui = apiToUi(item.status);
+              const tone = statusTone(ui);
+              const isUpdating = updatingId === item.id;
+              const isMenuOpen = openMenuId === item.id;
 
-                return (
-                  <tr key={item.id} className="transition-colors hover:bg-gray-50">
-                    <td className="p-3 text-center">
-                      <div className="mx-auto max-w-[220px] truncate text-sm font-medium sm:text-base">
-                        {item.sticker_number || "-"}
-                      </div>
-                    </td>
-
-                    <td className="p-3 text-center">
-                      <span
-                        className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm ${tone.text} ${tone.bg}`}
-                      >
-                        {ui}
-                      </span>
-                    </td>
-
-                    <td className="p-3 text-center">
-                      <div className="text-sm sm:text-base">{fmtDate(item.issued_at)}</div>
-                    </td>
-
-{/* 
-                    <td className="p-3 text-center">
-                      <div className="mx-auto max-w-[220px] truncate text-sm sm:text-base">
-                        {item.order_name || "-"}
-                      </div>
-                    </td> */}
-
-                    <td className="p-3 text-center">
-                      <span className="inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm text-gray-800 bg-gray-100">
-                        {item.license_plate || "—"}
-                      </span>
-                    </td>
-
-                    <td className="relative p-3 text-center">
-                      {/* Botón solo ícono */}
-                      <button
-                        ref={(el) => {
-                          if (el) buttonRefs.current.set(item.id, el);
-                          else buttonRefs.current.delete(item.id);
-                        }}
-                        aria-haspopup="menu"
-                        aria-expanded={isMenuOpen}
-                        onClick={() => setOpenMenuId((cur) => (cur === item.id ? null : item.id))}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-[4px] text-gray-700 hover:bg-gray-100"
-                      >
-                        <EllipsisVertical size={18} />
-                        <span className="sr-only">Abrir acciones</span>
-                      </button>
-
-                      <RowActionsMenu
-                        isOpen={isMenuOpen}
-                        onClose={() => setOpenMenuId(null)}
-                        disabled={isUpdating}
-                        onDisponible={() => updateStatus(item, "Disponible")}
-                        onEnUso={() => updateStatus(item, "En Uso")}
-                        onNoDisponible={() => updateStatus(item, "No Disponible")}
-                        buttonRef={{ current: buttonRefs.current.get(item.id) || null }}
-                      />
-                    </td>
-                  </tr>
-                );
-              }}
-              renderSkeletonRow={(cols, i) => (
-                <tr key={`sk-row-${i}`} className="min-h-[60px] animate-pulse">
-                  <td className="p-3 text-center"><Sk className="mx-auto h-4 w-28" /></td>
-                  <td className="p-3 text-center"><Sk className="mx-auto h-4 w-20" /></td>
-                  <td className="p-3 text-center"><Sk className="mx-auto h-4 w-24" /></td>
-                  <td className="p-3 text-center"><Sk className="mx-auto h-4 w-16" /></td>
-                  <td className="p-3 text-center">
-                    <div className="flex items-center justify-center">
-                      <Sk className="h-8 w-8 rounded-[4px]" />
+              return (
+                <tr key={item.id} className="transition-colors hover:bg-gray-50">
+                  <td className="p-3 text-center" style={{ width: "180px", minWidth: "180px" }}>
+                    <div className="mx-auto truncate text-sm font-medium sm:text-base">
+                      {item.sticker_number || "-"}
                     </div>
                   </td>
+
+                  <td className="p-3 text-center" style={{ width: "140px", minWidth: "140px" }}>
+                    <span
+                      className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm ${tone.text} ${tone.bg}`}
+                    >
+                      {ui}
+                    </span>
+                  </td>
+
+                  <td className="p-3 text-center" style={{ width: "110px", minWidth: "110px" }}>
+                    <div className="text-sm sm:text-base">{fmtDate(item.issued_at)}</div>
+                  </td>
+
+                  <td className="p-3 text-center" style={{ width: "100px", minWidth: "100px" }}>
+                    <span className="inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm text-gray-800 bg-gray-100">
+                      {item.license_plate || "—"}
+                    </span>
+                  </td>
+                </tr>
+              );
+            }}
+              renderSkeletonRow={(cols, i) => (
+                <tr key={`sk-row-${i}`} className="min-h-[60px] animate-pulse">
+                  <td className="p-3 text-center" style={{ width: "180px", minWidth: "180px" }}><Sk className="mx-auto h-4 w-28" /></td>
+                  <td className="p-3 text-center" style={{ width: "140px", minWidth: "140px" }}><Sk className="mx-auto h-4 w-20" /></td>
+                  <td className="p-3 text-center" style={{ width: "110px", minWidth: "110px" }}><Sk className="mx-auto h-4 w-24" /></td>
+                  <td className="p-3 text-center" style={{ width: "100px", minWidth: "100px" }}><Sk className="mx-auto h-4 w-16" /></td>
                 </tr>
               )}
             />
-          </div>
         </div>
       </div>
 
