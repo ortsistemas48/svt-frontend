@@ -210,6 +210,7 @@ export default function InspectionTable() {
       );
       if (!res.ok) throw new Error("Error al traer revisiones");
       const data = await res.json();
+      console.log(data);
       // Filtrar duplicados por application_id para evitar keys duplicadas
       const uniqueItems = (data.items ?? []).reduce((acc: Application[], item: Application) => {
         if (!acc.find(existing => existing.application_id === item.application_id)) {
@@ -661,11 +662,23 @@ export default function InspectionTable() {
                   Titular
                 </h3>
                 <div className="space-y-2 text-sm text-gray-700">
-                  <DetailRow
-                    label="Nombre"
-                    value={formatPersonName(detailTarget.owner?.first_name, detailTarget.owner?.last_name)}
-                  />
-                  <DetailRow label="DNI" value={detailTarget.owner?.dni || "-"} />
+                  {detailTarget.owner?.cuit ? (
+                    <>
+                      <DetailRow
+                        label="Razón Social"
+                        value={detailTarget.owner?.razon_social || "-"}
+                      />
+                      <DetailRow label="CUIT" value={detailTarget.owner?.cuit || "-"} />
+                    </>
+                  ) : (
+                    <>
+                      <DetailRow
+                        label="Nombre"
+                        value={formatPersonName(detailTarget.owner?.first_name, detailTarget.owner?.last_name)}
+                      />
+                      <DetailRow label="DNI" value={detailTarget.owner?.dni || "-"} />
+                    </>
+                  )}
                 </div>
               </section>
 
@@ -674,11 +687,23 @@ export default function InspectionTable() {
                   Conductor
                 </h3>
                 <div className="space-y-2 text-sm text-gray-700">
-                  <DetailRow
-                    label="Nombre"
-                    value={formatPersonName(detailTarget.driver?.first_name, detailTarget.driver?.last_name)}
-                  />
-                  <DetailRow label="DNI" value={detailTarget.driver?.dni || "-"} />
+                  {detailTarget.driver?.cuit ? (
+                    <>
+                      <DetailRow
+                        label="Razón Social"
+                        value={detailTarget.driver?.razon_social || "-"}
+                      />
+                      <DetailRow label="CUIT" value={detailTarget.driver?.cuit || "-"} />
+                    </>
+                  ) : (
+                    <>
+                      <DetailRow
+                        label="Nombre"
+                        value={formatPersonName(detailTarget.driver?.first_name, detailTarget.driver?.last_name)}
+                      />
+                      <DetailRow label="DNI" value={detailTarget.driver?.dni || "-"} />
+                    </>
+                  )}
                 </div>
               </section>
 
