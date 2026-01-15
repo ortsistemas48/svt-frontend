@@ -210,7 +210,6 @@ export default function InspectionTable() {
       );
       if (!res.ok) throw new Error("Error al traer revisiones");
       const data = await res.json();
-      console.log(data);
       // Filtrar duplicados por application_id para evitar keys duplicadas
       const uniqueItems = (data.items ?? []).reduce((acc: Application[], item: Application) => {
         if (!acc.find(existing => existing.application_id === item.application_id)) {
