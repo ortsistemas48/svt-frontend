@@ -50,17 +50,17 @@ export default function HeroSection() {
         </p>
       </div>
 
-      {/* CTA Buttons */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-12 sm:mb-16 lg:mb-20">
+      {/* CTA Buttons - uno al lado del otro en todos los tamaños */}
+      <div className="flex flex-row flex-wrap items-center justify-center gap-3 sm:gap-6 mb-12 sm:mb-16 lg:mb-20">
         <Link
           href="#contact"
-          className="px-5 py-2 rounded-[10px] bg-[#0040B8] hover:bg-[#0035a0] text-white text-sm font-medium transition-colors duration-200 text-center"
+          className="px-4 py-2 sm:px-5 rounded-[10px] bg-[#0040B8] hover:bg-[#0035a0] text-white text-sm font-medium transition-colors duration-200 text-center"
         >
           Contactanos
         </Link>
         <Link
           href="/login"
-          className="px-5 py-2 rounded-[10px] bg-white border border-[#DEDEDE] hover:bg-gray-50 text-[#808080] text-sm font-medium transition-colors duration-200 text-center"
+          className="px-4 py-2 sm:px-5 rounded-[10px] bg-white border border-[#DEDEDE] hover:bg-gray-50 text-[#808080] text-sm font-medium transition-colors duration-200 text-center"
         >
           Iniciar sesión
         </Link>

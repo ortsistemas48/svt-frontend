@@ -8,41 +8,31 @@ const footerLinks = {
   producto: {
     title: "Producto",
     links: [
-      { label: "Plataforma", href: "#plataforma" },
-      { label: "Funciones", href: "#funciones" },
-      { label: "Precios", href: "#precios" },
-      { label: "Demo", href: "#demo" },
-    ],
-  },
-  recursos: {
-    title: "Recursos",
-    links: [
-      { label: "Centro de ayuda", href: "#ayuda" },
-      { label: "Guías", href: "#guias" },
-      { label: "Preguntas frecuentes", href: "#faq" },
+      { label: "Ingresar", href: "/login" },
+      { label: "Funciones", href: "#features" },
+      { label: "Contacto", href: "#contact" },
     ],
   },
   empresa: {
     title: "Empresa",
     links: [
-      { label: "Sobre CheckRTO", href: "#sobre" },
+      { label: "Sobre CheckRTO", href: "#what-is-checkrto" },
+      { label: "Términos", href: "/terminos" },
+      { label: "Políticas de privacidad", href: "/privacidad" },
     ],
   },
   contacto: {
     title: "Contacto",
     links: [
-      { label: "WhatsApp", href: "#whatsapp" },
-      { label: "Email", href: "#email" },
-      { label: "Soporte", href: "#soporte" },
-      { label: "Ventas", href: "#ventas" },
+      { label: "WhatsApp", href: "https://wa.me/543415964249" },
+      { label: "Email", href: "#contact" },
     ],
   },
 };
 
 const legalLinks = [
-  { label: "Privacidad", href: "/privacidad" },
-  { label: "Términos", href: "/terminos" },
-  { label: "Cookies", href: "/cookies" },
+  { label: "Políticas de privacidad", href: "/privacidad" },
+  { label: "Términos y condiciones", href: "/terminos" },
 ];
 
 export default function Footer() {
@@ -73,7 +63,7 @@ export default function Footer() {
           </div>
 
           {/* Right - Link Columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 lg:gap-12">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 lg:gap-12">
             {Object.entries(footerLinks).map(([key, section]) => (
               <div key={key} className="hidden sm:block">
                 <h4 className="text-sm font-semibold text-gray-900 mb-4 tracking-tight">

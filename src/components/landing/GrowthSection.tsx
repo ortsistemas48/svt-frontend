@@ -169,7 +169,7 @@ export default function GrowthSection() {
           <path
             d="M 0,580 
                Q 400,575 600,560 
-               Q 800,540 900,480 
+               Q 800,540 900,470 
                Q 1000,400 1080,250 
                Q 1140,120 1200,-50"
             stroke="#0040B8"

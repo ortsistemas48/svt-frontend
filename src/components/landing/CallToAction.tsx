@@ -5,7 +5,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export default function CallToAction() {
   return (
-    <section className="relative w-full py-20 sm:py-28 lg:py-32 overflow-hidden bg-white">
+    <section id="contact" className="relative w-full py-20 sm:py-28 lg:py-32 overflow-hidden bg-white">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         {/* Main Card */}
         <div className="relative rounded-[32px] overflow-hidden">
