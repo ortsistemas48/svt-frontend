@@ -54,7 +54,7 @@ const features: Record<string, { title: string; subtitle: string; description: s
       "Alertas de tiempos de espera",
     ],
     tags: ["Prioridades", "Alertas", "Dinámico"],
-    image: "/images/cola_de_inspecciones.webp",
+    image: "/images/Cola_de_inspecciones.webp",
   },
   reimpresion_crt: {
     title: "Reimpresión de CRT",
