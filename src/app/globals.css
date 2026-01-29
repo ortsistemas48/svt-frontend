@@ -3,13 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --font-poppins: 'Poppins', sans-serif;
+  --font-sf-pro: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
-  font-family: var(--font-poppins);
+  font-family: var(--font-sf-pro);
 }
 
 
 html, body { height: 100%; }
 body { margin: 0; padding: 0;}
+

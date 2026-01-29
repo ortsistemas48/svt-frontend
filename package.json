@@ -17,6 +17,7 @@
     "firebase": "^11.10.0",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.523.0",
+    "motion": "^12.23.26",
     "next": "^16.0.8",
     "pdf-lib": "^1.17.1",
     "postcss": "8.4.29",
@@ -28,6 +29,7 @@
     "react-range-slider-input": "^3.0.7",
     "react-redux": "^9.2.0",
     "swiper": "^10.2.0",
+    "tailwind-merge": "^3.4.0",
     "tailwindcss": "3.3.3",
     "yet-another-react-lightbox": "^3.24.0"
   },
