@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 
 const stats = [
   {
-    value: 50,
+    value: 10,
     suffix: "+",
     label: "Talleres activos",
   },

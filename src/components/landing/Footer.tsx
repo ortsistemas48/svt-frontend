@@ -8,17 +8,23 @@ const footerLinks = {
   producto: {
     title: "Producto",
     links: [
-      { label: "Ingresar", href: "/login" },
+      { label: "Plataforma", href: "#what-is-checkrto" },
       { label: "Funciones", href: "#features" },
-      { label: "Contacto", href: "#contact" },
+    ],
+  },
+  recursos: {
+    title: "Recursos",
+    links: [
+      { label: "Centro de ayuda", href: "#contact" },
+      { label: "Guías", href: "#contact" },
+      { label: "Preguntas frecuentes", href: "#contact" },
     ],
   },
   empresa: {
     title: "Empresa",
     links: [
+      { label: "Provia", href: "#what-is-checkrto" },
       { label: "Sobre CheckRTO", href: "#what-is-checkrto" },
-      { label: "Términos", href: "/terminos" },
-      { label: "Políticas de privacidad", href: "/privacidad" },
     ],
   },
   contacto: {
@@ -26,6 +32,7 @@ const footerLinks = {
     links: [
       { label: "WhatsApp", href: "https://wa.me/543415964249" },
       { label: "Email", href: "#contact" },
+      { label: "Soporte", href: "#contact" },
     ],
   },
 };
@@ -41,6 +48,15 @@ export default function Footer() {
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
+  };
+
+  const handleFooterLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith("#")) {
+      e.preventDefault();
+      const id = href.slice(1);
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   return (
@@ -63,7 +79,7 @@ export default function Footer() {
           </div>
 
           {/* Right - Link Columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 lg:gap-12">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 lg:gap-12 lg:ml-auto">
             {Object.entries(footerLinks).map(([key, section]) => (
               <div key={key} className="hidden sm:block">
                 <h4 className="text-sm font-semibold text-gray-900 mb-4 tracking-tight">
@@ -74,6 +90,7 @@ export default function Footer() {
                     <li key={link.label}>
                       <Link
                         href={link.href}
+                        onClick={(e) => handleFooterLinkClick(e, link.href)}
                         className="relative text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200 after:absolute after:-bottom-0.5 after:left-0 after:h-[1px] after:bg-gray-400 after:w-0 hover:after:w-full after:transition-all after:duration-300 after:ease-out"
                       >
                         {link.label}
@@ -116,6 +133,7 @@ export default function Footer() {
                         <li key={link.label}>
                           <Link
                             href={link.href}
+                            onClick={(e) => handleFooterLinkClick(e, link.href)}
                             className="text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200"
                           >
                             {link.label}

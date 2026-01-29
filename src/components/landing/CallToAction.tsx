@@ -85,7 +85,7 @@ export default function CallToAction() {
                 <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    <span>50+ talleres activos</span>
+                    <span>10+ talleres activos</span>
                   </div>
                   <div className="w-px h-3 bg-gray-200" />
                   <span>99.9% uptime</span>
