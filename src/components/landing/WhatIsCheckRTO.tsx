@@ -28,7 +28,7 @@ const highlights = [
 const stats = [
   { 
     label: "TALLERES ACTIVOS",
-    value: 50, 
+    value: 10, 
     suffix: "+", 
     description: "Talleres de RTO ya confían en CheckRTO para gestionar sus operaciones diarias."
   },
