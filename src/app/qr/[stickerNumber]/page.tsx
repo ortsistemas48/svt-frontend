@@ -77,8 +77,10 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
   // Calcular si se deben mostrar las fotos
   const shouldShowPhotos = insp?.photos_inspection_ids && insp.photos_inspection_ids.length > 0 && (isCrtVigente || insp?.has_result_2 || insp?.is_second);
 
+  const isCondicionalVencido = insp.result === "Condicional Vencido";
+
   return (
-    <div className={clsx("min-h-screen py-6", isCrtVigente ? "bg-gray-50" : "bg-red-50")}>
+    <div className={clsx("min-h-screen py-6", isCrtVigente && !isCondicionalVencido ? "bg-gray-50" : "bg-red-50")}>
       <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-4">
@@ -98,11 +100,11 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
             <div
               className={clsx(
                 "absolute top-3 right-3 rounded-full border px-3 py-1 text-[12px] font-medium flex items-center gap-1",
-                isCrtVigente ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-rose-50 border-rose-200 text-rose-700"
+                (isCrtVigente && !isCondicionalVencido) ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-rose-50 border-rose-200 text-rose-700"
               )}
             >
               <span className="opacity-70">CRT:</span>
-              <span>{isCrtVigente ? "Vigente" : "Vencido"}</span>
+              <span>{(isCrtVigente && !isCondicionalVencido) ? "Vigente" : "Vencido"}</span>
             </div>
 
             <div className="bg-purple-50 px-5 py-4 flex items-center gap-3">
@@ -163,9 +165,10 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
                     valueCls,
                     insp.result === "Apto" && "text-emerald-700",
                     insp.result === "Condicional" && "text-amber-700",
+                    insp.result === "Condicional Vencido" && "text-rose-700",
                     insp.result === "Rechazado" && "text-rose-700"
                   )}>
-                    {estado || "No disponible"}
+                    {(insp.result === "Condicional Vencido" ? "Condicional Vencido" : estado) || "No disponible"}
                   </p>
                 </div>
               </div>
@@ -180,6 +183,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
                 isCrtVigente && insp.result === "Apto" && "bg-blue-50",
                 !isCrtVigente && insp.result === "Condicional" && "bg-red-50",
                 isCrtVigente && insp.result === "Condicional" && "bg-orange-50",
+                insp.result === "Condicional Vencido" && "bg-red-50",
                 insp.result === "Rechazado" && "bg-red-50",
                 !insp.result && "bg-zinc-50"
               )}
@@ -191,6 +195,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
                   isCrtVigente && insp.result === "Apto" && "text-blue-700 font-bold",
                   !isCrtVigente && insp.result === "Condicional" && "text-red-700 font-bold",
                   isCrtVigente && insp.result === "Condicional" && "text-orange-700 font-bold",
+                  insp.result === "Condicional Vencido" && "text-red-700 font-bold",
                   insp.result === "Rechazado" && "text-red-700 font-bold",
                   !insp.result && "text-zinc-700 font-normal"
                 )}
@@ -199,9 +204,12 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
                 {isCrtVigente && insp.result === "Apto" && <CheckCircle className="h-4 w-4 text-blue-700" />}
                 {!isCrtVigente && insp.result === "Condicional" && <XCircle className="h-4 w-4 text-red-700" />}
                 {isCrtVigente && insp.result === "Condicional" && <Circle className="h-4 w-4 text-orange-700" />}
+                {insp.result === "Condicional Vencido" && <XCircle className="h-4 w-4 text-red-700" />}
                 {insp.result === "Rechazado" && <XCircle className="h-4 w-4 text-red-700" />}
                 {!insp.result && <Circle className="h-4 w-4 text-zinc-600" />}
-                {insp.result === "Rechazado" 
+                {insp.result === "Condicional Vencido"
+                  ? "Vehículo no apto para circular - Condicional vencido"
+                  : insp.result === "Rechazado" 
                   ? "Vehículo no apto para circular - Revisión rechazada"
                   : !isCrtVigente && (insp.result === "Apto" || insp.result === "Condicional")
                   ? "Vehículo no apto para circular - CRT Vencido"
