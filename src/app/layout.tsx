@@ -1,5 +1,4 @@
 import "./globals.css";
-import { sfPro } from "@/fonts";
 import ClientLayout from "@/layouts/ClientLayout";
 import { getUserFromCookies } from "@/auth";
 
@@ -18,7 +17,7 @@ export default async function RootLayout({
   
   return (
     <html lang="es">
-      <body className={sfPro.variable}>
+      <body>
         <ClientLayout user={user} workshops={workshops}>{children}</ClientLayout>
       </body>
     </html>
