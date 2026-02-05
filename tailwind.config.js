@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-poppins)", "sans-serif"],
+        sans: ["var(--font-sf-pro-display)", "sans-serif"],
       },
       animation: {
         "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",

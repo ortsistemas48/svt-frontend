@@ -394,11 +394,11 @@ export default function PaymentPage() {
                 <section className="rounded-[4px] border bg-gradient-to-b from-[#F8FAFF] to-white p-3 sm:p-4">
                   <h4 className="text-xs sm:text-sm font-semibold text-gray-900">2- Datos la para transferencia</h4>
                   <ul className="mt-2 sm:mt-3 space-y-2 text-xs sm:text-sm text-gray-800">
-                    <CopyRow label="Titular" value="CheckRTO S.A." onCopy={copy} copiedKey={copied} k="titular" />
-                    <CopyRow label="CUIT" value="00-00000000-0" onCopy={copy} copiedKey={copied} k="cuit" />
-                    <CopyRow label="Banco" value="Banco Demo" onCopy={copy} copiedKey={copied} k="banco" />
-                    <CopyRow label="CBU" value="0000000000000000000000" onCopy={copy} copiedKey={copied} k="cbu" />
-                    <CopyRow label="Alias" value="demo.ar" onCopy={copy} copiedKey={copied} k="alias" />
+                    <CopyRow label="Titular" value="PROVIACONSULTING SAS" onCopy={copy} copiedKey={copied} k="titular" />
+                    <CopyRow label="CUIT" value="30-71927786-8" onCopy={copy} copiedKey={copied} k="cuit" />
+                    <CopyRow label="Tipo de cuenta" value="c.c. PESOS" onCopy={copy} copiedKey={copied} k="tipo" />
+                    <CopyRow label="N° de cuenta" value="20-299-026645/1" onCopy={copy} copiedKey={copied} k="cuenta" />
+                    <CopyRow label="CBU" value="01702998-20000002664514" onCopy={copy} copiedKey={copied} k="cbu" />
                   </ul>
                   <p className="mt-2 text-xs text-gray-500">Copiá los datos y realizá la transferencia</p>
                 </section>

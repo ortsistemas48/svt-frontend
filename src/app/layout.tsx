@@ -1,5 +1,5 @@
 import "./globals.css";
-import { poppins } from "@/fonts";
+import { sfPro } from "@/fonts";
 import ClientLayout from "@/layouts/ClientLayout";
 import { getUserFromCookies } from "@/auth";
 
@@ -18,7 +18,7 @@ export default async function RootLayout({
   
   return (
     <html lang="es">
-      <body className={poppins.variable}>
+      <body className={sfPro.variable}>
         <ClientLayout user={user} workshops={workshops}>{children}</ClientLayout>
       </body>
     </html>
