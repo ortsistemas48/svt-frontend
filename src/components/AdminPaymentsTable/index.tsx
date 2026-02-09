@@ -149,6 +149,24 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
     }
   };
 
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("No se pudo obtener el archivo");
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(url, "_blank");
+    }
+  };
+
   const Badge = ({ s }: { s: PaymentOrder["status"] }) => {
     const b = STATUS_BADGES[s];
     return <span className={`inline-flex items-center px-2 py-1 rounded text-xs ${b.bg} ${b.fg}`}>{b.text}</span>;
@@ -273,26 +291,24 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                     <td className="p-2 sm:p-3 text-center"><Badge s={o.status} /></td>
                     <td className="p-2 sm:p-3 text-center">
                       {o.receipt_url ? (
-                        <div className="inline-flex items-center gap-2">
+                        <div className="inline-flex items-center gap-2 flex-wrap justify-center">
                           <a
                             href={o.receipt_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[#0040B8] hover:underline text-xs sm:text-sm"
+                            className="inline-flex items-center gap-1.5 text-[#0040B8] hover:underline text-xs sm:text-sm"
                             title="Ver comprobante"
                           >
-                            <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
+                            <FileText size={14} className="sm:w-4 sm:h-4 flex-shrink-0" /> Ver
                           </a>
-                          <a
-                            href={o.receipt_url}
-                            download={`comprobante-orden-${o.id}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-[4px] bg-[#0040B8] text-white text-xs sm:text-sm hover:bg-[#003399] transition-colors"
+                          <button
+                            type="button"
+                            onClick={() => handleDownload(o.receipt_url!, `comprobante-orden-${o.id}`)}
+                            className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border border-[#0040B8] text-[#0040B8] bg-white text-xs sm:text-sm font-medium hover:bg-[#0040B8] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-offset-1 transition-all duration-200"
                             title="Descargar comprobante"
                           >
-                            <Download size={14} className="sm:w-4 sm:h-4" /> Descargar
-                          </a>
+                            <Download size={14} className="sm:w-4 sm:h-4 flex-shrink-0" /> Descargar
+                          </button>
                         </div>
                       ) : (
                         <span className="text-xs sm:text-sm text-gray-400">Sin archivo</span>
@@ -371,21 +387,19 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                           href={o.receipt_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[#0040B8] hover:underline text-xs sm:text-sm"
+                          className="inline-flex items-center gap-1.5 text-[#0040B8] hover:underline text-xs sm:text-sm"
                           title="Ver comprobante"
                         >
                           <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
                         </a>
-                        <a
-                          href={o.receipt_url}
-                          download={`comprobante-orden-${o.id}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-[4px] bg-[#0040B8] text-white text-xs sm:text-sm hover:bg-[#003399] transition-colors"
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(o.receipt_url!, `comprobante-orden-${o.id}`)}
+                          className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border border-[#0040B8] text-[#0040B8] bg-white text-xs sm:text-sm font-medium hover:bg-[#0040B8] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-offset-1 transition-all duration-200"
                           title="Descargar comprobante"
                         >
                           <Download size={14} className="sm:w-4 sm:h-4" /> Descargar
-                        </a>
+                        </button>
                       </>
                     ) : (
                       <span className="text-xs sm:text-sm text-gray-400">Sin archivo</span>
@@ -480,20 +494,18 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                           href={selected.receipt_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[#0040B8] hover:underline text-xs sm:text-sm"
+                          className="inline-flex items-center gap-1.5 text-[#0040B8] hover:underline text-xs sm:text-sm"
                         >
                           <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
                         </a>
-                        <a
-                          href={selected.receipt_url}
-                          download={`comprobante-orden-${selected.id}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-[4px] bg-[#0040B8] text-white text-xs sm:text-sm hover:bg-[#003399] transition-colors"
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(selected.receipt_url!, `comprobante-orden-${selected.id}`)}
+                          className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border border-[#0040B8] text-[#0040B8] bg-white text-xs sm:text-sm font-medium hover:bg-[#0040B8] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-offset-1 transition-all duration-200"
                           title="Descargar comprobante"
                         >
                           <Download size={14} className="sm:w-4 sm:h-4" /> Descargar
-                        </a>
+                        </button>
                       </div>
                     ) : (
                       "Sin archivo"
