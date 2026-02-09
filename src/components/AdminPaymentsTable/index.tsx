@@ -9,6 +9,7 @@ import {
   XCircle,
   FileText,
   X,
+  Download,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -272,15 +273,27 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                     <td className="p-2 sm:p-3 text-center"><Badge s={o.status} /></td>
                     <td className="p-2 sm:p-3 text-center">
                       {o.receipt_url ? (
-                        <a
-                          href={o.receipt_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[#0040B8] hover:underline text-xs sm:text-sm"
-                          title="Ver comprobante"
-                        >
-                          <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
-                        </a>
+                        <div className="inline-flex items-center gap-2">
+                          <a
+                            href={o.receipt_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-[#0040B8] hover:underline text-xs sm:text-sm"
+                            title="Ver comprobante"
+                          >
+                            <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
+                          </a>
+                          <a
+                            href={o.receipt_url}
+                            download={`comprobante-orden-${o.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-[4px] bg-[#0040B8] text-white text-xs sm:text-sm hover:bg-[#003399] transition-colors"
+                            title="Descargar comprobante"
+                          >
+                            <Download size={14} className="sm:w-4 sm:h-4" /> Descargar
+                          </a>
+                        </div>
                       ) : (
                         <span className="text-xs sm:text-sm text-gray-400">Sin archivo</span>
                       )}
@@ -351,17 +364,29 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                 </div>
                 <div>
                   <div className="text-gray-500 mb-0.5">Comprobante</div>
-                  <div>
+                  <div className="flex flex-wrap items-center gap-2">
                     {o.receipt_url ? (
-                      <a
-                        href={o.receipt_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[#0040B8] hover:underline text-xs sm:text-sm"
-                        title="Ver comprobante"
-                      >
-                        <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
-                      </a>
+                      <>
+                        <a
+                          href={o.receipt_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[#0040B8] hover:underline text-xs sm:text-sm"
+                          title="Ver comprobante"
+                        >
+                          <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
+                        </a>
+                        <a
+                          href={o.receipt_url}
+                          download={`comprobante-orden-${o.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-[4px] bg-[#0040B8] text-white text-xs sm:text-sm hover:bg-[#003399] transition-colors"
+                          title="Descargar comprobante"
+                        >
+                          <Download size={14} className="sm:w-4 sm:h-4" /> Descargar
+                        </a>
+                      </>
                     ) : (
                       <span className="text-xs sm:text-sm text-gray-400">Sin archivo</span>
                     )}
@@ -450,14 +475,26 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                   label="Comprobante"
                   value={
                     selected.receipt_url ? (
-                      <a
-                        href={selected.receipt_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[#0040B8] hover:underline text-xs sm:text-sm"
-                      >
-                        <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
-                      </a>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <a
+                          href={selected.receipt_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[#0040B8] hover:underline text-xs sm:text-sm"
+                        >
+                          <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
+                        </a>
+                        <a
+                          href={selected.receipt_url}
+                          download={`comprobante-orden-${selected.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-[4px] bg-[#0040B8] text-white text-xs sm:text-sm hover:bg-[#003399] transition-colors"
+                          title="Descargar comprobante"
+                        >
+                          <Download size={14} className="sm:w-4 sm:h-4" /> Descargar
+                        </a>
+                      </div>
                     ) : (
                       "Sin archivo"
                     )
