@@ -149,10 +149,22 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
     }
   };
 
-  const handleDownload = async (url: string, filename: string) => {
+  const [downloading, setDownloading] = useState<number | null>(null);
+
+  const handleDownload = async (orderId: number) => {
     try {
-      const res = await fetch(url, { credentials: "include" });
+      setDownloading(orderId);
+      const res = await fetch(`${API_BASE}/payments_admin/orders/${orderId}/receipt/download`, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("No se pudo obtener el archivo");
+
+      // Extraer filename del Content-Disposition si existe
+      const disposition = res.headers.get("Content-Disposition") || "";
+      let filename = `comprobante-orden-${orderId}`;
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      if (match) filename = match[1];
+
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -163,13 +175,15 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
     } catch {
-      window.open(url, "_blank");
+      setErrorMsg("No se pudo descargar el comprobante");
+    } finally {
+      setDownloading(null);
     }
   };
 
   const Badge = ({ s }: { s: PaymentOrder["status"] }) => {
     const b = STATUS_BADGES[s];
-    return <span className={`inline-flex items-center px-2 py-1 rounded text-xs ${b.bg} ${b.fg}`}>{b.text}</span>;
+    return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium tracking-wide ${b.bg} ${b.fg}`}>{b.text}</span>;
   };
 
   const Money = ({ v }: { v: number }) => (
@@ -291,27 +305,22 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                     <td className="p-2 sm:p-3 text-center"><Badge s={o.status} /></td>
                     <td className="p-2 sm:p-3 text-center">
                       {o.receipt_url ? (
-                        <div className="inline-flex items-center gap-2 flex-wrap justify-center">
-                          <a
-                            href={o.receipt_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 text-[#0040B8] hover:underline text-xs sm:text-sm"
-                            title="Ver comprobante"
-                          >
-                            <FileText size={14} className="sm:w-4 sm:h-4 flex-shrink-0" /> Ver
-                          </a>
+                        <div className="inline-flex items-center gap-1.5 justify-center">
                           <button
                             type="button"
-                            onClick={() => handleDownload(o.receipt_url!, `comprobante-orden-${o.id}`)}
-                            className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border border-[#0040B8] text-[#0040B8] bg-white text-xs sm:text-sm font-medium hover:bg-[#0040B8] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-offset-1 transition-all duration-200"
+                            onClick={() => handleDownload(o.id)}
+                            disabled={downloading === o.id}
+                            className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-md text-[#0040B8] bg-blue-50/80 text-xs font-medium hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-150 disabled:opacity-50"
                             title="Descargar comprobante"
                           >
-                            <Download size={14} className="sm:w-4 sm:h-4 flex-shrink-0" /> Descargar
+                            <Download size={13} className="flex-shrink-0" />
+                            {downloading === o.id ? "Descargando..." : "Descargar"}
                           </button>
                         </div>
                       ) : (
-                        <span className="text-xs sm:text-sm text-gray-400">Sin archivo</span>
+                        <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                          <FileText size={13} className="flex-shrink-0" /> Sin archivo
+                        </span>
                       )}
                     </td>
                     <td className="p-0">
@@ -382,27 +391,20 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                   <div className="text-gray-500 mb-0.5">Comprobante</div>
                   <div className="flex flex-wrap items-center gap-2">
                     {o.receipt_url ? (
-                      <>
-                        <a
-                          href={o.receipt_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[#0040B8] hover:underline text-xs sm:text-sm"
-                          title="Ver comprobante"
-                        >
-                          <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => handleDownload(o.receipt_url!, `comprobante-orden-${o.id}`)}
-                          className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border border-[#0040B8] text-[#0040B8] bg-white text-xs sm:text-sm font-medium hover:bg-[#0040B8] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-offset-1 transition-all duration-200"
-                          title="Descargar comprobante"
-                        >
-                          <Download size={14} className="sm:w-4 sm:h-4" /> Descargar
-                        </button>
-                      </>
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(o.id)}
+                        disabled={downloading === o.id}
+                        className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-md text-[#0040B8] bg-blue-50/80 text-xs font-medium hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-150 disabled:opacity-50"
+                        title="Descargar comprobante"
+                      >
+                        <Download size={13} className="flex-shrink-0" />
+                        {downloading === o.id ? "Descargando..." : "Descargar"}
+                      </button>
                     ) : (
-                      <span className="text-xs sm:text-sm text-gray-400">Sin archivo</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                        <FileText size={13} className="flex-shrink-0" /> Sin archivo
+                      </span>
                     )}
                   </div>
                 </div>
@@ -413,26 +415,30 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
       </div>
 
       {/* Paginación inferior */}
-      <div className="w-full flex items-center justify-between gap-2 sm:gap-3 mt-3 sm:mt-4">
+      <div className="w-full flex items-center justify-between gap-2 sm:gap-3 mt-3 sm:mt-4 bg-white border border-gray-200 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3">
         <button
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage <= 1}
-          className={`px-2 py-1 rounded border text-xs ${
-            currentPage <= 1 ? "text-gray-400 border-gray-200" : "text-[#0040B8] border-[#0040B8]"
+          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all duration-150 ${
+            currentPage <= 1
+              ? "text-gray-300 bg-gray-50 cursor-not-allowed"
+              : "text-gray-700 bg-gray-100 hover:bg-gray-200"
           }`}
         >
           Anterior
         </button>
 
-        <div className="text-xs sm:text-sm text-gray-600">
-          Página {currentPage} de {totalPages}
+        <div className="text-xs sm:text-sm text-gray-500">
+          <span className="font-medium text-gray-700">{currentPage}</span> de <span className="font-medium text-gray-700">{totalPages}</span>
         </div>
 
         <button
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className={`px-2 py-1 rounded border text-xs ${
-            currentPage >= totalPages ? "text-gray-400 border-gray-200" : "text-[#0040B8] border-[#0040B8]"
+          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all duration-150 ${
+            currentPage >= totalPages
+              ? "text-gray-300 bg-gray-50 cursor-not-allowed"
+              : "text-gray-700 bg-gray-100 hover:bg-gray-200"
           }`}
         >
           Siguiente
@@ -489,51 +495,45 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                   label="Comprobante"
                   value={
                     selected.receipt_url ? (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <a
-                          href={selected.receipt_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[#0040B8] hover:underline text-xs sm:text-sm"
-                        >
-                          <FileText size={14} className="sm:w-4 sm:h-4" /> Ver
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => handleDownload(selected.receipt_url!, `comprobante-orden-${selected.id}`)}
-                          className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border border-[#0040B8] text-[#0040B8] bg-white text-xs sm:text-sm font-medium hover:bg-[#0040B8] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#0040B8] focus:ring-offset-1 transition-all duration-200"
-                          title="Descargar comprobante"
-                        >
-                          <Download size={14} className="sm:w-4 sm:h-4" /> Descargar
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(selected.id)}
+                        disabled={downloading === selected.id}
+                        className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-md text-[#0040B8] bg-blue-50/80 text-xs font-medium hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-150 disabled:opacity-50"
+                        title="Descargar comprobante"
+                      >
+                        <Download size={13} className="flex-shrink-0" />
+                        {downloading === selected.id ? "Descargando..." : "Descargar"}
+                      </button>
                     ) : (
-                      "Sin archivo"
+                      <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                        <FileText size={13} /> Sin archivo
+                      </span>
                     )
                   }
                 />
               </div>
 
               {selected.status === "IN_REVIEW" && (
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setConfirmOpen("APPROVE")}
                     disabled={processing}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[4px] bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs sm:text-sm"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-sm font-medium shadow-sm hover:shadow transition-all duration-150"
                     title="Aprobar"
                   >
-                    <CheckCircle2 size={14} className="sm:w-4 sm:h-4" />
-                    Aprobar
+                    <CheckCircle2 size={16} />
+                    Aprobar pago
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmOpen("REJECT")}
                     disabled={processing}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[4px] bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-xs sm:text-sm"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white border border-rose-300 text-rose-600 hover:bg-rose-50 disabled:opacity-60 text-sm font-medium transition-all duration-150"
                     title="Rechazar"
                   >
-                    <XCircle size={14} className="sm:w-4 sm:h-4" />
+                    <XCircle size={16} />
                     Rechazar
                   </button>
                 </div>
@@ -582,11 +582,11 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
 
             {errorMsg && <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-rose-700">{errorMsg}</p>}
 
-            <div className="mt-4 sm:mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
+            <div className="mt-4 sm:mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setConfirmOpen(null)}
-                className="w-full sm:w-auto px-4 py-2 rounded-[4px] border border-gray-300 bg-white text-xs sm:text-sm hover:bg-gray-50"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors duration-150"
               >
                 Cancelar
               </button>
@@ -594,7 +594,7 @@ export default function PaymentApprovalTable({ orders, onRefresh, adminSetStatus
                 type="button"
                 onClick={confirmAction}
                 disabled={processing}
-                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[4px] text-white text-xs sm:text-sm ${
+                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-medium shadow-sm transition-all duration-150 ${
                   confirmOpen === "APPROVE" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"
                 } disabled:opacity-60`}
               >
