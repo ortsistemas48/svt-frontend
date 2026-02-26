@@ -53,7 +53,9 @@ export default function HeroSection() {
       {/* CTA Buttons - uno al lado del otro en todos los tamaños */}
       <div className="flex flex-row flex-wrap items-center justify-center gap-3 sm:gap-6 mb-12 sm:mb-16 lg:mb-20">
         <Link
-          href="#contact"
+          href="https://wa.me/543415964249"
+          target="_blank"
+          rel="noopener noreferrer"
           className="px-4 py-2 sm:px-5 rounded-[10px] bg-[#0040B8] hover:bg-[#0035a0] text-white text-sm font-medium transition-colors duration-200 text-center"
         >
           Contactanos

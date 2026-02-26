@@ -67,7 +67,9 @@ export default function CallToAction() {
               {/* Right side - CTA */}
               <div className="flex flex-col gap-4 lg:items-end w-full lg:w-auto">
                 <Link
-                  href="#contact"
+                  href="https://wa.me/543415964249"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="group relative px-8 py-4 rounded-2xl bg-[#0040B8] text-white text-base font-semibold hover:bg-[#0035a0] transition-all duration-300 flex items-center justify-center gap-2 shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] w-full lg:w-[200px]"
                 >
                   <span>Contactanos</span>

@@ -37,7 +37,9 @@ export default function LandingHeader() {
           Iniciar sesión
         </Link>
         <Link
-          href="#contact"
+          href="https://wa.me/543415964249"
+          target="_blank"
+          rel="noopener noreferrer"
           className="px-2.5 py-1.5 sm:px-3 rounded-[10px] bg-[#0040B8] hover:bg-[#0035a0] text-white text-xs sm:text-sm font-medium transition-colors duration-200"
         >
           Contactanos

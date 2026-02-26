@@ -173,7 +173,9 @@ export default function WhatIsCheckRTO() {
             {/* CTA */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
-                href="#contact"
+                href="https://wa.me/543415964249"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group px-6 py-3.5 rounded-xl bg-[#0040B8] text-white text-sm font-semibold hover:bg-[#0035a0] transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/15 hover:shadow-blue-500/25"
               >
                 Contactanos

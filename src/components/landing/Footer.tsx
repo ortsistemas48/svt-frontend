@@ -8,22 +8,22 @@ const footerLinks = {
   producto: {
     title: "Producto",
     links: [
-      { label: "Plataforma", href: "#what-is-checkrto" },
+      { label: "Plataforma", href: "#hero" },
       { label: "Funciones", href: "#features" },
     ],
   },
   recursos: {
     title: "Recursos",
     links: [
-      { label: "Centro de ayuda", href: "#contact" },
-      { label: "Guías", href: "#contact" },
-      { label: "Preguntas frecuentes", href: "#contact" },
+      { label: "Centro de ayuda", href: "https://wa.me/543415964249" },
+      { label: "Guías", href: "https://wa.me/543415964249" },
+      { label: "Preguntas frecuentes", href: "https://wa.me/543415964249" },
     ],
   },
   empresa: {
     title: "Empresa",
     links: [
-      { label: "Provia", href: "#what-is-checkrto" },
+      { label: "Provia", href: "https://proviaconsulting.com" },
       { label: "Sobre CheckRTO", href: "#what-is-checkrto" },
     ],
   },
@@ -31,8 +31,6 @@ const footerLinks = {
     title: "Contacto",
     links: [
       { label: "WhatsApp", href: "https://wa.me/543415964249" },
-      { label: "Email", href: "#contact" },
-      { label: "Soporte", href: "#contact" },
     ],
   },
 };
@@ -91,6 +89,7 @@ export default function Footer() {
                       <Link
                         href={link.href}
                         onClick={(e) => handleFooterLinkClick(e, link.href)}
+                        {...(link.href.startsWith("http") && { target: "_blank", rel: "noopener noreferrer" })}
                         className="relative text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200 after:absolute after:-bottom-0.5 after:left-0 after:h-[1px] after:bg-gray-400 after:w-0 hover:after:w-full after:transition-all after:duration-300 after:ease-out"
                       >
                         {link.label}
@@ -134,6 +133,7 @@ export default function Footer() {
                           <Link
                             href={link.href}
                             onClick={(e) => handleFooterLinkClick(e, link.href)}
+                            {...(link.href.startsWith("http") && { target: "_blank", rel: "noopener noreferrer" })}
                             className="text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200"
                           >
                             {link.label}
