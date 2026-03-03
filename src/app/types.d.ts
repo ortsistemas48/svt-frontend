@@ -99,6 +99,7 @@ export type Application = {
   date: string;
   status: ApplicationStatus;
   previous_status?: ApplicationStatus | null;
+  previous_sticker_number?: string | null;
   previous_status_date?: string | null;
   result?: ApplicationResult;
   result_2?: ApplicationResult;

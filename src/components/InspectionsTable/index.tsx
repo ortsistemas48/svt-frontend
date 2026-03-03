@@ -400,6 +400,7 @@ export default function InspectionTable() {
                 const date = d.toLocaleDateString("es-AR");
                 const time = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
                 const tone = STATUS_TONES[item.status] || DEFAULT_TONE;
+                const stickerNumber = item.status === "Abandonado" ? (item.previous_sticker_number || "-") : (item.sticker_number || "-");
                 // Usar key compuesta para garantizar unicidad (application_id + índice + fecha como fallback)
                 const uniqueKey = `${item.application_id}-${index}-${item.date}`;
                 return (
@@ -425,7 +426,7 @@ export default function InspectionTable() {
                     </td>
 
                     <td className="p-3 text-center">
-                      <div className="text-sm font-medium sm:text-base">{item.sticker_number || "-"}</div>
+                      <div className="text-sm font-medium sm:text-base">{stickerNumber}</div>
                     </td>
 
                     <td className="p-0">
@@ -775,6 +776,7 @@ export default function InspectionTable() {
                     <div className="space-y-2 text-sm text-gray-700">
                       <DetailRow label="Estado Previo" value={detailTarget.previous_status || "-"} valueClassName={detailTarget.previous_status ? (STATUS_TONES[detailTarget.previous_status]?.text || DEFAULT_TONE.text) : DEFAULT_TONE.text} bgClassName={detailTarget.previous_status ? (STATUS_TONES[detailTarget.previous_status]?.bg || DEFAULT_TONE.bg) : DEFAULT_TONE.bg} />
                       <DetailRow label="Fecha de abandono" value={formatDateTime(detailTarget.previous_status_date) || "-"} />
+                      <DetailRow label="Número de oblea previo" value={detailTarget.previous_sticker_number || "-"} />
                     </div>
                   </section>
 
