@@ -21,6 +21,7 @@ const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
 const RESULT_TONES: Record<string, { text: string; bg: string }> = {
   Apto: { text: "text-blue-700", bg: "bg-blue-50" },
   Condicional: { text: "text-amber-700", bg: "bg-amber-50" },
+  "Condicional Vencido": { text: "text-red-700", bg: "bg-red-50" },
   Rechazado: { text: "text-white", bg: "bg-black" },
 };
 const DEFAULT_RESULT_TONE = { text: "text-gray-900", bg: "bg-gray-100" };
