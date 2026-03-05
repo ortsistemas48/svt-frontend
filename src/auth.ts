@@ -1,29 +1,19 @@
 // auth.ts
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { apiFetch } from "./utils";
 
 type SessionOut = { user: any | null; workshops: any[] };
 
-async function getBaseURL() {
-  const h = await headers(); 
-  const host =
-    h.get("x-forwarded-host") || h.get("host") || process.env.VERCEL_URL;
-  if (!host) throw new Error("No host header");
-
-  const proto =
-    h.get("x-forwarded-proto") ||
-    (process.env.NODE_ENV === "production" ? "https" : "http");
-
-  return `${proto}://${host}`;
-}
+const BACKEND_ORIGIN =
+  process.env.NEXT_PUBLIC_API_URL || "https://svt-backend.onrender.com";
 
 export async function getUserFromCookies(): Promise<SessionOut> {
   try {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const base = await getBaseURL();
-    const res = await fetch(`${base}/api/auth/me`, {
+    // Call the backend directly — no loopback through Next.js rewrites
+    const res = await fetch(`${BACKEND_ORIGIN}/auth/me`, {
       cache: "no-store",
       headers: cookieHeader ? { cookie: cookieHeader } : {},
     });

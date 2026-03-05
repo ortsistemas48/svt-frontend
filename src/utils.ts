@@ -2,21 +2,18 @@ import { Application, DailyStatistics } from "./app/types";
 import type { TopModels } from "@/components/Statistics"; 
 import localidadesData from "@/georef/localidades.json";
 
-async function getBaseURL() {
-  const { headers } = await import("next/headers");
-  const h = await headers();
-  const host = h.get("x-forwarded-host") || h.get("host");
-  if (!host) throw new Error("No host header");
-  const proto = h.get("x-forwarded-proto") || (process.env.NODE_ENV === "production" ? "https" : "http");
-  return `${proto}://${host}`;
-}
+const BACKEND_ORIGIN =
+  process.env.NEXT_PUBLIC_API_URL || "https://svt-backend.onrender.com";
 
+/**
+ * Calls the backend directly, bypassing the Next.js /api rewrite proxy.
+ * Strips the leading /api prefix because the backend routes don't include it.
+ */
 async function serverFetch(path: string, init: RequestInit = {}) {
   const { cookies } = await import("next/headers");
   const cookieHeader = (await cookies()).toString();
-  const base = await getBaseURL();
-  return fetch(`${base}${path}`, {
-    cache: "no-store",
+  const backendPath = path.startsWith("/api") ? path.slice(4) : path;
+  return fetch(`${BACKEND_ORIGIN}${backendPath}`, {
     ...init,
     headers: {
       ...(init.headers || {}),
@@ -644,7 +641,11 @@ export async function fetchDailyStatistics(workshopId: number, date?: string): P
   const url = date ? `${baseUrl}?date=${encodeURIComponent(date)}` : baseUrl;
 
   try {
-    const response = await apiFetch(url, { method: "GET" });
+    const response = await apiFetch(url, {
+      method: "GET",
+      // Statistics change at most once per minute; revalidate periodically
+      next: { revalidate: 60 },
+    } as RequestInit & { next?: { revalidate?: number } });
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
       throw new Error(`Failed to fetch daily statistics: ${response.status} - ${errorText}`);
@@ -666,6 +667,7 @@ export async function fetchLatestApplications(workshopId: number, perPage = 5) {
 
   const res = await apiFetch(`/api/applications/workshop/${workshopId}/full?${params.toString()}`, {
     method: "GET",
+    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -685,6 +687,7 @@ export async function fetchQueueApplications(workshopId: number, perPage = 10) {
 
   const res = await apiFetch(`/api/applications/workshop/${workshopId}/full?${params.toString()}`, {
     method: "GET",
+    cache: "no-store",
   });
 
   if (!res.ok) {

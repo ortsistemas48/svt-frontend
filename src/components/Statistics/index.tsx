@@ -940,7 +940,9 @@ export default function Statistics({
                             <p className="text-sm font-semibold text-gray-900">{item.license_plate}</p>
                             <p className="text-xs text-gray-600 mt-1">{item.contact}</p>
                             <p className="text-xs font-medium text-gray-700 mt-1">
-                              Vence en {item.days_until} {item.days_until === 1 ? "día" : "días"}
+                              {item.days_until === 0
+                                ? "Vence hoy"
+                                : `Vence en ${item.days_until} ${item.days_until === 1 ? "día" : "días"}`}
                             </p>
                           </div>
                         </div>
