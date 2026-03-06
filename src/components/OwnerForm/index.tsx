@@ -285,7 +285,7 @@ export default function OwnerForm({
         fieldLabel: "DNI o CUIT",
         placeholder: "Ej: 39959950 o 20123456789",
         inputType: "text",
-        sanitize: (s) => clamp(onlyDigits(s), 11),
+        sanitize: (s) => clamp(s, 50),
         validate: (q) => {
           const digits = onlyDigits(q);
           if (!digits) return "Ingresá un DNI o CUIT válido.";

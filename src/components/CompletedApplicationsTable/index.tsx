@@ -18,7 +18,7 @@ const STATUS_TONES: Record<string, { text: string; bg: string }> = {
   "Condicional Vencido": { text: "text-red-700", bg: "bg-red-50" },
 };
 const DEFAULT_TONE = { text: "text-gray-700", bg: "bg-gray-100" };
-const TABLE_FILTERS = ["Todos", "Apto", "Rechazado", "Condicional"];
+const TABLE_FILTERS = ["Todos", "Apto", "Rechazado", "Condicional", "Condicional Vencido"];
 interface PaginationData {
   page: number;
   per_page: number;
