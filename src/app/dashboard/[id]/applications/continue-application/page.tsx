@@ -17,7 +17,7 @@ type Application = {
   } | null;
   date: string;
   status: "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección";
-  result?: "Apto" | "Condicional" | "Rechazado";
+  result?: "Apto" | "Condicional" | "Condicional Vencido" | "Rechazado";
   result_2?: "Apto" | "Condicional" | "Rechazado";
   inspection_1_date?: string | null;
   inspection_2_date?: string | null;
@@ -152,6 +152,22 @@ export default function ContinueApplicationPage() {
                     !app.result_2  // Exclude if second inspection already completed
             );
             if (condicionalApps.length === 0) {
+                // Check if the only matches are "Condicional Vencido" (expired second-inspection window)
+                const condicionalVencidoApps = applications.filter(
+                    (app) =>
+                        app.result === "Condicional Vencido" &&
+                        app.car?.license_plate?.toUpperCase().replace(/[-\s]/g, "") === plate
+                );
+                if (condicionalVencidoApps.length > 0) {
+                    const lastVencido = condicionalVencidoApps[0];
+                    const observations = await fetchFirstInspectionObservations(lastVencido.application_id);
+                    setFoundApplication({
+                        ...lastVencido,
+                        first_inspection_observations: observations,
+                    });
+                    setLoading(false);
+                    return;
+                }
                 // Check if there ARE condicional apps but they all have result_2
                 const alreadyInspected = applications.filter(
                     (app) => 
@@ -199,6 +215,10 @@ export default function ContinueApplicationPage() {
     const handleBeginInspection = async () => {
         if (!foundApplication) return;
         
+        if (foundApplication.result === "Condicional Vencido") {
+            setError("El plazo para hacer la segunda revisión ha expirado.");
+            return;
+        }
         // Check if the 60-day period has expired
         if (isInspectionExpired(foundApplication)) {
             setError("El periodo para continuar el trámite ha caducado, (60 días).");
@@ -271,6 +291,10 @@ export default function ContinueApplicationPage() {
     const handleSendToQueue = async () => {
         if (!foundApplication) return;
         
+        if (foundApplication.result === "Condicional Vencido") {
+            setError("El plazo para hacer la segunda revisión ha expirado.");
+            return;
+        }
         // Check if the 60-day period has expired
         if (isInspectionExpired(foundApplication)) {
             setError("El periodo para continuar el trámite ha caducado, (60 días).");
@@ -473,7 +497,11 @@ export default function ContinueApplicationPage() {
                                     <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide mb-1">
                                         Resultado
                                     </p>
-                                    <span className="inline-block px-2 sm:px-3 py-1 bg-amber-100 text-amber-800 text-xs sm:text-sm font-semibold rounded-full">
+                                    <span className={`inline-block px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold rounded-full ${
+                                        foundApplication.result === "Condicional Vencido"
+                                            ? "bg-red-100 text-red-800"
+                                            : "bg-amber-100 text-amber-800"
+                                    }`}>
                                         {foundApplication.result}
                                     </span>
                                 </div>
@@ -526,8 +554,27 @@ export default function ContinueApplicationPage() {
                             </div>
                         </div>
 
+                        {/* Condicional Vencido: show message and block actions */}
+                        {foundApplication.result === "Condicional Vencido" && (
+                            <div className="p-3 sm:p-4 bg-red-50 border-2 border-red-500 rounded-lg sm:rounded-[14px]">
+                                <div className="flex items-start gap-2 sm:gap-3">
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    <div>
+                                        <h4 className="text-xs sm:text-sm font-semibold text-red-900 mb-0.5 sm:mb-1">
+                                            Plazo vencido
+                                        </h4>
+                                        <p className="text-xs sm:text-sm text-red-700">
+                                            El plazo para hacer la segunda revisión ha expirado.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Expiration Warning */}
-                        {foundApplication.inspection_1_date && !foundApplication.inspection_2_date && (() => {
+                        {foundApplication.result !== "Condicional Vencido" && foundApplication.inspection_1_date && !foundApplication.inspection_2_date && (() => {
                             const daysRemaining = calculateDaysRemaining(foundApplication.inspection_1_date);
                             
                             if (daysRemaining <= 0) {
@@ -588,7 +635,7 @@ export default function ContinueApplicationPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                 <button
                                     onClick={handleSendToQueue}
-                                    disabled={actionLoading !== null || isInspectionExpired(foundApplication)}
+                                    disabled={actionLoading !== null || isInspectionExpired(foundApplication) || foundApplication.result === "Condicional Vencido"}
                                     className="group relative flex flex-col items-center justify-center p-4 sm:p-5 md:p-6 border-2 border-gray-300 rounded-[4px] hover:border-[#0040B8] hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[140px] sm:min-h-[160px] md:min-h-[180px]"
                                 >
                                     {actionLoading === "queue" ? (
