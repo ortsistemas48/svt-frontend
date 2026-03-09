@@ -366,14 +366,16 @@ export default function CompletedApplicationsTable({ externalSearchQuery = "" }:
           <div className="space-y-3 sm:space-y-4">
             {applications.map((item: Application) => {
               const tone = STATUS_TONES[item.result as string] || DEFAULT_TONE;
-              // Si no hay nombre completo ni DNI, usar razón social y CUIT (i  gual que InspectionsTable)
-              const hasNameAndDni = (item.owner?.first_name || item.owner?.last_name) && item.owner?.dni;
-              const ownerText = hasNameAndDni 
-                ? `${item.owner?.first_name || ""} ${item.owner?.last_name || ""}`.trim() 
+              const hasName = (item.owner?.first_name || item.owner?.last_name);
+              const ownerText = hasName
+                ? `${item.owner?.first_name || ""} ${item.owner?.last_name || ""}`.trim()
                 : (item.owner?.razon_social || "");
-              const identityText = hasNameAndDni 
-                ? (item.owner?.dni || "") 
-                : (item.owner?.cuit || "");
+              // Jerarquía identificador: CUIT -> DNI -> PASAPORTE
+              const identityText =
+                item.owner?.cuit ||
+                item.owner?.dni ||
+                item.owner?.passport_number ||
+                "";
               
               return (
                 <div
@@ -552,14 +554,16 @@ export default function CompletedApplicationsTable({ externalSearchQuery = "" }:
               const date = dateObj.toLocaleDateString("es-AR");
               const time = dateObj.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
               const tone = STATUS_TONES[item.result as string] || DEFAULT_TONE;
-              // Si no hay nombre completo ni DNI, usar razón social y CUIT (igual que InspectionsTable)
-              const hasNameAndDni = (item.owner?.first_name || item.owner?.last_name) && item.owner?.dni;
-              const ownerText = hasNameAndDni 
-                ? `${item.owner?.first_name || ""} ${item.owner?.last_name || ""}`.trim() 
+              const hasName = (item.owner?.first_name || item.owner?.last_name);
+              const ownerText = hasName
+                ? `${item.owner?.first_name || ""} ${item.owner?.last_name || ""}`.trim()
                 : (item.owner?.razon_social || "");
-              const identityText = hasNameAndDni 
-                ? (item.owner?.dni || "") 
-                : (item.owner?.cuit || "");
+              // Jerarquía identificador: CUIT -> DNI -> PASAPORTE
+              const identityText =
+                item.owner?.cuit ||
+                item.owner?.dni ||
+                item.owner?.passport_number ||
+                "";
               return (
                 <tr key={item.application_id} className="hover:bg-gray-50 transition-colors">
                   <td className="p-3 text-center text-sm sm:text-base">{item.application_id}</td>

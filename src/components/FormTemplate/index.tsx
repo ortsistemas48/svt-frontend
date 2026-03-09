@@ -23,21 +23,23 @@ type Field = {
 type SearchConfig = {
   enabled: boolean;
   dataKey: string;
-  fieldLabel: string;         
-  placeholder?: string;       
-  inputType?: string;         
+  fieldLabel: string;
+  placeholder?: string;
+  inputType?: string;
   sanitize?: (raw: string) => string;
   validate?: (q: string) => string | null;
   buildUrl: (q: string) => string;
   mapFound: (payload: any, query: string) => Record<string, any>;
   mapNotFound: (query: string) => Record<string, any>;
   notFoundStatus?: number;
-  titleIdle?: string;        
-  descIdle?: string;          
-  searchButtonLabel?: string; 
-  resetButtonLabel?: string;  
+  titleIdle?: string;
+  descIdle?: string;
+  searchButtonLabel?: string;
+  resetButtonLabel?: string;
   onReset?: () => void;
   onModeChange?: (mode: Mode) => void;
+  /** Contenido extra renderizado entre el header y el input de búsqueda en la vista idle */
+  idleExtraContent?: React.ReactNode;
 };
 
 type Props = {
@@ -100,13 +102,20 @@ export default function FormTemplate({
     searchConfig?.onModeChange?.(mode);
   }, [mode, searchConfig]);
 
+  // Limpiar query cuando cambia el dataKey (el usuario cambió el tipo de documento)
+  useEffect(() => {
+    setQuery("");
+    setSearchError(null);
+  }, [searchConfig?.dataKey]);
+
   // Si ya viene el dataKey cargado en data, saltamos a "edit" (cuando search está activo)
-  // También verifica CUIT si el dataKey es "dni" (para soportar búsqueda por DNI o CUIT)
+  // Verifica DNI, CUIT y passport_number para cubrir todos los layouts posibles
   useEffect(() => {
     if (!searchConfig?.enabled) return;
     const val = data?.[searchConfig.dataKey];
-    const cuitVal = searchConfig.dataKey === "dni" ? data?.cuit : null;
-    if ((val || cuitVal) && mode === "idle") setMode("edit");
+    const cuitVal = data?.cuit || null;
+    const passportVal = data?.passport_number || null;
+    if ((val || cuitVal || passportVal) && mode === "idle") setMode("edit");
   }, [searchConfig, data, mode]);
 
   useEffect(() => {
@@ -227,6 +236,8 @@ export default function FormTemplate({
             )}
           </header>
         )}
+
+        {searchConfig.idleExtraContent}
 
         <div className="w-full max-w-2xl">
           <label htmlFor="search-input" className="block text-xs sm:text-sm text-gray-700 mb-1 sm:mb-1.5">

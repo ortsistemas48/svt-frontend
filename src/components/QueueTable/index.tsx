@@ -485,8 +485,18 @@ export default function QueueTable({ externalSearchQuery = "" }: { externalSearc
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-sm text-gray-600">DNI</p>
-                          <p className="text-base font-medium text-gray-900">{detailTarget.owner?.dni || "-"}</p>
+                          <p className="text-sm text-gray-600">
+                            {detailTarget.owner?.dni
+                              ? "DNI"
+                              : detailTarget.owner?.passport_number
+                              ? "Pasaporte"
+                              : "Identificador"}
+                          </p>
+                          <p className="text-base font-medium text-gray-900">
+                            {detailTarget.owner?.dni ||
+                              detailTarget.owner?.passport_number ||
+                              "-"}
+                          </p>
                         </div>
                       </>
                     )}

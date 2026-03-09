@@ -16,6 +16,7 @@ const tableData = [
   { label: "Apellido", key: "last_name" },
   { label: "DNI", key: "dni" },
   { label: "CUIT", key: "cuit" },
+  { label: "Pasaporte", key: "passport_number" },
   { label: "Razón social", key: "razon_social" },
   { label: "Teléfono", key: "phone_number" },
   { label: "Email", key: "email" },
@@ -25,11 +26,11 @@ const tableData = [
 
 // ahora acepta docs
 const renderPerson = (person: PersonType) => {
-
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         {tableData.map((item) => (
+          
           <div key={item.key} className="bg-gray-50 rounded-lg sm:rounded-[14px] p-3 sm:p-4">
             <dt className="text-xs sm:text-sm font-medium text-gray-500 mb-1">{item.label}</dt>
             <dd

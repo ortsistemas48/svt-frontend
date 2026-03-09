@@ -14,6 +14,9 @@ import {
 } from "@/utils";
 import { useApplication } from "@/context/ApplicationContext";
 
+type DocType = "dni" | "cuit" | "passport";
+type IdType = "dni" | "cuit" | "passport";
+
 type Props = {
   data: any;
   applicationId: number;
@@ -25,15 +28,6 @@ type Props = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// Helper para detectar si es DNI o CUIT
-const detectIdType = (value: string): "dni" | "cuit" | null => {
-  const digits = onlyDigits(value);
-  if (digits.length <= 9) return "dni";
-  if (digits.length === 11) return "cuit";
-  return null;
-};
-
-// ---- mensajes & patrones (vacío = sin error) ----
 const MSG: Record<string, string> = {
   dni: "Solo números (hasta 9).",
   cuit: "Solo números (11 dígitos).",
@@ -42,6 +36,7 @@ const MSG: Record<string, string> = {
   first_name: "Solo letras (con acentos), espacios, ' y - (máx. 40).",
   last_name: "Solo letras (con acentos), espacios, ' y - (máx. 40).",
   email: "Formato de email inválido.",
+  passport_number: "Alfanumérico (máx. 20 caracteres).",
 };
 
 const PATTERN: Record<string, RegExp> = {
@@ -52,14 +47,20 @@ const PATTERN: Record<string, RegExp> = {
   first_name: /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'-]{1,40}$/,
   last_name: /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'-]{1,40}$/,
   email: EMAIL_REGEX,
+  passport_number: /^[A-Za-z0-9]{1,20}$/,
 };
 
-// Dedup por value (para evitar keys duplicadas en selects)
 const uniqueByValue = (arr: { value: any; label: any }[] = []) => {
   const m = new Map<string, { value: any; label: any }>();
   for (const o of arr) m.set(String(o.value).trim().toLowerCase(), { value: String(o.value), label: String(o.label) });
   return Array.from(m.values());
 };
+
+const DOC_TYPE_OPTIONS: { value: DocType; label: string }[] = [
+  { value: "dni", label: "DNI" },
+  { value: "cuit", label: "CUIT" },
+  { value: "passport", label: "Pasaporte" },
+];
 
 export default function OwnerForm({
   data,
@@ -75,10 +76,21 @@ export default function OwnerForm({
   const [cityOptions, setCityOptions] = useState<{ value: string; label: string }[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [cityApiFailed, setCityApiFailed] = useState(false);
-  // Guardar el tipo inicial basado en la búsqueda para mantener el layout fijo
-  const [initialIdType, setInitialIdType] = useState<"dni" | "cuit" | null>(null);
+  const [initialIdType, setInitialIdType] = useState<IdType | null>(null);
+  const [docType, setDocType] = useState<DocType>("dni");
 
-  // helpers de error (prefijo owner_)
+  // Sincronizar docType cuando llegan datos pre-cargados (aplicación existente)
+  useEffect(() => {
+    if (initialIdType !== null) return; // ya fue seteado por una búsqueda manual
+    if (data?.passport_number) {
+      setDocType("passport");
+    } else if (data?.cuit && data.cuit.replace(/\D/g, "").length === 11) {
+      setDocType("cuit");
+    } else if (data?.dni) {
+      setDocType("dni");
+    }
+  }, [data?.passport_number, data?.cuit, data?.dni, initialIdType]);
+
   const setOwnerError = (name: string, msg: string) =>
     setErrors((prev: any) => ({ ...(prev || {}), [`owner_${name}`]: msg }));
 
@@ -93,7 +105,6 @@ export default function OwnerForm({
     setOwnerError(name, p.test(val) ? "" : MSG[name]);
   };
 
-  // Provincias
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -107,21 +118,17 @@ export default function OwnerForm({
     return () => { cancelled = true; };
   }, []);
 
-  // Localidades
   useEffect(() => {
     let cancelled = false;
-
     const province = data?.province ?? "";
     if (!province) {
       setCityOptions([]);
       setCityApiFailed(false);
       return;
     }
-
     setLoadingCities(true);
     setCityOptions([]);
     setCityApiFailed(false);
-
     (async () => {
       try {
         const locs = await getLocalidadesByProvincia(province);
@@ -131,84 +138,75 @@ export default function OwnerForm({
         }
       } catch (e) {
         console.error("Error cargando localidades:", e);
-        if (!cancelled) {
-          setCityApiFailed(true);
-        }
+        if (!cancelled) setCityApiFailed(true);
       } finally {
         if (!cancelled) setLoadingCities(false);
       }
     })();
-
     return () => { cancelled = true; };
   }, [data?.province]);
 
-  // Detectar tipo de ID (DNI o CUIT) basado en el tipo inicial de la búsqueda
-  // Si no hay tipo inicial, detectarlo de los datos pero solo una vez
-  const idType = useMemo(() => {
-    // Si ya hay un tipo inicial guardado, usarlo (mantiene el layout fijo)
-    if (initialIdType) {
-      return initialIdType;
-    }
-    
-    // Si no hay tipo inicial, detectarlo de los datos
+  const idType = useMemo((): IdType => {
+    if (initialIdType) return initialIdType;
+    if (data?.passport_number) return "passport";
     const cuit = data?.cuit || "";
     const dni = data?.dni || "";
-    
-    // Si hay CUIT válido, usar layout CUIT
-    if (cuit && detectIdType(cuit) === "cuit") {
-      return "cuit";
-    }
-    // Si hay DNI válido, usar layout DNI
-    if (dni && detectIdType(dni) === "dni") {
-      return "dni";
-    }
-    // Por defecto, usar layout DNI
+    if (cuit && onlyDigits(cuit).length === 11) return "cuit";
+    if (dni && onlyDigits(dni).length <= 9) return "dni";
     return "dni";
-  }, [initialIdType, data?.dni, data?.cuit]);
+  }, [initialIdType, data?.dni, data?.cuit, data?.passport_number]);
 
-  // Schema base - Layout dinámico según tipo
   const baseFormData = useMemo(() => {
-    const isCuit = idType === "cuit";
-    
-    if (isCuit) {
-      // Layout CUIT: cuit y razon_social obligatorios, nombre/apellido/dni opcionales al final
+    const cityField =
+      cityApiFailed || (cityOptions.length === 0 && !loadingCities && data?.province)
+        ? { label: "Localidad", placeholder: "Ej: Córdoba Capital", name: "city", type: "text", isRequired: true, disabled: !data?.province }
+        : { label: "Localidad", options: cityOptions, name: "city", isRequired: true, disabled: loadingCities || !data?.province || cityOptions.length === 0 };
+
+    if (idType === "cuit") {
       return [
         { label: "CUIT", placeholder: "Ej: 20123456789", name: "cuit", type: "text", isRequired: true },
         { label: "Razón Social", placeholder: "Ej: Empresa S.A.", name: "razon_social", type: "text", isRequired: true },
         { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street", isRequired: true },
         { label: "Provincia", options: provinceOptions, name: "province", isRequired: true },
-        cityApiFailed || (cityOptions.length === 0 && !loadingCities && data?.province)
-        ? { label: "Localidad", placeholder: "Ej: Córdoba Capital", name: "city", type: "text", isRequired: true, disabled: !data?.province }
-        : { label: "Localidad", options: cityOptions, name: "city", isRequired: true, disabled: loadingCities || !data?.province || cityOptions.length === 0 },
+        cityField,
         { label: "Email", placeholder: "Ej: ejemplo@gmail.com", name: "email", type: "email" },
         { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number", type: "text" },
         { label: "Nombre/s", placeholder: "Ej: Ángel Isaías", name: "first_name", type: "text", isRequired: false },
         { label: "Apellido/s", placeholder: "Ej: Vaquero", name: "last_name", type: "text", isRequired: false },
         { label: "DNI", placeholder: "Ej: 39959950", name: "dni", type: "text", isRequired: false },
       ];
-    } else {
-      // Layout DNI: dni, nombre, apellido obligatorios; cuit y razon_social opcionales
+    }
+
+    if (idType === "passport") {
       return [
-        { label: "DNI", placeholder: "Ej: 39959950", name: "dni", type: "text", isRequired: true },
+        { label: "Pasaporte", placeholder: "Ej: AB123456", name: "passport_number", type: "text", isRequired: true },
         { label: "Nombre/s", placeholder: "Ej: Ángel Isaías", name: "first_name", isRequired: true },
         { label: "Apellido/s", placeholder: "Ej: Vaquero", name: "last_name", isRequired: true },
         { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street", isRequired: true },
         { label: "Provincia", options: provinceOptions, name: "province", isRequired: true },
-        cityApiFailed || (cityOptions.length === 0 && !loadingCities && data?.province)
-        ? { label: "Localidad", placeholder: "Ej: Córdoba Capital", name: "city", type: "text", isRequired: true, disabled: !data?.province }
-        : { label: "Localidad", options: cityOptions, name: "city", isRequired: true, disabled: loadingCities || !data?.province || cityOptions.length === 0 },
+        cityField,
         { label: "Email", placeholder: "Ej: ejemplo@gmail.com", name: "email", type: "email" },
         { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number", type: "text" },
-        { label: "CUIT", placeholder: "Ej: 20123456789", name: "cuit", type: "text", isRequired: false },
-        { label: "Razón Social", placeholder: "Ej: Empresa S.A.", name: "razon_social", type: "text", isRequired: false },
       ];
     }
+
+    // DNI layout (default)
+    return [
+      { label: "DNI", placeholder: "Ej: 39959950", name: "dni", type: "text", isRequired: true },
+      { label: "Nombre/s", placeholder: "Ej: Ángel Isaías", name: "first_name", isRequired: true },
+      { label: "Apellido/s", placeholder: "Ej: Vaquero", name: "last_name", isRequired: true },
+      { label: "Domicilio", placeholder: "Ej: Avenida Colón 3131", name: "street", isRequired: true },
+      { label: "Provincia", options: provinceOptions, name: "province", isRequired: true },
+      cityField,
+      { label: "Email", placeholder: "Ej: ejemplo@gmail.com", name: "email", type: "email" },
+      { label: "Teléfono", placeholder: "Ej: 3516909988", name: "phone_number", type: "text" },
+      { label: "CUIT", placeholder: "Ej: 20123456789", name: "cuit", type: "text", isRequired: false },
+      { label: "Razón Social", placeholder: "Ej: Empresa S.A.", name: "razon_social", type: "text", isRequired: false },
+    ];
   }, [idType, provinceOptions, cityOptions, loadingCities, cityApiFailed, data?.province]);
 
-  // Sanitizado + validaciones
   const handleChangeField = (name: string, raw: string) => {
     let value = raw;
-
     switch (name) {
       case "dni":
         value = clamp(onlyDigits(value), 9);
@@ -216,11 +214,11 @@ export default function OwnerForm({
       case "cuit":
         value = clamp(onlyDigits(value), 11);
         break;
+      case "passport_number":
+        value = clamp(value.replace(/[^A-Za-z0-9]/g, ""), 20);
+        break;
       case "razon_social":
         value = clamp(value, 100);
-        break;
-      case "street":
-        // Sin límite de caracteres
         break;
       case "phone_number":
         value = clamp(onlyDigits(value), 15);
@@ -238,12 +236,8 @@ export default function OwnerForm({
       default:
         break;
     }
-
     setData((prev: any) => ({ ...prev, [name]: value }));
-
-    if (name in PATTERN) {
-      validateOne(name, value);
-    }
+    if (name in PATTERN) validateOne(name, value);
   };
 
   const handleBlurField = (name: string) => {
@@ -251,7 +245,6 @@ export default function OwnerForm({
     validateOne(name, String(data?.[name] ?? ""));
   };
 
-  // limpiar errores owner_ cuando se resetea la búsqueda
   const clearOwnerErrors = () => {
     setErrors((prev: any) => {
       if (!prev) return prev;
@@ -260,6 +253,33 @@ export default function OwnerForm({
       return next;
     });
   };
+
+  const searchFieldLabel = docType === "cuit" ? "CUIT" : docType === "passport" ? "Número de Pasaporte" : "DNI";
+  const searchPlaceholder = docType === "cuit" ? "Ej: 20123456789" : docType === "passport" ? "Ej: AB123456" : "Ej: 39959950";
+  const searchDataKey = docType === "passport" ? "passport_number" : docType;
+  const apiDocType = docType === "passport" ? "PAS" : docType.toUpperCase();
+
+  const docTypeSelector = (
+    <div className="w-full max-w-2xl mb-2">
+      <label className="block text-xs sm:text-sm text-gray-700 mb-1 sm:mb-1.5">
+        T. de Documento
+      </label>
+      <select
+        value={docType}
+        onChange={(e) => {
+          setDocType(e.target.value as DocType);
+          setInitialIdType(null);
+        }}
+        className="w-full border border-[#DEDEDE] rounded-[4px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#0040B8]"
+      >
+        {DOC_TYPE_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
   return (
     <FormTemplate
@@ -278,36 +298,56 @@ export default function OwnerForm({
       fieldErrors={{
         email: errors?.owner_email,
       }}
-      // 🆕: búsqueda reutilizable dentro del template
       searchConfig={{
         enabled: true,
-        dataKey: "dni",
-        fieldLabel: "DNI o CUIT",
-        placeholder: "Ej: 39959950 o 20123456789",
+        dataKey: searchDataKey,
+        fieldLabel: searchFieldLabel,
+        placeholder: searchPlaceholder,
         inputType: "text",
-        sanitize: (s) => clamp(s, 50),
+        idleExtraContent: docTypeSelector,
+        sanitize: (s) => {
+          if (docType === "passport") return clamp(s.replace(/[^A-Za-z0-9]/g, ""), 20);
+          return clamp(s, 50);
+        },
         validate: (q) => {
+          if (docType === "passport") {
+            if (!q) return "Ingresá un número de pasaporte válido.";
+            if (!/^[A-Za-z0-9]{1,20}$/.test(q)) return "El pasaporte debe ser alfanumérico (máx. 20 caracteres).";
+            return null;
+          }
           const digits = onlyDigits(q);
-          if (!digits) return "Ingresá un DNI o CUIT válido.";
-          if (digits.length <= 9) return null; // DNI válido
-          if (digits.length === 11) return null; // CUIT válido
-          return "El DNI debe tener hasta 9 dígitos y el CUIT debe tener 11 dígitos.";
+          if (!digits) return `Ingresá un ${searchFieldLabel} válido.`;
+          if (docType === "dni") {
+            if (digits.length > 9) return "El DNI debe tener hasta 9 dígitos.";
+            return null;
+          }
+          if (docType === "cuit") {
+            if (digits.length !== 11) return "El CUIT debe tener exactamente 11 dígitos.";
+            return null;
+          }
+          return null;
         },
         buildUrl: (value) => {
-          const digits = onlyDigits(value);
-          return `/api/persons/get-persons-by-dni-or-cuit/${encodeURIComponent(digits)}`;
+          return `/api/persons/get-persons-by-dni-or-cuit/${encodeURIComponent(value)}?doc_type=${apiDocType}`;
         },
         mapFound: (payload, value) => {
           const p = Array.isArray(payload) ? payload[0] : payload;
-          const digits = onlyDigits(value);
-          const isCuit = digits.length === 11;
-          
-          // Guardar el tipo inicial basado en la búsqueda
-          setInitialIdType(isCuit ? "cuit" : "dni");
-          
-          if (isCuit) {
+          setInitialIdType(docType === "passport" ? "passport" : docType === "cuit" ? "cuit" : "dni");
+          if (docType === "passport") {
             return {
-              cuit: digits,
+              passport_number: value,
+              first_name: p?.first_name ?? "",
+              last_name: p?.last_name ?? "",
+              phone_number: p?.phone_number ?? "",
+              email: p?.email ?? "",
+              province: p?.province ?? p?.Province ?? "",
+              city: p?.city ?? "",
+              street: p?.street ?? "",
+            };
+          }
+          if (docType === "cuit") {
+            return {
+              cuit: value,
               razon_social: p?.razon_social ?? "",
               first_name: p?.first_name ?? "",
               last_name: p?.last_name ?? "",
@@ -318,45 +358,39 @@ export default function OwnerForm({
               city: p?.city ?? "",
               street: p?.street ?? "",
             };
-          } else {
-            return {
-              dni: digits,
-              first_name: p?.first_name ?? "",
-              last_name: p?.last_name ?? "",
-              cuit: p?.cuit ?? "",
-              razon_social: p?.razon_social ?? "",
-              phone_number: p?.phone_number ?? "",
-              email: p?.email ?? "",
-              province: p?.province ?? p?.Province ?? "",
-              city: p?.city ?? "",
-              street: p?.street ?? "",
-            };
           }
+          return {
+            dni: value,
+            first_name: p?.first_name ?? "",
+            last_name: p?.last_name ?? "",
+            cuit: p?.cuit ?? "",
+            razon_social: p?.razon_social ?? "",
+            phone_number: p?.phone_number ?? "",
+            email: p?.email ?? "",
+            province: p?.province ?? p?.Province ?? "",
+            city: p?.city ?? "",
+            street: p?.street ?? "",
+          };
         },
         mapNotFound: (value) => {
-          const digits = onlyDigits(value);
-          const isCuit = digits.length === 11;
-          
-          // Guardar el tipo inicial basado en la búsqueda
-          setInitialIdType(isCuit ? "cuit" : "dni");
-          
-          return isCuit ? { cuit: digits } : { dni: digits };
+          setInitialIdType(docType === "passport" ? "passport" : docType === "cuit" ? "cuit" : "dni");
+          if (docType === "passport") return { passport_number: value };
+          if (docType === "cuit") return { cuit: value };
+          return { dni: value };
         },
         notFoundStatus: 404,
         titleIdle: "Datos del Titular",
-        descIdle: "Ingresá el DNI o CUIT para traer los datos de la persona",
+        descIdle: "Ingresá el identificador para traer los datos de la persona",
         searchButtonLabel: "Buscar",
-        resetButtonLabel: "Buscar otro DNI/CUIT",
+        resetButtonLabel: `Buscar otro ${searchFieldLabel}`,
         onReset: () => {
           clearOwnerErrors();
-          setData({}); // volver a un estado limpio
-          setInitialIdType(null); // resetear el tipo inicial
+          setData({});
+          setInitialIdType(null);
+          setDocType("dni");
         },
-        onModeChange: (m) => {
-          // opcional: podrías setear descripciones dinámicas aquí si lo necesitás
-        },
+        onModeChange: (_m) => {},
       }}
-      // Si quisieras que, sin búsqueda, arranque en edit:
       defaultMode="edit"
     />
   );

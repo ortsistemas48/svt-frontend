@@ -677,7 +677,20 @@ export default function InspectionTable() {
                         label="Nombre"
                         value={formatPersonName(detailTarget.owner?.first_name, detailTarget.owner?.last_name)}
                       />
-                      <DetailRow label="DNI" value={detailTarget.owner?.dni || "-"} />
+                      <DetailRow
+                        label={
+                          detailTarget.owner?.dni
+                            ? "DNI"
+                            : detailTarget.owner?.passport_number
+                            ? "Pasaporte"
+                            : "Identificador"
+                        }
+                        value={
+                          detailTarget.owner?.dni ||
+                          detailTarget.owner?.passport_number ||
+                          "-"
+                        }
+                      />
                     </>
                   )}
                 </div>
@@ -702,7 +715,20 @@ export default function InspectionTable() {
                         label="Nombre"
                         value={formatPersonName(detailTarget.driver?.first_name, detailTarget.driver?.last_name)}
                       />
-                      <DetailRow label="DNI" value={detailTarget.driver?.dni || "-"} />
+                      <DetailRow
+                        label={
+                          detailTarget.driver?.dni
+                            ? "DNI"
+                            : detailTarget.driver?.passport_number
+                            ? "Pasaporte"
+                            : "Identificador"
+                        }
+                        value={
+                          detailTarget.driver?.dni ||
+                          detailTarget.driver?.passport_number ||
+                          "-"
+                        }
+                      />
                     </>
                   )}
                 </div>

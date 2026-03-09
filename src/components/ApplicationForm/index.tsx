@@ -422,17 +422,23 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
         }
 
         // Guardar titular
-        // Convertir strings vacíos a null para campos opcionales
+        const ownerDocType = currentOwner.passport_number?.trim()
+          ? "PAS"
+          : currentOwner.cuit?.trim()
+          ? "CUIT"
+          : "DNI";
         res = await fetch(`/api/applications/${applicationId}/owner`, {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            doc_type: ownerDocType,
             first_name: currentOwner.first_name?.trim() || null,
             last_name: currentOwner.last_name?.trim() || null,
             dni: currentOwner.dni?.trim() || null,
             cuit: currentOwner.cuit?.trim() || null,
             razon_social: currentOwner.razon_social?.trim() || null,
+            passport_number: currentOwner.passport_number?.trim() || null,
             phone: currentOwner.phone_number?.trim() || null,
             email: currentOwner.email?.trim() || null,
             province: currentOwner.province?.trim() || null,
@@ -452,17 +458,23 @@ export default function ApplicationForm({ applicationId, initialData }: Props) {
             body: JSON.stringify({ is_same_person: true }),
           });
         } else {
-          // Convertir strings vacíos a null para campos opcionales
+          const driverDocType = currentDriver.passport_number?.trim()
+            ? "PAS"
+            : currentDriver.cuit?.trim()
+            ? "CUIT"
+            : "DNI";
           res = await fetch(`/api/applications/${applicationId}/driver`, {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              doc_type: driverDocType,
               first_name: currentDriver.first_name?.trim() || null,
               last_name: currentDriver.last_name?.trim() || null,
               dni: currentDriver.dni?.trim() || null,
               cuit: currentDriver.cuit?.trim() || null,
               razon_social: currentDriver.razon_social?.trim() || null,
+              passport_number: currentDriver.passport_number?.trim() || null,
               phone: currentDriver.phone_number?.trim() || null,
               email: currentDriver.email?.trim() || null,
               province: currentDriver.province?.trim() || null,

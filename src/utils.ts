@@ -354,28 +354,25 @@ export async function fetchAdminUserData({
 }
 
 export function getMissingPersonFields(person: any): string[] {
-  // Detectar si es DNI o CUIT basado en los valores presentes
-  // Priorizar CUIT si está presente (persona jurídica)
   const cuit = person?.cuit || "";
   const dni = person?.dni || "";
+  const passport = person?.passport_number || "";
   const cuitDigits = onlyDigits(cuit);
   const dniDigits = onlyDigits(dni);
-  
-  // Si hay CUIT válido (11 dígitos), usar layout CUIT
+
   const isCuit = cuitDigits.length === 11;
-  // Si no hay CUIT pero hay DNI válido (hasta 9 dígitos), usar layout DNI
   const isDni = !isCuit && dniDigits.length > 0 && dniDigits.length <= 9;
+  const isPassport = !isCuit && passport.trim().length > 0;
 
   let requiredFields: string[];
-  
+
   if (isCuit) {
-    // Layout CUIT: cuit y razon_social obligatorios; first_name, last_name, dni opcionales
     requiredFields = ["cuit", "razon_social", "street", "province", "city"];
+  } else if (isPassport) {
+    requiredFields = ["passport_number", "first_name", "last_name", "street", "province", "city"];
   } else if (isDni) {
-    // Layout DNI: dni, first_name, last_name obligatorios; cuit y razon_social opcionales
     requiredFields = ["dni", "first_name", "last_name", "street", "province", "city"];
   } else {
-    // Por defecto, si no hay ninguno válido, usar layout DNI
     requiredFields = ["dni", "first_name", "last_name", "street", "province", "city"];
   }
 
@@ -388,6 +385,7 @@ export function getMissingPersonFields(person: any): string[] {
     street: "Domicilio",
     province: "Provincia",
     city: "Localidad",
+    passport_number: "Pasaporte",
   };
 
   return requiredFields

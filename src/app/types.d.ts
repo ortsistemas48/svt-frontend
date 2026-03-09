@@ -88,6 +88,7 @@ export type Application = {
     dni: string;
     cuit?: string;
     razon_social?: string;
+    passport_number?: string;
   } | null;
   driver: {
     first_name: string;
@@ -95,6 +96,7 @@ export type Application = {
     dni: string;
     cuit?: string;
     razon_social?: string;
+    passport_number?: string;
   } | null;
   date: string;
   status: ApplicationStatus;
