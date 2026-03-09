@@ -237,18 +237,22 @@ export default function FormTemplate({
           </header>
         )}
 
-        {searchConfig.idleExtraContent}
-
         <div className="w-full max-w-2xl">
-          <label htmlFor="search-input" className="block text-xs sm:text-sm text-gray-700 mb-1 sm:mb-1.5">
-            {searchConfig.fieldLabel}
-          </label>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              id="search-input"
-              type={searchConfig.inputType ?? "text"}
-              placeholder={searchConfig.placeholder ?? ""}
-              className={`flex-1 border rounded-[4px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]`}
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+            {searchConfig.idleExtraContent && (
+              <div className="w-full sm:w-auto sm:min-w-[120px] shrink-0 flex flex-col">
+                {searchConfig.idleExtraContent}
+              </div>
+            )}
+            <div className="flex-1 min-w-0 flex flex-col">
+              <label htmlFor="search-input" className="block text-xs sm:text-sm text-gray-700 mb-1 sm:mb-1.5">
+                {searchConfig.fieldLabel}
+              </label>
+              <input
+                id="search-input"
+                type={searchConfig.inputType ?? "text"}
+                placeholder={searchConfig.placeholder ?? ""}
+                className={`w-full border rounded-[4px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 border-[#DEDEDE] focus:ring-[#0040B8]`}
               value={query}
               onChange={(e) => {
                 const raw = e.target.value;
@@ -265,6 +269,7 @@ export default function FormTemplate({
               }}
               disabled={isSearching}
             />
+            </div>
             <button
               type="button"
               onClick={doSearch}

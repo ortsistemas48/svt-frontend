@@ -260,7 +260,7 @@ export default function OwnerForm({
   const apiDocType = docType === "passport" ? "PAS" : docType.toUpperCase();
 
   const docTypeSelector = (
-    <div className="w-full max-w-2xl mb-2">
+    <div className="w-full sm:w-auto sm:min-w-[120px]">
       <label className="block text-xs sm:text-sm text-gray-700 mb-1 sm:mb-1.5">
         T. de Documento
       </label>
