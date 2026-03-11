@@ -79,14 +79,15 @@ export default function FileHistoryTable({ workshopId, searchQuery = "" }: { wor
       
       const data = await res.json();
       const items = data.items ?? [];
-      
       const formattedItems: SearchHistoryItem[] = items.map((item: any) => ({
         id: item.application_id,
         applicationId: item.application_id,
         vehiclePlate: item.car?.license_plate || "-",
         vehicleModel: item.car?.model || "-",
         userName: item.owner ? item.owner.cuit ? item.owner.razon_social : item.owner.first_name + " " + item.owner.last_name : "-",
-        userIdentity: item.owner?.cuit ? item.owner?.cuit : item.owner?.dni || "-",
+        userIdentity: item.owner?.cuit
+          ? item.owner.cuit
+          : (item.owner?.dni || item.owner?.passport_number || "-"),
         searchDate: formatDate(item.date),
         status: item.status,
         result: item.result_2 || item.result || null,
