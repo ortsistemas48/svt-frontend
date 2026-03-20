@@ -1,12 +1,91 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import Spinner from "@/components/Spinner"; 
 import Link from "next/link";
+
+const PHRASES = [
+  "más simple.",
+  "más claro.",
+  "más seguro.",
+  "más preciso.",
+  "más confiable.",
+  "más consistente.",
+  "más prolijo.",
+  "más controlado.",
+  "más escalable.",
+  "más automático.",
+  "más moderno.",
+  "más práctico.",
+  "más fluido.",
+  "más estable.",
+  "más rentable.",
+  "más económico.",
+  "más profesional.",
+  "más optimizado.",
+  "más ágil para el equipo.",
+];
+
+const TypewriterTyped = memo(function TypewriterTyped() {
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [typed, setTyped] = useState("");
+
+  useEffect(() => {
+    const current = PHRASES[phraseIndex] || "";
+    const isDone = typed.length === current.length;
+
+    const timeout = window.setTimeout(() => {
+      if (!isDone) {
+        setTyped(current.slice(0, typed.length + 1));
+      } else {
+        const next = (phraseIndex + 1) % PHRASES.length;
+        setPhraseIndex(next);
+        setTyped("");
+      }
+    }, isDone ? 1300 : 110);
+
+    return () => clearTimeout(timeout);
+  }, [typed, phraseIndex]);
+
+  return <span className="font-medium text-[#0040B8]">{typed || "\u00A0"}</span>;
+});
+
+const Header = memo(function Header() {
+  return (
+    <div className="shrink-0 flex flex-col items-center -mt-2">
+      <Image
+        src="/images/logo.svg"
+        alt="CheckRTO"
+        width={160}
+        height={32}
+        className="mx-auto"
+      />
+      <p className="text-lg text-gray-700 mt-5 h-8">
+        Hacé tu taller {" "}
+        <TypewriterTyped />
+        <span className="inline-block w-[6px] h-[22px] ml-1 align-middle bg-[#0040B8] animate-pulse" />
+      </p>
+    </div>
+  );
+});
+
+const Footer = memo(function Footer() {
+  return (
+    <div className="shrink-0 pt-6">
+      <Link
+        href="/register-owner"
+        className="text-sm block text-[#00000099] hover:underline"
+      >
+        ¿No Tienes Cuenta?{" "}
+        <span className="text-[#0040B8] underline font-normal">Regístrate</span>
+      </Link>
+    </div>
+  );
+});
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,35 +96,25 @@ export default function LoginForm() {
   const { user } = useUser();
   const router = useRouter();
   const [checking, setChecking] = useState(true);
-  const phrases = useMemo(
-    () => ["más simple.", "más claro.", "más seguro.", "más preciso.", "más confiable.", "más consistente.", "más prolijo.", "más controlado.", "más escalable.", "más automático.", "más moderno.", "más práctico.", "más fluido.", "más estable.", "más rentable.", "más económico.", "más profesional.", "más optimizado.", "más ágil para el equipo."],
+
+  const handleTogglePassword = useCallback(() => {
+    setShowPassword((p) => !p);
+  }, []);
+
+  const handleEmailChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setEmailOrDni(e.target.value),
     []
   );
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [typed, setTyped] = useState("");
+
+  const handlePasswordChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value),
+    []
+  );
 
   useEffect(() => {
     if (user === null) setChecking(false);
     else if (user) router.push("/select-workshop");
   }, [user, router]);
-
-  // Typewriter effect para el slogan
-  useEffect(() => {
-    const current = phrases[phraseIndex] || "";
-    const isDone = typed.length === current.length;
-
-    const timeout = setTimeout(() => {
-      if (!isDone) {
-        setTyped(current.slice(0, typed.length + 1));
-      } else {
-        const next = (phraseIndex + 1) % phrases.length;
-        setPhraseIndex(next);
-        setTyped("");
-      }
-    }, isDone ? 1300 : 110);
-
-    return () => clearTimeout(timeout);
-  }, [typed, phraseIndex, phrases]);
 
   if (checking || user) return null;
 
@@ -120,22 +189,7 @@ export default function LoginForm() {
   return (
 <div className="w-full max-w-md px-6 py-14 text-center flex flex-col max-h-[calc(100dvh-2rem)] border border-[#DEDEDE] rounded-[14px]">
   {/* Header fijo (sin overflow, no se corta) */}
-  <div className="shrink-0 flex flex-col items-center -mt-2">
-    <Image
-      src="/images/logo.svg"
-      alt="CheckRTO"
-      width={160}
-      height={32}
-      className="mx-auto"
-    />
-    <p className="text-lg text-gray-700 mt-5 h-8">
-      Hacé tu taller {" "}
-      <span className="font-medium text-[#0040B8]">
-        {typed || "\u00A0"}
-      </span>
-      <span className="inline-block w-[6px] h-[22px] ml-1 align-middle bg-[#0040B8] animate-pulse" />
-    </p>
-  </div>
+  <Header />
 
   {/* Contenido con scroll interno */}
   <div className="flex-1 overflow-auto -mx-1 px-1">
@@ -146,7 +200,7 @@ export default function LoginForm() {
           placeholder="Correo electrónico o DNI"
           className="mb-5 text-sm w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 focus:outline-none focus:border-[#0040B8] focus:ring-1 focus:ring-[#0040B8] focus:ring-offset-0"
           value={emailOrDni}
-          onChange={(e) => setEmailOrDni(e.target.value)}
+          onChange={handleEmailChange}
           disabled={submitting}
         />
 
@@ -156,12 +210,12 @@ export default function LoginForm() {
             placeholder="Contraseña"
             className="w-full border border-[#DEDEDE] rounded-[14px] px-5 py-3 pr-10 text-sm focus:outline-none focus:border-[#0040B8] focus:ring-1 focus:ring-[#0040B8] focus:ring-offset-0"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
             disabled={submitting}
           />
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
+            onClick={handleTogglePassword}
             className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500"
             disabled={submitting}
             aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
@@ -201,14 +255,7 @@ export default function LoginForm() {
   </div>
 
   {/* Footer fijo (links abajo) */}
-  <div className="shrink-0 pt-6">
-    <Link
-      href="/register-owner"
-      className="text-sm block text-[#00000099] hover:underline"
-    >
-      ¿No Tienes Cuenta? <span className="text-[#0040B8] underline font-normal">Regístrate</span>
-    </Link>
-  </div>
+  <Footer />
 </div>
 
     
