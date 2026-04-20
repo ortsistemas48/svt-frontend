@@ -113,6 +113,25 @@ export default function InspectionTable() {
     return parts.length ? parts.join(" ") : "-";
   };
 
+  const ownerIsSameAsDriver = (
+    owner: Application["owner"] | null | undefined,
+    driver: Application["driver"] | null | undefined
+  ) => {
+    if (!owner || !driver) return false;
+    const norm = (v: string | number | null | undefined) =>
+      v === null || v === undefined ? "" : String(v).trim();
+    const cuitO = norm(owner.cuit);
+    const cuitD = norm(driver.cuit);
+    if (cuitO && cuitD && cuitO === cuitD) return true;
+    const dniO = norm(owner.dni);
+    const dniD = norm(driver.dni);
+    if (dniO && dniD && dniO === dniD) return true;
+    const passO = norm(owner.passport_number);
+    const passD = norm(driver.passport_number);
+    if (passO && passD && passO === passD) return true;
+    return false;
+  };
+
   const getResultTone = (result?: Application["result"] | null) => {
     if (!result) return DEFAULT_RESULT_TONE;
     return RESULT_TONES[result] || DEFAULT_RESULT_TONE;
@@ -693,46 +712,50 @@ export default function InspectionTable() {
                       />
                     </>
                   )}
+                  <DetailRow label="Email" value={detailTarget.owner?.email || "-"} />
                 </div>
               </section>
 
-              <section>
-                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
-                  Conductor
-                </h3>
-                <div className="space-y-2 text-sm text-gray-700">
-                  {detailTarget.driver?.cuit ? (
-                    <>
-                      <DetailRow
-                        label="Razón Social"
-                        value={detailTarget.driver?.razon_social || "-"}
-                      />
-                      <DetailRow label="CUIT" value={detailTarget.driver?.cuit || "-"} />
-                    </>
-                  ) : (
-                    <>
-                      <DetailRow
-                        label="Nombre"
-                        value={formatPersonName(detailTarget.driver?.first_name, detailTarget.driver?.last_name)}
-                      />
-                      <DetailRow
-                        label={
-                          detailTarget.driver?.dni
-                            ? "DNI"
-                            : detailTarget.driver?.passport_number
-                            ? "Pasaporte"
-                            : "Identificador"
-                        }
-                        value={
-                          detailTarget.driver?.dni ||
-                          detailTarget.driver?.passport_number ||
-                          "-"
-                        }
-                      />
-                    </>
-                  )}
-                </div>
-              </section>
+              {detailTarget.driver && !ownerIsSameAsDriver(detailTarget.owner, detailTarget.driver) ? (
+                <section>
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                    Conductor
+                  </h3>
+                  <div className="space-y-2 text-sm text-gray-700">
+                    {detailTarget.driver.cuit ? (
+                      <>
+                        <DetailRow
+                          label="Razón Social"
+                          value={detailTarget.driver.razon_social || "-"}
+                        />
+                        <DetailRow label="CUIT" value={detailTarget.driver.cuit || "-"} />
+                      </>
+                    ) : (
+                      <>
+                        <DetailRow
+                          label="Nombre"
+                          value={formatPersonName(detailTarget.driver.first_name, detailTarget.driver.last_name)}
+                        />
+                        <DetailRow
+                          label={
+                            detailTarget.driver.dni
+                              ? "DNI"
+                              : detailTarget.driver.passport_number
+                              ? "Pasaporte"
+                              : "Identificador"
+                          }
+                          value={
+                            detailTarget.driver.dni ||
+                            detailTarget.driver.passport_number ||
+                            "-"
+                          }
+                        />
+                      </>
+                    )}
+                    <DetailRow label="Email" value={detailTarget.driver.email || "-"} />
+                  </div>
+                </section>
+              ) : null}
 
               <section>
                 <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
@@ -782,6 +805,10 @@ export default function InspectionTable() {
                     </>
                   )}
                 </div>
+                <section className="border-t border-gray-200 pt-6">
+
+                <DetailRow label="Fecha de vencimiento" value={formatDateTime(detailTarget.inspection_expiration_date)} />
+                </section>
               </section>
 
               {/* Oblea asignada */}

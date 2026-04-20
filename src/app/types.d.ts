@@ -89,6 +89,7 @@ export type Application = {
     cuit?: string;
     razon_social?: string;
     passport_number?: string;
+    email?: string;
   } | null;
   driver: {
     first_name: string;
@@ -97,6 +98,7 @@ export type Application = {
     cuit?: string;
     razon_social?: string;
     passport_number?: string;
+    email?: string;
   } | null;
   date: string;
   status: ApplicationStatus;
@@ -109,6 +111,7 @@ export type Application = {
   inspection_2_date?: string | null;
   user_name?: string | null;
   sticker_number?: string | null;
+  inspection_expiration_date?: string | null;
 };
 
 type ApplicationStatus = "Completado" | "En curso" | "Pendiente" | "A Inspeccionar" | "Emitir CRT" | "Segunda Inspección" | "Abandonado";
