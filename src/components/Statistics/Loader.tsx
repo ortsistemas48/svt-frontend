@@ -9,6 +9,7 @@ import {
   fetchUsageTypes,
   fetchCommonErrors,
   fetchUpcomingExpirations,
+  fetchLostStickers,
 } from "@/utils";
 
 interface StatisticsLoaderProps {
@@ -38,6 +39,7 @@ export default async function StatisticsLoader({
     usageTypes,
     commonErrors,
     expirations,
+    lostStickers,
   ] = await Promise.all([
     fetchStatisticsOverview(workshopId, from, to) as Promise<Overview>,
     fetchStatisticsOverview(workshopId, prevFrom, prevTo) as Promise<Overview>,
@@ -50,6 +52,7 @@ export default async function StatisticsLoader({
     fetchUsageTypes(workshopId, from, to) as Promise<any>,
     fetchCommonErrors(workshopId, from, to, 3) as Promise<any>,
     fetchUpcomingExpirations(workshopId, 20) as Promise<any>,
+    fetchLostStickers(workshopId, from, to) as Promise<any>,
   ]);
 
   const topModels: TopModels = {
@@ -77,6 +80,7 @@ export default async function StatisticsLoader({
       usageTypes={usageTypes as any}
       commonErrors={commonErrors as any}
       expirations={expirations as any}
+      lostStickers={lostStickers as any}
     />
   );
 }

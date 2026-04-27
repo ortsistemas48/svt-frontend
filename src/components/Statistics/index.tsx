@@ -24,6 +24,7 @@ export type TopBrands = { items: { brand: string; count: number }[]; total: numb
 export type UsageTypes = { items: { use_type: string; count: number }[]; total: number };
 export type CommonErrors = { items: { step_name: string; count: number; percentage: number }[]; total: number };
 export type Expirations = { items: { license_plate: string; contact: string; days_until: number; expiration_date: string }[]; total: number };
+export type LostStickers = { count: number };
 
 /* ===========================
    UI helpers
@@ -410,6 +411,7 @@ export default function Statistics({
   usageTypes,
   commonErrors,
   expirations,
+  lostStickers,
 }: {
   workshopId: number;
   from: string;
@@ -425,6 +427,7 @@ export default function Statistics({
   usageTypes?: UsageTypes;
   commonErrors?: CommonErrors;
   expirations?: Expirations;
+  lostStickers?: LostStickers;
 }) {
   // Defensivos por si vienen nulos o incompletos
   const safeOverview = overview ?? ({
@@ -628,7 +631,8 @@ export default function Statistics({
     (results?.items?.length ?? 0) > 0 ||
     (status?.items?.length ?? 0) > 0 ||
     (topModels?.items?.length ?? 0) > 0 ||
-    (daily?.items?.length ?? 0) > 0;
+    (daily?.items?.length ?? 0) > 0 ||
+    (lostStickers?.count ?? 0) > 0;
 
   return (
     <div className="bg-white">
@@ -670,7 +674,7 @@ export default function Statistics({
         )}
 
         {/* KPIs estilo tarjeta con icono */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8 px-1 sm:px-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8 px-1 sm:px-0">
           <Card>
             <div className="relative p-4 sm:p-5">
               <div className="absolute top-3 right-3 h-7 w-7 sm:h-8 sm:w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
@@ -719,6 +723,19 @@ export default function Statistics({
               <p className="mt-2 text-xl sm:text-2xl text-gray-900">{conditionalRate}%</p>
               <div className="mt-1 text-[10px] sm:text-[11px]">
                 <DeltaInverted value={conditionalDelta} />
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="relative p-4 sm:p-5">
+              <div className="absolute top-3 right-3 h-7 w-7 sm:h-8 sm:w-8 rounded-[14px] bg-blue-50 ring-1 ring-blue-100 flex items-center justify-center">
+                <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-[#1f63ff]" />
+              </div>
+              <p className="text-[10px] sm:text-xs text-gray-500">Obleas perdidas</p>
+              <p className="mt-2 text-xl sm:text-2xl text-gray-900">{lostStickers?.count ?? 0}</p>
+              <div className="mt-1 text-[10px] sm:text-[11px] text-gray-500">
+                En el intervalo seleccionado
               </div>
             </div>
           </Card>

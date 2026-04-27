@@ -82,6 +82,10 @@ export type StatsTopModels = {
   total_models: number
 }
 
+export type StatsLostStickers = {
+  count: number
+}
+
 function q(params: Record<string, string | number | undefined>) {
   const usp = new URLSearchParams()
   Object.entries(params).forEach(([k, v]) => {
@@ -235,6 +239,19 @@ export async function fetchUpcomingExpirations(
     return await res.json();
   } catch {
     return { items: [], total: 0 };
+  }
+}
+
+export async function fetchLostStickers(workshopId: number, from: string, to: string): Promise<StatsLostStickers> {
+  const url = `/api/statistics/workshop/${workshopId}/lost-stickers${q({ from, to })}`
+
+  try {
+    const res = await apiFetch(url, { method: "GET", cache: "no-store" })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return res.json()
+  } catch (error) {
+    console.error("fetchLostStickers failed:", error)
+    return { count: 0 }
   }
 }
 
