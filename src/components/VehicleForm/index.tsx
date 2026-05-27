@@ -2,6 +2,7 @@
 
 import FormField from "@/components/PersonFormField";
 import { useApplication } from "@/context/ApplicationContext";
+import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   alnumSpaceUpper,
@@ -119,6 +120,21 @@ const FIELD_LABEL: Record<string, string> = {
   insurance: "Póliza del seguro",
 };
 
+const USAGE_TYPE_OPTIONS = [
+  { value: "A", label: "A - Oficial" },
+  { value: "B", label: "B - Diplomático, Consular u Org. Internacional" },
+  { value: "C", label: "C - Particular" },
+  { value: "D", label: "D - De alquiler / alquiler con chofer (Taxi - Remis)" },
+  { value: "E", label: "E - Transporte público de pasajeros" },
+  { value: "E1", label: "E1 - Servicio internacional (regular y turismo); larga distancia y urbanos cat. M1, M2, M3" },
+  { value: "E2", label: "E2 - Interjurisdiccional y jurisdiccional; regulares/turismo cat. M1, M2, M3" },
+  { value: "F", label: "F - Transporte escolar" },
+  { value: "G", label: "G - Cargas (generales/peligrosas), recolección, carretones, servicios industriales y trabajos sobre la vía pública" },
+  { value: "H", label: "H - Emergencia, seguridad, fúnebres, remolque, maquinaria especial o agrícola y trabajos sobre la vía pública" },
+];
+
+const TDF_USAGE_TYPE_D_LABEL = "D - De alquiler / con chofer (Taxi, Remis, STUPPE)";
+
 /* --------- Componente --------- */
 export default function VehicleForm({
   car,
@@ -130,6 +146,30 @@ export default function VehicleForm({
   ownerDni,
 }: VehicleFormProps) {
   const { setIsIdle, errors, setErrors } = useApplication() as any;
+  const { id: workshopId } = useParams<{ id: string }>();
+  const [workshopProvince, setWorkshopProvince] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchWorkshopProvince = async () => {
+      if (!workshopId) return;
+      try {
+        const res = await fetch(`/api/workshops/${workshopId}`, { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        setWorkshopProvince(data.province ?? null);
+      } catch {
+        // Si falla la carga, se mantiene el texto por defecto
+      }
+    };
+    fetchWorkshopProvince();
+  }, [workshopId]);
+
+  const usageTypeOptions = useMemo(() => {
+    if (workshopProvince !== "Tierra del Fuego") return USAGE_TYPE_OPTIONS;
+    return USAGE_TYPE_OPTIONS.map((opt) =>
+      opt.value === "D" ? { ...opt, label: TDF_USAGE_TYPE_D_LABEL } : opt
+    );
+  }, [workshopProvince]);
 
   const greenCardNoExpiration =
     car?.green_card_no_expiration === true ||
@@ -657,18 +697,7 @@ export default function VehicleForm({
                     <FormField
                       label="Tipo de uso"
                       type="select"
-                      options={[
-                        { value: "A", label: "A - Oficial" },
-                        { value: "B", label: "B - Diplomático, Consular u Org. Internacional" },
-                        { value: "C", label: "C - Particular" },
-                        { value: "D", label: "D - De alquiler / alquiler con chofer (Taxi - Remis)" },
-                        { value: "E", label: "E - Transporte público de pasajeros" },
-                        { value: "E1", label: "E1 - Servicio internacional (regular y turismo); larga distancia y urbanos cat. M1, M2, M3" },
-                        { value: "E2", label: "E2 - Interjurisdiccional y jurisdiccional; regulares/turismo cat. M1, M2, M3" },
-                        { value: "F", label: "F - Transporte escolar" },
-                        { value: "G", label: "G - Cargas (generales/peligrosas), recolección, carretones, servicios industriales y trabajos sobre la vía pública" },
-                        { value: "H", label: "H - Emergencia, seguridad, fúnebres, remolque, maquinaria especial o agrícola y trabajos sobre la vía pública" },
-                      ]}
+                      options={usageTypeOptions}
                       name="usage_type"
                       isOwner={true}
                       value={car?.["usage_type"] ?? ""}
