@@ -10,7 +10,6 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { getProvinces, getLocalidadesByProvincia } from "@/utils";
 
-/** Provincias - will be loaded from API */
 const PROVINCES_STATIC = [
   "Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes",
   "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones",
