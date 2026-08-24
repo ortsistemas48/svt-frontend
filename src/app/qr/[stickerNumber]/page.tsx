@@ -25,6 +25,12 @@ function fmtDate(d?: string | null) {
 
 export default async function QrPage({ params }: { params: Promise<{ stickerNumber: string }> }) {
   const { stickerNumber } = await params;
+  let displaySticker = stickerNumber;
+  try {
+    displaySticker = decodeURIComponent(stickerNumber).replace(/%20/gi, " ");
+  } catch {
+    displaySticker = stickerNumber.replace(/%20/gi, " ");
+  }
   
   let qrData;
   try {
@@ -35,7 +41,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg font-semibold text-zinc-800 mb-2">Oblea no encontrada</p>
-          <p className="text-sm text-zinc-600">No se encontró información para la oblea {stickerNumber}</p>
+          <p className="text-sm text-zinc-600">No se encontró información para la oblea {displaySticker}</p>
         </div>
       </div>
     );
@@ -46,7 +52,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg font-semibold text-zinc-800 mb-2">Oblea no encontrada</p>
-          <p className="text-sm text-zinc-600">No se encontró información para la oblea {stickerNumber}</p>
+          <p className="text-sm text-zinc-600">No se encontró información para la oblea {displaySticker}</p>
         </div>
       </div>
     );

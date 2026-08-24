@@ -727,7 +727,16 @@ export const alnumSpaceUpper = (s: string) => toUpper(s).replace(/[^A-Z0-9\s]/g,
 export const lettersSpaceUpper = (s: string) => toUpper(s).replace(/[^A-ZÁÉÍÓÚÑÜ\s-]/g, "");
 
 export async function fetchQrData(stickerNumber: string) {
-  const res = await apiFetch(`/api/qr/get-qr-data/${encodeURIComponent(stickerNumber)}`);
+  let value = stickerNumber ?? "";
+  try {
+    value = decodeURIComponent(value);
+  } catch {
+    // el param ya vino decodificado
+  }
+  value = value.replace(/%20/gi, " ").trim();
+  const res = await apiFetch(
+    `/api/qr/get-qr-data?sticker_number=${encodeURIComponent(value)}`
+  );
   if (!res.ok) {
     const errorText = await res.text();
     throw new Error(errorText || "No se pudo cargar el dato del QR"); 
