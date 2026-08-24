@@ -2,14 +2,26 @@
 
 import { ChevronRight, ScrollText, Search, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import StickerOrdersTable from "@/components/StickerOrdersTable";
 
 export default function BuyObleaPage() {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const success = searchParams.get("success");
+    if (success) {
+      setSuccessMessage(success);
+      router.replace(`/dashboard/${id}/stickers`, { scroll: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSearch = () => {
     // La búsqueda se pasará al componente StickerOrdersTable
@@ -77,7 +89,7 @@ export default function BuyObleaPage() {
           </div>
         </div>
 
-        <StickerOrdersTable externalSearchQuery={searchQuery} />
+        <StickerOrdersTable externalSearchQuery={searchQuery} initialSuccessMessage={successMessage} />
       </div>
     </div>
   );

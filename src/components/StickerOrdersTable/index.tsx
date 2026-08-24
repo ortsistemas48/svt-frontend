@@ -22,7 +22,13 @@ type StickerOrder = {
 
 const TABLE_FILTERS = ["Todos", "Con disponibles", "Sin disponibles"];
 
-export default function StickerOrdersTable({ externalSearchQuery = "" }: { externalSearchQuery?: string }) {
+export default function StickerOrdersTable({
+  externalSearchQuery = "",
+  initialSuccessMessage = null,
+}: {
+  externalSearchQuery?: string;
+  initialSuccessMessage?: string | null;
+}) {
   const { id } = useParams(); // workshop id desde la ruta /dashboard/[id]
   const router = useRouter();
 
@@ -76,6 +82,10 @@ export default function StickerOrdersTable({ externalSearchQuery = "" }: { exter
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    if (initialSuccessMessage) setSuccessMsg(initialSuccessMessage);
+  }, [initialSuccessMessage]);
 
   // filtro en cliente
   const filtered = useMemo(() => {

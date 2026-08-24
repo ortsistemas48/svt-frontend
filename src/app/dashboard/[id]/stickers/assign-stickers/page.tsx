@@ -20,14 +20,6 @@ const API = "/api";
 /* ===================== Tipos ===================== */
 type RangeInput = { id: string; lead: string; start: string; end: string; };
 
-type Group = {
-  id: string;
-  name: string;
-  ranges: RangeInput[];
-  obleas: string[];
-  createdAt: string;
-};
-
 type CreateOrderResponse = {
   ok: boolean;
   order: {
@@ -92,10 +84,8 @@ export default function AsignarObleasPage() {
   const [groupName, setGroupName] = useState("");
   const [ranges, setRanges] = useState<RangeInput[]>([{ id: uid(), lead: "", start: "", end: "" }]);
 
-  const [groups, setGroups] = useState<Group[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [errMsg, setErrMsg] = useState<string | null>(null);
-  const [okMsg, setOkMsg] = useState<string | null>(null);
 
   const calculatedQty = useMemo(() => {
     return ranges.reduce((acc, r) => {
@@ -133,7 +123,6 @@ export default function AsignarObleasPage() {
 
   const saveGroup = async () => {
     setErrMsg(null);
-    setOkMsg(null);
     if (!canSave) return;
 
     try {
@@ -159,20 +148,10 @@ export default function AsignarObleasPage() {
 
       const data: CreateOrderResponse = await res.json();
 
-      const newGroup: Group = {
-        id: String(data.order.id),
-        name: data.order.name,
-        ranges,
-        obleas: preview.items,
-        createdAt: data.order.created_at || new Date().toISOString(),
-      };
-      setGroups((prev) => [newGroup, ...prev]);
-
       let msg = `Orden creada, ${data.inserted} obleas insertadas`;
       if (data.duplicates?.length) msg += `, ${data.duplicates.length} duplicadas`;
-      setOkMsg(msg);
 
-      resetForm();
+      router.push(`/dashboard/${workshopId}/stickers?success=${encodeURIComponent(msg)}`);
     } catch (err: any) {
       setErrMsg(err?.message || "Error al guardar la orden");
     } finally {
@@ -199,18 +178,11 @@ export default function AsignarObleasPage() {
             Creá packs de obleas, generá las obleas que necesitás y guardalas para usarlas.
           </p>
         </div>
-        {(errMsg || okMsg) && (
+        {errMsg && (
           <div className="mb-4 mx-1 sm:mx-0">
-            {errMsg && (
-              <div className="rounded-[4px] border border-rose-300 bg-rose-50 text-rose-700 px-3 py-2 text-xs sm:text-sm">
-                {errMsg}
-              </div>
-            )}
-            {okMsg && (
-              <div className="rounded-[4px] border border-emerald-300 bg-emerald-50 text-emerald-700 px-3 py-2 text-xs sm:text-sm">
-                {okMsg}
-              </div>
-            )}
+            <div className="rounded-[4px] border border-rose-300 bg-rose-50 text-rose-700 px-3 py-2 text-xs sm:text-sm">
+              {errMsg}
+            </div>
           </div>
         )}
 
@@ -260,7 +232,7 @@ export default function AsignarObleasPage() {
                         <label className="block text-xs text-gray-600 mb-1">Prefijo (opcional)</label>
                         <input
                           value={r.lead}
-                          onChange={(e) => updateRange(r.id, { lead: e.target.value.toUpperCase() })}
+                          onChange={(e) => updateRange(r.id, { lead: e.target.value.toUpperCase().trim() })}
                           className="w-full rounded-[4px] border border-gray-300 px-2 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent uppercase"
                           placeholder="RA"
                         />
@@ -270,7 +242,7 @@ export default function AsignarObleasPage() {
                         <label className="block text-xs text-gray-600 mb-1">Desde</label>
                         <input
                           value={r.start}
-                          onChange={(e) => updateRange(r.id, { start: e.target.value })}
+                          onChange={(e) => updateRange(r.id, { start: e.target.value.trim() })}
                           className="w-full rounded-[4px] border border-gray-300 px-2 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
                           placeholder="0001"
                           inputMode="numeric"
@@ -283,7 +255,7 @@ export default function AsignarObleasPage() {
                         <label className="block text-xs text-gray-600 mb-1">Hasta</label>
                         <input
                           value={r.end}
-                          onChange={(e) => updateRange(r.id, { end: e.target.value })}
+                          onChange={(e) => updateRange(r.id, { end: e.target.value.trim() })}
                           className="w-full rounded-[4px] border border-gray-300 px-2 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#0040B8] focus:border-transparent"
                           placeholder="0050"
                           inputMode="numeric"
@@ -357,20 +329,6 @@ export default function AsignarObleasPage() {
             </div>
           </div>
         </section>
-
-        {groups.length > 0 && (
-          <div className="mt-6 sm:mt-8 mx-1 sm:mx-0">
-            <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2">Últimos packs de obleas creados</h3>
-            <ul className="space-y-2">
-              {groups.map((g) => (
-                <li key={g.id} className="rounded border border-gray-200 p-3 text-xs sm:text-sm">
-                  <div className="font-medium">{g.name}</div>
-                  <div className="text-gray-500">{g.obleas.length} obleas</div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
 
         <div className="mt-6 sm:mt-8 flex justify-center px-1 sm:px-0">
           <button
