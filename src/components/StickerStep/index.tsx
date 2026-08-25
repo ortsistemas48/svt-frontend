@@ -703,7 +703,7 @@ export default function StickerStep({ workshopId, car, setCar }: Props) {
                           type="text"
                           value={manualPrefix}
                           onChange={(e) =>
-                            setManualPrefix(e.target.value.toUpperCase())
+                            setManualPrefix(e.target.value.toUpperCase().trim())
                           }
                           className="border rounded-[6px] px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#0040B8] border-[#DEDEDE] transition-all"
                           placeholder="Ej: ABC"
