@@ -13,6 +13,7 @@ import {
   toUpper,
 } from "../../utils";
 import VehicleDocsDropzone, { type ExistingDoc as CarExistingDoc } from "@/components/VehicleDocsDropzone";
+import { USAGE_TYPE_OPTIONS, TDF_USAGE_TYPE_D_LABEL } from "@/lib/usageTypes";
 import { Car, Settings, FileText, Clipboard } from "lucide-react";
 
 interface VehicleFormProps {
@@ -119,21 +120,6 @@ const FIELD_LABEL: Record<string, string> = {
   license_expiration: "Exp. de la licencia",
   insurance: "Póliza del seguro",
 };
-
-const USAGE_TYPE_OPTIONS = [
-  { value: "A", label: "A - Oficial" },
-  { value: "B", label: "B - Diplomático, Consular u Org. Internacional" },
-  { value: "C", label: "C - Particular" },
-  { value: "D", label: "D - De alquiler / alquiler con chofer (Taxi - Remis)" },
-  { value: "E", label: "E - Transporte público de pasajeros" },
-  { value: "E1", label: "E1 - Servicio internacional (regular y turismo); larga distancia y urbanos cat. M1, M2, M3" },
-  { value: "E2", label: "E2 - Interjurisdiccional y jurisdiccional; regulares/turismo cat. M1, M2, M3" },
-  { value: "F", label: "F - Transporte escolar" },
-  { value: "G", label: "G - Cargas (generales/peligrosas), recolección, carretones, servicios industriales y trabajos sobre la vía pública" },
-  { value: "H", label: "H - Emergencia, seguridad, fúnebres, remolque, maquinaria especial o agrícola y trabajos sobre la vía pública" },
-];
-
-const TDF_USAGE_TYPE_D_LABEL = "D - De alquiler / con chofer (Taxi, Remis, STUPPE)";
 
 /* --------- Componente --------- */
 export default function VehicleForm({

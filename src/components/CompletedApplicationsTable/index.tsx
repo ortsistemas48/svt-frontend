@@ -151,6 +151,7 @@ export default function CompletedApplicationsTable({ externalSearchQuery = "" }:
       }
 
       const data: ApiResponse = await res.json();
+      console.log("Fetched applications data:", data);
       // Check if data and applications exist before filtering
       if (data && Array.isArray(data.applications
       )) {
@@ -564,6 +565,9 @@ export default function CompletedApplicationsTable({ externalSearchQuery = "" }:
                 item.owner?.dni ||
                 item.owner?.passport_number ||
                 "";
+              console.log("ownerText", ownerText, item?.owner);
+              console.log("identityText", identityText);
+
               return (
                 <tr key={item.application_id} className="hover:bg-gray-50 transition-colors">
                   <td className="p-3 text-center text-sm sm:text-base">{item.application_id}</td>

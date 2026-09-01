@@ -2,7 +2,30 @@ import { fetchQrData } from "@/utils";
 import { Car, Wrench, CheckCircle, XCircle, Circle } from "lucide-react";
 import CheckRTOIcon from "@/components/CheckRTOIcon";
 import VehiclePhotos from "@/components/VehiclePhotos";
+import { getUsageType } from "@/lib/usageTypes";
 import clsx from "clsx";
+
+function Field({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={clsx(
+        "text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1",
+        className
+      )}
+    >
+      <p className="text-[13px] font-medium text-zinc-600">{label}</p>
+      <div className="text-[15px] text-zinc-900">{children}</div>
+    </div>
+  );
+}
 
 function fmtDate(d?: string | null) {
   if (!d) return "No disponible";
@@ -61,8 +84,7 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
   const car = qrData.car || {};
   const workshop = qrData.workshop || {};
   const insp = qrData.inspection || {};
-  const labelCls = "text-[13px] font-medium text-zinc-600";
-  const valueCls = "text-[15px] text-zinc-900";
+  const usageType = getUsageType(car.usage_type);
 
 
   // Badge de estado: toma el de la inspección y, si no hay, el del sticker
@@ -79,6 +101,8 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const expDate = insp?.expiration_date ? new Date(insp.expiration_date) : null;
   const isCrtVigente = expDate ? !isNaN(expDate.getTime()) && expDate >= startOfToday : false;
+  // Solo se marca en rojo si hay una fecha válida y ya pasó (no si falta el dato)
+  const isCrtVencido = expDate ? !isNaN(expDate.getTime()) && expDate < startOfToday : false;
   
   // Calcular si se deben mostrar las fotos
   const shouldShowPhotos = insp?.photos_inspection_ids && insp.photos_inspection_ids.length > 0 && (isCrtVigente || insp?.has_result_2 || insp?.is_second);
@@ -131,52 +155,53 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
             <div className="px-5 py-5 bg-white">
               {/* 1 por fila en mobile, 3 por fila en pantallas grandes */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6 md:gap-y-4">
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Dominio</p>
-                  <p className={valueCls}>{(car.license_plate || "No disponible")?.toString().toUpperCase()}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Marca</p>
-                  <p className={valueCls}>{car.brand || "No disponible"}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Modelo</p>
-                  <p className={valueCls}>{car.model || "No disponible"}</p>
-                </div>
+                <Field label="Dominio">
+                  {(car.license_plate || "No disponible")?.toString().toUpperCase()}
+                </Field>
+                <Field label="Marca">{car.brand || "No disponible"}</Field>
+                <Field label="Modelo">{car.model || "No disponible"}</Field>
 
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Año de patentamiento</p>
-                  <p className={valueCls}>{car.patent_year || car.registration_year || "No disponible"}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Oblea vinculada</p>
-                  <p className={valueCls}>{qrData.sticker_number || "No disponible"}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>N° CRT/CNI</p>
-                  <p className={valueCls}>{insp.application_id || "No disponible"}</p>
-                </div>
+                <Field label="Año de patentamiento">
+                  {car.patent_year || car.registration_year || "No disponible"}
+                </Field>
+                <Field label="Oblea vinculada">{qrData.sticker_number || "No disponible"}</Field>
+                <Field label="N° CRT/CNI">{insp.application_id || "No disponible"}</Field>
 
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Emisión de CRT</p>
-                  <p className={valueCls}>{fmtDate(insp.inspection_date || insp.issue_date)}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Caducidad de CRT</p>
-                  <p className={valueCls}>{fmtDate(insp.expiration_date)}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Estado de oblea</p>
-                  <p className={clsx(
-                    valueCls,
+                <Field label="Emisión de CRT">{fmtDate(insp.inspection_date || insp.issue_date)}</Field>
+                <Field label="Caducidad de CRT">
+                  <span className={clsx(isCrtVencido && "text-rose-700 font-medium")}>
+                    {fmtDate(insp.expiration_date)}
+                  </span>
+                </Field>
+                <Field label="Estado de oblea">
+                  <span className={clsx(
                     insp.result === "Apto" && "text-emerald-700",
                     insp.result === "Condicional" && "text-amber-700",
                     insp.result === "Condicional Vencido" && "text-rose-700",
                     insp.result === "Rechazado" && "text-rose-700"
                   )}>
                     {(insp.result === "Condicional Vencido" ? "Condicional Vencido" : estado) || "No disponible"}
-                  </p>
-                </div>
+                  </span>
+                </Field>
+
+                {/* Ocupa toda la fila: la descripción del tipo de uso puede ser larga */}
+                <Field
+                  label="Tipo de uso"
+                  className="md:col-span-3 border-t border-[#eaeaea] pt-5 md:pt-4"
+                >
+                  {usageType ? (
+                    <div className="flex flex-col items-center md:flex-row md:items-start gap-2">
+                      <span className="inline-flex h-6 min-w-[1.75rem] shrink-0 items-center justify-center rounded-md border border-purple-200 bg-purple-50 px-2 text-[13px] font-semibold text-purple-700">
+                        {usageType.code}
+                      </span>
+                      {usageType.description && (
+                        <span className="leading-snug">{usageType.description}</span>
+                      )}
+                    </div>
+                  ) : (
+                    "No disponible"
+                  )}
+                </Field>
               </div>
             </div>
 
@@ -245,30 +270,12 @@ export default async function QrPage({ params }: { params: Promise<{ stickerNumb
             {/* Taller */}
             <div className="px-5 py-5 bg-white">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6 md:gap-y-4">
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>CUIT</p>
-                  <p className={valueCls}>{workshop.cuit || "No disponible"}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Razón social</p>
-                  <p className={valueCls}>{workshop.razon_social || "No disponible"}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Nombre</p>
-                  <p className={valueCls}>{workshop.name || "No disponible"}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Provincia</p>
-                  <p className={valueCls}>{workshop.province || "No disponible"}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Localidad</p>
-                  <p className={valueCls}>{workshop.city || "No disponible"}</p>
-                </div>
-                <div className="text-center md:text-left flex flex-col items-center md:items-start space-y-2 md:space-y-1">
-                  <p className={labelCls}>Domicilio</p>
-                  <p className={valueCls}>{workshop.address || "No disponible"}</p>
-                </div>
+                <Field label="CUIT">{workshop.cuit || "No disponible"}</Field>
+                <Field label="Razón social">{workshop.razon_social || "No disponible"}</Field>
+                <Field label="Nombre">{workshop.name || "No disponible"}</Field>
+                <Field label="Provincia">{workshop.province || "No disponible"}</Field>
+                <Field label="Localidad">{workshop.city || "No disponible"}</Field>
+                <Field label="Domicilio">{workshop.address || "No disponible"}</Field>
               </div>
             </div>
 
