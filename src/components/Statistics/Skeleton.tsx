@@ -9,8 +9,8 @@ export default function StatisticsSkeleton() {
         </div>
 
         {/* KPI cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8 px-1 sm:px-0">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8 px-1 sm:px-0">
+          {[...Array(5)].map((_, i) => (
             <div key={i} className="rounded-xl border border-gray-100 bg-white shadow-sm">
               <div className="p-4 sm:p-5 space-y-3">
                 <div className="h-3 w-28 bg-gray-200 rounded" />
@@ -33,6 +33,21 @@ export default function StatisticsSkeleton() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Lost stickers breakdown */}
+        <div className="rounded-xl border border-gray-100 bg-white shadow-sm mb-4 sm:mb-6 md:mb-8">
+          <div className="p-4 sm:p-5 border-b border-gray-100">
+            <div className="h-5 w-56 bg-gray-200 rounded" />
+          </div>
+          <div className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-3 w-40 bg-gray-200 rounded" />
+                <div className="h-2 w-full bg-gray-100 rounded-full" />
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Bottom row: brands, usage, errors, expirations */}

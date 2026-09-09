@@ -4,23 +4,15 @@
 import { Suspense } from "react";
 import StatisticsLoader from "@/components/Statistics/Loader";
 import StatisticsSkeleton from "@/components/Statistics/Skeleton";
-
-function fmt(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
+import { comparisonRange, formatISODateLocal } from "@/components/Statistics/dates";
 
 function monthRange(date = new Date()) {
   const y = date.getFullYear();
   const m = date.getMonth();
-  return { from: fmt(new Date(y, m, 1)), to: fmt(new Date(y, m + 1, 0)) };
-}
-
-function prevMonthRangeFrom(fromISO: string) {
-  const d = new Date(fromISO + "T00:00:00");
-  let prevYear = d.getFullYear();
-  let prevMonth = d.getMonth() - 1;
-  if (prevMonth < 0) { prevMonth = 11; prevYear--; }
-  return { from: fmt(new Date(prevYear, prevMonth, 1)), to: fmt(new Date(prevYear, prevMonth + 1, 0)) };
+  return {
+    from: formatISODateLocal(new Date(y, m, 1)),
+    to: formatISODateLocal(new Date(y, m + 1, 0)),
+  };
 }
 
 function makeRange(searchParams: any) {
@@ -35,7 +27,10 @@ function makeRange(searchParams: any) {
   if (monthQP) {
     const [yy, mm] = monthQP.split("-").map(Number);
     if (yy && mm && mm >= 1 && mm <= 12) {
-      return { from: fmt(new Date(yy, mm - 1, 1)), to: fmt(new Date(yy, mm, 0)) };
+      return {
+        from: formatISODateLocal(new Date(yy, mm - 1, 1)),
+        to: formatISODateLocal(new Date(yy, mm, 0)),
+      };
     }
   }
   return monthRange();
@@ -51,7 +46,9 @@ export default async function Page(props: any) {
   }
 
   const { from, to } = makeRange(sp);
-  const prevRange = prevMonthRangeFrom(from);
+  // Ventana de comparación del mismo largo que la seleccionada, salvo que el rango sea un
+  // mes calendario completo, en cuyo caso se compara contra el mes anterior.
+  const prev = comparisonRange(from, to);
 
   // StatisticsLoader is an async Server Component that fetches all data in parallel.
   // The Suspense boundary streams the skeleton to the browser immediately while it resolves.
@@ -61,8 +58,9 @@ export default async function Page(props: any) {
         workshopId={workshopId}
         from={from}
         to={to}
-        prevFrom={prevRange.from}
-        prevTo={prevRange.to}
+        prevFrom={prev.from}
+        prevTo={prev.to}
+        comparisonLabel={prev.label}
       />
     </Suspense>
   );

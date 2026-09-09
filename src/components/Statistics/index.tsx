@@ -3,10 +3,11 @@
 import Link from "next/link";
 import clsx from "clsx";
 import { useState, useRef, useEffect } from "react";
-import { BarChart3, PieChart, CalendarRange, ArrowUpRight, ArrowDownRight, LineChart, Users, ClipboardList, CheckCircle2, ChevronRight, FolderX, AlertCircle, Calendar } from "lucide-react";
+import { BarChart3, PieChart, CalendarRange, ArrowUpRight, ArrowDownRight, LineChart, Users, ClipboardList, CheckCircle2, ChevronRight, FolderX, AlertCircle, Calendar, WifiOff, Ticket } from "lucide-react";
 import { DayPicker, DateRange } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import Card from "@/components/Card";
+import { parseISODateLocal, formatISODateLocal } from "./dates";
 
 export type Overview = {
   date_from: string;
@@ -24,7 +25,7 @@ export type TopBrands = { items: { brand: string; count: number }[]; total: numb
 export type UsageTypes = { items: { use_type: string; count: number }[]; total: number };
 export type CommonErrors = { items: { step_name: string; count: number; percentage: number }[]; total: number };
 export type Expirations = { items: { license_plate: string; contact: string; days_until: number; expiration_date: string }[]; total: number };
-export type LostStickers = { count: number };
+export type LostStickers = { count: number; items: { reason: string; count: number; percentage: number }[] };
 
 /* ===========================
    UI helpers
@@ -51,6 +52,72 @@ function EmptyState({
       {children ? <div className="mt-3">{children}</div> : null}
     </div>
   );
+}
+
+/**
+ * Una tarjeta cuya llamada falló muestra esto, nunca un cero: un cero real y un backend
+ * caído tienen que verse distinto.
+ */
+function ErrorState({ className }: { className?: string }) {
+  return (
+    <EmptyState
+      title="No se pudieron cargar los datos"
+      subtitle="Reintentá recargando la página"
+      icon={WifiOff}
+      className={className}
+    />
+  );
+}
+
+/* Resultados de revisión. 'Condicional Vencido' es una categoría propia: antes caía en el
+   gris genérico y sin nombre, aun siendo el resultado de una oblea perdida. */
+const RESULT_COLORS: Record<string, string> = {
+  "Apto": "#0040B8",
+  "Aprobadas": "#0040B8",
+  "Rechazado": "#212121",
+  "Rechazadas": "#212121",
+  "Condicional": "#f97316",
+  "Condicional Vencido": "#eab308",
+  "Pendientes": "#f97316",
+};
+
+const RESULT_LABELS: Record<string, string> = {
+  "Apto": "Aprobadas",
+  "Rechazado": "Rechazadas",
+  "Condicional Vencido": "Condicional vencido",
+};
+
+function getResultColor(result: string | null | undefined): string {
+  return RESULT_COLORS[result || ""] || "#6b7280";
+}
+
+function getResultLabel(result: string | null | undefined): string {
+  return RESULT_LABELS[result || ""] ?? result ?? "Sin dato";
+}
+
+/* Motivos de pérdida de obleas, tal como los devuelve el backend en sticker_events */
+const LOST_REASON_LABELS: Record<string, string> = {
+  "Abandono": "Abandono de revisión",
+  "Condicional Vencido": "Condicional vencido",
+  "Rechazado": "Revisión rechazada",
+  "Baja Manual": "Baja manual",
+  "Sin clasificar": "Sin clasificar",
+};
+
+const LOST_REASON_COLORS: Record<string, string> = {
+  "Abandono": "#f97316",
+  "Condicional Vencido": "#eab308",
+  "Rechazado": "#212121",
+  "Baja Manual": "#0040B8",
+  "Sin clasificar": "#9ca3af",
+};
+
+function getLostReasonLabel(reason: string): string {
+  return LOST_REASON_LABELS[reason] ?? reason ?? "Sin clasificar";
+}
+
+function getLostReasonColor(reason: string): string {
+  return LOST_REASON_COLORS[reason] ?? "#6b7280";
 }
 
 function ProgressBar({ value }: { value: number }) {
@@ -111,8 +178,8 @@ function getUsageTypeLabel(useType: string): string {
 function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; thisMonth: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [range, setRange] = useState<DateRange | undefined>({
-    from: from ? new Date(from) : undefined,
-    to: to ? new Date(to) : undefined,
+    from: from ? parseISODateLocal(from) : undefined,
+    to: to ? parseISODateLocal(to) : undefined,
   });
   const [selectingTo, setSelectingTo] = useState(true); // true = seleccionando "to", false = seleccionando "from"
   const [isMobile, setIsMobile] = useState(false);
@@ -163,9 +230,8 @@ function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; th
 
   const handleApply = () => {
     if (range?.from && range?.to) {
-      const fromStr = range.from.toISOString().split("T")[0];
-      const toStr = range.to.toISOString().split("T")[0];
-      window.location.href = `?from=${fromStr}&to=${toStr}`;
+      // Componentes locales, no toISOString: el usuario eligió días en su calendario
+      window.location.href = `?from=${formatISODateLocal(range.from)}&to=${formatISODateLocal(range.to)}`;
     }
   };
 
@@ -331,6 +397,27 @@ function DateRangePicker({ from, to, thisMonth }: { from: string; to: string; th
   );
 }
 
+/**
+ * Escala del eje Y a partir del máximo real. Antes los ticks eran múltiplos fijos de 55
+ * con fallback 220, así que un taller con 3 revisiones dibujaba barras invisibles contra
+ * un eje de 0 a 220.
+ */
+function niceScale(max: number, steps = 4): { ticks: number[]; maxTick: number } {
+  if (!Number.isFinite(max) || max <= 0) {
+    return { ticks: [0, 1, 2, 3, 4], maxTick: 4 };
+  }
+  const rawStep = max / steps;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const normalized = rawStep / magnitude;
+  const niceStep = (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10) * magnitude;
+  const maxTick = Math.ceil(max / niceStep) * niceStep;
+  const ticks: number[] = [];
+  for (let v = 0; v <= maxTick + niceStep / 2; v += niceStep) {
+    ticks.push(Math.round(v));
+  }
+  return { ticks, maxTick };
+}
+
 function WeeklyChart({ data, yAxisTicks, maxTick }: { data: Array<{ label: string; value: number }>; yAxisTicks: number[]; maxTick: number }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -400,6 +487,7 @@ export default function Statistics({
   workshopId,
   from,
   to,
+  comparisonLabel,
   overview,
   overviewPrev,
   daily,
@@ -416,20 +504,22 @@ export default function Statistics({
   workshopId: number;
   from: string;
   to: string;
-  overview: Overview;
+  comparisonLabel: string;
+  overview: Overview | null;
   overviewPrev?: Overview | null;
-  daily: Daily;
-  status: StatusBreakdown;
-  results: ResultBreakdown;
+  daily: Daily | null;
+  status: StatusBreakdown | null;
+  results: ResultBreakdown | null;
   resultsPrev?: ResultBreakdown | null;
-  topModels: TopModels;
-  topBrands?: TopBrands;
-  usageTypes?: UsageTypes;
-  commonErrors?: CommonErrors;
-  expirations?: Expirations;
-  lostStickers?: LostStickers;
+  topModels: TopModels | null;
+  topBrands?: TopBrands | null;
+  usageTypes?: UsageTypes | null;
+  commonErrors?: CommonErrors | null;
+  expirations?: Expirations | null;
+  lostStickers?: LostStickers | null;
 }) {
-  // Defensivos por si vienen nulos o incompletos
+  // Un null significa "la llamada falló", distinto de "no hubo actividad". Solo se usa
+  // este placeholder para las fechas del encabezado; las tarjetas muestran el error.
   const safeOverview = overview ?? ({
     date_from: from,
     date_to: to,
@@ -437,175 +527,118 @@ export default function Statistics({
     totals: { created: 0, completed: 0, in_queue: 0, approved: 0, approval_rate: 0 },
   } as Overview);
 
-  // Deltas vs mes anterior
-  const prevOverviewData = overviewPrev ?? null;
+  /**
+   * Porcentaje de un resultado sobre el total de revisiones completadas del período.
+   * Devuelve null cuando no hay base de comparación posible, para no mostrar un 0% que
+   * se lee como "ninguna revisión aprobó".
+   */
+  function rateOf(data: ResultBreakdown | null | undefined, matches: (r: string) => boolean): number | null {
+    if (!data || !data.total) return null;
+    const found = data.items.filter(item => matches((item.result || "").toLowerCase().trim()));
+    const count = found.reduce((acc, item) => acc + item.count, 0);
+    return Math.round((count / data.total) * 100);
+  }
+
+  const isApto = (r: string) => r === "apto" || r === "aprobadas" || r === "aprobado";
+  const isRechazado = (r: string) => r === "rechazado" || r === "rechazadas";
+  // 'Condicional Vencido' es su propia categoría: un condicional que venció no es un
+  // condicional pendiente, y sumarlos acá inflaba la tasa de condicional.
+  const isCondicional = (r: string) => r === "condicional";
+
+  const approvalRate = rateOf(results, isApto);
+  const rejectionRate = rateOf(results, isRechazado);
+  const conditionalRate = rateOf(results, isCondicional);
+
+  const prevApprovalRate = rateOf(resultsPrev, isApto);
+  const prevRejectionRate = rateOf(resultsPrev, isRechazado);
+  const prevConditionalRate = rateOf(resultsPrev, isCondicional);
+
+  // Un delta solo existe si hay ambos extremos. Antes, sin período previo se mostraba
+  // "+0%", que se lee como "no cambió" en vez de "no hay con qué comparar".
+  const diff = (cur: number | null, prev: number | null) =>
+    cur === null || prev === null ? null : cur - prev;
+
+  const approvalDelta = diff(approvalRate, prevApprovalRate);
+  const rejectionDelta = diff(rejectionRate, prevRejectionRate);
+  const conditionalDelta = diff(conditionalRate, prevConditionalRate);
+
   const createdDelta = (() => {
-    const prevVal = prevOverviewData?.totals?.created ?? 0;
-    const curVal = safeOverview.totals.created ?? 0;
-    if (prevVal <= 0) return 0;
+    const prevVal = overviewPrev?.totals?.created;
+    const curVal = overview?.totals?.created;
+    if (prevVal === undefined || curVal === undefined || prevVal <= 0) return null;
     return ((curVal - prevVal) / prevVal) * 100;
   })();
 
-  // Calcular tasas de aprobación, rechazo y condicional basadas en results
-  const approvalRate = (() => {
-    if (!results?.items?.length || !results.total || results.total === 0) return 0;
-    // Buscar todas las variantes posibles de aprobado
-    const approved = results.items.find(item => {
-      const result = (item.result || "").toLowerCase().trim();
-      return result === "apto" || result === "aprobadas" || result === "aprobado";
-    });
-    if (!approved) return 0;
-    return Math.round((approved.count / results.total) * 100);
-  })();
-
-  const rejectionRate = (() => {
-    if (!results?.items?.length || !results.total || results.total === 0) return 0;
-    // Buscar todas las variantes posibles de rechazado
-    const rejected = results.items.find(item => {
-      const result = (item.result || "").toLowerCase().trim();
-      return result === "rechazado" || result === "rechazadas";
-    });
-    if (!rejected) return 0;
-    return Math.round((rejected.count / results.total) * 100);
-  })();
-
-  const conditionalRate = (() => {
-    if (!results?.items?.length || !results.total || results.total === 0) return 0;
-    const conditional = results.items.find(item => item.result === "Condicional");
-    if (!conditional) return 0;
-    return Math.round((conditional.count / results.total) * 100);
-  })();
-
-  // Calcular tasas previas de aprobación, rechazo y condicional
-  const prevApprovalRate = (() => {
-    if (!resultsPrev?.items?.length || !resultsPrev.total || resultsPrev.total === 0) return null;
-    // Buscar todas las variantes posibles de aprobado
-    const approved = resultsPrev.items.find(item => {
-      const result = (item.result || "").toLowerCase().trim();
-      return result === "apto" || result === "aprobadas" || result === "aprobado";
-    });
-    if (!approved) return 0;
-    return Math.round((approved.count / resultsPrev.total) * 100);
-  })();
-
-  const prevRejectionRate = (() => {
-    if (!resultsPrev?.items?.length || !resultsPrev.total || resultsPrev.total === 0) return null;
-    // Buscar todas las variantes posibles de rechazado
-    const rejected = resultsPrev.items.find(item => {
-      const result = (item.result || "").toLowerCase().trim();
-      return result === "rechazado" || result === "rechazadas";
-    });
-    if (!rejected) return 0;
-    return Math.round((rejected.count / resultsPrev.total) * 100);
-  })();
-
-  const prevConditionalRate = (() => {
-    if (!resultsPrev?.items?.length || !resultsPrev.total || resultsPrev.total === 0) return null;
-    const conditional = resultsPrev.items.find(item => item.result === "Condicional");
-    if (!conditional) return 0;
-    return Math.round((conditional.count / resultsPrev.total) * 100);
-  })();
-
-  // Calcular deltas para todas las tasas
-  const approvalDelta = (() => {
-    if (prevApprovalRate === null) return 0;
-    return approvalRate - prevApprovalRate;
-  })();
-
-  const rejectionDelta = (() => {
-    if (prevRejectionRate === null) return 0;
-    return rejectionRate - prevRejectionRate;
-  })();
-
-  const conditionalDelta = (() => {
-    if (prevConditionalRate === null) return 0;
-    return conditionalRate - prevConditionalRate;
-  })();
-
-  function Delta({ value, suffix = "%" }: { value: number; suffix?: string }) {
+  function Delta({ value, suffix = "%", inverted = false }: { value: number | null; suffix?: string; inverted?: boolean }) {
+    if (value === null) {
+      return <span className="text-gray-400">Sin base de comparación</span>;
+    }
     const v = Math.round(value * 10) / 10;
     const positive = v > 0;
     const negative = v < 0;
     const Icon = positive ? ArrowUpRight : negative ? ArrowDownRight : ArrowUpRight;
-    const color = positive ? "text-emerald-600" : negative ? "text-rose-600" : "text-gray-500";
-    const sign = positive ? "+" : negative ? "" : "";
+    // Invertido: en rechazo y condicional, subir es malo
+    const good = inverted ? negative : positive;
+    const bad = inverted ? positive : negative;
+    const color = good ? "text-emerald-600" : bad ? "text-rose-600" : "text-gray-500";
+    const sign = positive ? "+" : "";
     return (
       <span className={`inline-flex items-center gap-1 ${color}`}>
         <Icon className="h-3.5 w-3.5" />
         {sign}{Math.abs(v)}{suffix}
-        <span className="text-gray-500 ml-1">vs mes anterior</span>
+        <span className="text-gray-500 ml-1">{comparisonLabel}</span>
       </span>
     );
   }
 
-  function DeltaInverted({ value, suffix = "%" }: { value: number; suffix?: string }) {
-    const v = Math.round(value * 10) / 10;
-    const positive = v > 0;
-    const negative = v < 0;
-    const Icon = positive ? ArrowUpRight : negative ? ArrowDownRight : ArrowUpRight;
-    // Invertido: positivo (aumento) es malo (rojo), negativo (disminución) es bueno (verde)
-    const color = positive ? "text-rose-600" : negative ? "text-emerald-600" : "text-gray-500";
-    const sign = positive ? "+" : negative ? "" : "";
-    return (
-      <span className={`inline-flex items-center gap-1 ${color}`}>
-        <Icon className="h-3.5 w-3.5" />
-        {sign}{Math.abs(v)}{suffix}
-        <span className="text-gray-500 ml-1">vs mes anterior</span>
-      </span>
-    );
-  }
+  const MONTH_NAMES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
   // Calcular si hay más de 6 semanas en el rango
-  const dateFrom = new Date(from);
-  const dateTo = new Date(to);
-  const daysDiff = Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 60 * 60 * 24));
+  const dateFrom = parseISODateLocal(from);
+  const dateTo = parseISODateLocal(to);
+  const daysDiff = Math.round((dateTo.getTime() - dateFrom.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   const weeksDiff = Math.ceil(daysDiff / 7);
   const useMonthly = weeksDiff > 6;
 
-  // Agrupar datos diarios por semana o mes según el rango
+  // Agrupar datos diarios por semana o mes según el rango.
+  // Todas las fechas se parsean en hora local: con new Date("2026-09-01") el día 1 caía
+  // en el mes anterior al leerlo con getMonth() desde Argentina.
   const chartData = (() => {
     if (!daily?.items?.length) return { data: [], isMonthly: false };
-    
+
     if (useMonthly) {
-      // Agrupar por mes
       const byMonth: Record<string, number> = {};
       daily.items.forEach(item => {
-        const date = new Date(item.date);
+        const date = parseISODateLocal(item.date);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
         byMonth[monthKey] = (byMonth[monthKey] || 0) + item.created;
       });
-      const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+      // Sin slice: recortar en silencio hacía que el gráfico mostrara menos revisiones
+      // de las que el rango contiene.
       const data = Object.entries(byMonth)
         .sort(([a], [b]) => a.localeCompare(b))
-        .slice(-6) // Últimos 6 meses
         .map(([key, value]) => {
-          const [year, month] = key.split("-");
-          return { label: monthNames[parseInt(month) - 1], value };
+          const [, month] = key.split("-");
+          return { label: MONTH_NAMES[parseInt(month) - 1], value };
         });
       return { data, isMonthly: true };
     } else {
-      // Agrupar por semana
       const byWeek: Record<string, number> = {};
       daily.items.forEach(item => {
-        const date = new Date(item.date);
-        // Obtener el lunes de la semana
+        const date = parseISODateLocal(item.date);
+        // Lunes de la semana, sin mutar la fecha original
         const dayOfWeek = date.getDay();
-        const diff = date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-        const monday = new Date(date.setDate(diff));
-        monday.setHours(0, 0, 0, 0);
-        const weekKey = monday.toISOString().slice(0, 10);
+        const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() + offset);
+        const weekKey = formatISODateLocal(monday);
         byWeek[weekKey] = (byWeek[weekKey] || 0) + item.created;
       });
-      const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
       const data = Object.entries(byWeek)
         .sort(([a], [b]) => a.localeCompare(b))
-        .slice(-6) // Últimas 6 semanas
         .map(([key, value]) => {
-          const date = new Date(key);
-          const weekStart = new Date(date);
-          const weekEnd = new Date(date);
-          weekEnd.setDate(weekEnd.getDate() + 6);
-          const label = `${monthNames[weekStart.getMonth()]} ${weekStart.getDate()}-${weekEnd.getDate()}`;
+          const weekStart = parseISODateLocal(key);
+          const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6);
+          const label = `${MONTH_NAMES[weekStart.getMonth()]} ${weekStart.getDate()}-${weekEnd.getDate()}`;
           return { label, value };
         });
       return { data, isMonthly: false };
@@ -613,26 +646,29 @@ export default function Statistics({
   })();
 
   const maxChartValue = Math.max(...chartData.data.map(d => d.value), 0);
-  // Calcular ticks del eje Y similar a la foto (0, 55, 110, 165, 220)
-  // Redondear al múltiplo de 55 más cercano
-  const maxTick = maxChartValue > 0 ? Math.ceil(maxChartValue / 55) * 55 : 220;
-  // Asegurar valores únicos y ordenados
-  const yAxisTicks = Array.from(new Set([0, 55, 110, 165, maxTick].filter(v => v <= maxTick))).sort((a, b) => a - b);
+  const { ticks: yAxisTicks, maxTick } = niceScale(maxChartValue);
 
   const now = new Date();
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const prevMonth = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`;
 
+  // Si todo falló no es que no haya datos: no se pudieron pedir. Ese caso se avisa aparte.
+  const allFailed =
+    !overview && !daily && !status && !results && !topModels && !topBrands &&
+    !usageTypes && !commonErrors && !expirations && !lostStickers;
+
   const hasAnyData =
-    (safeOverview?.totals?.created ?? 0) > 0 ||
-    (safeOverview?.totals?.completed ?? 0) > 0 ||
-    (safeOverview?.totals?.in_queue ?? 0) > 0 ||
+    (overview?.totals?.created ?? 0) > 0 ||
+    (overview?.totals?.completed ?? 0) > 0 ||
+    (overview?.totals?.in_queue ?? 0) > 0 ||
     (results?.items?.length ?? 0) > 0 ||
     (status?.items?.length ?? 0) > 0 ||
     (topModels?.items?.length ?? 0) > 0 ||
     (daily?.items?.length ?? 0) > 0 ||
     (lostStickers?.count ?? 0) > 0;
+
+  const topLostReason = lostStickers?.items?.[0] ?? null;
 
   return (
     <div className="bg-white">
@@ -649,8 +685,19 @@ export default function Statistics({
           </div>
         </article>
 
+        {/* Todo el backend falló: no confundir con un rango vacío */}
+        {allFailed && (
+          <Card className="mb-4 sm:mb-6 md:mb-8 mx-1 sm:mx-0">
+            <EmptyState
+              title="No se pudieron cargar las estadísticas"
+              subtitle="No hubo respuesta del servidor. Reintentá recargando la página."
+              icon={WifiOff}
+            />
+          </Card>
+        )}
+
         {/* Info de rango sin datos */}
-        {!hasAnyData && (
+        {!allFailed && !hasAnyData && (
           <Card className="mb-4 sm:mb-6 md:mb-8 mx-1 sm:mx-0">
             <EmptyState
               title="No hay datos para este rango"
@@ -681,9 +728,11 @@ export default function Statistics({
                 <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4 text-[#1f63ff]" />
               </div>
               <p className="text-[10px] sm:text-xs text-gray-500">Revisiones creadas</p>
-              <p className="mt-2 text-xl sm:text-2xl text-gray-900">{safeOverview.totals.created ?? 0}</p>
+              <p className="mt-2 text-xl sm:text-2xl text-gray-900">
+                {overview ? overview.totals.created ?? 0 : <span className="text-gray-400">—</span>}
+              </p>
               <div className="mt-1 text-[10px] sm:text-[11px]">
-                <Delta value={createdDelta} />
+                {overview ? <Delta value={createdDelta} /> : <span className="text-gray-400">Sin datos del servidor</span>}
               </div>
             </div>
           </Card>
@@ -694,9 +743,11 @@ export default function Statistics({
                 <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-[#1f63ff]" />
               </div>
               <p className="text-[10px] sm:text-xs text-gray-500">Tasa Aprobación</p>
-              <p className="mt-2 text-xl sm:text-2xl text-gray-900">{approvalRate}%</p>
+              <p className="mt-2 text-xl sm:text-2xl text-gray-900">
+                {approvalRate === null ? <span className="text-gray-400">—</span> : `${approvalRate}%`}
+              </p>
               <div className="mt-1 text-[10px] sm:text-[11px]">
-                <Delta value={approvalDelta} />
+                {results ? <Delta value={approvalDelta} /> : <span className="text-gray-400">Sin datos del servidor</span>}
               </div>
             </div>
           </Card>
@@ -707,9 +758,11 @@ export default function Statistics({
                 <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-[#1f63ff]" />
               </div>
               <p className="text-[10px] sm:text-xs text-gray-500">Tasa de Rechazo</p>
-              <p className="mt-2 text-xl sm:text-2xl text-gray-900">{rejectionRate}%</p>
+              <p className="mt-2 text-xl sm:text-2xl text-gray-900">
+                {rejectionRate === null ? <span className="text-gray-400">—</span> : `${rejectionRate}%`}
+              </p>
               <div className="mt-1 text-[10px] sm:text-[11px]">
-                <DeltaInverted value={rejectionDelta} />
+                {results ? <Delta value={rejectionDelta} inverted /> : <span className="text-gray-400">Sin datos del servidor</span>}
               </div>
             </div>
           </Card>
@@ -720,9 +773,11 @@ export default function Statistics({
                 <LineChart className="h-3 w-3 sm:h-4 sm:w-4 text-[#1f63ff]" />
               </div>
               <p className="text-[10px] sm:text-xs text-gray-500">Tasa de Condicional</p>
-              <p className="mt-2 text-xl sm:text-2xl text-gray-900">{conditionalRate}%</p>
+              <p className="mt-2 text-xl sm:text-2xl text-gray-900">
+                {conditionalRate === null ? <span className="text-gray-400">—</span> : `${conditionalRate}%`}
+              </p>
               <div className="mt-1 text-[10px] sm:text-[11px]">
-                <DeltaInverted value={conditionalDelta} />
+                {results ? <Delta value={conditionalDelta} inverted /> : <span className="text-gray-400">Sin datos del servidor</span>}
               </div>
             </div>
           </Card>
@@ -733,9 +788,15 @@ export default function Statistics({
                 <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-[#1f63ff]" />
               </div>
               <p className="text-[10px] sm:text-xs text-gray-500">Obleas perdidas</p>
-              <p className="mt-2 text-xl sm:text-2xl text-gray-900">{lostStickers?.count ?? 0}</p>
+              <p className="mt-2 text-xl sm:text-2xl text-gray-900">
+                {lostStickers ? lostStickers.count : <span className="text-gray-400">—</span>}
+              </p>
               <div className="mt-1 text-[10px] sm:text-[11px] text-gray-500">
-                En el intervalo seleccionado
+                {!lostStickers
+                  ? <span className="text-gray-400">Sin datos del servidor</span>
+                  : topLostReason
+                    ? `Principal: ${getLostReasonLabel(topLostReason.reason).toLowerCase()} · ${topLostReason.count}`
+                    : "Ninguna en el período"}
               </div>
             </div>
           </Card>
@@ -751,13 +812,15 @@ export default function Statistics({
               </h3>
             </div>
             <div className="p-3 sm:p-4 md:p-5">
-              {chartData.data.length > 0 ? (
+              {!daily ? (
+                <ErrorState />
+              ) : chartData.data.length > 0 ? (
                 <WeeklyChart data={chartData.data} yAxisTicks={yAxisTicks} maxTick={maxTick} />
               ) : (
-                <EmptyState 
-                  title={chartData.isMonthly ? "Sin datos mensuales" : "Sin datos semanales"} 
-                  subtitle="No hay revisiones para mostrar" 
-                  icon={BarChart3} 
+                <EmptyState
+                  title={chartData.isMonthly ? "Sin datos mensuales" : "Sin datos semanales"}
+                  subtitle="No hay revisiones para mostrar"
+                  icon={BarChart3}
                 />
               )}
             </div>
@@ -769,7 +832,9 @@ export default function Statistics({
               <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Estado de Revisiones</h3>
             </div>
             <div className="p-3 sm:p-4 md:p-5">
-              {results?.items?.length ? (
+              {!results ? (
+                <ErrorState />
+              ) : results.items?.length ? (
                 <div className="flex flex-col items-center">
                   {/* Donut chart */}
                   <div className="relative w-40 h-40 sm:w-48 sm:h-48 mb-3 sm:mb-4">
@@ -777,14 +842,6 @@ export default function Statistics({
                       {(() => {
                         const total = results.total || 1;
                         let currentAngle = 0;
-                        const colors: Record<string, string> = {
-                          "Apto": "#0040B8", // emerald-500
-                          "Aprobadas": "#0040B8",
-                          "Rechazado": "#212121", // red-500
-                          "Rechazadas": "#212121",
-                          "Condicional": "#f97316", // orange-500
-                          "Pendientes": "#f97316",
-                        };
                         return results.items.map((item, i) => {
                           const percentage = (item.count / total) * 100;
                           const angle = (percentage / 100) * 360;
@@ -798,8 +855,8 @@ export default function Statistics({
                           const x2 = 50 + 50 * Math.cos((endAngle * Math.PI) / 180);
                           const y2 = 50 + 50 * Math.sin((endAngle * Math.PI) / 180);
                           
-                          const color = colors[item.result || ""] || "#6b7280";
-                          
+                          const color = getResultColor(item.result);
+
                           return (
                             <path
                               key={i}
@@ -818,16 +875,8 @@ export default function Statistics({
                   {/* Legend */}
                   <div className="w-full flex flex-wrap items-center justify-center gap-4">
                     {results.items.map((item, i) => {
-                      const colors: Record<string, string> = {
-                        "Apto": "#0040B8",
-                        "Aprobadas": "#0040B8",
-                        "Rechazado": "#212121",
-                        "Rechazadas": "#212121",
-                        "Condicional": "#f97316",
-                        "Pendientes": "#f97316",
-                      };
-                      const color = colors[item.result || ""] || "#6b7280";
-                      const label = item.result === "Apto" ? "Aprobadas" : item.result === "Rechazado" ? "Rechazadas" : item.result || "Pendientes";
+                      const color = getResultColor(item.result);
+                      const label = getResultLabel(item.result);
                       return (
                         <div key={i} className="flex items-center gap-2 text-sm">
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
@@ -845,6 +894,60 @@ export default function Statistics({
           </Card>
         </div>
 
+        {/* Obleas perdidas por motivo */}
+        <div className="mb-4 sm:mb-6 md:mb-8 px-1 sm:px-0">
+          <Card>
+            <div className="p-3 sm:p-4 md:p-5 border-b border-gray-100 flex items-center justify-between gap-3">
+              <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Obleas perdidas por motivo</h3>
+              {lostStickers ? (
+                <span className="text-xs sm:text-sm text-gray-500">
+                  {lostStickers.count} {lostStickers.count === 1 ? "oblea" : "obleas"} en el período
+                </span>
+              ) : null}
+            </div>
+            <div className="p-3 sm:p-4 md:p-5">
+              {!lostStickers ? (
+                <ErrorState />
+              ) : lostStickers.items?.length ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 sm:gap-x-8 gap-y-3 sm:gap-y-4">
+                    {lostStickers.items.map((item, i) => {
+                      const maxCount = Math.max(...lostStickers.items.map(r => r.count), 1);
+                      const width = (item.count / maxCount) * 100;
+                      const color = getLostReasonColor(item.reason);
+                      return (
+                        <div key={i}>
+                          <div className="flex items-center justify-between text-sm mb-1 gap-3">
+                            <span className="text-gray-700 truncate">{getLostReasonLabel(item.reason)}</span>
+                            <span className="flex-shrink-0 text-gray-900">
+                              <span className="font-medium">{item.count}</span>
+                              <span className="text-gray-500 ml-1.5 text-xs">{item.percentage}%</span>
+                            </span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${width}%`, backgroundColor: color }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-4 pt-3 border-t border-gray-100 text-[11px] text-gray-500">
+                    Se cuenta la fecha en que la oblea se dio de baja, no la fecha de la revisión.
+                    Las bajas anteriores a la puesta en marcha del historial no tienen motivo registrado.
+                  </p>
+                </>
+              ) : (
+                <EmptyState
+                  title="Sin obleas perdidas"
+                  subtitle="No se dio de baja ninguna oblea en el período"
+                  icon={Ticket}
+                  className="py-4"
+                />
+              )}
+            </div>
+          </Card>
+        </div>
+
         {/* Secciones inferiores: Marcas, Tipos de Uso, Errores, Vencimientos */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 px-1 sm:px-0">
           {/* Marcas Más Inspeccionadas */}
@@ -853,7 +956,9 @@ export default function Statistics({
               <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Marcas Más Inspeccionadas</h3>
             </div>
             <div className="p-3 sm:p-4 md:p-5">
-              {topBrands?.items?.length ? (
+              {!topBrands ? (
+                <ErrorState className="py-4" />
+              ) : topBrands.items?.length ? (
                 <div className="space-y-3">
                   {topBrands.items.slice(0, 5).map((item, i) => (
                     <div key={i} className="flex items-center gap-3">
@@ -881,7 +986,9 @@ export default function Statistics({
               <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Tipos de Uso</h3>
             </div>
             <div className="p-3 sm:p-4 md:p-5">
-              {usageTypes?.items?.length ? (
+              {!usageTypes ? (
+                <ErrorState className="py-4" />
+              ) : usageTypes.items?.length ? (
                 <div className="space-y-3">
                   {usageTypes.items.map((item, i) => {
                     const maxCount = Math.max(...usageTypes.items.map(u => u.count), 1);
@@ -911,7 +1018,9 @@ export default function Statistics({
               <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Errores Más Comunes</h3>
             </div>
             <div className="p-3 sm:p-4 md:p-5">
-              {commonErrors?.items?.length ? (
+              {!commonErrors ? (
+                <ErrorState className="py-4" />
+              ) : commonErrors.items?.length ? (
                 <div className="space-y-3">
                   {commonErrors.items.map((item, i) => {
                     const percentageColor = i === 0 ? "text-red-600" : "text-orange-600";
@@ -929,6 +1038,9 @@ export default function Statistics({
                       </div>
                     );
                   })}
+                  <p className="pt-1 text-[11px] text-gray-500">
+                    Porcentaje sobre las {commonErrors.total} revisiones con algún paso observado.
+                  </p>
                     </div>
               ) : (
                 <EmptyState title="Sin errores" subtitle="No hay errores registrados" icon={AlertCircle} className="py-4" />
@@ -942,7 +1054,9 @@ export default function Statistics({
               <h3 className="text-sm sm:text-base md:text-lg text-gray-900">Próximos Vencimientos</h3>
             </div>
             <div className="p-3 sm:p-4 md:p-5">
-              {expirations?.items?.length ? (
+              {!expirations ? (
+                <ErrorState className="py-4" />
+              ) : expirations.items?.length ? (
                 <div className="max-h-[280px] overflow-y-auto pr-2 space-y-3">
                   {expirations.items.map((item, i) => {
                     const isUrgent = item.days_until <= 30;

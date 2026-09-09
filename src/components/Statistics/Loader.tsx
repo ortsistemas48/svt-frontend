@@ -1,4 +1,4 @@
-import Statistics, { type TopModels, type Overview, type Daily, type StatusBreakdown, type ResultBreakdown } from ".";
+import Statistics, { type TopModels } from ".";
 import {
   fetchStatisticsOverview,
   fetchStatisticsDaily,
@@ -18,6 +18,7 @@ interface StatisticsLoaderProps {
   to: string;
   prevFrom: string;
   prevTo: string;
+  comparisonLabel: string;
 }
 
 export default async function StatisticsLoader({
@@ -26,7 +27,10 @@ export default async function StatisticsLoader({
   to,
   prevFrom,
   prevTo,
+  comparisonLabel,
 }: StatisticsLoaderProps) {
+  // Cada fetcher devuelve null si falla; ese null llega hasta la tarjeta correspondiente,
+  // que muestra un error en vez de un cero indistinguible de "no hubo actividad".
   const [
     overview,
     overviewPrev,
@@ -41,46 +45,49 @@ export default async function StatisticsLoader({
     expirations,
     lostStickers,
   ] = await Promise.all([
-    fetchStatisticsOverview(workshopId, from, to) as Promise<Overview>,
-    fetchStatisticsOverview(workshopId, prevFrom, prevTo) as Promise<Overview>,
-    fetchStatisticsDaily(workshopId, from, to) as Promise<Daily>,
-    fetchStatusBreakdown(workshopId, from, to) as Promise<StatusBreakdown>,
-    fetchResultsBreakdown(workshopId, from, to) as Promise<ResultBreakdown>,
-    fetchResultsBreakdown(workshopId, prevFrom, prevTo) as Promise<ResultBreakdown>,
-    fetchTopModels(workshopId, from, to, 8) as Promise<any>,
-    fetchTopBrands(workshopId, from, to, 5) as Promise<any>,
-    fetchUsageTypes(workshopId, from, to) as Promise<any>,
-    fetchCommonErrors(workshopId, from, to, 3) as Promise<any>,
-    fetchUpcomingExpirations(workshopId, 20) as Promise<any>,
-    fetchLostStickers(workshopId, from, to) as Promise<any>,
+    fetchStatisticsOverview(workshopId, from, to),
+    fetchStatisticsOverview(workshopId, prevFrom, prevTo),
+    fetchStatisticsDaily(workshopId, from, to),
+    fetchStatusBreakdown(workshopId, from, to),
+    fetchResultsBreakdown(workshopId, from, to),
+    fetchResultsBreakdown(workshopId, prevFrom, prevTo),
+    fetchTopModels(workshopId, from, to, 8),
+    fetchTopBrands(workshopId, from, to, 5),
+    fetchUsageTypes(workshopId, from, to),
+    fetchCommonErrors(workshopId, from, to, 3),
+    fetchUpcomingExpirations(workshopId, 20),
+    fetchLostStickers(workshopId, from, to),
   ]);
 
-  const topModels: TopModels = {
-    total_models: (topModelsRaw as any).total_models ?? 0,
-    items: ((topModelsRaw as any).items ?? []).map((i: any) => ({
-      model: i?.model ?? "N/D",
-      brand: i?.brand ?? null,
-      count: i?.count ?? 0,
-    })),
-  };
+  const topModels: TopModels | null = topModelsRaw
+    ? {
+        total_models: topModelsRaw.total_models ?? 0,
+        items: (topModelsRaw.items ?? []).map((i) => ({
+          model: i?.model ?? "N/D",
+          brand: i?.brand ?? null,
+          count: i?.count ?? 0,
+        })),
+      }
+    : null;
 
   return (
     <Statistics
       workshopId={workshopId}
       from={from}
       to={to}
-      overview={overview as any}
-      overviewPrev={overviewPrev as any}
-      daily={daily as any}
-      status={status as any}
-      results={results as any}
-      resultsPrev={resultsPrev as any}
+      comparisonLabel={comparisonLabel}
+      overview={overview}
+      overviewPrev={overviewPrev}
+      daily={daily}
+      status={status}
+      results={results}
+      resultsPrev={resultsPrev}
       topModels={topModels}
-      topBrands={topBrands as any}
-      usageTypes={usageTypes as any}
-      commonErrors={commonErrors as any}
-      expirations={expirations as any}
-      lostStickers={lostStickers as any}
+      topBrands={topBrands}
+      usageTypes={usageTypes}
+      commonErrors={commonErrors}
+      expirations={expirations}
+      lostStickers={lostStickers}
     />
   );
 }

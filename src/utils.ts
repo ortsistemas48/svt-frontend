@@ -84,6 +84,7 @@ export type StatsTopModels = {
 
 export type StatsLostStickers = {
   count: number
+  items: { reason: string; count: number; percentage: number }[]
 }
 
 function q(params: Record<string, string | number | undefined>) {
@@ -95,53 +96,49 @@ function q(params: Record<string, string | number | undefined>) {
   return s ? `?${s}` : ""
 }
 
-export async function fetchStatisticsOverview(workshopId: number, from: string, to: string): Promise<StatsOverview> {
-  const url = `/api/statistics/workshop/${workshopId}/overview${q({ from, to })}`
+/**
+ * Los fetchers de estadísticas devuelven `null` cuando la llamada falla, nunca un objeto
+ * con ceros. Devolver ceros hacía que un backend caído se viera exactamente igual que un
+ * taller sin actividad, que es lo contrario de lo que una página de estadísticas debería
+ * comunicar. Quien los consume decide cómo mostrar el error.
+ */
+async function fetchStats<T>(url: string, label: string): Promise<T | null> {
   try {
-    const res = await apiFetch(url, { method: "GET" })
+    const res = await apiFetch(url, { method: "GET", cache: "no-store" })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return res.json()
-  } catch {
-    return {
-      date_from: from,
-      date_to: to,
-      workshop_id: workshopId,
-      totals: { created: 0, completed: 0, in_queue: 0, approved: 0, approval_rate: 0 },
-    }
+    return (await res.json()) as T
+  } catch (error) {
+    console.error(`${label} failed:`, error)
+    return null
   }
 }
 
-export async function fetchStatisticsDaily(workshopId: number, from: string, to: string): Promise<StatsDaily> {
-  const url = `/api/statistics/workshop/${workshopId}/daily${q({ from, to })}`
-  try {
-    const res = await apiFetch(url, { method: "GET" })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return res.json()
-  } catch {
-    return { items: [], total_days: 0 }
-  }
+export async function fetchStatisticsOverview(workshopId: number, from: string, to: string): Promise<StatsOverview | null> {
+  return fetchStats<StatsOverview>(
+    `/api/statistics/workshop/${workshopId}/overview${q({ from, to })}`,
+    "fetchStatisticsOverview"
+  )
 }
 
-export async function fetchStatusBreakdown(workshopId: number, from: string, to: string): Promise<StatsStatusBreakdown> {
-  const url = `/api/statistics/workshop/${workshopId}/status-breakdown${q({ from, to })}`
-  try {
-    const res = await apiFetch(url, { method: "GET" })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return res.json()
-  } catch {
-    return { items: [], total: 0 }
-  }
+export async function fetchStatisticsDaily(workshopId: number, from: string, to: string): Promise<StatsDaily | null> {
+  return fetchStats<StatsDaily>(
+    `/api/statistics/workshop/${workshopId}/daily${q({ from, to })}`,
+    "fetchStatisticsDaily"
+  )
 }
 
-export async function fetchResultsBreakdown(workshopId: number, from: string, to: string): Promise<StatsResultsBreakdown> {
-  const url = `/api/statistics/workshop/${workshopId}/results-breakdown${q({ from, to })}`
-  try {
-    const res = await apiFetch(url, { method: "GET" })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return res.json()
-  } catch {
-    return { items: [], total: 0 }
-  }
+export async function fetchStatusBreakdown(workshopId: number, from: string, to: string): Promise<StatsStatusBreakdown | null> {
+  return fetchStats<StatsStatusBreakdown>(
+    `/api/statistics/workshop/${workshopId}/status-breakdown${q({ from, to })}`,
+    "fetchStatusBreakdown"
+  )
+}
+
+export async function fetchResultsBreakdown(workshopId: number, from: string, to: string): Promise<StatsResultsBreakdown | null> {
+  return fetchStats<StatsResultsBreakdown>(
+    `/api/statistics/workshop/${workshopId}/results-breakdown${q({ from, to })}`,
+    "fetchResultsBreakdown"
+  )
 }
 
 export async function fetchTopModels(
@@ -149,28 +146,22 @@ export async function fetchTopModels(
   from: string,
   to: string,
   limit = 8
-): Promise<TopModels> {
-  const url = `/api/statistics/workshop/${workshopId}/top-models${q({ from, to, limit })}`;
-  try {
-    const res = await apiFetch(url, { method: "GET" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const raw = await res.json() as {
-      items: { brand: string | null; model: string | null; count: number }[];
-      total_models: number;
-    };
+): Promise<TopModels | null> {
+  const raw = await fetchStats<StatsTopModels>(
+    `/api/statistics/workshop/${workshopId}/top-models${q({ from, to, limit })}`,
+    "fetchTopModels"
+  );
+  if (!raw) return null;
 
-    // Normalizar a model: string
-    return {
-      total_models: raw.total_models,
-      items: raw.items.map(i => ({
-        model: i.model ?? "N/D",
-        brand: i.brand ?? null,
-        count: i.count,
-      })),
-    };
-  } catch {
-    return { items: [], total_models: 0 };
-  }
+  // Normalizar a model: string
+  return {
+    total_models: raw.total_models,
+    items: (raw.items ?? []).map(i => ({
+      model: i.model ?? "N/D",
+      brand: i.brand ?? null,
+      count: i.count,
+    })),
+  };
 }
 
 export async function fetchTopBrands(
@@ -178,38 +169,32 @@ export async function fetchTopBrands(
   from: string,
   to: string,
   limit = 5
-): Promise<{ items: { brand: string; count: number }[]; total: number }> {
-  const url = `/api/statistics/workshop/${workshopId}/top-brands${q({ from, to, limit })}`;
-  try {
-    const res = await apiFetch(url, { method: "GET" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch {
-    return { items: [], total: 0 };
-  }
+): Promise<{ items: { brand: string; count: number }[]; total: number } | null> {
+  return fetchStats(
+    `/api/statistics/workshop/${workshopId}/top-brands${q({ from, to, limit })}`,
+    "fetchTopBrands"
+  );
 }
 
 export async function fetchUsageTypes(
   workshopId: number,
   from: string,
   to: string
-): Promise<{ items: { use_type: string; count: number }[]; total: number }> {
-  const url = `/api/statistics/workshop/${workshopId}/usage-types${q({ from, to })}`;
-  try {
-    const res = await apiFetch(url, { method: "GET" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    // Mapear usage_type del backend a use_type para el frontend
-    return {
-      ...data,
-      items: data.items?.map((item: any) => ({
-        use_type: item.usage_type || item.use_type || "",
-        count: item.count
-      })) || []
-    };
-  } catch {
-    return { items: [], total: 0 };
-  }
+): Promise<{ items: { use_type: string; count: number }[]; total: number } | null> {
+  const data = await fetchStats<{ items?: any[]; total: number }>(
+    `/api/statistics/workshop/${workshopId}/usage-types${q({ from, to })}`,
+    "fetchUsageTypes"
+  );
+  if (!data) return null;
+
+  // Mapear usage_type del backend a use_type para el frontend
+  return {
+    ...data,
+    items: data.items?.map((item: any) => ({
+      use_type: item.usage_type || item.use_type || "",
+      count: item.count
+    })) ?? []
+  };
 }
 
 export async function fetchCommonErrors(
@@ -217,42 +202,28 @@ export async function fetchCommonErrors(
   from: string,
   to: string,
   limit = 3
-): Promise<{ items: { step_name: string; count: number; percentage: number }[]; total: number }> {
-  const url = `/api/statistics/workshop/${workshopId}/common-errors${q({ from, to, limit })}`;
-  try {
-    const res = await apiFetch(url, { method: "GET" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch {
-    return { items: [], total: 0 };
-  }
+): Promise<{ items: { step_name: string; count: number; percentage: number }[]; total: number } | null> {
+  return fetchStats(
+    `/api/statistics/workshop/${workshopId}/common-errors${q({ from, to, limit })}`,
+    "fetchCommonErrors"
+  );
 }
 
 export async function fetchUpcomingExpirations(
   workshopId: number,
   limit = 3
-): Promise<{ items: { license_plate: string; contact: string; days_until: number; expiration_date: string }[]; total: number }> {
-  const url = `/api/statistics/workshop/${workshopId}/upcoming-expirations${q({ limit })}`;
-  try {
-    const res = await apiFetch(url, { method: "GET" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch {
-    return { items: [], total: 0 };
-  }
+): Promise<{ items: { license_plate: string; contact: string; days_until: number; expiration_date: string }[]; total: number } | null> {
+  return fetchStats(
+    `/api/statistics/workshop/${workshopId}/upcoming-expirations${q({ limit })}`,
+    "fetchUpcomingExpirations"
+  );
 }
 
-export async function fetchLostStickers(workshopId: number, from: string, to: string): Promise<StatsLostStickers> {
-  const url = `/api/statistics/workshop/${workshopId}/lost-stickers${q({ from, to })}`
-
-  try {
-    const res = await apiFetch(url, { method: "GET", cache: "no-store" })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return res.json()
-  } catch (error) {
-    console.error("fetchLostStickers failed:", error)
-    return { count: 0 }
-  }
+export async function fetchLostStickers(workshopId: number, from: string, to: string): Promise<StatsLostStickers | null> {
+  return fetchStats<StatsLostStickers>(
+    `/api/statistics/workshop/${workshopId}/lost-stickers${q({ from, to })}`,
+    "fetchLostStickers"
+  );
 }
 
 export async function fetchAvailableStickers({
