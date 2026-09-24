@@ -31,7 +31,7 @@ export default function SideBarMenu({ userType, loading }: Props) {
     { href: `/dashboard/${id}/applications`, icon: ClipboardList, label: "Revisiones", roles: ["administrativo", "titular", "ingeniero"] },
     { href: `/dashboard/${id}/inspections-queue`, icon: Clock, label: "Cola de revisiones", roles: ["all"] },
     { href: `/dashboard/${id}/reprint-crt`, icon: Printer, label: "Reimpresión de CRT", roles: ["administrativo", "titular", "ingeniero"] },
-    { href: `/dashboard/${id}/stickers`, icon: ScrollText, label: "Asignar obleas", roles: ["administrativo", "titular", "ingeniero"] },
+    { href: `/dashboard/${id}/stickers`, icon: ScrollText, label: "Obleas", roles: ["administrativo", "titular", "ingeniero"] },
     { href: `/dashboard/${id}/payment`, icon: BanknoteIcon, label: "Comprar revisiones", roles: ["administrativo", "titular", "ingeniero"] },
     { href: `/dashboard/${id}/statistics`, icon: ChartColumn, label: "Estadísticas", roles: ["titular", "ingeniero"] },
     { href: `/dashboard/${id}/files`, icon: FileText, label: "Legajos", roles: ["titular", "ingeniero"] },

@@ -2,402 +2,264 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Eye, RefreshCw } from "lucide-react";
-import TableTemplate, { TableHeader } from "@/components/TableTemplate";
-import RefreshButton from "@/components/RefreshButton";
-import TableFilters from "../TableFilters";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { Search, RefreshCcw } from "lucide-react";
 
-type StickerOrder = {
+export type StickerOrder = {
   id: number;
   name?: string | null;
   workshop_id: number;
   created_at?: string | null;
   updated_at?: string | null;
+  amount?: number | null;
   // cualquier otro campo que venga en so.*, lo dejamos flexible
   [key: string]: any;
   // agregado por el SELECT
   available_count: number;
 };
 
-const TABLE_FILTERS = ["Todos", "Con disponibles", "Sin disponibles"];
+const TABLE_FILTERS = ["Todos", "Con disponibles", "Sin disponibles"] as const;
+type Filter = (typeof TABLE_FILTERS)[number];
+
+const PER_PAGE = 8;
+
+// Tono según cuánto queda del pack
+const toneFor = (available: number, initial: number) => {
+  if (!available || available <= 0) return { bar: "bg-red-500", text: "text-red-700" };
+  if (initial > 0 && available / initial <= 0.2) return { bar: "bg-amber-500", text: "text-amber-800" };
+  return { bar: "bg-[#0040B8]", text: "text-gray-900" };
+};
 
 export default function StickerOrdersTable({
-  externalSearchQuery = "",
-  initialSuccessMessage = null,
+  orders,
+  loading,
+  onRefresh,
 }: {
-  externalSearchQuery?: string;
-  initialSuccessMessage?: string | null;
+  orders: StickerOrder[];
+  loading: boolean;
+  onRefresh: () => void;
 }) {
-  const { id } = useParams(); // workshop id desde la ruta /dashboard/[id]
-  const router = useRouter();
+  const { id } = useParams();
 
-  const [orders, setOrders] = useState<StickerOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-
-  // búsqueda y paginación en cliente
   const [q, setQ] = useState("");
-  const [searchQuery, setSearchQuery] = useState(externalSearchQuery || "");
-  const [statusFilter, setStatusFilter] = useState<string>("Todos");
-  const [showFilters, setShowFilters] = useState(false);
-
+  const [statusFilter, setStatusFilter] = useState<Filter>("Todos");
   const [page, setPage] = useState(1);
-  const perPage = 6;
 
-  const headers: TableHeader[] = [
-    { label: "Nombre" },
-    { label: "Creación" },
-    { label: "Disponibles" },
-    { label: "Cantidad Inicial" },
-  ];
-
-  const fetchOrders = async () => {
-    if (!id) return;
-    try {
-      setLoading(true);
-      setErrorMsg(null);
-      const usp = new URLSearchParams({ workshop_id: String(id) });
-      const res = await fetch(
-        `/api/stickers/list-orders?${usp.toString()}`,
-        { credentials: "include" }
-      );
-      if (!res.ok) {
-        const t = await res.text().catch(() => "");
-        throw new Error(t || "No se pudieron traer los packs de obleas");
-      }
-      const data: StickerOrder[] = await res.json();
-      setOrders(Array.isArray(data) ? data : []);
-    } catch (err: any) {
-      console.error(err);
-      setOrders([]);
-      setErrorMsg(err?.message || "Error al cargar packs de obleas");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  useEffect(() => {
-    if (initialSuccessMessage) setSuccessMsg(initialSuccessMessage);
-  }, [initialSuccessMessage]);
-
-  // filtro en cliente
+  // filtro en cliente, la búsqueda se aplica mientras se escribe
   const filtered = useMemo(() => {
     let list = orders;
-
-    if (searchQuery.trim()) {
-      const s = searchQuery.trim().toLowerCase();
-      list = list.filter((o) => {
-        const byId = String(o.id).includes(s);
-        const byName = (o.name || "").toLowerCase().includes(s);
-        return byId || byName;
-      });
+    const s = q.trim().toLowerCase();
+    if (s) {
+      list = list.filter((o) => String(o.id).includes(s) || (o.name || "").toLowerCase().includes(s));
     }
-
-    if (statusFilter === "Con disponibles") {
-      list = list.filter((o) => (o.available_count ?? 0) > 0);
-    } else if (statusFilter === "Sin disponibles") {
-      list = list.filter((o) => (o.available_count ?? 0) === 0);
-    }
-
+    if (statusFilter === "Con disponibles") list = list.filter((o) => (o.available_count ?? 0) > 0);
+    else if (statusFilter === "Sin disponibles") list = list.filter((o) => (o.available_count ?? 0) === 0);
     return list;
-  }, [orders, searchQuery, statusFilter]);
+  }, [orders, q, statusFilter]);
 
   const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
   const pageItems = useMemo(() => {
-    const start = (page - 1) * perPage;
-    return filtered.slice(start, start + perPage);
-  }, [filtered, page, perPage]);
+    const start = (page - 1) * PER_PAGE;
+    return filtered.slice(start, start + PER_PAGE);
+  }, [filtered, page]);
 
-  // Sincronizar searchQuery externo
-  useEffect(() => {
-    if (externalSearchQuery !== undefined && externalSearchQuery !== searchQuery) {
-      setSearchQuery(externalSearchQuery);
-      setQ(externalSearchQuery);
-      setPage(1);
-    }
-  }, [externalSearchQuery]);
-
-  // reseteo de página si cambian filtros o búsqueda
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [q, statusFilter]);
 
-  const toneForAvailable = (available: number, initial?: number) => {
-    if (!available || available <= 0) {
-      return { text: "text-red-700", bg: "bg-red-50" };
-    }
-
-    // si tenemos cantidad inicial, usamos ratio
-    if (typeof initial === "number" && initial > 0) {
-      const ratio = available / initial; // ej 0.18 = pocas
-      if (ratio <= 0.2) return { text: "text-yellow-800", bg: "bg-yellow-50" }; // pocas
-      return { text: "text-green-700", bg: "bg-green-50" }; // muchas
-    }
-
-    // fallback por valores absolutos si no hay initial
-    if (available <= 25) return { text: "text-yellow-800", bg: "bg-yellow-50" };
-    return { text: "text-green-700", bg: "bg-green-50" };
-  };
+  const hasOrders = orders.length > 0;
 
   return (
-    <div className="px-0 sm:px-0">
-      {/* Mensajes */}
-      {errorMsg && (
-        <div className="mb-3 rounded-[4px] border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {errorMsg}
-        </div>
-      )}
-      {successMsg && (
-        <div className="mb-3 rounded-[4px] border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
-          {successMsg}
-        </div>
-      )}
-    
-      {/* Search y filtros */}
-      <div className="hidden sm:flex mb-4 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between overflow-visible">
-        <div className="flex flex-1 gap-3 px-[1.5px] pt-1 overflow-visible">
-          <div className="relative flex-1">
+    <section aria-labelledby="packs-title">
+      <div className="mb-3 sm:mb-4 flex flex-col gap-1">
+        <h2 id="packs-title" className="text-base sm:text-2xl font-semibold text-gray-900">
+          Tus packs
+          {!loading && hasOrders && <span className="ml-2 text-xl font-normal text-gray-500">{orders.length}</span>}
+        </h2>
+        <p className="text-sm text-gray-500">Cada pack agrupa las obleas que cargaste juntas.</p>
+      </div>
+
+      {/* Búsqueda y filtros */}
+      {(loading || hasOrders) && (
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+          <label className="relative flex-1">
+            <span className="sr-only">Buscar packs por nombre</span>
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
+              type="search"
               disabled={loading}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="w-full rounded-[4px] border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100 sm:px-4 sm:py-3 sm:pr-12 sm:text-base"
-              placeholder="Buscar packs de obleas por nombre"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setSearchQuery(q);
-                  setPage(1);
-                }
-              }}
+              placeholder="Buscar packs por nombre"
+              className="w-full rounded-[4px] border border-gray-300 py-2.5 pl-9 pr-3 text-sm sm:text-base focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#0040B8] disabled:cursor-not-allowed disabled:bg-gray-100"
             />
-            <button
-              disabled={loading}
-              onClick={() => {
-                setSearchQuery(q);
-                setPage(1);
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors duration-200 disabled:opacity-50 sm:right-3"
-              type="button"
-            >
-              <Search size={16} />
-            </button>
-          </div>
-          <div className="hidden sm:block relative">
-            <button
-              disabled={loading}
-              onClick={() => {
-                setShowFilters(!showFilters);
-                setPage(1);
-              }}
-              className="flex bg-[#0040B8] items-center justify-center gap-2 rounded-[4px] border border-gray-300 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#0040B8] hover:border-[#0040B8] disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base"
-            >
-              <SlidersHorizontal size={16} className="text-white" />
-              <span className="hidden sm:inline text-white">Filtrar</span>
-            </button>
-            {showFilters && <TableFilters tableFilters={TABLE_FILTERS} statusFilter={statusFilter} setStatusFilter={setStatusFilter} setShowFilters={setShowFilters} setPage={setPage} />}
-          </div>
-          <RefreshButton loading={loading} fetchApps={fetchOrders} />
-        </div>
-      </div>
+          </label>
 
-      {/* Tabla */}
-      <div className="stk-table overflow-hidden sm:rounded-[14px] sm:border sm:border-gray-200 bg-white">
+          <div className="flex gap-2">
+            <div role="group" aria-label="Filtrar packs" className="flex flex-1 rounded-[4px] border border-gray-300 p-0.5">
+              {TABLE_FILTERS.map((f) => {
+                const active = statusFilter === f;
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    disabled={loading}
+                    aria-pressed={active}
+                    onClick={() => setStatusFilter(f)}
+                    className={`flex-1 whitespace-nowrap rounded-[3px] px-2.5 sm:px-3 py-2 text-xs sm:text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0040B8] disabled:opacity-50 ${
+                      active ? "bg-[#0040B8] text-white" : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {f}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={onRefresh}
+              title="Refrescar"
+              className="flex items-center justify-center gap-2 rounded-[4px] border border-[#0040B8] px-3 text-sm font-medium text-[#0040B8] transition-colors hover:bg-[#0040B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0040B8] focus-visible:ring-offset-2 disabled:opacity-50"
+            >
+              <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
+              <span className="hidden sm:inline">Refrescar</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Lista */}
+      <div className="overflow-hidden rounded-[14px] border border-gray-200 bg-white">
         {loading ? (
-          <div className="flex flex-col items-center justify-center px-1 sm:px-8 py-16 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0040B8] mb-4"></div>
-            <p className="text-sm text-gray-500">Cargando packs de obleas...</p>
+          <ul aria-busy="true">
+            {[...Array(4)].map((_, i) => (
+              <li key={i} className="flex animate-pulse flex-col gap-3 border-t border-gray-100 first:border-t-0 p-4 md:flex-row md:items-center">
+                <div className="h-4 w-40 rounded bg-gray-200/80" />
+                <div className="h-2 flex-1 rounded-full bg-gray-200/80" />
+              </li>
+            ))}
+          </ul>
+        ) : !hasOrders ? (
+          <div className="flex flex-col items-center px-4 py-12 text-center">
+            <p className="text-base font-medium text-gray-900">Todavía no cargaste obleas</p>
+            <p className="mt-1 max-w-[48ch] text-sm text-gray-500">
+              Cargá tu primer pack con el rango de números que recibiste para poder usarlas en las revisiones.
+            </p>
+            <Link
+              href={`/dashboard/${id}/stickers/assign-stickers`}
+              className="mt-4 inline-flex items-center rounded-[4px] bg-[#0040B8] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#003080] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0040B8] focus-visible:ring-offset-2"
+            >
+              Cargar pack
+            </Link>
           </div>
         ) : pageItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-1 sm:px-8 py-16 text-center">
-            <p className="text-sm sm:text-base text-gray-600">No hay packs de obleas para mostrar</p>
+          <div className="px-4 py-12 text-center">
+            <p className="text-sm sm:text-base text-gray-600">Ningún pack coincide con la búsqueda o el filtro.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setQ("");
+                setStatusFilter("Todos");
+              }}
+              className="mt-2 text-sm font-medium text-[#0040B8] underline underline-offset-2 hover:no-underline"
+            >
+              Mostrar todos los packs
+            </button>
           </div>
         ) : (
           <>
-            {/* Desktop Table View - Hidden on mobile/tablet */}
-            <div className="hidden xl:block overflow-x-auto">
-              <div className="min-w-[720px]">
-                <TableTemplate<StickerOrder>
-                  headers={headers}
-                  items={pageItems}
-                  isLoading={loading}
-                  emptyMessage="No hay packs de obleas para mostrar"
-                  rowsPerSkeleton={perPage}
-                  renderRow={(item) => {
-                    const created = item.created_at ? new Date(item.created_at) : null;
-                    const date = created ? created.toLocaleDateString("es-AR") : "-";
-                    const time = created
-                      ? created.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
-                      : "-";
-                    const tone = toneForAvailable(item.available_count ?? 0);
-
-                    return (
-                      <tr key={item.id} className="transition-colors hover:bg-gray-50">
-                        <td className="p-3 text-center">
-                          <div className="mx-auto max-w-[200px] truncate text-sm font-medium sm:text-base">
-                            {item.name || "-"}
-                          </div>
-                        </td>
-                        <td className="p-3 text-center">
-                          <div className="text-sm sm:text-base">{date}</div>
-                          <div className="text-xs text-gray-600 sm:text-sm">{time}</div>
-                        </td>
-                        <td className="p-3 text-center">
-                          <span
-                            className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm ${tone.text} ${tone.bg}`}
-                          >
-                            {item.available_count ?? 0}
-                          </span>
-                        </td>
-                        <td className="p-3 text-center">
-                          <span
-                            className={`inline-block rounded-full px-2 py-1 text-xs font-medium sm:text-sm text-gray-800 bg-[#f3f3f3]`}
-                          >
-                            {item.amount ?? 0}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  }}
-                  renderSkeletonRow={(cols, i) => (
-                    <tr key={`sk-row-${i}`} className="min-h-[60px] animate-pulse">
-                      <td className="p-3 text-center">
-                        <Sk className="mx-auto h-4 w-8" />
-                      </td>
-                      <td className="p-3 text-center">
-                        <Sk className="mx-auto h-4 w-32" />
-                      </td>
-                      <td className="p-3 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <Sk className="h-4 w-24" />
-                          <Sk className="h-3 w-20" />
-                        </div>
-                      </td>
-                      <td className="p-3 text-center">
-                        <Sk className="mx-auto h-5 w-10 rounded-full" />
-                      </td>
-                      <td className="p-0">
-                        <div className="flex h-full min-h-[48px] items-center justify-center gap-3 px-3">
-                          <Sk className="h-5 w-5 rounded" />
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                />
-              </div>
+            {/* Encabezado de columnas, solo desktop */}
+            <div className="hidden md:grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,3fr)] gap-6 border-b border-gray-200 px-5 py-3 text-sm text-gray-500">
+              <span>Pack</span>
+              <span>Cargado</span>
+              <span>Disponibles</span>
             </div>
+            <ul>
+              {pageItems.map((item) => {
+                const created = item.created_at ? new Date(item.created_at) : null;
+                const date = created ? created.toLocaleDateString("es-AR") : "-";
+                const time = created
+                  ? created.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
+                  : "";
+                const available = Number(item.available_count) || 0;
+                const initial = Number(item.amount) || 0;
+                const pct = initial > 0 ? Math.min(100, Math.round((available / initial) * 100)) : 0;
+                const tone = toneFor(available, initial);
 
-            {/* Mobile/Tablet Card View - Hidden on desktop */}
-            <div className="xl:hidden">
-              <div className="px-1 sm:px-2 md:px-4 py-2 sm:py-3 space-y-3 sm:space-y-4">
-                {pageItems.map((item) => {
-                  const created = item.created_at ? new Date(item.created_at) : null;
-                  const date = created ? created.toLocaleDateString("es-AR") : "-";
-                  const time = created
-                    ? created.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
-                    : "-";
-                  const tone = toneForAvailable(item.available_count ?? 0);
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="border border-gray-200 rounded-lg p-3 sm:p-4 space-y-3"
-                    >
-                      {/* Header: Nombre */}
-                      <div>
-                        <h3 className="font-semibold text-base sm:text-lg text-gray-900 mb-1">
-                          {item.name || "-"}
-                        </h3>
-                      </div>
-
-                      {/* Info Section */}
-                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
-                        <div>
-                          <span className="text-xs text-gray-500 font-medium block mb-1">Creación</span>
-                          <p className="text-sm text-gray-900">{date}</p>
-                          <p className="text-xs text-gray-600">{time}</p>
-                        </div>
-                        <div>
-                          <span className="text-xs text-gray-500 font-medium block mb-1">Cantidad Inicial</span>
-                          <span className={`inline-block px-2 py-1 rounded-full text-xs sm:text-sm text-gray-800 bg-[#f3f3f3]`}>
-                            {item.amount ?? 0}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Disponibles */}
-                      <div className="pt-2 border-t border-gray-100">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500 font-medium">Disponibles</span>
-                          <span className={`inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${tone.text} ${tone.bg}`}>
-                            {item.available_count ?? 0}
-                          </span>
-                        </div>
-                      </div>
+                return (
+                  <li
+                    key={item.id}
+                    className="grid gap-3 border-t border-gray-100 first:border-t-0 px-4 py-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,3fr)] md:items-center md:gap-6 md:px-5"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm sm:text-base font-medium text-gray-900">
+                        {item.name || `Pack #${item.id}`}
+                      </p>
+                      <p className="text-xs text-gray-500 md:hidden">
+                        Cargado el {date} {time && `a las ${time}`}
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+
+                    <div className="hidden md:block text-sm text-gray-700">
+                      {date}
+                      {time && <span className="block text-xs text-gray-500">{time}</span>}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200"
+                        role="meter"
+                        aria-valuemin={0}
+                        aria-valuemax={initial}
+                        aria-valuenow={available}
+                        aria-label={`Obleas disponibles del pack ${item.name || item.id}`}
+                      >
+                        <div className={`h-full rounded-full ${tone.bar}`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className={`w-[9.5rem] flex-shrink-0 text-right text-sm tabular-nums ${tone.text}`}>
+                        {available === 0 ? (
+                          "Sin disponibles"
+                        ) : (
+                          <>
+                            <span className="font-semibold">{available.toLocaleString("es-AR")}</span>
+                            <span className="text-gray-500"> de {initial.toLocaleString("es-AR")}</span>
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </>
         )}
       </div>
 
-      {/* Paginación y refresco */}
-      <div className="mt-6 flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
-        {total > perPage && (
-          <div className="flex items-center gap-2">
-            <button
-              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-            >
-              <span className="hidden sm:inline">Anterior</span>
-              <span className="sm:hidden">‹</span>
-            </button>
-            <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 sm:text-sm">
-              Página {page} de {totalPages}
-            </span>
-            <button
-              className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-            >
-              <span className="hidden sm:inline">Siguiente</span>
-              <span className="sm:hidden">›</span>
-            </button>
-          </div>
-        )}
-
-      </div>
-
-      {/* Estilos globales para que la tabla se vea igual que en InspectionTable */}
-      <style jsx global>{`
-        .stk-table thead {
-          background-color: #fff !important;
-        }
-        .stk-table table {
-          border-collapse: collapse;
-          width: 100%;
-        }
-        .stk-table thead tr {
-          border-bottom: 1px solid rgb(229 231 235);
-        }
-        .stk-table tbody > tr {
-          border-top: 1px solid rgb(229 231 235);
-        }
-      `}</style>
-    </div>
+      {/* Paginación */}
+      {!loading && total > PER_PAGE && (
+        <div className="mt-5 flex items-center justify-center gap-2 text-sm">
+          <button
+            className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Anterior
+          </button>
+          <span className="px-2 py-1 text-xs text-gray-600 sm:text-sm">
+            Página {page} de {totalPages}
+          </span>
+          <button
+            className="rounded-[4px] border border-gray-300 px-3 py-2 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+          >
+            Siguiente
+          </button>
+        </div>
+      )}
+    </section>
   );
-}
-
-function Sk({ className = "" }: { className?: string }) {
-  return <div className={`rounded bg-gray-200/80 ${className}`} />;
 }

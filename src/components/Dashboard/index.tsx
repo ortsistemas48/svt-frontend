@@ -333,7 +333,7 @@ export default async function Dashboard({ workshopId, date, userType: userTypePr
                     className="inline-flex items-center gap-1 text-xs text-rose-600 hover:underline"
                   >
                     <AlertTriangle className="h-3 w-3" />
-                    Asigná obleas a tu taller
+                    Cargá obleas a tu taller
                   </Link>
                 </div>
               ) : statistics.sticker_stock.available <= 250 ? (
@@ -408,7 +408,7 @@ export default async function Dashboard({ workshopId, date, userType: userTypePr
                       href={`/dashboard/${workshopId}/stickers`}
                       className="mt-5 block rounded-[4px] border bg-rose-100 border-rose-300 px-4 py-3 text-sm text-rose-500"
                     >
-                      Stock bajo de obleas, asigná las tuyas haciendo click aquí.
+                      Stock bajo de obleas. Cargá un pack nuevo.
                     </Link>
                   )}
                 </div>
@@ -482,7 +482,7 @@ export default async function Dashboard({ workshopId, date, userType: userTypePr
                       href={`/dashboard/${workshopId}/stickers`}
                       className="mx-4 sm:mx-5 mb-4 sm:mb-5 block rounded-[4px] border bg-rose-100 border-rose-300 px-4 py-3 text-xs sm:text-sm text-rose-500"
                     >
-                      Stock bajo de obleas, asigná las tuyas haciendo click aquí.
+                      Stock bajo de obleas. Cargá un pack nuevo.
                     </Link>
                   )}
                 </div>

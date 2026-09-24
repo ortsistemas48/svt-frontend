@@ -1,13 +1,15 @@
 "use client";
 
 import { ChevronRight, ChevronLeft, Search, ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import AllStickersTable from "@/components/AllStickersTable";
 
 
 export default function BuyObleaPage() {
   const router = useRouter();
+  const { id } = useParams<{ id: string }>();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = () => {
@@ -19,18 +21,20 @@ export default function BuyObleaPage() {
       <div className="max-w-8xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-6">
         <article className="flex items-center justify-between text-xs sm:text-sm md:text-base lg:text-lg mb-2 sm:mb-4 md:mb-6 px-1 sm:px-0">
           <div className="flex items-center gap-1">
-            <span className="text-gray-600">Inicio</span>
+            <Link href={`/dashboard/${id}`} className="text-gray-600 hover:text-[#0040B8]">Inicio</Link>
             <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
-            <span className="text-[#0040B8] font-medium">Obleas</span>
+            <Link href={`/dashboard/${id}/stickers`} className="text-gray-600 hover:text-[#0040B8]">Obleas</Link>
+            <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
+            <span className="text-[#0040B8] font-medium">Todas las obleas</span>
           </div>
         </article>
 
         <div className="text-center mb-4 sm:mb-6 md:mb-8 px-1 sm:px-0">
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-[#0040B8] mb-2 sm:mb-3">
-            Obleas de tu taller
+            Todas las obleas
           </h2> 
           <p className="text-xs sm:text-sm md:text-base text-gray-500 max-w-2xl mx-auto leading-relaxed">
-            Aquí podrás ver y gestionar todo el stock de obleas en tu taller.
+            Buscá cualquier oblea por número, patente o pack y mirá en qué estado está.
           </p>
         </div>
 
