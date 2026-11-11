@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { ChevronRight, ArrowRight, Info, X, Copy, Check } from "lucide-react";
 import clsx from "clsx";
@@ -17,40 +17,18 @@ type Workshop = {
   available_inspections: number; 
 };
 
-const ZONE_BY_PROVINCE: Record<string, "SUR" | "CENTRO" | "NORTE"> = {
-  "Santa Cruz": "SUR",
-  "Tierra del Fuego": "SUR",
-  Chubut: "SUR",
-  Neuquén: "SUR",
-  "Río Negro": "SUR",
-  "Buenos Aires": "SUR",
-  CABA: "SUR",
-  "La Pampa": "CENTRO",
-  "Santa Fe": "CENTRO",
-  Córdoba: "CENTRO",
-  Mendoza: "CENTRO",
-  "San Luis": "CENTRO",
-  "Entre Ríos": "CENTRO",
-  "La Rioja": "CENTRO",
-  "San Juan": "CENTRO",
-  Salta: "NORTE",
-  Jujuy: "NORTE",
-  Catamarca: "NORTE",
-  Chaco: "NORTE",
-  Formosa: "NORTE",
-  Corrientes: "NORTE",
-  Misiones: "NORTE",
-  "Santiago del Estero": "NORTE",
-  Tucumán: "NORTE",
+type Zone = "SUR" | "CENTRO" | "NORTE";
+
+// Zona, precio y límites vienen del backend (fuente de verdad, ver backend/app/pricing.py)
+type Pricing = {
+  zone: Zone;
+  unit_price: number;
+  min_quantity: number;
+  max_quantity: number;
 };
 
-const UNIT_PRICE: Record<"SUR" | "CENTRO" | "NORTE", number> = {
-  SUR: 3000,
-  CENTRO: 1500,
-  NORTE: 1500,
-};
-
-function formatARS(n: number) {
+function formatARS(n: number | null | undefined) {
+  if (n == null || !Number.isFinite(n)) return "—";
   return n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 }
 
@@ -66,10 +44,12 @@ export default function PaymentPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
 
+  const [pricing, setPricing] = useState<Pricing | null>(null);
+
   const [qty, setQty] = useState(250);
   const [qtyInput, setQtyInput] = useState(String(qty));
-  const minQty = 250;
-  const maxQty = 20000;
+  const minQty = pricing?.min_quantity ?? 250;
+  const maxQty = pricing?.max_quantity ?? 20000;
   useEffect(() => {
     setQtyInput(String(qty));
   }, [qty]);
@@ -105,6 +85,29 @@ export default function PaymentPage() {
     fetchWorkshop();
   }, [workshopId]);
 
+  useEffect(() => {
+    const fetchPricing = async () => {
+      if (!workshopId) return;
+      try {
+        const res = await fetch(`${API}/payments/pricing?workshop_id=${workshopId}`, { credentials: "include" });
+        if (!res.ok) throw new Error("No se pudo obtener el precio vigente");
+        const data = await res.json();
+        const p: Pricing = {
+          zone: data.zone,
+          unit_price: Number(data.unit_price),
+          min_quantity: Number(data.min_quantity),
+          max_quantity: Number(data.max_quantity),
+        };
+        if (!p.zone || !(p.unit_price > 0)) throw new Error("Precio vigente inválido");
+        setPricing(p);
+        setQty((q) => Math.max(p.min_quantity, Math.min(p.max_quantity, q)));
+      } catch (e: any) {
+        setErrorMsg(e?.message || "Error obteniendo el precio vigente");
+      }
+    };
+    fetchPricing();
+  }, [workshopId]);
+
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (showModal) {
@@ -119,13 +122,10 @@ export default function PaymentPage() {
     };
   }, [showModal]);
 
-  const zone = useMemo(() => {
-    if (!ws) return "CENTRO" as const;
-    return ZONE_BY_PROVINCE[ws.province] ?? "CENTRO";
-  }, [ws]);
-
-  const unit = UNIT_PRICE[zone];
-  const total = qty * unit;
+  const zone = pricing?.zone ?? null;
+  const unit = pricing?.unit_price ?? null;
+  // Estimación para mostrar; el total definitivo lo calcula el backend
+  const total = unit != null ? qty * unit : null;
   const stock = ws?.available_inspections ?? 0;
   const stockState = stock < 100 ? "zero" : stock < minQty ? "low" : "ok";
   const stockClasses =
@@ -139,7 +139,7 @@ export default function PaymentPage() {
   const closeModal = () => setShowModal(false);
 
     const onConfirmPayment = async () => {
-    if (!ws) return;
+    if (!ws || !pricing) return;
 
     try {
         setSubmitting(true);
@@ -155,9 +155,6 @@ export default function PaymentPage() {
         const body = {
         workshop_id: ws.id,
         quantity: qty,
-        zone,
-        unit_price: unit,
-        amount: total,
         status: orderStatus,
         };
         const res = await fetch(`${API}/payments/orders`, {
@@ -252,7 +249,7 @@ export default function PaymentPage() {
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-2 border-b border-gray-100 p-3 sm:p-5">
               <span className="inline-flex items-center gap-2 rounded-full border px-2 sm:px-3 py-1 text-[10px] sm:text-xs text-gray-700">
                 <span className="font-medium">Zona</span>
-                <span className="rounded-full bg-[#F3F6FF] px-2 py-0.5 text-[#0040B8]">{zone}</span>
+                <span className="rounded-full bg-[#F3F6FF] px-2 py-0.5 text-[#0040B8]">{zone ?? "—"}</span>
               </span>
               
               <span
@@ -274,7 +271,7 @@ export default function PaymentPage() {
               </span>
 
               <span className="text-[10px] sm:text-xs text-gray-500">
-                Precio unitario: <span className="font-semibold text-gray-900">{formatARS(UNIT_PRICE[zone])}</span> por revisión
+                Precio unitario: <span className="font-semibold text-gray-900">{formatARS(unit)}</span> por revisión
               </span>
 
               {/* NUEVO, stock disponible */}
@@ -327,7 +324,7 @@ export default function PaymentPage() {
                     }}
                     className="w-full sm:w-40 rounded-[4px] border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[#0040B8]"
                   />
-                  <span className="text-xs text-gray-500">Mínimo 250</span>
+                  <span className="text-xs text-gray-500">Mínimo {minQty}</span>
                 </div>
               </div>
 
@@ -348,7 +345,8 @@ export default function PaymentPage() {
 
                 <button
                   onClick={openModal}
-                  className="mt-4 sm:mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[4px] bg-[#0040B8] px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-[#00379f]"
+                  disabled={!pricing || !ws}
+                  className="mt-4 sm:mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[4px] bg-[#0040B8] px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-[#00379f] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Generar orden de transferencia
                   <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -387,7 +385,7 @@ export default function PaymentPage() {
                 <section className="rounded-[4px] border bg-white/60 p-3 sm:p-4">
                   <h4 className="text-xs sm:text-sm font-semibold text-gray-900">1- Monto a transferir</h4>
                   <p className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-[#0040B8]">{formatARS(total)}</p>
-                  <p className="mt-1 text-xs sm:text-sm text-gray-600 break-words">Concepto: {qty} revisiones - {zone}</p>
+                  <p className="mt-1 text-xs sm:text-sm text-gray-600 break-words">Concepto: {qty} revisiones - {zone ?? "—"}</p>
                 </section>
 
                 {/* Paso 2, datos bancarios copiable */}
